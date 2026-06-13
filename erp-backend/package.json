@@ -1,0 +1,22 @@
+{
+  "name": "erp-backend",
+  "version": "1.0.0",
+  "description": "Simple ERP Backend",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:execute": "wrangler d1 execute erp-d1 --local --file=db/schema.sql"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "wrangler": "^3.0.0"
+  }
+}

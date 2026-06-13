@@ -1,0 +1,25 @@
+{
+	"name": "erp-backend",
+	"main": "src/index.ts",
+	"compatibility_date": "2024-09-23",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true
+	},
+	"vars": {
+		"JWT_SECRET": "change-this-in-production"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "erp-db",
+			"database_id": "local-d1-id"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "FILES",
+			"bucket_name": "erp-files"
+		}
+	]
+}

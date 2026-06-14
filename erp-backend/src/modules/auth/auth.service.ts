@@ -15,6 +15,10 @@ export class AuthService {
   ) {}
 
   async generateToken(user: any): Promise<string> {
+    if (!this.env.JWT_SECRET) {
+      throw new Error('Server configuration error: JWT_SECRET is not configured');
+    }
+
     const payload: JwtPayload = {
       sub: user.id,
       institution_id: user.institution_id,

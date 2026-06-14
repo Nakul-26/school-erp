@@ -1,0 +1,2 @@
+JWT_SECRET=replace-with-a-long-random-secret
+RESEND_API_KEY=re_replace_with_your_key

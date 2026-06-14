@@ -6,10 +6,6 @@
 	"observability": {
 		"enabled": true
 	},
-	"vars": {
-		"JWT_SECRET": "change-this-in-production",
-		"RESEND_API_KEY": "re_..."
-	},
 	"d1_databases": [
 		{
 			"binding": "DB",

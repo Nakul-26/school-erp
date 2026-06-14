@@ -5,9 +5,9 @@ export interface Env {
   RESEND_API_KEY: string;
 }
 
-export interface JwtPayload {
-  sub: number;
-  college_id: number;
+export interface JwtPayload extends Record<string, unknown> {
+  sub: string;
+  institution_id: string;
   role: 'super_admin' | 'admin' | 'teacher' | 'student' | 'parent';
   email: string;
   name: string;

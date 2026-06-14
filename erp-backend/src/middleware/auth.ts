@@ -10,6 +10,9 @@ export async function authMiddleware(c: Context<{ Bindings: Env; Variables: { us
   const token = authHeader.slice(7);
   try {
     const payload = (await verify(token, c.env.JWT_SECRET, 'HS256')) as unknown as JwtPayload;
+    if (!payload.sub || !payload.institution_id) {
+      return c.json({ error: 'Invalid or stale token. Please log in again.' }, 401);
+    }
     c.set('user', payload);
     await next();
   } catch (err) {

@@ -2,12 +2,13 @@
 
 const ITERATIONS = 100_000;
 
-function bufferToHex(buf: ArrayBuffer): string {
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+function bufferToHex(buf: ArrayBuffer | Uint8Array<ArrayBuffer>): string {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-function hexToBuffer(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
+function hexToBuffer(hex: string): Uint8Array<ArrayBuffer> {
+  const bytes = new Uint8Array(new ArrayBuffer(hex.length / 2));
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
   }
@@ -47,5 +48,19 @@ export async function verifyPassword(password: string, stored: string): Promise<
     keyMaterial,
     256
   );
-  return bufferToHex(derivedBits) === hashHex;
+  const expected = hexToBuffer(hashHex);
+  const actual = new Uint8Array(derivedBits);
+  if (expected.length !== actual.length) return false;
+
+  let difference = 0;
+  for (let i = 0; i < actual.length; i++) {
+    difference |= actual[i] ^ expected[i];
+  }
+  return difference === 0;
+}
+
+export function generatePassword(length = 16): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+  const random = crypto.getRandomValues(new Uint8Array(length));
+  return [...random].map((value) => alphabet[value % alphabet.length]).join('');
 }

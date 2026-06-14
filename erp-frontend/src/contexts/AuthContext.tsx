@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: 'super_admin' | 'admin' | 'teacher' | 'student' | 'parent';
-  college_id: number;
+  institution_id: string;
 }
 
 interface AuthContextType {

@@ -1,15 +1,17 @@
 import { Hono } from 'hono';
-import { AuthRepository } from './auth.repository';
 import { AuthService } from './auth.service';
-import { authMiddleware, requireRole } from '../../middleware/auth';
+import { UserRepository } from '../users/users.repository';
+import { InstitutionRepository } from '../institutions/institutions.repository';
+import { authMiddleware } from '../../middleware/auth';
 import type { Env, JwtPayload } from '../../types';
 
 const auth = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 const getServices = (c: any) => {
-  const repo = new AuthRepository(c.env.DB);
-  const service = new AuthService(repo, c.env);
-  return { repo, service };
+  const userRepo = new UserRepository(c.env.DB);
+  const instRepo = new InstitutionRepository(c.env.DB);
+  const service = new AuthService(userRepo, instRepo, c.env);
+  return { userRepo, instRepo, service };
 };
 
 auth.post('/login', async (c) => {
@@ -23,11 +25,11 @@ auth.post('/login', async (c) => {
   }
 });
 
-auth.post('/register-college', async (c) => {
+auth.post('/register-institution', async (c) => {
   const { service } = getServices(c);
   const data = await c.req.json();
   try {
-    const result = await service.registerCollege(data);
+    const result = await service.registerInstitution(data);
     return c.json(result, 201);
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
@@ -54,13 +56,6 @@ auth.post('/reset-password', async (c) => {
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
   }
-});
-
-auth.get('/users', authMiddleware, requireRole('admin', 'super_admin'), async (c) => {
-  const { repo } = getServices(c);
-  const user = c.get('user');
-  const results = await repo.listUsers(user.college_id);
-  return c.json(results);
 });
 
 export default auth;

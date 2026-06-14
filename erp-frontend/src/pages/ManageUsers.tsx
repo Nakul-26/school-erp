@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
+import { api } from '../services/api'
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: string;
@@ -21,11 +22,7 @@ export default function ManageUsers() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('/auth/users', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('erp_token')}` }
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch users')
+      const data = await api.get('/users')
       setUsers(data)
     } catch (err: any) {
       setError(err.message)

@@ -48,8 +48,9 @@ export default function Timetable() {
   const scheduleByDay: Record<number, TimetableSlot[]> = {}
   if (Array.isArray(timetable)) {
     timetable.forEach(slot => {
-      if (!scheduleByDay[slot.day_of_week]) scheduleByDay[slot.day_of_week] = []
-      scheduleByDay[slot.day_of_week].push(slot)
+      const day = slot.day_of_week;
+      if (!scheduleByDay[day]) scheduleByDay[day] = [];
+      scheduleByDay[day]!.push(slot);
     })
   }
 

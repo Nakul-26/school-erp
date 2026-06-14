@@ -15,6 +15,15 @@ export default defineConfig({
       '/comms': 'http://localhost:8787',
       '/dashboard': 'http://localhost:8787',
       '/subjects': 'http://localhost:8787',
+      '/users': 'http://localhost:8787',
+      '/academic-years': 'http://localhost:8787',
+      '/programs': 'http://localhost:8787',
+      '/sections': 'http://localhost:8787',
+      '/guardians': 'http://localhost:8787',
+      '/teachers': 'http://localhost:8787',
+      '/teacher-assignments': 'http://localhost:8787',
+      '/enrollments': 'http://localhost:8787',
+      '/institutions': 'http://localhost:8787',
       '/api': 'http://localhost:8787'
     }
   }

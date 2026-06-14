@@ -1,15 +1,31 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, Clock, CreditCard, GraduationCap, Bell } from 'lucide-react'
+import { LayoutDashboard, Users, Clock, CreditCard, GraduationCap, Bell, UserCog, Calendar, BookOpen } from 'lucide-react'
 
 export default function Sidebar() {
+  const userStr = localStorage.getItem('erp_user')
+  const user = userStr ? JSON.parse(userStr) : null
+  const role = user?.role
+
   const links = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/students', label: 'Students', icon: Users },
+  ]
+
+  if (role === 'admin') {
+    links.push({ to: '/classes', label: 'Manage Classes', icon: BookOpen })
+  }
+
+  links.push(
     { to: '/attendance', label: 'Attendance', icon: Clock },
+    { to: '/timetable', label: 'Timetable', icon: Calendar },
     { to: '/fees', label: 'Fees', icon: CreditCard },
     { to: '/exams', label: 'Exams', icon: GraduationCap },
     { to: '/notifications', label: 'Notifications', icon: Bell },
-  ]
+  )
+
+  if (role === 'admin') {
+    links.push({ to: '/users', label: 'Manage Users', icon: UserCog })
+  }
 
   return (
     <div className="sidebar">

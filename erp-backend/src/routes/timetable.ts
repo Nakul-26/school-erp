@@ -76,4 +76,38 @@ timetable.delete('/:id', requireRole('admin'), async (c) => {
   return c.json({ success: true });
 });
 
+// Get my timetable (student/teacher)
+timetable.get('/my', async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+
+  let query = `
+    SELECT ts.*, s.name as subject_name, s.code as subject_code, t.employee_code, u.name as teacher_name
+    FROM timetable_slots ts
+    JOIN subjects s ON ts.subject_id = s.id
+    LEFT JOIN teachers t ON ts.teacher_id = t.id
+    LEFT JOIN users u ON t.user_id = u.id
+    WHERE ts.college_id = ?
+  `;
+  const params: (string | number)[] = [user.college_id];
+
+  if (user.role === 'student') {
+    const student = await db.prepare('SELECT section_id FROM students WHERE user_id = ?').bind(user.sub).first<{ section_id: number }>();
+    if (!student || !student.section_id) return c.json({ timetable: [] });
+    query += ' AND ts.section_id = ?';
+    params.push(student.section_id);
+  } else if (user.role === 'teacher') {
+    const teacher = await db.prepare('SELECT id FROM teachers WHERE user_id = ?').bind(user.sub).first<{ id: number }>();
+    if (!teacher) return c.json({ timetable: [] });
+    query += ' AND ts.teacher_id = ?';
+    params.push(teacher.id);
+  } else {
+    return c.json({ error: 'Admins should use /section/:id' }, 400);
+  }
+
+  query += ' ORDER BY ts.day_of_week, ts.start_time';
+  const { results } = await db.prepare(query).bind(...params).all();
+  return c.json({ timetable: results });
+});
+
 export default timetable;

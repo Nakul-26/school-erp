@@ -152,4 +152,52 @@ fees.post('/pay', requireRole('admin'), async (c) => {
   }, 201);
 });
 
+// Get my fee records (student)
+fees.get('/my', async (c) => {
+  const user = c.get('user');
+  if (user.role !== 'student') return c.json({ error: 'Only students' }, 403);
+
+  const db = c.env.DB;
+  const student = await db.prepare('SELECT id FROM students WHERE user_id = ?').bind(user.sub).first<{ id: number }>();
+  if (!student) return c.json({ records: [] });
+
+  const { results } = await db.prepare(`
+    SELECT fr.*, fs.fee_type, fs.academic_year
+    FROM fee_records fr
+    JOIN fee_structures fs ON fr.fee_structure_id = fs.id
+    WHERE fr.student_id = ? AND fr.college_id = ?
+  `).bind(student.id, user.college_id).all();
+
+  return c.json({ records: results });
+});
+
+// Get payment receipt data
+fees.get('/payments/:id', async (c) => {
+  const user = c.get('user');
+  const paymentId = c.req.param('id');
+
+  const payment = await c.env.DB.prepare(`
+    SELECT 
+      fp.*, 
+      fr.amount_due, 
+      fs.fee_type, 
+      fs.academic_year,
+      u.name as student_name,
+      s.roll_number,
+      c.name as college_name,
+      c.address as college_address
+    FROM fee_payments fp
+    JOIN fee_records fr ON fp.fee_record_id = fr.id
+    JOIN fee_structures fs ON fr.fee_structure_id = fs.id
+    JOIN students s ON fr.student_id = s.id
+    JOIN users u ON s.user_id = u.id
+    JOIN colleges c ON fp.college_id = c.id
+    WHERE fp.id = ? AND fp.college_id = ?
+  `).bind(paymentId, user.college_id).first();
+
+  if (!payment) return c.json({ error: 'Payment not found' }, 404);
+
+  return c.json({ payment });
+});
+
 export default fees;

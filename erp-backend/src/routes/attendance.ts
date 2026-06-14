@@ -107,4 +107,35 @@ attendance.get('/student/:id', async (c) => {
   return c.json({ records: results });
 });
 
+// Get attendance statistics for a section
+attendance.get('/stats', async (c) => {
+  const user = c.get('user');
+  const sectionId = c.req.query('section_id');
+  if (!sectionId) return c.json({ error: 'section_id required' }, 400);
+
+  const { results } = await c.env.DB
+    .prepare(`
+      SELECT 
+        st.id as student_id, 
+        u.name, 
+        st.roll_number,
+        COUNT(a.id) as total_days,
+        SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_days
+      FROM students st
+      JOIN users u ON st.user_id = u.id
+      LEFT JOIN attendance a ON st.id = a.student_id AND a.subject_id IS NULL
+      WHERE st.section_id = ? AND st.college_id = ?
+      GROUP BY st.id
+    `)
+    .bind(sectionId, user.college_id)
+    .all();
+
+  const stats = results.map((r: any) => ({
+    ...r,
+    percentage: r.total_days > 0 ? (r.present_days / r.total_days * 100).toFixed(2) : 'N/A'
+  }));
+
+  return c.json({ stats });
+});
+
 export default attendance;

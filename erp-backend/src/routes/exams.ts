@@ -108,4 +108,30 @@ exams.get('/:id/marks', async (c) => {
   return c.json({ marks: results });
 });
 
+// Get report card data for a student
+exams.get('/report/:student_id', async (c) => {
+  const user = c.get('user');
+  const studentId = c.req.param('student_id');
+
+  const { results } = await c.env.DB
+    .prepare(`
+      SELECT 
+        ex.name as exam_name,
+        ex.academic_year,
+        sub.name as subject_name,
+        em.marks_obtained,
+        em.max_marks,
+        em.grade
+      FROM exam_marks em
+      JOIN exams ex ON em.exam_id = ex.id
+      JOIN subjects sub ON em.subject_id = sub.id
+      WHERE em.student_id = ? AND em.college_id = ?
+      ORDER BY ex.academic_year DESC, ex.name
+    `)
+    .bind(studentId, user.college_id)
+    .all();
+
+  return c.json({ report: results });
+});
+
 export default exams;

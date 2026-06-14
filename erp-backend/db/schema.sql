@@ -2,7 +2,7 @@
 -- College ERP - D1 Schema (multi-tenant)
 -- ============================================
 
-CREATE TABLE colleges (
+CREATE TABLE IF NOT EXISTS colleges (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   address TEXT,
@@ -11,27 +11,29 @@ CREATE TABLE colleges (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
-  role TEXT NOT NULL CHECK (role IN ('admin','teacher','student','parent')),
+  role TEXT NOT NULL CHECK (role IN ('super_admin','admin','teacher','student','parent')),
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   phone TEXT,
   password_hash TEXT NOT NULL,
+  reset_token TEXT,
+  reset_expires TEXT,
   is_active INTEGER DEFAULT 1,
   created_at TEXT DEFAULT (datetime('now')),
   UNIQUE(college_id, email)
 );
 
-CREATE TABLE courses (
+CREATE TABLE IF NOT EXISTS courses (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   name TEXT NOT NULL,
   duration_years INTEGER NOT NULL
 );
 
-CREATE TABLE sections (
+CREATE TABLE IF NOT EXISTS sections (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   course_id INTEGER NOT NULL REFERENCES courses(id),
@@ -40,7 +42,7 @@ CREATE TABLE sections (
   academic_year TEXT NOT NULL
 );
 
-CREATE TABLE students (
+CREATE TABLE IF NOT EXISTS students (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),
   college_id INTEGER NOT NULL REFERENCES colleges(id),
@@ -58,7 +60,7 @@ CREATE TABLE students (
   UNIQUE(college_id, roll_number)
 );
 
-CREATE TABLE teachers (
+CREATE TABLE IF NOT EXISTS teachers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),
   college_id INTEGER NOT NULL REFERENCES colleges(id),
@@ -67,7 +69,7 @@ CREATE TABLE teachers (
   designation TEXT
 );
 
-CREATE TABLE subjects (
+CREATE TABLE IF NOT EXISTS subjects (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   course_id INTEGER NOT NULL REFERENCES courses(id),
@@ -76,7 +78,7 @@ CREATE TABLE subjects (
   semester INTEGER
 );
 
-CREATE TABLE timetable_slots (
+CREATE TABLE IF NOT EXISTS timetable_slots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   section_id INTEGER NOT NULL REFERENCES sections(id),
@@ -88,7 +90,7 @@ CREATE TABLE timetable_slots (
   room TEXT
 );
 
-CREATE TABLE attendance (
+CREATE TABLE IF NOT EXISTS attendance (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   student_id INTEGER NOT NULL REFERENCES students(id),
@@ -101,7 +103,7 @@ CREATE TABLE attendance (
   UNIQUE(student_id, subject_id, date)
 );
 
-CREATE TABLE fee_structures (
+CREATE TABLE IF NOT EXISTS fee_structures (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   course_id INTEGER NOT NULL REFERENCES courses(id),
@@ -111,7 +113,7 @@ CREATE TABLE fee_structures (
   due_date TEXT
 );
 
-CREATE TABLE fee_records (
+CREATE TABLE IF NOT EXISTS fee_records (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   student_id INTEGER NOT NULL REFERENCES students(id),
@@ -122,7 +124,7 @@ CREATE TABLE fee_records (
   due_date TEXT
 );
 
-CREATE TABLE fee_payments (
+CREATE TABLE IF NOT EXISTS fee_payments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   fee_record_id INTEGER NOT NULL REFERENCES fee_records(id),
@@ -135,7 +137,7 @@ CREATE TABLE fee_payments (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE exams (
+CREATE TABLE IF NOT EXISTS exams (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   course_id INTEGER NOT NULL REFERENCES courses(id),
@@ -144,7 +146,7 @@ CREATE TABLE exams (
   semester INTEGER
 );
 
-CREATE TABLE exam_marks (
+CREATE TABLE IF NOT EXISTS exam_marks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   exam_id INTEGER NOT NULL REFERENCES exams(id),
@@ -157,7 +159,7 @@ CREATE TABLE exam_marks (
   UNIQUE(exam_id, student_id, subject_id)
 );
 
-CREATE TABLE announcements (
+CREATE TABLE IF NOT EXISTS announcements (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   title TEXT NOT NULL,
@@ -168,7 +170,7 @@ CREATE TABLE announcements (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   college_id INTEGER NOT NULL REFERENCES colleges(id),
   user_id INTEGER NOT NULL REFERENCES users(id),
@@ -179,11 +181,11 @@ CREATE TABLE notifications (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_users_college ON users(college_id);
-CREATE INDEX idx_students_college ON students(college_id);
-CREATE INDEX idx_students_section ON students(section_id);
-CREATE INDEX idx_attendance_student_date ON attendance(student_id, date);
-CREATE INDEX idx_fee_records_student ON fee_records(student_id);
-CREATE INDEX idx_exam_marks_student ON exam_marks(exam_id, student_id);
-CREATE INDEX idx_notifications_user ON notifications(user_id, is_read);
-CREATE INDEX idx_timetable_section ON timetable_slots(section_id, day_of_week);
+CREATE INDEX IF NOT EXISTS idx_users_college ON users(college_id);
+CREATE INDEX IF NOT EXISTS idx_students_college ON students(college_id);
+CREATE INDEX IF NOT EXISTS idx_students_section ON students(section_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_student_date ON attendance(student_id, date);
+CREATE INDEX IF NOT EXISTS idx_fee_records_student ON fee_records(student_id);
+CREATE INDEX IF NOT EXISTS idx_exam_marks_student ON exam_marks(exam_id, student_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_timetable_section ON timetable_slots(section_id, day_of_week);

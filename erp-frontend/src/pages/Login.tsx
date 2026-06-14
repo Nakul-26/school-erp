@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -7,6 +8,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,9 +28,7 @@ export default function Login() {
         throw new Error(data.error || 'Login failed')
       }
 
-      localStorage.setItem('erp_token', data.token)
-      localStorage.setItem('erp_user', JSON.stringify(data.user))
-      
+      login(data.token, data.user)
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.message)
@@ -62,7 +62,10 @@ export default function Login() {
               placeholder="admin123"
             />
           </div>
-          {error && <p style={{ color: 'red', fontSize: '0.875rem' }}>{error}</p>}
+          <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
+            <Link to="/forgot-password" style={{ fontSize: '0.875rem', color: 'var(--primary)', textDecoration: 'none' }}>Forgot Password?</Link>
+          </div>
+          {error && <p style={{ color: 'red', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</p>}
           <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
             {loading ? 'Logging in...' : 'Login'}
           </button>

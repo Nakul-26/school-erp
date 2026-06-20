@@ -2,7 +2,8 @@ import { Hono } from 'hono';
 import { Env, JwtPayload } from '../../types';
 import { SectionRepository } from './sections.repository';
 import { SectionService } from './sections.service';
-import { authMiddleware, requireRole } from '../../middleware/auth';
+import { authMiddleware, requirePermission } from '../../middleware/auth';
+import { createAuditLog } from '../../utils/audit';
 
 const sections = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -30,16 +31,22 @@ sections.get('/:id', async (c) => {
   return c.json(result);
 });
 
-sections.post('/', requireRole('admin', 'super_admin'), async (c) => {
+sections.post('/', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
   const repo = new SectionRepository(c.env.DB);
   const service = new SectionService(repo);
-  const id = await service.createSection(user.institution_id, input, user.sub);
-  return c.json({ id }, 201);
+  
+  try {
+    const id = await service.createSection(user.institution_id, input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'CREATE_SECTION', 'sections', id, `Created section: ${input.name} (Year: ${input.year_number})`);
+    return c.json({ id }, 201);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
-sections.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
+sections.put('/:id', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const input = await c.req.json();
@@ -51,11 +58,16 @@ sections.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
     return c.json({ error: 'Section not found' }, 404);
   }
   
-  await service.updateSection(id, input, user.sub);
-  return c.json({ success: true });
+  try {
+    await service.updateSection(id, input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'UPDATE_SECTION', 'sections', id, `Updated section: ${existing.name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
-sections.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
+sections.delete('/:id', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new SectionRepository(c.env.DB);
@@ -67,6 +79,7 @@ sections.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
   }
   
   await service.deleteSection(id, user.sub);
+  await createAuditLog(c.env.DB, user.sub, 'DELETE_SECTION', 'sections', id, `Deleted section: ${existing.name}`);
   return c.json({ success: true });
 });
 

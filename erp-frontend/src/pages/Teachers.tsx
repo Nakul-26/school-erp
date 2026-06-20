@@ -70,14 +70,13 @@ export default function Teachers() {
       </div>
 
       <div className="card filters" style={{ marginBottom: '1rem' }}>
-        <div className="input-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem' }}>
-          <Search size={18} color="#666" />
+        <div className="search-container">
+          <Search size={18} />
           <input 
             type="text" 
             placeholder="Search by name, ID, or department..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ border: 'none', outline: 'none', width: '100%', fontSize: '1rem' }}
           />
         </div>
       </div>

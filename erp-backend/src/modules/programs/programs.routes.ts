@@ -2,7 +2,8 @@ import { Hono } from 'hono';
 import { Env, JwtPayload } from '../../types';
 import { ProgramRepository } from './programs.repository';
 import { ProgramService } from './programs.service';
-import { authMiddleware, requireRole } from '../../middleware/auth';
+import { authMiddleware, requirePermission } from '../../middleware/auth';
+import { createAuditLog } from '../../utils/audit';
 
 const programs = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -29,16 +30,22 @@ programs.get('/:id', async (c) => {
   return c.json(result);
 });
 
-programs.post('/', requireRole('admin', 'super_admin'), async (c) => {
+programs.post('/', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
   const repo = new ProgramRepository(c.env.DB);
   const service = new ProgramService(repo);
-  const id = await service.createProgram(user.institution_id, input, user.sub);
-  return c.json({ id }, 201);
+  
+  try {
+    const id = await service.createProgram(user.institution_id, input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'CREATE_COURSE', 'courses', id, `Created course: ${input.name} (${input.course_code})`);
+    return c.json({ id }, 201);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
-programs.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
+programs.put('/:id', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const input = await c.req.json();
@@ -50,11 +57,16 @@ programs.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
     return c.json({ error: 'Program not found' }, 404);
   }
   
-  await service.updateProgram(id, input, user.sub);
-  return c.json({ success: true });
+  try {
+    await service.updateProgram(id, input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'UPDATE_COURSE', 'courses', id, `Updated course: ${existing.name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
-programs.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
+programs.delete('/:id', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new ProgramRepository(c.env.DB);
@@ -66,6 +78,7 @@ programs.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
   }
   
   await service.deleteProgram(id, user.sub);
+  await createAuditLog(c.env.DB, user.sub, 'DELETE_COURSE', 'courses', id, `Deleted course: ${existing.name}`);
   return c.json({ success: true });
 });
 

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
+import { Plus, Trash2 } from 'lucide-react';
 
-export default function Sections() {
-  const [sections, setSections] = useState<any[]>([]);
+export default function Classes() {
+  const [classes, setClasses] = useState<any[]>([]);
   const [years, setYears] = useState<any[]>([]);
   const [programs, setPrograms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +22,7 @@ export default function Sections() {
         api.get('/academic-years'),
         api.get('/programs')
       ]);
-      setSections(sectionsData);
+      setClasses(sectionsData);
       setYears(yearsData);
       setPrograms(programsData);
       if (yearsData.length > 0) setForm(f => ({ ...f, academic_year_id: yearsData[0].id }));
@@ -38,35 +39,38 @@ export default function Sections() {
     try {
       await api.post('/sections', form);
       setShowModal(false);
+      setForm(f => ({ ...f, name: '', year_number: 1 }));
       fetchData();
     } catch (err) {
-      alert('Error creating section');
+      alert('Error creating class');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure?')) return;
+    if (!confirm('Are you sure you want to delete this class?')) return;
     try {
       await api.delete(`/sections/${id}`);
       fetchData();
     } catch (err) {
-      alert('Error deleting');
+      alert('Error deleting class');
     }
   };
 
   return (
     <Layout>
       <div className="page-header">
-        <h2>Sections</h2>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>Add Section</button>
+        <h2>Classes</h2>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          <Plus size={18} /> Add Class
+        </button>
       </div>
 
       <div className="card">
-        {loading ? <p>Loading...</p> : (
+        {loading ? <p>Loading classes...</p> : (
           <table className="table">
             <thead>
               <tr>
-                <th>Name</th>
+                <th>Class Name</th>
                 <th>Year</th>
                 <th>Program</th>
                 <th>Academic Year</th>
@@ -74,34 +78,53 @@ export default function Sections() {
               </tr>
             </thead>
             <tbody>
-              {sections.map(section => (
-                <tr key={section.id}>
-                  <td>{section.name}</td>
-                  <td>{section.year_number}</td>
-                  <td>{programs.find(p => p.id === section.course_id)?.name || 'Unknown'}</td>
-                  <td>{years.find(y => y.id === section.academic_year_id)?.name || 'Unknown'}</td>
+              {classes.map(cls => (
+                <tr key={cls.id}>
+                  <td><strong>{cls.name}</strong></td>
+                  <td>Year {cls.year_number}</td>
+                  <td>{programs.find(p => p.id === cls.course_id)?.name || 'Unknown'}</td>
+                  <td>{years.find(y => y.id === cls.academic_year_id)?.name || 'Unknown'}</td>
                   <td>
-                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(section.id)}>Delete</button>
+                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(cls.id)}>
+                      <Trash2 size={14} /> Delete
+                    </button>
                   </td>
                 </tr>
               ))}
+              {classes.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>No classes found.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         )}
       </div>
 
       {showModal && (
-        <div className="modal">
+        <div className="modal-overlay">
           <div className="modal-content">
-            <h3>Add Section</h3>
+            <h3>Add New Class</h3>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Section Name (e.g., A, B, C)</label>
-                <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+                <label>Class/Section Name (e.g., A, B, Class 10A)</label>
+                <input 
+                  type="text" 
+                  value={form.name} 
+                  onChange={e => setForm({...form, name: e.target.value})} 
+                  placeholder="e.g. Section A"
+                  required 
+                />
               </div>
               <div className="form-group">
                 <label>Year Number (e.g., 1, 2, 3)</label>
-                <input type="number" value={form.year_number} onChange={e => setForm({...form, year_number: parseInt(e.target.value)})} required min="1" />
+                <input 
+                  type="number" 
+                  value={form.year_number} 
+                  onChange={e => setForm({...form, year_number: parseInt(e.target.value) || 1})} 
+                  required 
+                  min="1" 
+                />
               </div>
               <div className="form-group">
                 <label>Program</label>

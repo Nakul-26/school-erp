@@ -4,6 +4,7 @@ import { sendEmail } from '../../utils/email';
 import { Env, JwtPayload } from '../../types';
 import { UserRepository } from '../users/users.repository';
 import { InstitutionRepository } from '../institutions/institutions.repository';
+import { createAuditLog } from '../../utils/audit';
 
 const TOKEN_EXPIRY_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
@@ -22,7 +23,8 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
       institution_id: user.institution_id,
-      role: user.role,
+      roles: user.roles || [],
+      role: user.role || '',
       email: user.email,
       name: user.name,
       exp: Math.floor(Date.now() / 1000) + TOKEN_EXPIRY_SECONDS,
@@ -38,9 +40,19 @@ export class AuthService {
     if (!valid) throw new Error('Invalid credentials');
 
     const token = await this.generateToken(user);
+    
+    await createAuditLog(this.env.DB, user.id, 'LOGIN', 'auth', user.id, `User ${user.email} logged in successfully`);
+
     return {
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, institution_id: user.institution_id },
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        roles: user.roles || [], 
+        role: user.role || '', 
+        institution_id: user.institution_id 
+      },
     };
   }
 
@@ -52,8 +64,8 @@ export class AuthService {
     await this.instRepo.create(institutionId, {
       name: data.institution_name,
       address: data.address,
-      contact_email: data.contact_email,
-      contact_phone: data.contact_phone,
+      email: data.contact_email,
+      phone: data.contact_phone,
       institution_type: data.institution_type,
     });
 
@@ -65,13 +77,15 @@ export class AuthService {
       username: data.admin_username,
       email: data.admin_email,
       password_hash: hash,
-      role: 'admin',
       name: data.admin_name,
       phone: data.admin_phone,
+      roles: ['Principal']
     });
 
-    const user = { id: userId, name: data.admin_name, email: data.admin_email, role: 'admin', institution_id: institutionId };
+    const user = { id: userId, name: data.admin_name, email: data.admin_email, roles: ['Principal'], role: 'Principal', institution_id: institutionId };
     const token = await this.generateToken(user);
+
+    await createAuditLog(this.env.DB, userId, 'REGISTER_INSTITUTION', 'auth', institutionId, `Registered institution ${data.institution_name} with admin ${data.admin_email}`);
 
     return { token, user, institution: { id: institutionId, name: data.institution_name } };
   }
@@ -101,6 +115,9 @@ export class AuthService {
 
     const hash = await hashPassword(newPass);
     await this.userRepo.update(user.id, { password_hash: hash, reset_token: null, reset_expires: null });
+    
+    await createAuditLog(this.env.DB, user.id, 'RESET_PASSWORD', 'auth', user.id, `User ${user.email} reset their password successfully`);
+
     return { message: 'Password reset successfully' };
   }
 }

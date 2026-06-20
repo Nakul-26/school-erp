@@ -4,7 +4,8 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'teacher' | 'student' | 'parent';
+  roles: string[];
+  role?: string;
   institution_id: string;
 }
 

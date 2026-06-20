@@ -5,7 +5,7 @@ import { generatePassword, hashPassword } from '../../utils/password';
 export class UserService {
   constructor(private repo: UserRepository) {}
 
-  async createUser(input: CreateUserInput & { password?: string }, userId?: string): Promise<string> {
+  async createUser(input: CreateUserInput & { password?: string; roles?: string[] }, userId?: string): Promise<string> {
     const id = crypto.randomUUID();
     const password = input.password || generatePassword();
     const password_hash = await hashPassword(password);
@@ -25,7 +25,7 @@ export class UserService {
     return await this.repo.findById(id);
   }
 
-  async updateUser(id: string, input: UpdateUserInput, userId?: string): Promise<void> {
+  async updateUser(id: string, input: UpdateUserInput & { roles?: string[] }, userId?: string): Promise<void> {
     await this.repo.update(id, input, userId);
   }
 

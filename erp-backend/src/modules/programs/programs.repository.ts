@@ -1,7 +1,7 @@
 import { Program, CreateProgramInput, UpdateProgramInput } from './programs.types';
 import { getUpdateFields } from '../../utils/repository';
 
-const UPDATE_FIELDS = ['course_code', 'name', 'duration_years'] as const;
+const UPDATE_FIELDS = ['course_code', 'name', 'duration_years', 'department_id'] as const;
 
 export class ProgramRepository {
   constructor(private db: D1Database) {}
@@ -9,11 +9,12 @@ export class ProgramRepository {
   async create(id: string, institutionId: string, input: CreateProgramInput, userId?: string): Promise<void> {
     await this.db.prepare(`
       INSERT INTO courses (
-        id, institution_id, course_code, name, duration_years, created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        id, institution_id, department_id, course_code, name, duration_years, created_by, updated_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
       institutionId,
+      input.department_id || null,
       input.course_code,
       input.name,
       input.duration_years,

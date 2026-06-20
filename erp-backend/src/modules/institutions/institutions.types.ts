@@ -2,9 +2,10 @@ export interface Institution {
   id: string;
   name: string;
   address?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  institution_type: 'school' | 'pu_college' | 'degree_college' | 'engineering_college';
+  phone?: string;
+  email?: string;
+  logo?: string;
+  institution_type?: string;
   is_active: number;
   created_at: string;
   updated_at: string;

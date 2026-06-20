@@ -14,6 +14,49 @@ export default function StudentDetails() {
   const [sections, setSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [studentExams, setStudentExams] = useState<any[]>([]);
+  const [selectedExamId, setSelectedExamId] = useState<string>('');
+  const [detailedResult, setDetailedResult] = useState<any>(null);
+  const [loadingResult, setLoadingResult] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'results') {
+      fetchExams();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (selectedExamId) {
+      fetchDetailedResult();
+    } else {
+      setDetailedResult(null);
+    }
+  }, [selectedExamId]);
+
+  const fetchExams = async () => {
+    try {
+      const data = await api.get(`/exams/students/${id}/results`);
+      setStudentExams(data);
+      if (data.length > 0) {
+        setSelectedExamId(data[0].id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchDetailedResult = async () => {
+    try {
+      setLoadingResult(true);
+      const data = await api.get(`/exams/students/${id}/exams/${selectedExamId}/result`);
+      setDetailedResult(data);
+    } catch (err) {
+      console.error(err);
+      setDetailedResult(null);
+    } finally {
+      setLoadingResult(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -69,6 +112,10 @@ export default function StudentDetails() {
           style={{ padding: '0.75rem 1rem', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'enrollments' ? '2px solid #007bff' : 'none', color: activeTab === 'enrollments' ? '#007bff' : '#666', fontWeight: activeTab === 'enrollments' ? '600' : '400' }} 
           onClick={() => setActiveTab('enrollments')}
         >Enrollments</button>
+        <button 
+          style={{ padding: '0.75rem 1rem', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'results' ? '2px solid #007bff' : 'none', color: activeTab === 'results' ? '#007bff' : '#666', fontWeight: activeTab === 'results' ? '600' : '400' }} 
+          onClick={() => setActiveTab('results')}
+        >Results</button>
       </div>
 
       <div className="card">
@@ -179,6 +226,88 @@ export default function StudentDetails() {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {activeTab === 'results' && (
+          <div>
+            <h3 style={{ marginBottom: '1rem' }}>Academic Results</h3>
+            {studentExams.length === 0 ? (
+              <p style={{ color: '#666' }}>No exams found for this student.</p>
+            ) : (
+              <div>
+                <div className="form-group" style={{ maxWidth: '300px', marginBottom: '1.5rem' }}>
+                  <label>Select Exam</label>
+                  <select value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)}>
+                    {studentExams.map(ex => (
+                      <option key={ex.id} value={ex.id}>{ex.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {loadingResult ? (
+                  <p>Loading result card...</p>
+                ) : detailedResult ? (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem', padding: '1.25rem', backgroundColor: '#f8fafc', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Total Obtained</span>
+                        <strong style={{ fontSize: '1.25rem', color: 'var(--text-main)' }}>{detailedResult.total_obtained} / {detailedResult.total_max}</strong>
+                      </div>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Percentage</span>
+                        <strong style={{ fontSize: '1.25rem', color: 'var(--text-main)' }}>{detailedResult.percentage}%</strong>
+                      </div>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Grade</span>
+                        <strong style={{ fontSize: '1.25rem', color: 'var(--text-main)' }}>{detailedResult.grade}</strong>
+                      </div>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.25rem' }}>Overall Result</span>
+                        <span className={`badge ${detailedResult.result === 'PASS' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem' }}>
+                          {detailedResult.result}
+                        </span>
+                      </div>
+                    </div>
+
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Subject Code</th>
+                          <th>Subject Name</th>
+                          <th>Marks Obtained</th>
+                          <th>Max Marks</th>
+                          <th>Passing Marks</th>
+                          <th>Status</th>
+                          <th>Remarks</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detailedResult.subjects.map((sub: any) => (
+                          <tr key={sub.subject_id}>
+                            <td><strong>{sub.subject_code}</strong></td>
+                            <td>{sub.subject_name}</td>
+                            <td><strong>{sub.marks_obtained}</strong></td>
+                            <td>{sub.max_marks}</td>
+                            <td>{sub.min_marks}</td>
+                            <td>
+                              <span className={`badge ${sub.status === 'PASS' ? 'badge-success' : 'badge-danger'}`}>
+                                {sub.status}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: '0.875rem', color: '#64748b' }}>{sub.remarks || '-'}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p style={{ color: '#666' }}>No marks entered yet for this exam.</p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../contexts/AuthContext'
+import { api } from '../services/api'
 import { Users, BookOpen, Clock, TrendingUp, LogOut } from 'lucide-react'
 
 export default function Dashboard() {
   const [stats, setStats] = useState<any>({})
   const [loading, setLoading] = useState(true)
-  const { user, logout, token } = useAuth()
+  const { user, logout } = useAuth()
+  
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const isAdmin = userRoles.includes('super_admin') || userRoles.includes('Super Admin') || userRoles.includes('admin') || userRoles.includes('Principal');
+  const isStudent = userRoles.includes('student') || userRoles.includes('Student');
 
   useEffect(() => {
     fetchStats()
@@ -14,10 +19,7 @@ export default function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('/dashboard/stats', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      const data = await res.json()
+      const data = await api.get('/dashboard/stats')
       setStats(data)
     } catch (err) {
       console.error(err)
@@ -42,7 +44,7 @@ export default function Dashboard() {
 
       {loading ? <p>Loading overview...</p> : (
         <div className="stats-grid">
-          {user?.role === 'admin' && (
+          {isAdmin && (
             <>
               <div className="stat-card card">
                 <div className="icon" style={{ background: '#e6f7ff', color: '#1890ff' }}><Users size={24} /></div>
@@ -68,7 +70,7 @@ export default function Dashboard() {
             </>
           )}
 
-          {user?.role === 'student' && (
+          {isStudent && (
             <>
               <div className="stat-card card">
                 <div className="icon" style={{ background: '#f9f0ff', color: '#722ed1' }}><Clock size={24} /></div>

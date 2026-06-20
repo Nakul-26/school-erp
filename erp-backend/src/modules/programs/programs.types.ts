@@ -1,6 +1,7 @@
 export interface Program {
   id: string;
   institution_id: string;
+  department_id?: string | null;
   course_code: string;
   name: string;
   duration_years: number;

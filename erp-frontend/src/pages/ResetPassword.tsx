@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { api } from '../services/api'
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('')
@@ -21,14 +22,7 @@ export default function ResetPassword() {
     setLoading(true)
 
     try {
-      const res = await fetch('/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, new_password: password })
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Something went wrong')
-      
+      await api.post('/auth/reset-password', { token, new_password: password })
       alert('Password reset successful. Please login.')
       navigate('/login')
     } catch (err: any) {

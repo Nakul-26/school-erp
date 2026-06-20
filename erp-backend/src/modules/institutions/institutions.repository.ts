@@ -1,7 +1,7 @@
 import { Institution, CreateInstitutionInput, UpdateInstitutionInput } from './institutions.types';
 import { getUpdateFields } from '../../utils/repository';
 
-const UPDATE_FIELDS = ['name', 'address', 'contact_email', 'contact_phone', 'institution_type'] as const;
+const UPDATE_FIELDS = ['name', 'address', 'phone', 'email', 'logo', 'institution_type'] as const;
 
 export class InstitutionRepository {
   constructor(private db: D1Database) {}
@@ -9,15 +9,16 @@ export class InstitutionRepository {
   async create(id: string, input: CreateInstitutionInput, userId?: string): Promise<void> {
     await this.db.prepare(`
       INSERT INTO institutions (
-        id, name, address, contact_email, contact_phone, institution_type, created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        id, name, address, phone, email, logo, institution_type, created_by, updated_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
       input.name,
       input.address || null,
-      input.contact_email || null,
-      input.contact_phone || null,
-      input.institution_type,
+      input.phone || null,
+      input.email || null,
+      input.logo || null,
+      input.institution_type || 'college',
       userId || null,
       userId || null
     ).run();
@@ -37,7 +38,7 @@ export class InstitutionRepository {
     if (fields.length === 0) return;
 
     const sets = fields.map(field => `${field} = ?`).join(', ');
-    const values = [...fields.map(field => input[field]), userId || null, id];
+    const values = [...fields.map(field => input[field as keyof UpdateInstitutionInput]), userId || null, id];
 
     await this.db.prepare(`
       UPDATE institutions 

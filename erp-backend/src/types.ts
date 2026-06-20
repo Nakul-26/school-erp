@@ -8,7 +8,8 @@ export interface Env {
 export interface JwtPayload extends Record<string, unknown> {
   sub: string;
   institution_id: string;
-  role: 'super_admin' | 'admin' | 'teacher' | 'student' | 'parent';
+  roles: string[];
+  role?: string;
   email: string;
   name: string;
   exp: number;

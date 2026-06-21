@@ -22,6 +22,18 @@ import StudentDetails from './pages/StudentDetails';
 import Teachers from './pages/Teachers';
 import TeacherDetails from './pages/TeacherDetails';
 import Exams from './pages/Exams';
+import TeacherAttendance from './pages/TeacherAttendance';
+import AttendanceReports from './pages/AttendanceReports';
+import TeacherReports from './pages/TeacherReports';
+import Announcements from './pages/Announcements';
+import Notifications from './pages/Notifications';
+import FeeStructures from './pages/FeeStructures';
+import StudentFees from './pages/StudentFees';
+import FeeReports from './pages/FeeReports';
+import Profile from './pages/Profile';
+import DataExport from './pages/DataExport';
+import BulkImport from './pages/BulkImport';
+import SystemSettings from './pages/SystemSettings';
 
 function App() {
   return (
@@ -137,6 +149,78 @@ function App() {
           <Route path="/exams" element={
             <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}>
               <Exams />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/teacher-attendance" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}>
+              <TeacherAttendance />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/attendance-reports" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}>
+              <AttendanceReports />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/teacher-reports" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}>
+              <TeacherReports />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/announcements" element={
+            <ProtectedRoute>
+              <Announcements />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/fee-structures" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant']}>
+              <FeeStructures />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/student-fees" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant', 'Teacher']}>
+              <StudentFees />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/fee-reports" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'Accountant']}>
+              <FeeReports />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/exports" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}>
+              <DataExport />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/imports" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}>
+              <BulkImport />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/settings" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}>
+              <SystemSettings />
             </ProtectedRoute>
           } />
           

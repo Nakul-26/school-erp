@@ -15,6 +15,33 @@ enrollments.get('/student/:studentId', async (c) => {
   if (!await repo.studentBelongsToInstitution(studentId, user.institution_id)) {
     return c.json({ error: 'Student not found' }, 404);
   }
+
+  // Security checks
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isStudent = userRoles.some(r => ['student', 'Student'].includes(r));
+  const isParent = userRoles.some(r => ['parent', 'Parent', 'guardian', 'Guardian'].includes(r));
+  const isAdminOrStaff = userRoles.some(r => ['super_admin', 'Super Admin', 'admin', 'Principal', 'HOD', 'Teacher'].includes(r));
+
+  if (isStudent) {
+    const student = await c.env.DB.prepare('SELECT user_id FROM students WHERE id = ? AND is_active = 1').bind(studentId).first<{ user_id: string }>();
+    if (student && student.user_id !== user.sub) {
+      return c.json({ error: 'Forbidden: You cannot access other student enrollments' }, 403);
+    }
+  }
+
+  if (isParent) {
+    const isChild = await c.env.DB.prepare(
+      'SELECT 1 FROM guardians WHERE user_id = ? AND student_id = ? AND is_active = 1'
+    ).bind(user.sub, studentId).first();
+    if (!isChild && !isAdminOrStaff) {
+      return c.json({ error: 'Forbidden: You cannot access enrollments of students who are not your children' }, 403);
+    }
+  }
+
+  if (!isStudent && !isParent && !isAdminOrStaff) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
   const service = new EnrollmentService(repo);
   const results = await service.listEnrollmentsByStudent(studentId);
   return c.json(results);

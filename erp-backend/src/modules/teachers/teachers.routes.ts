@@ -16,6 +16,14 @@ teachers.get('/', async (c) => {
   return c.json(results);
 });
 
+teachers.get('/reports/workload', async (c) => {
+  const user = c.get('user');
+  const repo = new TeacherRepository(c.env.DB);
+  const service = new TeacherService(repo);
+  const results = await service.getTeacherWorkloadReport(user.institution_id);
+  return c.json(results);
+});
+
 teachers.get('/:id', async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;

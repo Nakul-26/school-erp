@@ -43,4 +43,16 @@ export const api = {
     });
     return parseResponse(res);
   },
+  upload: async (path: string, formData: FormData) => {
+    const token = localStorage.getItem('erp_token');
+    const headers: Record<string, string> = {
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    };
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+    return parseResponse(res);
+  }
 };

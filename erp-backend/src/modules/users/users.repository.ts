@@ -1,7 +1,7 @@
 import { User, CreateUserInput, UpdateUserInput } from './users.types';
 import { getUpdateFields } from '../../utils/repository';
 
-const UPDATE_FIELDS = ['name', 'phone', 'password_hash', 'reset_token', 'reset_expires'] as const;
+const UPDATE_FIELDS = ['name', 'phone', 'password_hash', 'reset_token', 'reset_expires', 'profile_photo', 'email'] as const;
 
 export class UserRepository {
   constructor(private db: D1Database) {}
@@ -37,7 +37,7 @@ export class UserRepository {
 
   async findById(id: string): Promise<any | null> {
     const user = await this.db.prepare(`
-      SELECT id, institution_id, username, email, name, phone, is_active, created_at, updated_at
+      SELECT id, institution_id, username, email, name, phone, profile_photo, is_active, created_at, updated_at
       FROM users 
       WHERE id = ? AND is_active = 1
     `).bind(id).first<any>();

@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS institutions (
   email TEXT,
   logo TEXT,
   institution_type TEXT DEFAULT 'college',
+  current_academic_year_id TEXT,
+  attendance_threshold REAL DEFAULT 75.0,
+  passing_marks REAL DEFAULT 40.0,
   
   -- Audit fields
   is_active INTEGER DEFAULT 1,
@@ -30,6 +33,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
   phone TEXT,
+  profile_photo TEXT,
   reset_token TEXT,
   reset_expires TEXT,
   
@@ -234,6 +238,24 @@ CREATE TABLE IF NOT EXISTS students (
   updated_by TEXT
 );
 
+-- 13b. Guardians
+CREATE TABLE IF NOT EXISTS guardians (
+  id TEXT PRIMARY KEY,
+  student_id TEXT NOT NULL REFERENCES students(id),
+  user_id TEXT REFERENCES users(id),
+  name TEXT NOT NULL,
+  relationship TEXT NOT NULL,
+  phone TEXT,
+  email TEXT,
+  occupation TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
 -- 14. Academic Calendar
 CREATE TABLE IF NOT EXISTS academic_calendar (
   id TEXT PRIMARY KEY,
@@ -394,6 +416,128 @@ CREATE TABLE IF NOT EXISTS student_marks (
   UNIQUE(exam_subject_id, student_id)
 );
 
+-- 23. Teacher Attendance
+CREATE TABLE IF NOT EXISTS teacher_attendance (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  teacher_id TEXT NOT NULL REFERENCES teachers(id),
+  date TEXT NOT NULL, -- 'YYYY-MM-DD'
+  status TEXT NOT NULL, -- 'present', 'absent', 'half_day', 'on_leave'
+  remarks TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(teacher_id, date)
+);
+
+-- 24. Announcements
+CREATE TABLE IF NOT EXISTS announcements (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  visible_to_students INTEGER DEFAULT 0,
+  visible_to_teachers INTEGER DEFAULT 0,
+  visible_to_parents INTEGER DEFAULT 0,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT REFERENCES users(id),
+  updated_by TEXT REFERENCES users(id)
+);
+
+-- 25. Notifications
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  user_id TEXT NOT NULL REFERENCES users(id), -- recipient user ID
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT NOT NULL, -- 'exam', 'attendance', 'result', 'announcement', 'general'
+  is_read INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  read_at TEXT
+);
+
+-- 26. Fee Structures
+CREATE TABLE IF NOT EXISTS fee_structures (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  academic_year_id TEXT NOT NULL REFERENCES academic_years(id),
+  course_id TEXT NOT NULL REFERENCES courses(id),
+  year_number INTEGER NOT NULL,
+  fee_type TEXT NOT NULL, -- 'Tuition Fee', 'Exam Fee', 'Library Fee', 'Other'
+  amount REAL NOT NULL,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(institution_id, academic_year_id, course_id, year_number, fee_type)
+);
+
+-- 27. Student Fee Records (Student Ledger)
+CREATE TABLE IF NOT EXISTS student_fee_records (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  student_id TEXT NOT NULL REFERENCES students(id),
+  academic_year_id TEXT NOT NULL REFERENCES academic_years(id),
+  course_id TEXT NOT NULL REFERENCES courses(id),
+  year_number INTEGER NOT NULL,
+  fee_structure_id TEXT REFERENCES fee_structures(id),
+  fee_type TEXT NOT NULL,
+  total_amount REAL NOT NULL,
+  paid_amount REAL DEFAULT 0.0,
+  due_date TEXT, -- YYYY-MM-DD
+  status TEXT NOT NULL DEFAULT 'UNPAID', -- 'UNPAID', 'PARTIALLY_PAID', 'PAID', 'OVERDUE'
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(student_id, academic_year_id, course_id, year_number, fee_type)
+);
+
+-- 28. Fee Payments
+CREATE TABLE IF NOT EXISTS fee_payments (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  student_id TEXT NOT NULL REFERENCES students(id),
+  student_fee_record_id TEXT NOT NULL REFERENCES student_fee_records(id) ON DELETE CASCADE,
+  amount REAL NOT NULL,
+  payment_date TEXT NOT NULL, -- 'YYYY-MM-DD'
+  payment_method TEXT NOT NULL, -- 'UPI', 'Cash', 'Bank Transfer', 'Cheque'
+  transaction_reference TEXT,
+  remarks TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
+-- 29. Fee Receipts
+CREATE TABLE IF NOT EXISTS fee_receipts (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  payment_id TEXT NOT NULL REFERENCES fee_payments(id) ON DELETE CASCADE,
+  receipt_number TEXT NOT NULL, -- e.g. "REC-2026-00001"
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(institution_id, receipt_number)
+);
+
 -- Additional Indexes
 CREATE INDEX IF NOT EXISTS idx_teachers_institution ON teachers(institution_id);
 CREATE INDEX IF NOT EXISTS idx_students_institution ON students(institution_id);
@@ -405,5 +549,62 @@ CREATE INDEX IF NOT EXISTS idx_student_attendance_institution ON student_attenda
 CREATE INDEX IF NOT EXISTS idx_exams_institution ON exams(institution_id);
 CREATE INDEX IF NOT EXISTS idx_exam_subjects_exam ON exam_subjects(exam_id);
 CREATE INDEX IF NOT EXISTS idx_student_marks_student ON student_marks(student_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_attendance_institution ON teacher_attendance(institution_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_attendance_teacher ON teacher_attendance(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_announcements_institution ON announcements(institution_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_fee_structures_institution ON fee_structures(institution_id);
+CREATE INDEX IF NOT EXISTS idx_student_fee_records_institution ON student_fee_records(institution_id);
+CREATE INDEX IF NOT EXISTS idx_student_fee_records_student ON student_fee_records(student_id);
+CREATE INDEX IF NOT EXISTS idx_fee_payments_institution ON fee_payments(institution_id);
+CREATE INDEX IF NOT EXISTS idx_fee_payments_student ON fee_payments(student_id);
+CREATE INDEX IF NOT EXISTS idx_fee_receipts_institution ON fee_receipts(institution_id);
+CREATE INDEX IF NOT EXISTS idx_fee_receipts_payment ON fee_receipts(payment_id);
+
+-- =====================================================
+-- HARDENING SPRINT: Additional Performance Indexes
+-- =====================================================
+
+-- Attendance: most common query pattern - student + date range
+CREATE INDEX IF NOT EXISTS idx_student_attendance_student ON student_attendance(student_id);
+CREATE INDEX IF NOT EXISTS idx_student_attendance_session ON student_attendance(session_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_sessions_section_date ON attendance_sessions(section_id, date);
+CREATE INDEX IF NOT EXISTS idx_attendance_sessions_teacher ON attendance_sessions(teacher_id);
+
+-- Marks: fast lookup by exam_subject
+CREATE INDEX IF NOT EXISTS idx_student_marks_exam_subject ON student_marks(exam_subject_id);
+
+-- Notifications: user inbox query (unread first)
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_institution ON notifications(institution_id);
+
+-- Audit logs: timestamp-based pagination
+CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_module ON audit_logs(module);
+
+-- Weekly timetable: teacher schedule lookup
+CREATE INDEX IF NOT EXISTS idx_weekly_timetable_teacher ON weekly_timetable(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_weekly_timetable_section ON weekly_timetable(section_id);
+
+-- Fee payments: chronological + student lookup
+CREATE INDEX IF NOT EXISTS idx_fee_payments_date ON fee_payments(payment_date);
+CREATE INDEX IF NOT EXISTS idx_fee_payments_record ON fee_payments(student_fee_record_id);
+
+-- Enrollments: section-based queries
+CREATE INDEX IF NOT EXISTS idx_enrollments_section ON student_enrollments(section_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_student ON student_enrollments(student_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_year ON student_enrollments(academic_year_id);
+
+-- Guardians: parent portal lookup
+CREATE INDEX IF NOT EXISTS idx_guardians_student ON guardians(student_id);
+CREATE INDEX IF NOT EXISTS idx_guardians_user ON guardians(user_id);
+
+-- Exams: course + year filtering
+CREATE INDEX IF NOT EXISTS idx_exams_course ON exams(course_id);
+CREATE INDEX IF NOT EXISTS idx_exams_year ON exams(academic_year_id);
+CREATE INDEX IF NOT EXISTS idx_exam_subjects_institution ON exam_subjects(institution_id);
+
+
+
 
 

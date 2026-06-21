@@ -25,4 +25,8 @@ export class TeacherService {
   async deleteTeacher(id: string, userId?: string): Promise<void> {
     await this.repo.softDelete(id, userId);
   }
+
+  async getTeacherWorkloadReport(institutionId: string): Promise<any[]> {
+    return await this.repo.getTeacherWorkloadReport(institutionId);
+  }
 }

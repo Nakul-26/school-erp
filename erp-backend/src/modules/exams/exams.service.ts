@@ -62,8 +62,22 @@ export class ExamsService {
   }
 
   async saveMarks(institutionId: string, examSubjectId: string, marks: EnterMarkInput[], userId?: string): Promise<void> {
+    // Validate all marks before writing anything
+    for (let i = 0; i < marks.length; i++) {
+      const m = marks[i];
+      if (m.marks_obtained === undefined || m.marks_obtained === null) continue;
+      const obtained = Number(m.marks_obtained);
+      const max = Number(m.max_marks);
+      if (isNaN(obtained) || obtained < 0) {
+        throw new Error(`Row ${i + 1}: marks_obtained cannot be negative (got ${m.marks_obtained})`);
+      }
+      if (max > 0 && obtained > max) {
+        throw new Error(`Row ${i + 1}: marks_obtained (${obtained}) exceeds max_marks (${max})`);
+      }
+    }
     await this.repo.saveMarks(institutionId, examSubjectId, marks, userId);
   }
+
 
   // --- RESULTS CALCULATION ---
   private calculateGrade(percentage: number): string {

@@ -29,4 +29,8 @@ export class AttendanceService {
   async deleteSession(id: string, userId?: string): Promise<void> {
     await this.repo.deleteSession(id, userId);
   }
+
+  async getStudentAttendanceReport(institutionId: string, sectionId: string): Promise<any[]> {
+    return await this.repo.getStudentAttendanceReport(institutionId, sectionId);
+  }
 }

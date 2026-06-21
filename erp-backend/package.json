@@ -8,8 +8,10 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "db:execute": "wrangler d1 execute erp-db --local --file=db/schema.sql"
+    "db:execute": "wrangler d1 execute erp-db --local --file=db/schema.sql",
+    "seed-demo": "node seed-demo.js"
   },
+
   "keywords": [],
   "author": "",
   "license": "ISC",

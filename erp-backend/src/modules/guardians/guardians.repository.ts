@@ -1,7 +1,7 @@
 import { Guardian, CreateGuardianInput, UpdateGuardianInput } from './guardians.types';
 import { getUpdateFields } from '../../utils/repository';
 
-const UPDATE_FIELDS = ['name', 'relationship', 'phone', 'email', 'occupation'] as const;
+const UPDATE_FIELDS = ['user_id', 'name', 'relationship', 'phone', 'email', 'occupation'] as const;
 
 export class GuardianRepository {
   constructor(private db: D1Database) {}
@@ -9,10 +9,10 @@ export class GuardianRepository {
   async create(id: string, input: CreateGuardianInput, userId?: string): Promise<void> {
     await this.db.prepare(`
       INSERT INTO guardians (
-        id, student_id, name, relationship, phone, email, occupation, created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, student_id, user_id, name, relationship, phone, email, occupation, created_by, updated_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
-      id, input.student_id, input.name, input.relationship, input.phone || null,
+      id, input.student_id, input.user_id || null, input.name, input.relationship, input.phone || null,
       input.email || null, input.occupation || null, userId || null, userId || null
     ).run();
   }

@@ -8,6 +8,7 @@ export interface User {
   role?: string;
   name: string;
   phone?: string;
+  profile_photo?: string;
   reset_token?: string;
   reset_expires?: string;
   is_active: number;
@@ -19,4 +20,4 @@ export interface User {
 }
 
 export type CreateUserInput = Omit<User, 'id' | 'password_hash' | 'is_active' | 'created_at' | 'updated_at' | 'deleted_at' | 'created_by' | 'updated_by' | 'reset_token' | 'reset_expires'>;
-export type UpdateUserInput = Partial<Omit<CreateUserInput, 'institution_id' | 'username' | 'email'>>;
+export type UpdateUserInput = Partial<Omit<CreateUserInput, 'institution_id' | 'username'>>;

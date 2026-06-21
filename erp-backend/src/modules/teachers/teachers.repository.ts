@@ -53,4 +53,60 @@ export class TeacherRepository {
       WHERE id = ?
     `).bind(userId || null, id).run();
   }
+
+  async getTeacherWorkloadReport(institutionId: string): Promise<any[]> {
+    const { results } = await this.db.prepare(`
+      SELECT 
+        t.id AS teacher_id,
+        t.first_name,
+        t.last_name,
+        t.employee_id,
+        t.designation,
+        t.department,
+        (
+          SELECT COUNT(DISTINCT a.subject_id) 
+          FROM teacher_subject_assignments a 
+          WHERE a.teacher_id = t.id AND a.is_active = 1
+        ) AS subjects_count,
+        (
+          SELECT COUNT(DISTINCT a.section_id) 
+          FROM teacher_subject_assignments a 
+          WHERE a.teacher_id = t.id AND a.is_active = 1
+        ) AS sections_count,
+        (
+          SELECT COUNT(*) 
+          FROM attendance_sessions s 
+          WHERE s.teacher_id = t.id AND s.is_active = 1
+        ) AS classes_conducted,
+        (
+          SELECT COUNT(*) 
+          FROM teacher_attendance ta 
+          WHERE ta.teacher_id = t.id AND ta.is_active = 1
+        ) AS total_attendance_days,
+        (
+          SELECT COUNT(*) 
+          FROM teacher_attendance ta 
+          WHERE ta.teacher_id = t.id AND ta.status = 'present' AND ta.is_active = 1
+        ) AS present_days,
+        (
+          SELECT COUNT(*) 
+          FROM teacher_attendance ta 
+          WHERE ta.teacher_id = t.id AND ta.status = 'half_day' AND ta.is_active = 1
+        ) AS half_day_days,
+        (
+          SELECT COUNT(*) 
+          FROM teacher_attendance ta 
+          WHERE ta.teacher_id = t.id AND ta.status = 'on_leave' AND ta.is_active = 1
+        ) AS on_leave_days,
+        (
+          SELECT COUNT(*) 
+          FROM teacher_attendance ta 
+          WHERE ta.teacher_id = t.id AND ta.status = 'absent' AND ta.is_active = 1
+        ) AS absent_days
+      FROM teachers t
+      WHERE t.institution_id = ? AND t.is_active = 1
+      ORDER BY t.first_name ASC, t.last_name ASC
+    `).bind(institutionId).all<any>();
+    return results || [];
+  }
 }

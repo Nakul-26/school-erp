@@ -107,4 +107,28 @@ export class AttendanceRepository {
       WHERE id = ?
     `).bind(userId || null, id).run();
   }
+
+  async getStudentAttendanceReport(institutionId: string, sectionId: string): Promise<any[]> {
+    const { results } = await this.db.prepare(`
+      SELECT 
+        s.id AS student_id,
+        s.first_name,
+        s.last_name,
+        s.roll_number,
+        s.admission_number,
+        COUNT(sa.id) AS total_sessions,
+        SUM(CASE WHEN sa.status = 'present' THEN 1 ELSE 0 END) AS present_count,
+        SUM(CASE WHEN sa.status = 'absent' THEN 1 ELSE 0 END) AS absent_count,
+        SUM(CASE WHEN sa.status = 'late' THEN 1 ELSE 0 END) AS late_count,
+        SUM(CASE WHEN sa.status = 'excused' THEN 1 ELSE 0 END) AS excused_count
+      FROM student_enrollments se
+      JOIN students s ON se.student_id = s.id
+      LEFT JOIN attendance_sessions asess ON asess.section_id = se.section_id AND asess.is_active = 1 AND asess.institution_id = ?
+      LEFT JOIN student_attendance sa ON sa.session_id = asess.id AND sa.student_id = s.id AND sa.is_active = 1 AND sa.institution_id = ?
+      WHERE se.section_id = ? AND se.is_active = 1 AND s.is_active = 1
+      GROUP BY s.id
+      ORDER BY s.first_name ASC, s.last_name ASC
+    `).bind(institutionId, institutionId, sectionId).all<any>();
+    return results || [];
+  }
 }

@@ -2,8 +2,11 @@ import { Hono } from 'hono';
 import { Env, JwtPayload } from '../../types';
 import { ExamsRepository } from './exams.repository';
 import { ExamsService } from './exams.service';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware, requireRole } from '../../middleware/auth';
+
 import { createAuditLog } from '../../utils/audit';
+import { NotificationRepository } from '../notifications/notifications.repository';
+import { NotificationService } from '../notifications/notifications.service';
 
 const exams = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -31,22 +34,44 @@ exams.get('/:id', async (c) => {
   return c.json(result);
 });
 
-exams.post('/', async (c) => {
+exams.post('/', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teacher'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
+
+  // Input validation
+  if (!input.name || !input.academic_year_id || !input.course_id || !input.semester || !input.start_date || !input.end_date) {
+    return c.json({ error: 'Missing required fields: name, academic_year_id, course_id, semester, start_date, end_date' }, 400);
+  }
+  if (new Date(input.start_date) > new Date(input.end_date)) {
+    return c.json({ error: 'start_date cannot be after end_date' }, 400);
+  }
+
   const repo = new ExamsRepository(c.env.DB);
   const service = new ExamsService(repo);
   
   try {
     const id = await service.createExam(user.institution_id, input, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'CREATE_EXAM', 'exams', id, `Created exam event: ${input.name}`);
+    
+    // Trigger in-app notification if published
+    if (input.status === 'PUBLISHED') {
+      try {
+        const notifRepo = new NotificationRepository(c.env.DB);
+        const notifService = new NotificationService(notifRepo, c.env.DB);
+        await notifService.notifyExamCreated(user.institution_id, input.name, input.course_id, input.semester);
+      } catch (err) {
+        console.error('Failed to trigger exam notification:', err);
+      }
+    }
+
     return c.json({ id }, 201);
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
   }
 });
 
-exams.put('/:id', async (c) => {
+
+exams.put('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teacher'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const input = await c.req.json();
@@ -61,13 +86,25 @@ exams.put('/:id', async (c) => {
   try {
     await service.updateExam(id, input, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'UPDATE_EXAM', 'exams', id, `Updated exam event: ${existing.name}`);
+    
+    // Trigger in-app notification if status is being set to PUBLISHED
+    if (input.status === 'PUBLISHED' && existing.status !== 'PUBLISHED') {
+      try {
+        const notifRepo = new NotificationRepository(c.env.DB);
+        const notifService = new NotificationService(notifRepo, c.env.DB);
+        await notifService.notifyExamCreated(user.institution_id, existing.name, existing.course_id, existing.semester);
+      } catch (err) {
+        console.error('Failed to trigger exam notification on update:', err);
+      }
+    }
+
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
   }
 });
 
-exams.delete('/:id', async (c) => {
+exams.delete('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new ExamsRepository(c.env.DB);
@@ -171,6 +208,16 @@ exams.post('/subjects/:id/marks', async (c) => {
   try {
     await service.saveMarks(user.institution_id, id, input, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'ENTER_EXAM_MARKS', 'exams', id, `Entered marks for exam subject ${id}`);
+    
+    // Trigger in-app notification
+    try {
+      const notifRepo = new NotificationRepository(c.env.DB);
+      const notifService = new NotificationService(notifRepo, c.env.DB);
+      await notifService.notifyResultPublished(user.institution_id, examSub.exam_id);
+    } catch (err) {
+      console.error('Failed to trigger result publication notification:', err);
+    }
+
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
@@ -199,11 +246,33 @@ exams.get('/students/:studentId/results', async (c) => {
   const repo = new ExamsRepository(c.env.DB);
   const service = new ExamsService(repo);
   
-  const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
+  const student = await c.env.DB.prepare('SELECT * FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first<any>();
   if (!student) {
     return c.json({ error: 'Student not found' }, 404);
   }
   
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isStudent = userRoles.some(r => ['student', 'Student'].includes(r));
+  const isParent = userRoles.some(r => ['parent', 'Parent', 'guardian', 'Guardian'].includes(r));
+  const isAdminOrStaff = userRoles.some(r => ['super_admin', 'Super Admin', 'admin', 'Principal', 'HOD', 'Teacher'].includes(r));
+
+  if (isStudent && student.user_id !== user.sub) {
+    return c.json({ error: 'Forbidden: You cannot access other student results' }, 403);
+  }
+
+  if (isParent) {
+    const isChild = await c.env.DB.prepare(
+      'SELECT 1 FROM guardians WHERE user_id = ? AND student_id = ? AND is_active = 1'
+    ).bind(user.sub, studentId).first();
+    if (!isChild && !isAdminOrStaff) {
+      return c.json({ error: 'Forbidden: You cannot access results of students who are not your children' }, 403);
+    }
+  }
+
+  if (!isStudent && !isParent && !isAdminOrStaff) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
   const results = await service.listExamsForStudent(studentId);
   return c.json(results);
 });
@@ -218,6 +287,28 @@ exams.get('/students/:studentId/exams/:examId/result', async (c) => {
   const student = await c.env.DB.prepare('SELECT * FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first<any>();
   if (!student) {
     return c.json({ error: 'Student not found' }, 404);
+  }
+
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isStudent = userRoles.some(r => ['student', 'Student'].includes(r));
+  const isParent = userRoles.some(r => ['parent', 'Parent', 'guardian', 'Guardian'].includes(r));
+  const isAdminOrStaff = userRoles.some(r => ['super_admin', 'Super Admin', 'admin', 'Principal', 'HOD', 'Teacher'].includes(r));
+
+  if (isStudent && student.user_id !== user.sub) {
+    return c.json({ error: 'Forbidden: You cannot access other student results' }, 403);
+  }
+
+  if (isParent) {
+    const isChild = await c.env.DB.prepare(
+      'SELECT 1 FROM guardians WHERE user_id = ? AND student_id = ? AND is_active = 1'
+    ).bind(user.sub, studentId).first();
+    if (!isChild && !isAdminOrStaff) {
+      return c.json({ error: 'Forbidden: You cannot access results of students who are not your children' }, 403);
+    }
+  }
+
+  if (!isStudent && !isParent && !isAdminOrStaff) {
+    return c.json({ error: 'Forbidden' }, 403);
   }
   
   const exam = await service.getExam(examId);

@@ -11,9 +11,10 @@ programs.use('*', authMiddleware);
 
 programs.get('/', async (c) => {
   const user = c.get('user');
+  const includeArchived = c.req.query('include_archived') === 'true';
   const repo = new ProgramRepository(c.env.DB);
   const service = new ProgramService(repo);
-  const results = await service.listPrograms(user.institution_id);
+  const results = await service.listPrograms(user.institution_id, includeArchived);
   return c.json(results);
 });
 
@@ -66,6 +67,26 @@ programs.put('/:id', requirePermission('academic.manage'), async (c) => {
   }
 });
 
+programs.post('/:id/restore', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new ProgramRepository(c.env.DB);
+  const service = new ProgramService(repo);
+  
+  const existing = await service.getProgram(id);
+  if (!existing || existing.institution_id !== user.institution_id) {
+    return c.json({ error: 'Program not found' }, 404);
+  }
+  
+  try {
+    await service.restoreProgram(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'RESTORE_COURSE', 'courses', id, `Restored course: ${existing.name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
 programs.delete('/:id', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
@@ -77,9 +98,13 @@ programs.delete('/:id', requirePermission('academic.manage'), async (c) => {
     return c.json({ error: 'Program not found' }, 404);
   }
   
-  await service.deleteProgram(id, user.sub);
-  await createAuditLog(c.env.DB, user.sub, 'DELETE_COURSE', 'courses', id, `Deleted course: ${existing.name}`);
-  return c.json({ success: true });
+  try {
+    await service.deleteProgram(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'ARCHIVE_COURSE', 'courses', id, `Archived course: ${existing.name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
 export default programs;

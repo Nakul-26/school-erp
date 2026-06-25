@@ -4,46 +4,312 @@ import { getUpdateFields } from '../../utils/repository';
 const UPDATE_FIELDS = [
   'user_id', 'admission_number', 'roll_number', 'first_name', 'middle_name', 'last_name',
   'gender', 'date_of_birth', 'email', 'phone', 'admission_date', 'status',
+  'blood_group', 'emergency_contact', 'medical_conditions', 'allergies',
 ] as const;
 
 export class StudentRepository {
   constructor(private db: D1Database) {}
 
-  async create(id: string, institutionId: string, input: CreateStudentInput, userId?: string): Promise<void> {
+  async create(id: string, institutionId: string, input: any, userId?: string): Promise<void> {
+    // 1. Insert student
     await this.db.prepare(`
       INSERT INTO students (
         id, institution_id, user_id, admission_number, roll_number, 
         first_name, middle_name, last_name, gender, date_of_birth, 
-        email, phone, admission_date, status, created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        email, phone, admission_date, status, created_by, updated_by,
+        blood_group, emergency_contact, medical_conditions, allergies
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id, institutionId, input.user_id || null, input.admission_number, input.roll_number || null,
       input.first_name, input.middle_name || null, input.last_name, input.gender || null, input.date_of_birth || null,
-      input.email || null, input.phone || null, input.admission_date || null, input.status, userId || null, userId || null
+      input.email || null, input.phone || null, input.admission_date || null, input.status || 'ACTIVE', userId || null, userId || null,
+      input.blood_group || null, input.emergency_contact || null, input.medical_conditions || null, input.allergies || null
     ).run();
+
+    // 2. Insert enrollment if academic info is provided
+    if (input.academic_year_id && input.course_id && input.section_id) {
+      const enrollmentId = crypto.randomUUID();
+      await this.db.prepare(`
+        INSERT INTO student_enrollments (
+          id, student_id, academic_year_id, course_id, section_id, semester, created_by, updated_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        enrollmentId, id, input.academic_year_id, input.course_id, input.section_id, 1, userId || null, userId || null
+      ).run();
+
+      // Automatically generate fee records for student if fee structure exists
+      try {
+        const { results: structures } = await this.db.prepare(`
+          SELECT * FROM fee_structures 
+          WHERE institution_id = ? AND academic_year_id = ? AND course_id = ? AND year_number = ? AND is_active = 1
+        `).bind(institutionId, input.academic_year_id, input.course_id, 1).all<any>();
+
+        if (structures && structures.length > 0) {
+          for (const struct of structures) {
+            const recordId = crypto.randomUUID();
+            await this.db.prepare(`
+              INSERT OR IGNORE INTO student_fee_records (
+                id, institution_id, student_id, academic_year_id, course_id, year_number, 
+                fee_structure_id, fee_type, total_amount, paid_amount, due_date, status, created_by, updated_by
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0.0, ?, 'UNPAID', ?, ?)
+            `).bind(
+              recordId, institutionId, id, input.academic_year_id, input.course_id, 1,
+              struct.id, struct.fee_type, struct.amount, null, userId || null, userId || null
+            ).run();
+          }
+        }
+      } catch (err) {
+        console.error('Failed to auto-generate fee records:', err);
+      }
+    }
+
+    // 3. Insert guardian if guardian info is provided
+    if (input.guardian_name) {
+      const guardianId = crypto.randomUUID();
+      await this.db.prepare(`
+        INSERT INTO guardians (
+          id, student_id, name, relationship, phone, email, is_active, created_by, updated_by
+        ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+      `).bind(
+        guardianId, id, input.guardian_name, input.guardian_relationship || 'Parent', 
+        input.guardian_phone || null, input.guardian_email || null, userId || null, userId || null
+      ).run();
+    }
   }
 
-  async findById(id: string): Promise<Student | null> {
-    return await this.db.prepare('SELECT * FROM students WHERE id = ? AND is_active = 1').bind(id).first<Student>();
+  async findById(id: string): Promise<any | null> {
+    return await this.db.prepare(`
+      SELECT 
+        s.*,
+        se.academic_year_id,
+        se.course_id,
+        se.section_id,
+        se.semester,
+        c.name AS program_name,
+        c.course_code AS program_code,
+        sec.name AS section_name,
+        ay.name AS academic_year_name,
+        (
+          SELECT CASE 
+            WHEN COUNT(status) > 0 THEN ROUND(100.0 * COUNT(CASE WHEN status IN ('present', 'late') THEN 1 END) / COUNT(status), 0)
+            ELSE 100 
+          END
+          FROM student_attendance 
+          WHERE student_id = s.id AND is_active = 1
+        ) AS attendance_percentage,
+        (
+          SELECT COALESCE(SUM(total_amount - paid_amount), 0) 
+          FROM student_fee_records 
+          WHERE student_id = s.id AND is_active = 1
+        ) AS fee_due,
+        g.name AS guardian_name,
+        g.relationship AS guardian_relationship,
+        g.phone AS guardian_phone,
+        g.email AS guardian_email
+      FROM students s
+      LEFT JOIN student_enrollments se ON se.id = (
+        SELECT id FROM student_enrollments 
+        WHERE student_id = s.id AND is_active = 1 
+        ORDER BY created_at DESC LIMIT 1
+      )
+      LEFT JOIN courses c ON c.id = se.course_id AND c.is_active = 1
+      LEFT JOIN sections sec ON sec.id = se.section_id AND sec.is_active = 1
+      LEFT JOIN academic_years ay ON ay.id = se.academic_year_id AND ay.is_active = 1
+      LEFT JOIN guardians g ON g.id = (
+        SELECT id FROM guardians 
+        WHERE student_id = s.id AND is_active = 1 
+        ORDER BY created_at DESC LIMIT 1
+      )
+      WHERE s.id = ? AND s.is_active = 1
+    `).bind(id).first<any>();
   }
 
-  async listByInstitution(institutionId: string): Promise<Student[]> {
-    const { results } = await this.db.prepare('SELECT * FROM students WHERE institution_id = ? AND is_active = 1').bind(institutionId).all<Student>();
-    return results || [];
+  async listByInstitution(
+    institutionId: string,
+    filters?: {
+      search?: string;
+      program_id?: string;
+      section_id?: string;
+      academic_year_id?: string;
+      status?: string;
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<{ students: any[]; total: number }> {
+    let whereClause = 'WHERE s.institution_id = ? AND s.is_active = 1';
+    const params: any[] = [institutionId];
+
+    if (filters) {
+      if (filters.status) {
+        whereClause += ` AND s.status = ?`;
+        params.push(filters.status);
+      }
+      if (filters.academic_year_id) {
+        whereClause += ` AND se.academic_year_id = ?`;
+        params.push(filters.academic_year_id);
+      }
+      if (filters.program_id) {
+        whereClause += ` AND se.course_id = ?`;
+        params.push(filters.program_id);
+      }
+      if (filters.section_id) {
+        whereClause += ` AND se.section_id = ?`;
+        params.push(filters.section_id);
+      }
+      if (filters.search) {
+        whereClause += ` AND (
+          s.first_name LIKE ? 
+          OR s.last_name LIKE ? 
+          OR s.admission_number LIKE ? 
+          OR (s.roll_number IS NOT NULL AND s.roll_number LIKE ?)
+        )`;
+        const searchPattern = `%${filters.search}%`;
+        params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      }
+    }
+
+    // 1. Get total matching count
+    const countQuery = `
+      SELECT COUNT(DISTINCT s.id) as count 
+      FROM students s
+      LEFT JOIN student_enrollments se ON se.id = (
+        SELECT id FROM student_enrollments 
+        WHERE student_id = s.id AND is_active = 1 
+        ORDER BY created_at DESC LIMIT 1
+      )
+      ${whereClause}
+    `;
+    const countResult = await this.db.prepare(countQuery).bind(...params).first<{ count: number }>();
+    const total = countResult?.count || 0;
+
+    // 2. Query actual records
+    let selectQuery = `
+      SELECT 
+        s.*,
+        se.academic_year_id,
+        se.course_id,
+        se.section_id,
+        se.semester,
+        c.name AS program_name,
+        c.course_code AS program_code,
+        sec.name AS section_name,
+        ay.name AS academic_year_name,
+        (
+          SELECT CASE 
+            WHEN COUNT(status) > 0 THEN ROUND(100.0 * COUNT(CASE WHEN status IN ('present', 'late') THEN 1 END) / COUNT(status), 0)
+            ELSE 100 
+          END
+          FROM student_attendance 
+          WHERE student_id = s.id AND is_active = 1
+        ) AS attendance_percentage,
+        (
+          SELECT COALESCE(SUM(total_amount - paid_amount), 0) 
+          FROM student_fee_records 
+          WHERE student_id = s.id AND is_active = 1
+        ) AS fee_due,
+        g.name AS guardian_name,
+        g.relationship AS guardian_relationship,
+        g.phone AS guardian_phone,
+        g.email AS guardian_email
+      FROM students s
+      LEFT JOIN student_enrollments se ON se.id = (
+        SELECT id FROM student_enrollments 
+        WHERE student_id = s.id AND is_active = 1 
+        ORDER BY created_at DESC LIMIT 1
+      )
+      LEFT JOIN courses c ON c.id = se.course_id AND c.is_active = 1
+      LEFT JOIN sections sec ON sec.id = se.section_id AND sec.is_active = 1
+      LEFT JOIN academic_years ay ON ay.id = se.academic_year_id AND ay.is_active = 1
+      LEFT JOIN guardians g ON g.id = (
+        SELECT id FROM guardians 
+        WHERE student_id = s.id AND is_active = 1 
+        ORDER BY created_at DESC LIMIT 1
+      )
+      ${whereClause}
+      ORDER BY s.created_at DESC
+    `;
+
+    if (filters && typeof filters.limit === 'number') {
+      selectQuery += ` LIMIT ?`;
+      params.push(filters.limit);
+      if (typeof filters.offset === 'number') {
+        selectQuery += ` OFFSET ?`;
+        params.push(filters.offset);
+      }
+    }
+
+    const { results } = await this.db.prepare(selectQuery).bind(...params).all<any>();
+    return { students: results || [], total };
   }
 
-  async update(id: string, input: UpdateStudentInput, userId?: string): Promise<void> {
+  async update(id: string, input: any, userId?: string): Promise<void> {
     const fields = getUpdateFields(input, UPDATE_FIELDS);
-    if (fields.length === 0) return;
+    if (fields.length > 0) {
+      const sets = fields.map(field => `${field} = ?`).join(', ');
+      const values = [...fields.map(f => input[f]), userId || null, id];
 
-    const sets = fields.map(field => `${field} = ?`).join(', ');
-    const values = [...fields.map(f => input[f as keyof UpdateStudentInput]), userId || null, id];
+      await this.db.prepare(`
+        UPDATE students 
+        SET ${sets}, updated_at = datetime('now'), updated_by = ?
+        WHERE id = ? AND is_active = 1
+      `).bind(...values).run();
+    }
 
-    await this.db.prepare(`
-      UPDATE students 
-      SET ${sets}, updated_at = datetime('now'), updated_by = ?
-      WHERE id = ? AND is_active = 1
-    `).bind(...values).run();
+    // 2. Update guardian details
+    if (input.guardian_name) {
+      const hasGuardian = await this.db.prepare('SELECT id FROM guardians WHERE student_id = ? AND is_active = 1').bind(id).first<{ id: string }>();
+      if (hasGuardian) {
+        await this.db.prepare(`
+          UPDATE guardians 
+          SET name = ?, relationship = ?, phone = ?, email = ?, updated_at = datetime('now'), updated_by = ?
+          WHERE id = ?
+        `).bind(
+          input.guardian_name, input.guardian_relationship || 'Parent', 
+          input.guardian_phone || null, input.guardian_email || null, userId || null, hasGuardian.id
+        ).run();
+      } else {
+        const guardianId = crypto.randomUUID();
+        await this.db.prepare(`
+          INSERT INTO guardians (id, student_id, name, relationship, phone, email, is_active, created_by, updated_by)
+          VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+        `).bind(
+          guardianId, id, input.guardian_name, input.guardian_relationship || 'Parent', 
+          input.guardian_phone || null, input.guardian_email || null, userId || null, userId || null
+        ).run();
+      }
+    }
+
+    // 3. Update active enrollment
+    if (input.academic_year_id && input.course_id && input.section_id) {
+      const activeEnrollment = await this.db.prepare('SELECT id, academic_year_id, semester FROM student_enrollments WHERE student_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1').bind(id).first<{ id: string, academic_year_id: string, semester: number }>();
+      if (activeEnrollment) {
+        if (activeEnrollment.academic_year_id === input.academic_year_id && activeEnrollment.semester === (input.semester || 1)) {
+          await this.db.prepare(`
+            UPDATE student_enrollments 
+            SET course_id = ?, section_id = ?, updated_at = datetime('now'), updated_by = ? 
+            WHERE id = ?
+          `).bind(
+            input.course_id, input.section_id, userId || null, activeEnrollment.id
+          ).run();
+        } else {
+          const enrollmentId = crypto.randomUUID();
+          await this.db.prepare(`
+            INSERT INTO student_enrollments (id, student_id, academic_year_id, course_id, section_id, semester, created_by, updated_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(
+            enrollmentId, id, input.academic_year_id, input.course_id, input.section_id, input.semester || 1, userId || null, userId || null
+          ).run();
+        }
+      } else {
+        const enrollmentId = crypto.randomUUID();
+        await this.db.prepare(`
+          INSERT INTO student_enrollments (id, student_id, academic_year_id, course_id, section_id, semester, created_by, updated_by)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          enrollmentId, id, input.academic_year_id, input.course_id, input.section_id, input.semester || 1, userId || null, userId || null
+        ).run();
+      }
+    }
   }
 
   async softDelete(id: string, userId?: string): Promise<void> {

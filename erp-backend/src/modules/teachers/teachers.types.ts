@@ -4,6 +4,7 @@ export interface Teacher {
   user_id?: string;
   employee_id: string;
   first_name: string;
+  middle_name?: string;
   last_name: string;
   email?: string;
   phone?: string;
@@ -17,6 +18,8 @@ export interface Teacher {
   deleted_at?: string;
   created_by?: string;
   updated_by?: string;
+  qualification?: string;
+  experience?: string;
 }
 
 export type CreateTeacherInput = Omit<Teacher, 'id' | 'is_active' | 'created_at' | 'updated_at' | 'deleted_at' | 'created_by' | 'updated_by'>;

@@ -13,6 +13,10 @@ export interface Student {
   phone?: string;
   admission_date?: string;
   status: 'APPLIED' | 'ADMITTED' | 'ACTIVE' | 'TRANSFERRED' | 'GRADUATED' | 'DROPPED' | 'ALUMNI';
+  blood_group?: string;
+  emergency_contact?: string;
+  medical_conditions?: string;
+  allergies?: string;
   is_active: number;
   created_at: string;
   updated_at: string;

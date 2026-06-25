@@ -4,21 +4,32 @@ import { Student, CreateStudentInput, UpdateStudentInput } from './students.type
 export class StudentService {
   constructor(private repo: StudentRepository) {}
 
-  async createStudent(institutionId: string, input: CreateStudentInput, userId?: string): Promise<string> {
+  async createStudent(institutionId: string, input: any, userId?: string): Promise<string> {
     const id = crypto.randomUUID();
     await this.repo.create(id, institutionId, input, userId);
     return id;
   }
 
-  async getStudent(id: string): Promise<Student | null> {
+  async getStudent(id: string): Promise<any | null> {
     return await this.repo.findById(id);
   }
 
-  async listStudents(institutionId: string): Promise<Student[]> {
-    return await this.repo.listByInstitution(institutionId);
+  async listStudents(
+    institutionId: string,
+    filters?: {
+      search?: string;
+      program_id?: string;
+      section_id?: string;
+      academic_year_id?: string;
+      status?: string;
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<{ students: any[]; total: number }> {
+    return await this.repo.listByInstitution(institutionId, filters);
   }
 
-  async updateStudent(id: string, input: UpdateStudentInput, userId?: string): Promise<void> {
+  async updateStudent(id: string, input: any, userId?: string): Promise<void> {
     await this.repo.update(id, input, userId);
   }
 

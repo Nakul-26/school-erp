@@ -4,6 +4,8 @@ export interface Department {
   name: string;
   code: string;
   description?: string;
+  head_teacher_id?: string;
+  head_teacher_name?: string;
   is_active: number;
   created_at?: string;
   updated_at?: string;
@@ -16,10 +18,13 @@ export interface CreateDepartmentInput {
   name: string;
   code: string;
   description?: string;
+  head_teacher_id?: string;
 }
 
 export interface UpdateDepartmentInput {
   name?: string;
   code?: string;
   description?: string;
+  head_teacher_id?: string | null;
+  is_active?: number;
 }

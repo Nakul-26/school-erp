@@ -3,6 +3,8 @@ import { Env, JwtPayload } from '../../types';
 import { TeacherRepository } from './teachers.repository';
 import { TeacherService } from './teachers.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
+import { UserRepository } from '../users/users.repository';
+import { UserService } from '../users/users.service';
 
 const teachers = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -34,16 +36,97 @@ teachers.get('/:id', async (c) => {
   if (!result || result.institution_id !== user.institution_id) {
     return c.json({ error: 'Teacher not found' }, 404);
   }
-  return c.json(result);
+
+  // Count unique students enrolled in sections assigned to this teacher
+  const studentsCountRow = await c.env.DB.prepare(`
+    SELECT COUNT(DISTINCT se.student_id) as count
+    FROM teacher_subject_assignments a
+    JOIN student_enrollments se ON a.section_id = se.section_id
+    WHERE a.teacher_id = ? AND a.is_active = 1 AND se.is_active = 1
+  `).bind(id).first<{ count: number }>();
+
+  // Count periods/classes per week in the timetable
+  const periodsCountRow = await c.env.DB.prepare(`
+    SELECT COUNT(*) as count
+    FROM weekly_timetable
+    WHERE teacher_id = ? AND is_active = 1
+  `).bind(id).first<{ count: number }>();
+
+  return c.json({
+    ...result,
+    students_count: studentsCountRow?.count || 0,
+    periods_count: periodsCountRow?.count || 0
+  });
 });
 
 teachers.post('/', requireRole('admin', 'super_admin'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
-  const repo = new TeacherRepository(c.env.DB);
-  const service = new TeacherService(repo);
-  const id = await service.createTeacher(user.institution_id, input, user.sub);
-  return c.json({ id }, 201);
+  
+  const userRepo = new UserRepository(c.env.DB);
+  const userService = new UserService(userRepo);
+  const teacherRepo = new TeacherRepository(c.env.DB);
+  const teacherService = new TeacherService(teacherRepo);
+
+  let linkedUserId: string | null = null;
+  let tempPassword = '';
+  let finalUsername = '';
+
+  if (input.create_login) {
+    let username = input.username || input.employee_id?.toLowerCase() || `${input.first_name.toLowerCase()}.${input.last_name.toLowerCase()}`;
+    username = username.replace(/[^a-zA-Z0-9._-]/g, '');
+    
+    finalUsername = username;
+    let counter = 1;
+    while (true) {
+      const existing = await userRepo.findByUsername(finalUsername);
+      if (!existing) break;
+      finalUsername = `${username}${counter}`;
+      counter++;
+    }
+
+    tempPassword = input.password || `${input.employee_id || 'Teacher'}@2026`;
+    
+    try {
+      linkedUserId = await userService.createUser({
+        institution_id: user.institution_id,
+        username: finalUsername,
+        email: input.email || `${finalUsername}@school.com`,
+        name: `${input.first_name} ${input.middle_name ? input.middle_name + ' ' : ''}${input.last_name}`.trim(),
+        phone: input.phone || '',
+        roles: ['teacher'],
+        password: tempPassword
+      }, user.sub);
+    } catch (e: any) {
+      return c.json({ error: `Failed to create login account: ${e.message}` }, 400);
+    }
+  }
+
+  // Create the teacher
+  try {
+    const teacherId = await teacherService.createTeacher(user.institution_id, {
+      ...input,
+      user_id: linkedUserId
+    }, user.sub);
+
+    return c.json({ 
+      id: teacherId,
+      login_created: !!linkedUserId,
+      username: finalUsername,
+      password: tempPassword
+    }, 201);
+  } catch (e: any) {
+    // Transaction Rollback: if teacher creation fails and we created a user, delete the user!
+    if (linkedUserId) {
+      try {
+        await c.env.DB.prepare('DELETE FROM user_roles WHERE user_id = ?').bind(linkedUserId).run();
+        await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(linkedUserId).run();
+      } catch (err) {
+        console.error('Failed to rollback/delete user account after teacher creation error:', err);
+      }
+    }
+    return c.json({ error: `Failed to create teacher: ${e.message}` }, 400);
+  }
 });
 
 teachers.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
@@ -74,6 +157,162 @@ teachers.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
   }
   
   await service.deleteTeacher(id, user.sub);
+  return c.json({ success: true });
+});
+
+// --- TEACHER NOTES ENDPOINTS ---
+// GET Notes
+teachers.get('/:id/notes', async (c) => {
+  const user = c.get('user');
+  const teacherId = c.req.param('id')!;
+  
+  // Verify teacher matches institution
+  const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
+  if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+
+  const { results } = await c.env.DB.prepare('SELECT * FROM teacher_notes WHERE teacher_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(teacherId).all();
+  return c.json(results || []);
+});
+
+// POST Note
+teachers.post('/:id/notes', async (c) => {
+  const user = c.get('user');
+  const teacherId = c.req.param('id')!;
+  const { content } = await c.req.json();
+
+  if (!content || content.trim() === '') {
+    return c.json({ error: 'Note content is required' }, 400);
+  }
+
+  const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
+  if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+
+  const noteId = crypto.randomUUID();
+  const authorName = user.name || 'Staff member';
+  
+  await c.env.DB.prepare('INSERT INTO teacher_notes (id, teacher_id, author_id, author_name, content) VALUES (?, ?, ?, ?, ?)')
+    .bind(noteId, teacherId, user.sub, authorName, content).run();
+
+  return c.json({ id: noteId, success: true }, 201);
+});
+
+// DELETE Note
+teachers.delete('/:id/notes/:noteId', async (c) => {
+  const user = c.get('user');
+  const teacherId = c.req.param('id')!;
+  const noteId = c.req.param('noteId')!;
+
+  const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
+  if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+
+  await c.env.DB.prepare('UPDATE teacher_notes SET is_active = 0 WHERE id = ? AND teacher_id = ?').bind(noteId, teacherId).run();
+  return c.json({ success: true });
+});
+
+// --- TEACHER DOCUMENTS ENDPOINTS ---
+// GET Documents list
+teachers.get('/:id/documents', async (c) => {
+  const user = c.get('user');
+  const teacherId = c.req.param('id')!;
+
+  const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
+  if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+
+  const { results } = await c.env.DB.prepare('SELECT * FROM teacher_documents WHERE teacher_id = ? AND is_active = 1 ORDER BY uploaded_at DESC').bind(teacherId).all();
+  return c.json(results || []);
+});
+
+// POST upload file to R2 + metadata to D1
+teachers.post('/:id/documents/upload', async (c) => {
+  const user = c.get('user');
+  const teacherId = c.req.param('id')!;
+
+  const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
+  if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+
+  const body = await c.req.parseBody();
+  const file = body['file'];
+  const documentType = body['document_type'] || 'Other';
+
+  if (!file || !(file instanceof File)) {
+    return c.json({ error: 'No document file uploaded' }, 400);
+  }
+
+  try {
+    const bytes = await file.arrayBuffer();
+    const docId = crypto.randomUUID();
+    const fileKey = `teacher_docs/${teacherId}/${docId}_${file.name}`;
+    
+    // Put file in R2 Bucket
+    await c.env.FILES.put(fileKey, bytes, {
+      httpMetadata: { contentType: file.type || 'application/octet-stream' }
+    });
+
+    // Save metadata in D1 Database
+    await c.env.DB.prepare(`
+      INSERT INTO teacher_documents (id, teacher_id, name, document_type, file_key, file_size, uploaded_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(docId, teacherId, file.name, documentType, fileKey, file.size, user.sub).run();
+
+    return c.json({ success: true, id: docId });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// GET file stream / download from R2
+teachers.get('/:id/documents/:docId/download', async (c) => {
+  const user = c.get('user');
+  const teacherId = c.req.param('id')!;
+  const docId = c.req.param('docId')!;
+
+  const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
+  if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+
+  const metadata = await c.env.DB.prepare('SELECT * FROM teacher_documents WHERE id = ? AND teacher_id = ? AND is_active = 1')
+    .bind(docId, teacherId).first<any>();
+
+  if (!metadata) return c.json({ error: 'Document not found' }, 404);
+
+  try {
+    const file = await c.env.FILES.get(metadata.file_key);
+    if (!file) {
+      return c.json({ error: 'File data not found in storage' }, 404);
+    }
+
+    const headers = new Headers();
+    headers.set('Content-Type', file.httpMetadata?.contentType || 'application/octet-stream');
+    headers.set('Content-Disposition', `attachment; filename="${metadata.name}"`);
+    return new Response(file.body, { headers });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// DELETE Document
+teachers.delete('/:id/documents/:docId', async (c) => {
+  const user = c.get('user');
+  const teacherId = c.req.param('id')!;
+  const docId = c.req.param('docId')!;
+
+  const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
+  if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+
+  const metadata = await c.env.DB.prepare('SELECT * FROM teacher_documents WHERE id = ? AND teacher_id = ? AND is_active = 1')
+    .bind(docId, teacherId).first<any>();
+
+  if (!metadata) return c.json({ error: 'Document not found' }, 404);
+
+  // Soft delete in database
+  await c.env.DB.prepare('UPDATE teacher_documents SET is_active = 0 WHERE id = ?').bind(docId).run();
+
+  // Delete from R2 bucket in background / ignore errors
+  try {
+    await c.env.FILES.delete(metadata.file_key);
+  } catch (err) {
+    console.error('Failed to delete document from R2:', err);
+  }
+
   return c.json({ success: true });
 });
 

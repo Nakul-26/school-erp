@@ -2,24 +2,26 @@ import { Teacher, CreateTeacherInput, UpdateTeacherInput } from './teachers.type
 import { getUpdateFields } from '../../utils/repository';
 
 const UPDATE_FIELDS = [
-  'user_id', 'employee_id', 'first_name', 'last_name', 'email', 'phone',
+  'user_id', 'employee_id', 'first_name', 'middle_name', 'last_name', 'email', 'phone',
   'joining_date', 'designation', 'department', 'status',
+  'qualification', 'experience',
 ] as const;
 
 export class TeacherRepository {
   constructor(private db: D1Database) {}
 
-  async create(id: string, institutionId: string, input: CreateTeacherInput, userId?: string): Promise<void> {
+  async create(id: string, institutionId: string, input: any, userId?: string): Promise<void> {
     await this.db.prepare(`
       INSERT INTO teachers (
-        id, institution_id, user_id, employee_id, first_name, last_name, 
+        id, institution_id, user_id, employee_id, first_name, middle_name, last_name, 
         email, phone, joining_date, designation, department, status, 
-        created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        created_by, updated_by, qualification, experience
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
-      id, institutionId, input.user_id || null, input.employee_id, input.first_name, input.last_name,
+      id, institutionId, input.user_id || null, input.employee_id, input.first_name, input.middle_name || null, input.last_name,
       input.email || null, input.phone || null, input.joining_date || null, input.designation || null, 
-      input.department || null, input.status, userId || null, userId || null
+      input.department || null, input.status, userId || null, userId || null,
+      input.qualification || null, input.experience || null
     ).run();
   }
 

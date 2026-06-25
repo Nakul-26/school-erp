@@ -112,6 +112,7 @@ CREATE TABLE IF NOT EXISTS departments (
   name TEXT NOT NULL,
   code TEXT NOT NULL,
   description TEXT,
+  head_teacher_id TEXT REFERENCES teachers(id) ON DELETE SET NULL,
   
   -- Audit fields
   is_active INTEGER DEFAULT 1,
@@ -132,6 +133,10 @@ CREATE TABLE IF NOT EXISTS courses (
   course_code TEXT NOT NULL,
   name TEXT NOT NULL,
   duration_years INTEGER NOT NULL,
+  semester_enabled INTEGER DEFAULT 0,
+  credit_system_enabled INTEGER DEFAULT 0,
+  electives_enabled INTEGER DEFAULT 0,
+  description TEXT,
   
   -- Audit fields
   is_active INTEGER DEFAULT 1,
@@ -199,6 +204,7 @@ CREATE TABLE IF NOT EXISTS teachers (
   user_id TEXT REFERENCES users(id),
   employee_id TEXT UNIQUE NOT NULL,
   first_name TEXT NOT NULL,
+  middle_name TEXT,
   last_name TEXT NOT NULL,
   email TEXT,
   phone TEXT,
@@ -603,6 +609,26 @@ CREATE INDEX IF NOT EXISTS idx_guardians_user ON guardians(user_id);
 CREATE INDEX IF NOT EXISTS idx_exams_course ON exams(course_id);
 CREATE INDEX IF NOT EXISTS idx_exams_year ON exams(academic_year_id);
 CREATE INDEX IF NOT EXISTS idx_exam_subjects_institution ON exam_subjects(institution_id);
+
+-- 30. Teacher Subject Assignments
+CREATE TABLE IF NOT EXISTS teacher_subject_assignments (
+  id TEXT PRIMARY KEY,
+  teacher_id TEXT NOT NULL REFERENCES teachers(id),
+  subject_id TEXT NOT NULL REFERENCES subjects(id),
+  course_id TEXT NOT NULL REFERENCES courses(id),
+  section_id TEXT NOT NULL REFERENCES sections(id),
+  academic_year_id TEXT NOT NULL REFERENCES academic_years(id),
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(teacher_id, subject_id, course_id, section_id, academic_year_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_teacher_assignments_teacher ON teacher_subject_assignments(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_assignments_section ON teacher_subject_assignments(section_id);
 
 
 

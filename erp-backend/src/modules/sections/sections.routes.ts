@@ -78,9 +78,13 @@ sections.delete('/:id', requirePermission('academic.manage'), async (c) => {
     return c.json({ error: 'Section not found' }, 404);
   }
   
-  await service.deleteSection(id, user.sub);
-  await createAuditLog(c.env.DB, user.sub, 'DELETE_SECTION', 'sections', id, `Deleted section: ${existing.name}`);
-  return c.json({ success: true });
+  try {
+    await service.deleteSection(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_SECTION', 'sections', id, `Deleted section: ${existing.name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
 export default sections;

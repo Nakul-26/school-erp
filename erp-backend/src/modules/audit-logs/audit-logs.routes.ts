@@ -11,6 +11,7 @@ auditLogs.get('/', requireRole('admin', 'super_admin', 'Principal'), async (c) =
 
   const module    = c.req.query('module')    || '';
   const action    = c.req.query('action')    || '';
+  const recordId  = c.req.query('record_id') || '';
   const fromDate  = c.req.query('from_date') || '';
   const toDate    = c.req.query('to_date')   || '';
   const page      = Math.max(1, parseInt(c.req.query('page')  || '1', 10));
@@ -27,6 +28,10 @@ auditLogs.get('/', requireRole('admin', 'super_admin', 'Principal'), async (c) =
   if (action) {
     conditions.push('al.action LIKE ?');
     values.push(`%${action}%`);
+  }
+  if (recordId) {
+    conditions.push('al.record_id = ?');
+    values.push(recordId);
   }
   if (fromDate) {
     conditions.push("date(al.timestamp) >= date(?)");

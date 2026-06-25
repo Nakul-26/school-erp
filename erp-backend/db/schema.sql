@@ -156,6 +156,9 @@ CREATE TABLE IF NOT EXISTS sections (
   course_id TEXT NOT NULL REFERENCES courses(id),
   name TEXT NOT NULL,
   year_number INTEGER NOT NULL,
+  capacity INTEGER,
+  room TEXT,
+  class_teacher_id TEXT REFERENCES teachers(id),
   
   -- Audit fields
   is_active INTEGER DEFAULT 1,

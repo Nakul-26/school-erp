@@ -24,7 +24,8 @@ import {
   Receipt,
   BarChart3,
   Upload,
-  Settings
+  Settings,
+  CheckSquare
 } from 'lucide-react';
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -84,7 +85,9 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       { to: '/departments', label: 'Departments', icon: Layers },
       { to: '/programs', label: 'Courses/Programs', icon: GraduationCap },
       { to: '/classes', label: 'Classes/Sections', icon: School },
-      { to: '/subjects', label: 'Subjects', icon: BookOpen }
+      { to: '/subjects', label: 'Subjects', icon: BookOpen },
+      { to: '/allocations', label: 'Teaching Allocations', icon: ClipboardList },
+      { to: '/approvals', label: 'Approvals Inbox', icon: CheckSquare }
     );
   }
 

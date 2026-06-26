@@ -8,12 +8,12 @@ export class AnnouncementRepository {
       INSERT INTO announcements (
         id, institution_id, title, content, 
         visible_to_students, visible_to_teachers, visible_to_parents, 
-        created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        section_id, created_by, updated_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id, institutionId, input.title, input.content,
       input.visible_to_students || 0, input.visible_to_teachers || 0, input.visible_to_parents || 0,
-      userId || null, userId || null
+      input.section_id || null, userId || null, userId || null
     ).run();
   }
 
@@ -21,17 +21,34 @@ export class AnnouncementRepository {
     return await this.db.prepare('SELECT * FROM announcements WHERE id = ? AND is_active = 1').bind(id).first<Announcement>();
   }
 
-  async listAll(institutionId: string): Promise<Announcement[]> {
-    const { results } = await this.db.prepare('SELECT * FROM announcements WHERE institution_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(institutionId).all<Announcement>();
+  async listAll(institutionId: string, sectionId?: string): Promise<Announcement[]> {
+    let query = 'SELECT * FROM announcements WHERE institution_id = ? AND is_active = 1';
+    const params: any[] = [institutionId];
+    if (sectionId) {
+      query += ' AND (section_id = ? OR section_id IS NULL)';
+      params.push(sectionId);
+    }
+    query += ' ORDER BY created_at DESC';
+    const { results } = await this.db.prepare(query).bind(...params).all<Announcement>();
     return results || [];
   }
 
-  async listForAudience(institutionId: string, filterField: 'visible_to_students' | 'visible_to_teachers' | 'visible_to_parents'): Promise<Announcement[]> {
-    const { results } = await this.db.prepare(`
+  async listForAudience(
+    institutionId: string, 
+    filterField: 'visible_to_students' | 'visible_to_teachers' | 'visible_to_parents',
+    sectionId?: string
+  ): Promise<Announcement[]> {
+    let query = `
       SELECT * FROM announcements 
-      WHERE institution_id = ? AND ${filterField} = 1 AND is_active = 1 
-      ORDER BY created_at DESC
-    `).bind(institutionId).all<Announcement>();
+      WHERE institution_id = ? AND ${filterField} = 1 AND is_active = 1
+    `;
+    const params: any[] = [institutionId];
+    if (sectionId) {
+      query += ' AND (section_id = ? OR section_id IS NULL)';
+      params.push(sectionId);
+    }
+    query += ' ORDER BY created_at DESC';
+    const { results } = await this.db.prepare(query).bind(...params).all<Announcement>();
     return results || [];
   }
 
@@ -58,6 +75,10 @@ export class AnnouncementRepository {
     if (input.visible_to_parents !== undefined) {
       updates.push('visible_to_parents = ?');
       values.push(input.visible_to_parents);
+    }
+    if (input.section_id !== undefined) {
+      updates.push('section_id = ?');
+      values.push(input.section_id);
     }
 
     if (updates.length === 0) return;

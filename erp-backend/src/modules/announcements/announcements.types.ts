@@ -6,6 +6,7 @@ export interface Announcement {
   visible_to_students: number; // 0 or 1
   visible_to_teachers: number; // 0 or 1
   visible_to_parents: number;  // 0 or 1
+  section_id?: string | null;
   is_active: number;
   created_at: string;
   updated_at: string;

@@ -12,7 +12,9 @@ import AcademicYears from './pages/AcademicYears';
 import Departments from './pages/Departments';
 import Programs from './pages/Programs';
 import Classes from './pages/Classes';
+import SectionWorkspace from './pages/SectionWorkspace';
 import Subjects from './pages/Subjects';
+import SubjectWorkspace from './pages/SubjectWorkspace';
 import AcademicCalendar from './pages/AcademicCalendar';
 import TimetableSlots from './pages/TimetableSlots';
 import WeeklyTimetable from './pages/WeeklyTimetable';
@@ -34,6 +36,10 @@ import Profile from './pages/Profile';
 import DataExport from './pages/DataExport';
 import BulkImport from './pages/BulkImport';
 import SystemSettings from './pages/SystemSettings';
+import TeachingAllocationHub from './pages/TeachingAllocationHub';
+import ApprovalsInbox from './pages/ApprovalsInbox';
+
+
 
 function App() {
   return (
@@ -92,11 +98,36 @@ function App() {
             </ProtectedRoute>
           } />
           
+          <Route path="/classes/:id" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}>
+              <SectionWorkspace />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/subjects" element={
             <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}>
               <Subjects />
             </ProtectedRoute>
           } />
+
+          <Route path="/subjects/:id" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}>
+              <SubjectWorkspace />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/allocations" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}>
+              <TeachingAllocationHub />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/approvals" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}>
+              <ApprovalsInbox />
+            </ProtectedRoute>
+          } />
+
           
           <Route path="/calendar" element={
             <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}>

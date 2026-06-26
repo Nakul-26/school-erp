@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS academic_years (
   start_date TEXT NOT NULL,
   end_date TEXT NOT NULL,
   is_current INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'Draft',
   
   -- Audit fields
   is_active INTEGER DEFAULT 1,
@@ -451,6 +452,7 @@ CREATE TABLE IF NOT EXISTS announcements (
   visible_to_students INTEGER DEFAULT 0,
   visible_to_teachers INTEGER DEFAULT 0,
   visible_to_parents INTEGER DEFAULT 0,
+  section_id TEXT REFERENCES sections(id),
   is_active INTEGER DEFAULT 1,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now')),
@@ -632,6 +634,165 @@ CREATE TABLE IF NOT EXISTS teacher_subject_assignments (
 
 CREATE INDEX IF NOT EXISTS idx_teacher_assignments_teacher ON teacher_subject_assignments(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_teacher_assignments_section ON teacher_subject_assignments(section_id);
+
+-- 31. Unified Documents
+CREATE TABLE IF NOT EXISTS documents (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  folder TEXT DEFAULT 'General',
+  file_key TEXT NOT NULL,
+  file_size INTEGER NOT NULL,
+  mime_type TEXT,
+  uploaded_by TEXT NOT NULL REFERENCES users(id),
+  created_at TEXT DEFAULT (datetime('now')),
+  is_active INTEGER DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_documents_entity ON documents(entity_type, entity_id);
+
+-- 32. Unified Notes
+CREATE TABLE IF NOT EXISTS notes (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  author_id TEXT NOT NULL REFERENCES users(id),
+  author_name TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  is_active INTEGER DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_notes_entity ON notes(entity_type, entity_id);
+
+-- 33. Subject Lesson Plans
+CREATE TABLE IF NOT EXISTS subject_lesson_plans (
+  id TEXT PRIMARY KEY,
+  subject_id TEXT NOT NULL REFERENCES subjects(id),
+  unit_number TEXT NOT NULL,       -- E.g. 'Unit I', 'Chapter 3'
+  topic_title TEXT NOT NULL,
+  topic_description TEXT,
+  planned_hours INTEGER NOT NULL DEFAULT 1,
+  completed_hours INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'pending',   -- 'pending', 'in_progress', 'completed'
+  completed_at TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_lesson_plans_subject ON subject_lesson_plans(subject_id);
+
+-- 34. Subject Assessments
+CREATE TABLE IF NOT EXISTS subject_assessments (
+  id TEXT PRIMARY KEY,
+  subject_id TEXT NOT NULL REFERENCES subjects(id),
+  name TEXT NOT NULL,              -- E.g. 'Midterm Exam', 'Assignment 1', 'Quiz 3'
+  assessment_type TEXT NOT NULL,   -- 'quiz', 'assignment', 'internal_test', 'lab_eval', 'project', 'final_exam'
+  max_marks INTEGER NOT NULL DEFAULT 100,
+  weightage_percent INTEGER NOT NULL DEFAULT 0,
+  due_date TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_assessments_subject ON subject_assessments(subject_id);
+
+-- 35. Teaching Allocations
+CREATE TABLE IF NOT EXISTS teaching_allocations (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  academic_year_id TEXT NOT NULL REFERENCES academic_years(id),
+  department_id TEXT NOT NULL REFERENCES departments(id),
+  program_id TEXT NOT NULL REFERENCES courses(id),
+  semester INTEGER NOT NULL,
+  year_number INTEGER NOT NULL,
+  section_id TEXT NOT NULL REFERENCES sections(id),
+  subject_id TEXT NOT NULL REFERENCES subjects(id),
+  teacher_id TEXT NOT NULL REFERENCES teachers(id),
+  classes_per_week INTEGER DEFAULT 4,
+  theory_hours REAL DEFAULT 0.0,
+  practical_hours REAL DEFAULT 0.0,
+  tutorial_hours REAL DEFAULT 0.0,
+  mentoring_hours REAL DEFAULT 0.0,
+  admin_hours REAL DEFAULT 0.0,
+  primary_teacher INTEGER DEFAULT 1,
+  status TEXT DEFAULT 'Active',
+  start_date TEXT,
+  end_date TEXT,
+  remarks TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(teacher_id, subject_id, section_id, academic_year_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_allocations_teacher ON teaching_allocations(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_allocations_section ON teaching_allocations(section_id);
+CREATE INDEX IF NOT EXISTS idx_allocations_subject ON teaching_allocations(subject_id);
+CREATE INDEX IF NOT EXISTS idx_allocations_year ON teaching_allocations(academic_year_id);
+
+-- 36. System Settings
+CREATE TABLE IF NOT EXISTS system_settings (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  category TEXT NOT NULL,
+  setting_key TEXT NOT NULL,
+  setting_value TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  updated_by TEXT REFERENCES users(id),
+  UNIQUE(institution_id, category, setting_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_settings_institution ON system_settings(institution_id);
+
+-- 37. Unified Approvals Queue
+CREATE TABLE IF NOT EXISTS approvals (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  requester_id TEXT NOT NULL REFERENCES users(id),
+  approval_type TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  payload TEXT,
+  status TEXT DEFAULT 'Pending',
+  remarks TEXT,
+  approver_id TEXT REFERENCES users(id),
+  approved_rejected_at TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  created_by TEXT REFERENCES users(id),
+  updated_by TEXT REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_approvals_institution ON approvals(institution_id);
+CREATE INDEX IF NOT EXISTS idx_approvals_status ON approvals(status);
+CREATE INDEX IF NOT EXISTS idx_approvals_entity ON approvals(entity_type, entity_id);
+
+-- 38. Academic Year Rollover Logs
+CREATE TABLE IF NOT EXISTS academic_year_rollover_logs (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  source_year_id TEXT REFERENCES academic_years(id),
+  target_year_id TEXT NOT NULL REFERENCES academic_years(id),
+  checklist TEXT NOT NULL,
+  status TEXT NOT NULL,
+  log_output TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  created_by TEXT REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_rollover_logs_institution ON academic_year_rollover_logs(institution_id);
+
+
+
 
 
 

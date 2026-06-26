@@ -82,4 +82,133 @@ academicYears.delete('/:id', requirePermission('academic.manage'), async (c) => 
   return c.json({ success: true });
 });
 
+// Rollover Endpoint
+academicYears.post('/rollover', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const body = await c.req.json<{
+    source_year_id: string;
+    target_year_id: string;
+    checklist: string[];
+    preview?: boolean;
+  }>();
+
+  const repo = new AcademicYearRepository(c.env.DB);
+  const service = new AcademicYearService(repo);
+
+  try {
+    const res = await service.rollover(
+      user.institution_id,
+      body.source_year_id,
+      body.target_year_id,
+      body.checklist,
+      body.preview !== false,
+      user.sub
+    );
+    
+    if (!body.preview) {
+      await createAuditLog(
+        c.env.DB,
+        user.sub,
+        'ROLLOVER_ACADEMIC_YEAR',
+        'academic_years',
+        body.target_year_id,
+        `Executed rollover from ${body.source_year_id} to ${body.target_year_id}`
+      );
+    }
+    
+    return c.json(res);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+// Promotion Endpoint
+academicYears.post('/promote', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const body = await c.req.json<{
+    source_year_id: string;
+    target_year_id: string;
+    source_course_id: string;
+    source_section_id: string;
+    target_course_id: string;
+    target_section_id: string;
+    target_semester?: number;
+    student_ids: string[];
+    generate_fees?: boolean;
+    preview?: boolean;
+  }>();
+
+  const repo = new AcademicYearRepository(c.env.DB);
+  const service = new AcademicYearService(repo);
+
+  try {
+    const res = await service.promote(
+      user.institution_id,
+      body.source_year_id,
+      body.target_year_id,
+      body.source_course_id,
+      body.source_section_id,
+      body.target_course_id,
+      body.target_section_id,
+      body.target_semester,
+      body.student_ids,
+      body.generate_fees !== false,
+      body.preview !== false,
+      user.sub
+    );
+
+    if (!body.preview) {
+      await createAuditLog(
+        c.env.DB,
+        user.sub,
+        'PROMOTE_STUDENTS',
+        'student_enrollments',
+        body.target_section_id,
+        `Promoted ${res.promoted_count} students to section ${body.target_section_id}`
+      );
+    }
+
+    return c.json(res);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+// Year Closing Endpoint
+academicYears.post('/close', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const body = await c.req.json<{
+    academic_year_id: string;
+    preview?: boolean;
+  }>();
+
+  const repo = new AcademicYearRepository(c.env.DB);
+  const service = new AcademicYearService(repo);
+
+  try {
+    const res = await service.closeYear(
+      user.institution_id,
+      body.academic_year_id,
+      body.preview !== false,
+      user.sub
+    );
+
+    if (!body.preview) {
+      await createAuditLog(
+        c.env.DB,
+        user.sub,
+        'CLOSE_ACADEMIC_YEAR',
+        'academic_years',
+        body.academic_year_id,
+        `Closed and archived academic year ID ${body.academic_year_id}`
+      );
+    }
+
+    return c.json(res);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
 export default academicYears;
+

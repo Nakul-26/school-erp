@@ -19,8 +19,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const userRoles = user.roles || (user.role ? [user.role] : []);
-  const hasRole = allowedRoles ? userRoles.some((r: string) => allowedRoles.includes(r)) : true;
+  const userRoles = (user.roles || (user.role ? [user.role] : [])).map((r: string) => r.toLowerCase().replace(/[\s_-]+/g, ''));
+  const hasRole = allowedRoles 
+    ? userRoles.some((r: string) => allowedRoles.map((ar: string) => ar.toLowerCase().replace(/[\s_-]+/g, '')).includes(r)) 
+    : true;
 
   if (allowedRoles && !hasRole) {
     return <Navigate to="/dashboard" replace />;

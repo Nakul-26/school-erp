@@ -4,6 +4,7 @@ import { WeeklyTimetableRepository } from './weekly-timetable.repository';
 import { WeeklyTimetableService } from './weekly-timetable.service';
 import { authMiddleware } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
+import { isYearLockedOrArchived } from '../../utils/academic-year-lock';
 
 const timetable = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -48,6 +49,12 @@ timetable.post('/', async (c) => {
   const repo = new WeeklyTimetableRepository(c.env.DB);
   const service = new WeeklyTimetableService(repo);
   
+  // Validate academic year is not locked/archived
+  const isLocked = await isYearLockedOrArchived(c.env.DB, input.academic_year_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
+  }
+  
   try {
     const id = await service.createEntry(user.institution_id, input, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'CREATE_TIMETABLE_ENTRY', 'weekly-timetable', id, `Created timetable entry for Day: ${input.day_of_week}`);
@@ -68,6 +75,13 @@ timetable.put('/:id', async (c) => {
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Timetable entry not found' }, 404);
   }
+
+  // Validate academic year is not locked/archived
+  const isLockedOld = await isYearLockedOrArchived(c.env.DB, existing.academic_year_id);
+  const isLockedNew = input.academic_year_id ? await isYearLockedOrArchived(c.env.DB, input.academic_year_id) : false;
+  if (isLockedOld || isLockedNew) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
+  }
   
   try {
     await service.updateEntry(id, input, user.sub);
@@ -87,6 +101,12 @@ timetable.delete('/:id', async (c) => {
   const existing = await service.getEntry(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Timetable entry not found' }, 404);
+  }
+
+  // Validate academic year is not locked/archived
+  const isLocked = await isYearLockedOrArchived(c.env.DB, existing.academic_year_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
   await service.deleteEntry(id, user.sub);

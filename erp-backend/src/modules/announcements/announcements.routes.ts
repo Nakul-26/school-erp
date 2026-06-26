@@ -12,10 +12,11 @@ announcements.use('*', authMiddleware);
 announcements.get('/', async (c) => {
   const user = c.get('user');
   const userRoles = user.roles || (user.role ? [user.role] : []);
+  const sectionId = c.req.query('section_id');
 
   const repo = new AnnouncementRepository(c.env.DB);
   const service = new AnnouncementService(repo);
-  const results = await service.listAnnouncements(user.institution_id, userRoles);
+  const results = await service.listAnnouncements(user.institution_id, userRoles, sectionId);
   return c.json(results);
 });
 

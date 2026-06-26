@@ -4,6 +4,9 @@ import { TeacherAssignmentRepository } from './teacher-assignments.repository';
 import { TeacherAssignmentService } from './teacher-assignments.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
 
+// NOTE: This module and the underlying teacher_subject_assignments table are DEPRECATED.
+// Active features should migrate to the teaching-allocations module.
+
 const teacherAssignments = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 teacherAssignments.use('*', authMiddleware);

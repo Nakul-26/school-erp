@@ -7,6 +7,7 @@ import { authMiddleware, requireRole } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 import { NotificationRepository } from '../notifications/notifications.repository';
 import { NotificationService } from '../notifications/notifications.service';
+import { isYearLockedOrArchived, isExamYearLockedOrArchived } from '../../utils/academic-year-lock';
 
 const exams = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -46,6 +47,12 @@ exams.post('/', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teacher
     return c.json({ error: 'start_date cannot be after end_date' }, 400);
   }
 
+  // Validate academic year is not locked/archived
+  const isYearLocked = await isYearLockedOrArchived(c.env.DB, input.academic_year_id);
+  if (isYearLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
+  }
+
   const repo = new ExamsRepository(c.env.DB);
   const service = new ExamsService(repo);
   
@@ -82,6 +89,13 @@ exams.put('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teach
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam not found' }, 404);
   }
+
+  // Validate academic year is not locked/archived
+  const isLockedOld = await isYearLockedOrArchived(c.env.DB, existing.academic_year_id);
+  const isLockedNew = input.academic_year_id ? await isYearLockedOrArchived(c.env.DB, input.academic_year_id) : false;
+  if (isLockedOld || isLockedNew) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
+  }
   
   try {
     await service.updateExam(id, input, user.sub);
@@ -113,6 +127,12 @@ exams.delete('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD'), as
   const existing = await service.getExam(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam not found' }, 404);
+  }
+
+  // Validate academic year is not locked/archived
+  const isLocked = await isYearLockedOrArchived(c.env.DB, existing.academic_year_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
   await service.deleteExam(id, user.sub);
@@ -147,6 +167,12 @@ exams.post('/:id/subjects', async (c) => {
   if (!exam || exam.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam not found' }, 404);
   }
+
+  // Validate academic year is not locked/archived
+  const isLocked = await isYearLockedOrArchived(c.env.DB, exam.academic_year_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
+  }
   
   try {
     const examSubjectId = await service.addExamSubject(user.institution_id, id, input, user.sub);
@@ -166,6 +192,12 @@ exams.delete('/subjects/:id', async (c) => {
   const existing = await repo.findSubjectById(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam subject not found' }, 404);
+  }
+
+  // Validate academic year is not locked/archived
+  const isLocked = await isExamYearLockedOrArchived(c.env.DB, existing.exam_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
   await service.removeExamSubject(id, user.sub);
@@ -203,6 +235,12 @@ exams.post('/subjects/:id/marks', async (c) => {
   const examSub = await repo.findSubjectById(id);
   if (!examSub || examSub.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam subject not found' }, 404);
+  }
+
+  // Validate academic year is not locked/archived
+  const isLocked = await isExamYearLockedOrArchived(c.env.DB, examSub.exam_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
   try {

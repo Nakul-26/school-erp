@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { 
@@ -21,6 +22,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Classes() {
+  const navigate = useNavigate();
   const [classes, setClasses] = useState<any[]>([]); // sections
   const [years, setYears] = useState<any[]>([]);
   const [programs, setPrograms] = useState<any[]>([]);
@@ -343,11 +345,16 @@ export default function Classes() {
                 return (
                   <tr key={cls.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background-color 0.2s' }} className="hover-row">
                     <td style={{ padding: '1rem' }}>
-                      <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.95rem' }}>{cls.name}</span>
+                      <span 
+                        onClick={() => navigate(`/classes/${cls.id}`)}
+                        style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.95rem', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        {cls.name}
+                      </span>
                       <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>{cls.academic_year_name || 'No Year'}</span>
                     </td>
                     {institutionType !== 'school' && (
-                      <td style={{ padding: '1rem', color: 'var(--text-main)' }}>Year {cls.year_number}</td>
+                       <td style={{ padding: '1rem', color: 'var(--text-main)' }}>Year {cls.year_number}</td>
                     )}
                     <td style={{ padding: '1rem', color: 'var(--text-main)', fontWeight: 500 }}>
                       {cls.course_name || 'Unknown'}
@@ -402,7 +409,7 @@ export default function Classes() {
                     </td>
                     <td style={{ padding: '1rem', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
-                        <button className="btn btn-sm btn-secondary" onClick={() => handleOpenDetails(cls)} title="View Detail dossier" style={{ padding: '0.35rem' }}>
+                        <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/classes/${cls.id}`)} title="Open Section Workspace" style={{ padding: '0.35rem' }}>
                           <Eye size={14} />
                         </button>
                         <button className="btn btn-sm btn-secondary" onClick={() => handleOpenEdit(cls)} title="Edit details" style={{ padding: '0.35rem' }}>

@@ -13,6 +13,7 @@ import students from './modules/students/students.routes';
 import guardians from './modules/guardians/guardians.routes';
 import teachers from './modules/teachers/teachers.routes';
 import teacherAssignments from './modules/teacher-assignments/teacher-assignments.routes';
+import allocations from './modules/teaching-allocations/allocations.routes';
 import enrollments from './modules/enrollments/enrollments.routes';
 import auditLogs from './modules/audit-logs/audit-logs.routes';
 import roles from './modules/roles/roles.routes';
@@ -27,6 +28,9 @@ import notifications from './modules/notifications/notifications.routes';
 import fees from './modules/fees/fees.routes';
 import exams from './modules/exams/exams.routes';
 import system from './modules/system/system.routes';
+import settings from './modules/system-settings/settings.routes';
+import approvals from './modules/approvals/approvals.routes';
+
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -273,6 +277,7 @@ app.route('/students', students);
 app.route('/guardians', guardians);
 app.route('/teachers', teachers);
 app.route('/teacher-assignments', teacherAssignments);
+app.route('/teaching-allocations', allocations);
 app.route('/enrollments', enrollments);
 app.route('/audit-logs', auditLogs);
 app.route('/roles', roles);
@@ -287,5 +292,8 @@ app.route('/notifications', notifications);
 app.route('/fees', fees);
 app.route('/exams', exams);
 app.route('/system', system);
+app.route('/system-settings', settings);
+app.route('/approvals', approvals);
+
 
 export default app;

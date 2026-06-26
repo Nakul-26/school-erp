@@ -6,6 +6,7 @@ import { authMiddleware } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 import { NotificationRepository } from '../notifications/notifications.repository';
 import { NotificationService } from '../notifications/notifications.service';
+import { isSectionYearLockedOrArchived } from '../../utils/academic-year-lock';
 
 const attendance = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -41,6 +42,12 @@ attendance.post('/sessions', async (c) => {
   const repo = new AttendanceRepository(c.env.DB);
   const service = new AttendanceService(repo);
   
+  // Validate academic year is not locked/archived
+  const isLocked = await isSectionYearLockedOrArchived(c.env.DB, input.section_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
+  }
+  
   try {
     const id = await service.createSession(user.institution_id, input, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'CREATE_ATTENDANCE_SESSION', 'attendance', id, `Created attendance session for section ${input.section_id} on ${input.date}`);
@@ -59,6 +66,12 @@ attendance.delete('/sessions/:id', async (c) => {
   const existing = await service.getSession(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Session not found' }, 404);
+  }
+
+  // Validate academic year is not locked/archived
+  const isLocked = await isSectionYearLockedOrArchived(c.env.DB, existing.section_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
   await service.deleteSession(id, user.sub);
@@ -92,6 +105,12 @@ attendance.post('/sessions/:id/attendance', async (c) => {
   const session = await service.getSession(id);
   if (!session || session.institution_id !== user.institution_id) {
     return c.json({ error: 'Session not found' }, 404);
+  }
+
+  // Validate academic year is not locked/archived
+  const isLocked = await isSectionYearLockedOrArchived(c.env.DB, session.section_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
   try {

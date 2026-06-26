@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { Eye, Trash2 } from 'lucide-react';
 
 export default function Subjects() {
+  const navigate = useNavigate();
   const [subjects, setSubjects] = useState<any[]>([]);
   const [programs, setPrograms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,13 +103,27 @@ export default function Subjects() {
             <tbody>
               {subjects.map(subject => (
                 <tr key={subject.id}>
-                  {institutionType !== 'school' && <td>{subject.subject_code}</td>}
-                  <td><strong>{subject.subject_name}</strong></td>
+                  {institutionType !== 'school' && <td style={{ fontFamily: 'monospace' }}>{subject.subject_code}</td>}
+                  <td>
+                    <span 
+                      onClick={() => navigate(`/subjects/${subject.id}`)}
+                      style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      {subject.subject_name}
+                    </span>
+                  </td>
                   {institutionType !== 'school' && <td>{subject.semester}</td>}
                   {institutionType !== 'school' && <td>{subject.credits}</td>}
                   <td>{programs.find(p => p.id === subject.course_id)?.name || 'Unknown'}</td>
                   <td>
-                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(subject.id)}>Delete</button>
+                    <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
+                      <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/subjects/${subject.id}`)} title="Open Subject Workspace" style={{ padding: '0.35rem' }}>
+                        <Eye size={14} />
+                      </button>
+                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(subject.id)} title="Delete Subject" style={{ padding: '0.35rem' }}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

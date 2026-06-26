@@ -14,28 +14,28 @@ export class AnnouncementService {
     return await this.repo.findById(id);
   }
 
-  async listAnnouncements(institutionId: string, roles: string[]): Promise<Announcement[]> {
+  async listAnnouncements(institutionId: string, roles: string[], sectionId?: string): Promise<Announcement[]> {
     const isAdminOrStaff = roles.some(r => 
       ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal', 'Principal', 'HOD', 'hod'].includes(r)
     );
 
     if (isAdminOrStaff) {
-      return await this.repo.listAll(institutionId);
+      return await this.repo.listAll(institutionId, sectionId);
     }
 
     // Otherwise, check roles and accumulate
     const announcementsMap = new Map<string, Announcement>();
 
     if (roles.some(r => ['student', 'Student'].includes(r))) {
-      const list = await this.repo.listForAudience(institutionId, 'visible_to_students');
+      const list = await this.repo.listForAudience(institutionId, 'visible_to_students', sectionId);
       list.forEach(a => announcementsMap.set(a.id, a));
     }
     if (roles.some(r => ['teacher', 'Teacher'].includes(r))) {
-      const list = await this.repo.listForAudience(institutionId, 'visible_to_teachers');
+      const list = await this.repo.listForAudience(institutionId, 'visible_to_teachers', sectionId);
       list.forEach(a => announcementsMap.set(a.id, a));
     }
     if (roles.some(r => ['parent', 'Parent', 'guardian', 'Guardian'].includes(r))) {
-      const list = await this.repo.listForAudience(institutionId, 'visible_to_parents');
+      const list = await this.repo.listForAudience(institutionId, 'visible_to_parents', sectionId);
       list.forEach(a => announcementsMap.set(a.id, a));
     }
 

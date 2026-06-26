@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Trash2, Calendar, ClipboardCheck, ArrowLeft, Check, X, AlertTriangle, HelpCircle, Clock } from 'lucide-react';
 
 interface AttendanceSession {
@@ -29,6 +30,9 @@ interface StudentAttendanceRecord {
 }
 
 export default function Attendance() {
+  const [searchParams] = useSearchParams();
+  const querySectionId = searchParams.get('section_id');
+
   const [view, setView] = useState<'list' | 'new' | 'mark'>('list');
   const [sessions, setSessions] = useState<AttendanceSession[]>([]);
   const [sections, setSections] = useState<any[]>([]);
@@ -69,10 +73,19 @@ export default function Attendance() {
       setTeachers(teachersData);
       setSlots(slotsData);
       
-      if (sectionsData.length > 0) setSessionForm(f => ({ ...f, section_id: sectionsData[0].id }));
-      if (subjectsData.length > 0) setSessionForm(f => ({ ...f, subject_id: subjectsData[0].id }));
-      if (teachersData.length > 0) setSessionForm(f => ({ ...f, teacher_id: teachersData[0].id }));
-      if (slotsData.length > 0) setSessionForm(f => ({ ...f, slot_id: slotsData[0].id }));
+      const initialSectionId = querySectionId || (sectionsData.length > 0 ? sectionsData[0].id : '');
+      
+      setSessionForm(f => ({
+        ...f,
+        section_id: initialSectionId,
+        subject_id: subjectsData.length > 0 ? subjectsData[0].id : '',
+        teacher_id: teachersData.length > 0 ? teachersData[0].id : '',
+        slot_id: slotsData.length > 0 ? slotsData[0].id : ''
+      }));
+
+      if (querySectionId) {
+        setView('new');
+      }
     } catch (err) {
       console.error('Error fetching metadata:', err);
     } finally {

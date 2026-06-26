@@ -36,6 +36,14 @@ export const api = {
     });
     return parseResponse(res);
   },
+  patch: async (path: string, body: any) => {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify(body),
+    });
+    return parseResponse(res);
+  },
   delete: async (path: string) => {
     const res = await fetch(`${BASE_URL}${path}`, {
       method: 'DELETE',

@@ -286,7 +286,7 @@ students.get('/:id/notes', async (c) => {
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
 
-  const { results } = await c.env.DB.prepare('SELECT * FROM student_notes WHERE student_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(studentId).all();
+  const { results } = await c.env.DB.prepare('SELECT * FROM notes WHERE entity_type = "student" AND entity_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(studentId).all();
   return c.json(results || []);
 });
 
@@ -306,8 +306,8 @@ students.post('/:id/notes', async (c) => {
   const noteId = crypto.randomUUID();
   const authorName = user.name || 'Staff member';
   
-  await c.env.DB.prepare('INSERT INTO student_notes (id, student_id, author_id, author_name, content) VALUES (?, ?, ?, ?, ?)')
-    .bind(noteId, studentId, user.sub, authorName, content).run();
+  await c.env.DB.prepare('INSERT INTO notes (id, institution_id, entity_type, entity_id, author_id, author_name, content) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(noteId, user.institution_id, 'student', studentId, user.sub, authorName, content).run();
 
   return c.json({ id: noteId, success: true }, 201);
 });
@@ -321,7 +321,7 @@ students.delete('/:id/notes/:noteId', async (c) => {
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
 
-  await c.env.DB.prepare('UPDATE student_notes SET is_active = 0 WHERE id = ? AND student_id = ?').bind(noteId, studentId).run();
+  await c.env.DB.prepare('UPDATE notes SET is_active = 0 WHERE id = ? AND entity_type = "student" AND entity_id = ?').bind(noteId, studentId).run();
   return c.json({ success: true });
 });
 
@@ -334,7 +334,7 @@ students.get('/:id/documents', async (c) => {
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
 
-  const { results } = await c.env.DB.prepare('SELECT * FROM student_documents WHERE student_id = ? AND is_active = 1 ORDER BY uploaded_at DESC').bind(studentId).all();
+  const { results } = await c.env.DB.prepare('SELECT * FROM documents WHERE entity_type = "student" AND entity_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(studentId).all();
   return c.json(results || []);
 });
 
@@ -366,9 +366,9 @@ students.post('/:id/documents/upload', async (c) => {
 
     // Save metadata in D1 Database
     await c.env.DB.prepare(`
-      INSERT INTO student_documents (id, student_id, name, document_type, file_key, file_size, uploaded_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).bind(docId, studentId, file.name, documentType, fileKey, file.size, user.sub).run();
+      INSERT INTO documents (id, institution_id, entity_type, entity_id, name, folder, file_key, file_size, mime_type, uploaded_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(docId, user.institution_id, 'student', studentId, file.name, documentType, fileKey, file.size, file.type || 'application/octet-stream', user.sub).run();
 
     return c.json({ success: true, id: docId });
   } catch (err: any) {
@@ -385,7 +385,7 @@ students.get('/:id/documents/:docId/download', async (c) => {
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
 
-  const metadata = await c.env.DB.prepare('SELECT * FROM student_documents WHERE id = ? AND student_id = ? AND is_active = 1')
+  const metadata = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ? AND entity_type = "student" AND entity_id = ? AND is_active = 1')
     .bind(docId, studentId).first<any>();
 
   if (!metadata) return c.json({ error: 'Document not found' }, 404);
@@ -414,13 +414,13 @@ students.delete('/:id/documents/:docId', async (c) => {
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
 
-  const metadata = await c.env.DB.prepare('SELECT * FROM student_documents WHERE id = ? AND student_id = ? AND is_active = 1')
+  const metadata = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ? AND entity_type = "student" AND entity_id = ? AND is_active = 1')
     .bind(docId, studentId).first<any>();
 
   if (!metadata) return c.json({ error: 'Document not found' }, 404);
 
   // Soft delete in database
-  await c.env.DB.prepare('UPDATE student_documents SET is_active = 0 WHERE id = ?').bind(docId).run();
+  await c.env.DB.prepare('UPDATE documents SET is_active = 0 WHERE id = ?').bind(docId).run();
 
   // Delete from R2 bucket in background / ignore errors
   try {

@@ -4,6 +4,7 @@ import { FeesRepository } from './fees.repository';
 import { FeesService } from './fees.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
+import { isYearLockedOrArchived } from '../../utils/academic-year-lock';
 
 const fees = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -21,6 +22,12 @@ fees.get('/structures', async (c) => {
 fees.post('/structures', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
+  // Validate academic year is not locked/archived
+  const isYearLocked = await isYearLockedOrArchived(c.env.DB, input.academic_year_id);
+  if (isYearLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
+  }
+
   const repo = new FeesRepository(c.env.DB);
   const service = new FeesService(repo);
 
@@ -42,6 +49,12 @@ fees.delete('/structures/:id', requireRole('admin', 'super_admin', 'Principal', 
   const existing = await repo.getStructureById(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Fee structure not found' }, 404);
+  }
+
+  // Validate academic year is not locked/archived
+  const isLocked = await isYearLockedOrArchived(c.env.DB, existing.academic_year_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
 
   await service.deleteStructure(id, user.sub);
@@ -129,6 +142,12 @@ fees.post('/generate-ledger', requireRole('admin', 'super_admin', 'Principal', '
     return c.json({ error: 'Missing required parameters' }, 400);
   }
 
+  // Validate academic year is not locked/archived
+  const isLocked = await isYearLockedOrArchived(c.env.DB, academic_year_id);
+  if (isLocked) {
+    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
+  }
+
   const repo = new FeesRepository(c.env.DB);
   const service = new FeesService(repo);
   
@@ -154,6 +173,15 @@ fees.get('/payments', async (c) => {
 fees.post('/payments', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
+  // Validate academic year is not locked/archived
+  const feeRec = await c.env.DB.prepare('SELECT academic_year_id FROM student_fee_records WHERE id = ?').bind(input.student_fee_record_id).first<{ academic_year_id: string }>();
+  if (feeRec) {
+    const isLocked = await isYearLockedOrArchived(c.env.DB, feeRec.academic_year_id);
+    if (isLocked) {
+      return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
+    }
+  }
+
   const repo = new FeesRepository(c.env.DB);
   const service = new FeesService(repo);
 

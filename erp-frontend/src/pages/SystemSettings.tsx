@@ -16,10 +16,12 @@ import {
   AlertCircle, 
   CheckCircle,
   Loader2,
-  Camera
+  Camera,
+  Sliders
 } from 'lucide-react';
 
-type SettingsTab = 'general' | 'backup';
+type SettingsTab = 'general' | 'rules' | 'backup';
+
 
 export default function SystemSettings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
@@ -34,6 +36,13 @@ export default function SystemSettings() {
   const [currentAcademicYearId, setCurrentAcademicYearId] = useState('');
   const [attendanceThreshold, setAttendanceThreshold] = useState('75');
   const [passingMarks, setPassingMarks] = useState('40');
+
+  // Rule settings states
+  const [workingDays, setWorkingDays] = useState<string[]>(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']);
+  const [gradingSystem, setGradingSystem] = useState<string>('Percentage');
+  const [gracePeriod, setGracePeriod] = useState<string>('15');
+  const [lockAfterHours, setLockAfterHours] = useState<string>('24');
+
 
   // Backup state
   const [backupFile, setBackupFile] = useState<File | null>(null);
@@ -53,9 +62,10 @@ export default function SystemSettings() {
     try {
       setLoading(true);
       setError(null);
-      const [settingsData, yearsData] = await Promise.all([
+      const [settingsData, yearsData, platformSettings] = await Promise.all([
         api.get('/system/settings'),
-        api.get('/academic-years').catch(() => [])
+        api.get('/academic-years').catch(() => []),
+        api.get('/system-settings').catch(() => [])
       ]);
 
       setName(settingsData.name || '');
@@ -64,8 +74,24 @@ export default function SystemSettings() {
       setAddress(settingsData.address || '');
       setLogo(settingsData.logo || '');
       setCurrentAcademicYearId(settingsData.current_academic_year_id || '');
-      setAttendanceThreshold(String(settingsData.attendance_threshold ?? '75'));
       setPassingMarks(String(settingsData.passing_marks ?? '40'));
+
+      const safeParse = (val: string, fallback: any) => {
+        if (!val) return fallback;
+        try { return JSON.parse(val); } catch { return val; }
+      };
+
+      const thresholdVal = platformSettings.find((s: any) => s.setting_key === 'attendance_threshold')?.setting_value;
+      const daysVal = platformSettings.find((s: any) => s.setting_key === 'working_days')?.setting_value;
+      const gradingVal = platformSettings.find((s: any) => s.setting_key === 'grading_system')?.setting_value;
+      const graceVal = platformSettings.find((s: any) => s.setting_key === 'grace_period_minutes')?.setting_value;
+      const lockVal = platformSettings.find((s: any) => s.setting_key === 'lock_after_hours')?.setting_value;
+
+      if (thresholdVal) setAttendanceThreshold(String(safeParse(thresholdVal, '75')));
+      if (daysVal) setWorkingDays(safeParse(daysVal, ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']));
+      if (gradingVal) setGradingSystem(safeParse(gradingVal, 'Percentage'));
+      if (graceVal) setGracePeriod(String(safeParse(graceVal, '15')));
+      if (lockVal) setLockAfterHours(String(safeParse(lockVal, '24')));
 
       setAcademicYears(yearsData);
     } catch (err: any) {
@@ -96,6 +122,30 @@ export default function SystemSettings() {
       setSuccess('Institution configurations saved successfully.');
     } catch (err: any) {
       setError(err.message || 'Failed to update system settings.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRulesSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setLoading(true);
+
+    try {
+      await api.post('/system-settings', {
+        settings: [
+          { category: 'attendance', setting_key: 'attendance_threshold', setting_value: JSON.stringify(Number(attendanceThreshold)) },
+          { category: 'academic', setting_key: 'working_days', setting_value: JSON.stringify(workingDays) },
+          { category: 'academic', setting_key: 'grading_system', setting_value: JSON.stringify(gradingSystem) },
+          { category: 'attendance', setting_key: 'grace_period_minutes', setting_value: JSON.stringify(Number(gracePeriod)) },
+          { category: 'attendance', setting_key: 'lock_after_hours', setting_value: JSON.stringify(Number(lockAfterHours)) }
+        ]
+      });
+      setSuccess('Academic rules and system preferences saved successfully.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to update system rules.');
     } finally {
       setLoading(false);
     }
@@ -217,7 +267,15 @@ export default function SystemSettings() {
           disabled={loading || backupLoading}
         >
           <Building2 size={18} />
-          Institution & Academic Settings
+          Institution Settings
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'rules' ? 'active' : ''}`}
+          onClick={() => setActiveTab('rules')}
+          disabled={loading || backupLoading}
+        >
+          <Sliders size={18} />
+          Academic Rules & Preferences
         </button>
         <button 
           className={`tab-btn ${activeTab === 'backup' ? 'active' : ''}`}
@@ -244,7 +302,7 @@ export default function SystemSettings() {
           </div>
         )}
 
-        {activeTab === 'general' ? (
+        {activeTab === 'general' && (
           <form onSubmit={handleSettingsSubmit} className="settings-form">
             <div className="settings-split">
               {/* Left Side: General Profile / Logo */}
@@ -404,7 +462,9 @@ export default function SystemSettings() {
               </div>
             </div>
           </form>
-        ) : (
+        )}
+
+        {activeTab === 'backup' && (
           <div className="backup-section">
             <div className="settings-split">
               {/* Left Side: Export info */}
@@ -477,6 +537,107 @@ export default function SystemSettings() {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'rules' && (
+          <form onSubmit={handleRulesSubmit} className="settings-form">
+            <div className="card" style={{ padding: '2rem' }}>
+              <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Sliders size={20} className="text-primary" /> Academic Rules & Preferences
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div className="form-group">
+                    <label>Attendance Threshold (%)</label>
+                    <input 
+                      type="number" 
+                      value={attendanceThreshold} 
+                      onChange={e => setAttendanceThreshold(e.target.value)} 
+                      min={0} 
+                      max={100} 
+                      required 
+                    />
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Students with attendance below this will trigger warnings.</p>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Grading System</label>
+                    <select 
+                      value={gradingSystem} 
+                      onChange={e => setGradingSystem(e.target.value)}
+                    >
+                      <option value="Percentage">Percentage (%)</option>
+                      <option value="GPA">GPA Scale (10.0)</option>
+                      <option value="Letter">Letter Grades (A-F)</option>
+                    </select>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Default grading schema for report card builders.</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div className="form-group">
+                    <label>Attendance Late Grace Period (Minutes)</label>
+                    <input 
+                      type="number" 
+                      value={gracePeriod} 
+                      onChange={e => setGracePeriod(e.target.value)} 
+                      min={0} 
+                      required 
+                    />
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Minutes a student can be late before being marked as late/absent.</p>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Attendance Lock Duration (Hours)</label>
+                    <input 
+                      type="number" 
+                      value={lockAfterHours} 
+                      onChange={e => setLockAfterHours(e.target.value)} 
+                      min={0} 
+                      required 
+                    />
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Hours after class slot during which teachers can submit or edit attendance.</p>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Working Days</label>
+                  <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                      const checked = workingDays.includes(day);
+                      return (
+                        <label key={day} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>
+                          <input 
+                            type="checkbox" 
+                            checked={checked} 
+                            style={{ width: 'auto', cursor: 'pointer' }}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setWorkingDays([...workingDays, day]);
+                              } else {
+                                setWorkingDays(workingDays.filter(d => d !== day));
+                              }
+                            }}
+                          />
+                          {day}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Operational days in the academic calendar.</p>
+                </div>
+
+              </div>
+
+              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  <Save size={16} /> Save Academic Rules
+                </button>
+              </div>
+            </div>
+          </form>
         )}
       </div>
 

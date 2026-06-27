@@ -30,6 +30,12 @@ import exams from './modules/exams/exams.routes';
 import system from './modules/system/system.routes';
 import settings from './modules/system-settings/settings.routes';
 import approvals from './modules/approvals/approvals.routes';
+import leave from './modules/leave/leave.routes';
+import admissions from './modules/admissions/admissions.routes';
+import grades from './modules/grades/grades.routes';
+import payroll from './modules/payroll/payroll.routes';
+import studentLeaves from './modules/student-leaves/student-leaves.routes';
+import homework from './modules/homework/homework.routes';
 
 
 const app = new Hono<{ Bindings: Env }>();
@@ -294,6 +300,12 @@ app.route('/exams', exams);
 app.route('/system', system);
 app.route('/system-settings', settings);
 app.route('/approvals', approvals);
+app.route('/leave', leave);
+app.route('/admissions', admissions);
+app.route('/grades', grades);
+app.route('/payroll', payroll);
+app.route('/student-leaves', studentLeaves);
+app.route('/homework', homework);
 
 
 export default app;

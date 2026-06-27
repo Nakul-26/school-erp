@@ -90,3 +90,48 @@ export interface FeeReceipt {
   created_at: string;
   updated_at: string;
 }
+
+export interface FeeConcession {
+  id: string;
+  institution_id: string;
+  student_fee_record_id: string;
+  student_id: string;
+  concession_type: string;
+  discount_type: 'flat' | 'percent';
+  discount_value: number;
+  discount_amount: number;
+  reason: string | null;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateConcessionInput {
+  student_fee_record_id: string;
+  student_id: string;
+  concession_type: string;
+  discount_type: 'flat' | 'percent';
+  discount_value: number;
+  reason?: string;
+}
+
+export interface FeeInstallment {
+  id: string;
+  institution_id: string;
+  student_fee_record_id: string;
+  student_id: string;
+  installment_number: number;
+  due_date: string;
+  amount: number;
+  paid_amount: number;
+  status: 'Pending' | 'Paid' | 'Overdue';
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateInstallmentPlanInput {
+  student_fee_record_id: string;
+  student_id: string;
+  installments: Array<{ due_date: string; amount: number }>;
+}

@@ -1,7 +1,8 @@
 import { 
   FeeStructure, CreateFeeStructureInput, 
   StudentFeeRecord, CreateStudentFeeRecordInput, 
-  FeePayment, CreatePaymentInput, FeeReceipt 
+  FeePayment, CreatePaymentInput, FeeReceipt,
+  FeeConcession, CreateConcessionInput, FeeInstallment, CreateInstallmentPlanInput
 } from './fees.types';
 
 export class FeesRepository {
@@ -274,5 +275,82 @@ export class FeesRepository {
       LIMIT 10
     `).bind(institutionId).all<any>();
     return results || [];
+  }
+
+  // --- CONCESSIONS ---
+  async createConcession(id: string, institutionId: string, input: CreateConcessionInput, discountAmount: number, userId?: string): Promise<void> {
+    await this.db.prepare(`
+      INSERT INTO fee_concessions (id, institution_id, student_fee_record_id, student_id, concession_type, discount_type, discount_value, discount_amount, reason, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, institutionId, input.student_fee_record_id, input.student_id, input.concession_type, input.discount_type, input.discount_value, discountAmount, input.reason || null, userId || null).run();
+  }
+
+  async listConcessionsByRecord(recordId: string): Promise<FeeConcession[]> {
+    const { results } = await this.db.prepare(
+      `SELECT * FROM fee_concessions WHERE student_fee_record_id = ? AND is_active = 1 ORDER BY created_at DESC`
+    ).bind(recordId).all<FeeConcession>();
+    return results || [];
+  }
+
+  async deleteConcession(id: string, userId?: string): Promise<void> {
+    await this.db.prepare(
+      `UPDATE fee_concessions SET is_active = 0, updated_at = datetime('now') WHERE id = ?`
+    ).bind(id).run();
+  }
+
+  async getConcessionById(id: string): Promise<FeeConcession | null> {
+    return await this.db.prepare('SELECT * FROM fee_concessions WHERE id = ? AND is_active = 1').bind(id).first<FeeConcession>();
+  }
+
+  async reduceTotalAmount(recordId: string, discountAmount: number, userId?: string): Promise<void> {
+    await this.db.prepare(
+      `UPDATE student_fee_records SET total_amount = MAX(0, total_amount - ?), updated_at = datetime('now'), updated_by = ? WHERE id = ?`
+    ).bind(discountAmount, userId || null, recordId).run();
+  }
+
+  async restoreTotalAmount(recordId: string, discountAmount: number, userId?: string): Promise<void> {
+    await this.db.prepare(
+      `UPDATE student_fee_records SET total_amount = total_amount + ?, updated_at = datetime('now'), updated_by = ? WHERE id = ?`
+    ).bind(discountAmount, userId || null, recordId).run();
+  }
+
+  // --- INSTALLMENTS ---
+  async createInstallments(institutionId: string, input: CreateInstallmentPlanInput, userId?: string): Promise<void> {
+    // First soft-delete any existing installments for this record
+    await this.db.prepare(
+      `UPDATE fee_installments SET is_active = 0, updated_at = datetime('now') WHERE student_fee_record_id = ? AND is_active = 1`
+    ).bind(input.student_fee_record_id).run();
+    // Create new installments
+    for (let i = 0; i < input.installments.length; i++) {
+      const inst = input.installments[i];
+      const id = crypto.randomUUID();
+      await this.db.prepare(`
+        INSERT INTO fee_installments (id, institution_id, student_fee_record_id, student_id, installment_number, due_date, amount, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(id, institutionId, input.student_fee_record_id, input.student_id, i + 1, inst.due_date, inst.amount, userId || null).run();
+    }
+  }
+
+  async listInstallmentsByRecord(recordId: string): Promise<FeeInstallment[]> {
+    const { results } = await this.db.prepare(
+      `SELECT * FROM fee_installments WHERE student_fee_record_id = ? AND is_active = 1 ORDER BY installment_number ASC`
+    ).bind(recordId).all<FeeInstallment>();
+    return results || [];
+  }
+
+  async getInstallmentById(id: string): Promise<FeeInstallment | null> {
+    return await this.db.prepare('SELECT * FROM fee_installments WHERE id = ? AND is_active = 1').bind(id).first<FeeInstallment>();
+  }
+
+  async payInstallment(id: string, amount: number, userId?: string): Promise<void> {
+    await this.db.prepare(
+      `UPDATE fee_installments SET paid_amount = paid_amount + ?, status = CASE WHEN paid_amount + ? >= amount THEN 'Paid' ELSE 'Pending' END, updated_at = datetime('now') WHERE id = ?`
+    ).bind(amount, amount, id).run();
+  }
+
+  async updateOverdueInstallments(studentFeeRecordId: string): Promise<void> {
+    await this.db.prepare(
+      `UPDATE fee_installments SET status = 'Overdue' WHERE student_fee_record_id = ? AND status = 'Pending' AND due_date < date('now') AND is_active = 1`
+    ).bind(studentFeeRecordId).run();
   }
 }

@@ -11,7 +11,6 @@
     "db:execute": "wrangler d1 execute erp-db --local --file=db/schema.sql",
     "seed-demo": "node seed-demo.js"
   },
-
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -21,6 +20,6 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
     "typescript": "^5.3.3",
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.105.0"
   }
 }

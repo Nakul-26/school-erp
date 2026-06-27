@@ -1,7 +1,8 @@
 import { FeesRepository } from './fees.repository';
 import { 
   CreateFeeStructureInput, UpdateFeeStructureInput, 
-  CreateStudentFeeRecordInput, CreatePaymentInput 
+  CreateStudentFeeRecordInput, CreatePaymentInput,
+  CreateConcessionInput, CreateInstallmentPlanInput
 } from './fees.types';
 
 export class FeesService {
@@ -114,5 +115,60 @@ export class FeesService {
 
   async getTopDefaulters(institutionId: string): Promise<any[]> {
     return await this.repo.getTopDefaulters(institutionId);
+  }
+
+  // --- CONCESSIONS ---
+  async applyConcession(institutionId: string, input: CreateConcessionInput, userId?: string): Promise<string> {
+    const record = await this.repo.getRecordById(input.student_fee_record_id);
+    if (!record || record.institution_id !== institutionId) throw new Error('Fee record not found');
+
+    let discountAmount: number;
+    if (input.discount_type === 'percent') {
+      discountAmount = Math.round((record.total_amount * input.discount_value / 100) * 100) / 100;
+    } else {
+      discountAmount = input.discount_value;
+    }
+
+    if (discountAmount > record.total_amount) throw new Error('Discount exceeds total amount');
+
+    const id = crypto.randomUUID();
+    await this.repo.createConcession(id, institutionId, input, discountAmount, userId);
+    await this.repo.reduceTotalAmount(input.student_fee_record_id, discountAmount, userId);
+    return id;
+  }
+
+  async listConcessions(recordId: string): Promise<any[]> {
+    return this.repo.listConcessionsByRecord(recordId);
+  }
+
+  async removeConcession(id: string, institutionId: string, userId?: string): Promise<void> {
+    const concession = await this.repo.getConcessionById(id);
+    if (!concession || concession.institution_id !== institutionId) throw new Error('Concession not found');
+    await this.repo.deleteConcession(id, userId);
+    await this.repo.restoreTotalAmount(concession.student_fee_record_id, concession.discount_amount, userId);
+  }
+
+  // --- INSTALLMENTS ---
+  async createInstallmentPlan(institutionId: string, input: CreateInstallmentPlanInput, userId?: string): Promise<void> {
+    const record = await this.repo.getRecordById(input.student_fee_record_id);
+    if (!record || record.institution_id !== institutionId) throw new Error('Fee record not found');
+
+    const totalInstallmentAmount = input.installments.reduce((sum, i) => sum + i.amount, 0);
+    if (Math.abs(totalInstallmentAmount - record.total_amount) > 1) {
+      throw new Error(`Installment amounts (${totalInstallmentAmount}) must equal total fee amount (${record.total_amount})`);
+    }
+
+    await this.repo.createInstallments(institutionId, input, userId);
+  }
+
+  async listInstallments(recordId: string): Promise<any[]> {
+    await this.repo.updateOverdueInstallments(recordId);
+    return this.repo.listInstallmentsByRecord(recordId);
+  }
+
+  async payInstallment(id: string, institutionId: string, amount: number, userId?: string): Promise<void> {
+    const inst = await this.repo.getInstallmentById(id);
+    if (!inst || inst.institution_id !== institutionId) throw new Error('Installment not found');
+    await this.repo.payInstallment(id, amount, userId);
   }
 }

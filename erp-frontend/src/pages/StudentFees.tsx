@@ -70,6 +70,21 @@ export default function StudentFees() {
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
 
+  // Concession & Installment States
+  const [showConcessionModal, setShowConcessionModal] = useState(false);
+  const [showInstallmentModal, setShowInstallmentModal] = useState(false);
+  const [selectedFeeRecord, setSelectedFeeRecord] = useState<any | null>(null);
+  const [concessions, setConcessions] = useState<any[]>([]);
+  const [installments, setInstallments] = useState<any[]>([]);
+  const [concessionForm, setConcessionForm] = useState({
+    concession_type: 'Scholarship',
+    discount_type: 'percent',
+    discount_value: '',
+    reason: ''
+  });
+  const [installmentCount, setInstallmentCount] = useState<number>(2);
+  const [dynamicInstallments, setDynamicInstallments] = useState<Array<{ due_date: string; amount: number }>>([]);
+
   // Auth user check
   const userRoles = user?.roles || (user?.role ? [user.role] : []);
   const isFinanceAdmin = userRoles.some(r => ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal', 'Accountant', 'accountant'].includes(r));
@@ -267,6 +282,159 @@ export default function StudentFees() {
     }
   };
 
+  // --- CONCESSION HANDLERS ---
+  const handleOpenConcessions = async (record: any) => {
+    setSelectedFeeRecord(record);
+    setShowConcessionModal(true);
+    try {
+      const data = await api.get(`/fees/records/${record.id}/concessions`);
+      setConcessions(data);
+    } catch (err) {
+      console.error('Error fetching concessions:', err);
+    }
+  };
+
+  const handleApplyConcession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFeeRecord) return;
+    try {
+      await api.post(`/fees/records/${selectedFeeRecord.id}/concession`, {
+        student_id: selectedStudent.student_id,
+        concession_type: concessionForm.concession_type,
+        discount_type: concessionForm.discount_type,
+        discount_value: Number(concessionForm.discount_value),
+        reason: concessionForm.reason
+      });
+      alert('Concession applied successfully!');
+      setConcessionForm({ concession_type: 'Scholarship', discount_type: 'percent', discount_value: '', reason: '' });
+      
+      // Refresh list & ledger
+      const updatedLedger = await api.get(`/fees/students/${selectedStudent.student_id}/ledger`);
+      setLedger(updatedLedger);
+      const data = await api.get(`/fees/records/${selectedFeeRecord.id}/concessions`);
+      setConcessions(data);
+    } catch (err: any) {
+      alert(err.message || 'Error applying concession');
+    }
+  };
+
+  const handleRemoveConcession = async (concessionId: string) => {
+    if (!confirm('Are you sure you want to remove this concession?')) return;
+    try {
+      await api.delete(`/fees/concessions/${concessionId}`);
+      alert('Concession removed successfully!');
+      
+      // Refresh list & ledger
+      const updatedLedger = await api.get(`/fees/students/${selectedStudent.student_id}/ledger`);
+      setLedger(updatedLedger);
+      if (selectedFeeRecord) {
+        const data = await api.get(`/fees/records/${selectedFeeRecord.id}/concessions`);
+        setConcessions(data);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error removing concession');
+    }
+  };
+
+  // --- INSTALLMENT HANDLERS ---
+  const handleOpenInstallments = async (record: any) => {
+    setSelectedFeeRecord(record);
+    setShowInstallmentModal(true);
+    // Initialize default equal-split list
+    const count = installmentCount;
+    const splitAmount = Math.round((record.total_amount / count) * 100) / 100;
+    const initial: Array<{ due_date: string; amount: number }> = [];
+    for (let i = 0; i < count; i++) {
+      const d = new Date();
+      d.setMonth(d.getMonth() + i);
+      initial.push({
+        due_date: d.toISOString().split('T')[0],
+        amount: i === count - 1 ? record.total_amount - (splitAmount * (count - 1)) : splitAmount
+      });
+    }
+    setDynamicInstallments(initial);
+
+    try {
+      const data = await api.get(`/fees/records/${record.id}/installments`);
+      setInstallments(data);
+    } catch (err) {
+      console.error('Error fetching installments:', err);
+    }
+  };
+
+  const handleInstallmentCountChange = (count: number) => {
+    setInstallmentCount(count);
+    if (!selectedFeeRecord) return;
+    const splitAmount = Math.round((selectedFeeRecord.total_amount / count) * 100) / 100;
+    const next: Array<{ due_date: string; amount: number }> = [];
+    for (let i = 0; i < count; i++) {
+      const d = new Date();
+      d.setMonth(d.getMonth() + i);
+      next.push({
+        due_date: d.toISOString().split('T')[0],
+        amount: i === count - 1 ? selectedFeeRecord.total_amount - (splitAmount * (count - 1)) : splitAmount
+      });
+    }
+    setDynamicInstallments(next);
+  };
+
+  const handleDynamicInstallmentChange = (index: number, field: 'due_date' | 'amount', value: any) => {
+    setDynamicInstallments(prev => prev.map((item, idx) => {
+      if (idx === index) {
+        return {
+          ...item,
+          [field]: field === 'amount' ? Number(value) : value
+        };
+      }
+      return item;
+    }));
+  };
+
+  const handleSaveInstallmentPlan = async () => {
+    if (!selectedFeeRecord) return;
+    try {
+      const totalAmount = dynamicInstallments.reduce((sum, item) => sum + item.amount, 0);
+      if (Math.abs(totalAmount - selectedFeeRecord.total_amount) > 1) {
+        return alert(`Total of installments (₹${totalAmount}) must match overall fee amount (₹${selectedFeeRecord.total_amount})`);
+      }
+
+      await api.post(`/fees/records/${selectedFeeRecord.id}/installments`, {
+        student_id: selectedStudent.student_id,
+        installments: dynamicInstallments
+      });
+      alert('Installment plan saved successfully!');
+      
+      const data = await api.get(`/fees/records/${selectedFeeRecord.id}/installments`);
+      setInstallments(data);
+    } catch (err: any) {
+      alert(err.message || 'Error saving installment plan');
+    }
+  };
+
+  const handlePayInstallment = async (inst: any) => {
+    const payAmountStr = prompt(`Enter amount to pay for Installment #${inst.installment_number} (Outstanding: ₹${inst.amount - inst.paid_amount})`, String(inst.amount - inst.paid_amount));
+    if (payAmountStr === null || payAmountStr.trim() === '') return;
+    const payAmount = Number(payAmountStr);
+    if (isNaN(payAmount) || payAmount <= 0 || payAmount > (inst.amount - inst.paid_amount)) {
+      return alert('Invalid payment amount entered');
+    }
+
+    try {
+      await api.patch(`/fees/installments/${inst.id}/pay`, { amount: payAmount });
+      alert('Installment payment recorded successfully!');
+      
+      // Refresh list, ledger & installments
+      const updatedLedger = await api.get(`/fees/students/${selectedStudent.student_id}/ledger`);
+      setLedger(updatedLedger);
+      if (selectedFeeRecord) {
+        const data = await api.get(`/fees/records/${selectedFeeRecord.id}/installments`);
+        setInstallments(data);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error making installment payment');
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -408,6 +576,7 @@ export default function StudentFees() {
                       <th>Paid</th>
                       <th>Due</th>
                       <th>Status</th>
+                      {isFinanceAdmin && <th style={{ textAlign: 'right' }}>Manage</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -420,6 +589,26 @@ export default function StudentFees() {
                           <td>₹{item.paid_amount.toLocaleString('en-IN')}</td>
                           <td><span style={{ fontWeight: 'bold', color: outstanding > 0 ? 'var(--danger)' : '' }}>₹{outstanding.toLocaleString('en-IN')}</span></td>
                           <td>{getStatusBadge(item.status)}</td>
+                          {isFinanceAdmin && (
+                            <td style={{ textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
+                                <button
+                                  className="btn btn-sm btn-outline"
+                                  style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem' }}
+                                  onClick={() => handleOpenConcessions(item)}
+                                >
+                                  🏷️ Concession
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-outline"
+                                  style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem' }}
+                                  onClick={() => handleOpenInstallments(item)}
+                                >
+                                  📅 Installments
+                                </button>
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
@@ -657,6 +846,223 @@ export default function StudentFees() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showConcessionModal && selectedFeeRecord && (
+        <div className="modal-overlay">
+          <div className="modal" style={{ maxWidth: '600px', width: '90%' }}>
+            <div className="modal-header">
+              <h3>Manage Concessions — {selectedFeeRecord.fee_type}</h3>
+              <button onClick={() => { setShowConcessionModal(false); setSelectedFeeRecord(null); }}>✕</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleApplyConcession} style={{ marginBottom: '1.5rem', borderBottom: '1px dashed var(--border)', paddingBottom: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label>Concession Type</label>
+                    <select
+                      value={concessionForm.concession_type}
+                      onChange={(e) => setConcessionForm({ ...concessionForm, concession_type: e.target.value })}
+                      required
+                    >
+                      <option value="Scholarship">Scholarship</option>
+                      <option value="Sibling">Sibling Discount</option>
+                      <option value="Staff Ward">Staff Ward</option>
+                      <option value="Merit">Merit Discount</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Discount Type</label>
+                    <select
+                      value={concessionForm.discount_type}
+                      onChange={(e) => setConcessionForm({ ...concessionForm, discount_type: e.target.value as any })}
+                      required
+                    >
+                      <option value="percent">Percentage (%)</option>
+                      <option value="flat">Flat Amount (₹)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label>Value</label>
+                    <input
+                      type="number"
+                      placeholder={concessionForm.discount_type === 'percent' ? 'e.g. 20' : 'e.g. 1000'}
+                      value={concessionForm.discount_value}
+                      onChange={(e) => setConcessionForm({ ...concessionForm, discount_value: e.target.value })}
+                      required
+                      min={0}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Reason / Description</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 20% sibling discount"
+                      value={concessionForm.reason}
+                      onChange={(e) => setConcessionForm({ ...concessionForm, reason: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                  Apply Concession
+                </button>
+              </form>
+
+              <h4>Applied Concessions</h4>
+              <table className="table" style={{ marginTop: '0.5rem' }}>
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Discount</th>
+                    <th>Reason</th>
+                    <th style={{ textAlign: 'right' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {concessions.map((c) => (
+                    <tr key={c.id}>
+                      <td><strong>{c.concession_type}</strong></td>
+                      <td>{c.discount_type === 'percent' ? `${c.discount_value}%` : `₹${c.discount_value.toLocaleString('en-IN')}`} (₹{c.discount_amount.toLocaleString('en-IN')})</td>
+                      <td>{c.reason || '—'}</td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button className="btn btn-sm btn-outline btn-danger" onClick={() => handleRemoveConcession(c.id)}>
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {concessions.length === 0 && (
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1.5rem' }}>
+                        No concessions applied to this record.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => { setShowConcessionModal(false); setSelectedFeeRecord(null); }}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showInstallmentModal && selectedFeeRecord && (
+        <div className="modal-overlay">
+          <div className="modal" style={{ maxWidth: '650px', width: '90%' }}>
+            <div className="modal-header">
+              <h3>Manage Installments — {selectedFeeRecord.fee_type}</h3>
+              <button onClick={() => { setShowInstallmentModal(false); setSelectedFeeRecord(null); }}>✕</button>
+            </div>
+            <div className="modal-body">
+              {installments.length > 0 ? (
+                <div>
+                  <h4>Installment Schedule</h4>
+                  <table className="table" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+                    <thead>
+                      <tr>
+                        <th>Term</th>
+                        <th>Due Date</th>
+                        <th>Amount</th>
+                        <th>Paid</th>
+                        <th>Status</th>
+                        <th style={{ textAlign: 'right' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {installments.map((inst) => (
+                        <tr key={inst.id}>
+                          <td>Installment #{inst.installment_number}</td>
+                          <td>{inst.due_date}</td>
+                          <td>₹{inst.amount.toLocaleString('en-IN')}</td>
+                          <td>₹{inst.paid_amount.toLocaleString('en-IN')}</td>
+                          <td>
+                            <span className={`badge ${inst.status === 'Paid' ? 'badge-success' : inst.status === 'Overdue' ? 'badge-danger' : 'badge-warning'}`}>
+                              {inst.status}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            {inst.status !== 'Paid' && (
+                              <button className="btn btn-sm btn-primary" onClick={() => handlePayInstallment(inst)}>
+                                Pay Term
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', border: '1px dashed var(--border)', borderRadius: '6px', marginBottom: '1.5rem' }}>
+                  No installment plan created for this fee category. Total amount: <strong>₹{selectedFeeRecord.total_amount.toLocaleString('en-IN')}</strong>.
+                </div>
+              )}
+
+              <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '1.5rem' }}>
+                <h4>Setup Installment Plan</h4>
+                <div className="form-group" style={{ marginTop: '0.5rem' }}>
+                  <label>Number of Installments</label>
+                  <select
+                    value={installmentCount}
+                    onChange={(e) => handleInstallmentCountChange(Number(e.target.value))}
+                    style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
+                  >
+                    {[2, 3, 4, 5, 6, 8, 10, 12].map(n => (
+                      <option key={n} value={n}>{n} Installments</option>
+                    ))}
+                  </select>
+                </div>
+
+                <table className="table" style={{ marginTop: '0.5rem' }}>
+                  <thead>
+                    <tr>
+                      <th>Term</th>
+                      <th>Due Date</th>
+                      <th>Amount (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dynamicInstallments.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>Installment #{idx + 1}</td>
+                        <td>
+                          <input
+                            type="date"
+                            value={item.due_date}
+                            onChange={(e) => handleDynamicInstallmentChange(idx, 'due_date', e.target.value)}
+                            style={{ padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px' }}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={item.amount}
+                            onChange={(e) => handleDynamicInstallmentChange(idx, 'amount', e.target.value)}
+                            style={{ padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px', width: '120px' }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <button className="btn btn-primary" onClick={handleSaveInstallmentPlan} style={{ marginTop: '1rem', width: '100%' }}>
+                  Create & Save Installment Plan
+                </button>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => { setShowInstallmentModal(false); setSelectedFeeRecord(null); }}>Close</button>
+            </div>
           </div>
         </div>
       )}

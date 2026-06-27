@@ -1,0 +1,320 @@
+import React, { useEffect, useState } from 'react';
+import Layout from '../components/Layout';
+import { api } from '../services/api';
+import { BookOpen, Plus, Trash2, Calendar, Clipboard } from 'lucide-react';
+
+interface Homework {
+  id: string;
+  section_id: string;
+  section_name: string;
+  subject_id: string;
+  subject_name: string;
+  subject_code: string;
+  teacher_first: string;
+  teacher_last: string;
+  title: string;
+  description: string;
+  due_date: string;
+}
+
+export default function HomeworkList() {
+  const [homeworkList, setHomeworkList] = useState<Homework[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  // Filters
+  const [filterSection, setFilterSection] = useState('');
+  const [filterSubject, setFilterSubject] = useState('');
+
+  const [form, setForm] = useState({
+    section_id: '',
+    subject_id: '',
+    teacher_id: '',
+    title: '',
+    description: '',
+    due_date: new Date().toISOString().split('T')[0]
+  });
+
+  const user = JSON.parse(localStorage.getItem('erp_user') || '{}');
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const canManage = userRoles.some((r: string) => ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher'].includes(r));
+
+  useEffect(() => {
+    fetchMetadata();
+  }, []);
+
+  useEffect(() => {
+    fetchHomework();
+  }, [filterSection, filterSubject]);
+
+  const fetchMetadata = async () => {
+    try {
+      const [secList, subList, teachList] = await Promise.all([
+        api.get('/classes'), // sections
+        api.get('/subjects'),
+        api.get('/teachers')
+      ]);
+      setSections(secList);
+      setSubjects(subList);
+      setTeachers(teachList);
+
+      // Pre-fill teacher field if logged-in user is a teacher
+      const matchedTeacher = teachList.find((t: any) => t.user_id === user.sub);
+      if (matchedTeacher) {
+        setForm(prev => ({ ...prev, teacher_id: matchedTeacher.id }));
+      }
+    } catch (err) {
+      console.error('Error fetching metadata:', err);
+    }
+  };
+
+  const fetchHomework = async () => {
+    try {
+      setLoading(true);
+      let query = '';
+      if (filterSection) query += `&section_id=${filterSection}`;
+      if (filterSubject) query += `&subject_id=${filterSubject}`;
+      if (query) query = '?' + query.substring(1);
+
+      const data = await api.get(`/homework${query}`);
+      setHomeworkList(data);
+    } catch (err) {
+      console.error('Error fetching homework:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.section_id || !form.subject_id || !form.teacher_id || !form.title || !form.due_date) {
+      return alert('Please fill in all required fields');
+    }
+    try {
+      setSaving(true);
+      await api.post('/homework', form);
+      alert('Homework assigned successfully!');
+      setShowModal(false);
+      setForm({
+        section_id: '',
+        subject_id: '',
+        teacher_id: form.teacher_id, // keep teacher pre-filled
+        title: '',
+        description: '',
+        due_date: new Date().toISOString().split('T')[0]
+      });
+      fetchHomework();
+    } catch (err: any) {
+      alert(err.message || 'Error creating homework assignment');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this homework assignment?')) return;
+    try {
+      await api.delete(`/homework/${id}`);
+      alert('Homework deleted');
+      fetchHomework();
+    } catch (err) {
+      alert('Error deleting homework');
+    }
+  };
+
+  return (
+    <Layout>
+      <div className="page-header">
+        <div>
+          <h2>Academic Homework Logs</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+            Post daily homework, assign projects, specify due dates, and track logs per subject section.
+          </p>
+        </div>
+        {canManage && (
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            <Plus size={16} /> Assign Homework
+          </button>
+        )}
+      </div>
+
+      <div style={{
+        padding: '1rem 1.25rem',
+        backgroundColor: '#eff6ff',
+        borderLeft: '4px solid #3b82f6',
+        borderRadius: '6px',
+        fontSize: '0.875rem',
+        color: '#1e3a8a',
+        lineHeight: '1.5',
+        marginBottom: '1.5rem'
+      }}>
+        <strong>💡 Page Guidance:</strong> Class homework portal. Teachers can assign new homework to their designated sections and select specific subjects, instructions, and target due dates. Students and parents can log in to view current homework lists and submission schedules.
+      </div>
+
+      {/* Filter panel */}
+      <div className="card" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Filter Class:</label>
+          <select value={filterSection} onChange={(e) => setFilterSection(e.target.value)} style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}>
+            <option value="">All Classes</option>
+            {sections.map(s => <option key={s.id} value={s.id}>{s.name} - {s.course_name}</option>)}
+          </select>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Filter Subject:</label>
+          <select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}>
+            <option value="">All Subjects</option>
+            {subjects.map(s => <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: '1.5rem' }}>
+        {loading ? <p>Loading homework logs...</p> : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Class/Section</th>
+                <th>Subject</th>
+                <th>Homework Title & Task</th>
+                <th>Assigned By</th>
+                <th>Due Date</th>
+                {canManage && <th style={{ textAlign: 'right' }}>Actions</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {homeworkList.map((h) => (
+                <tr key={h.id}>
+                  <td><strong>{h.section_name}</strong></td>
+                  <td>
+                    <strong>{h.subject_name}</strong>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{h.subject_code}</div>
+                  </td>
+                  <td>
+                    <strong style={{ fontSize: '0.95rem' }}>{h.title}</strong>
+                    {h.description && <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{h.description}</p>}
+                  </td>
+                  <td>Teacher {h.teacher_first} {h.teacher_last}</td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--danger)', fontWeight: 'bold' }}>
+                      <Calendar size={14} /> {h.due_date}
+                    </div>
+                  </td>
+                  {canManage && (
+                    <td style={{ textAlign: 'right' }}>
+                      <button className="btn btn-sm btn-outline btn-danger" onClick={() => handleDelete(h.id)}>
+                        <Trash2 size={12} />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+              {homeworkList.length === 0 && (
+                <tr>
+                  <td colSpan={canManage ? 6 : 5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                    <Clipboard size={32} style={{ marginBottom: '0.5rem' }} />
+                    <p>No homework assignments found matching filter criteria.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal" style={{ maxWidth: '600px', width: '90%' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Create Homework Assignment</h3>
+              <button onClick={() => setShowModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label>Select Class / Section</label>
+                    <select
+                      value={form.section_id}
+                      onChange={(e) => setForm({ ...form, section_id: e.target.value })}
+                      required
+                    >
+                      <option value="">-- Choose Class --</option>
+                      {sections.map(s => <option key={s.id} value={s.id}>{s.name} - {s.course_name}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Select Subject</label>
+                    <select
+                      value={form.subject_id}
+                      onChange={(e) => setForm({ ...form, subject_id: e.target.value })}
+                      required
+                    >
+                      <option value="">-- Choose Subject --</option>
+                      {subjects.map(s => <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Assigning Teacher</label>
+                  <select
+                    value={form.teacher_id}
+                    onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
+                    required
+                  >
+                    <option value="">-- Choose Staff --</option>
+                    {teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name} ({t.employee_id})</option>)}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Homework Title</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Exercise 4.2 Questions 1-5"
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Detailed Instructions / Notes</label>
+                  <textarea
+                    rows={4}
+                    placeholder="Provide details about the homework task, references, textbooks, page numbers..."
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '4px' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Due Date</label>
+                  <input
+                    type="date"
+                    value={form.due_date}
+                    onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? 'Saving...' : 'Post Homework'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </Layout>
+  );
+}

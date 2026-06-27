@@ -255,4 +255,87 @@ fees.get('/reports/defaulters', requireRole('admin', 'super_admin', 'Principal',
   return c.json(list);
 });
 
+// --- CONCESSIONS ---
+fees.get('/records/:id/concessions', async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new FeesRepository(c.env.DB);
+  const service = new FeesService(repo);
+  const record = await repo.getRecordById(id);
+  if (!record || record.institution_id !== user.institution_id) return c.json({ error: 'Not found' }, 404);
+  const concessions = await service.listConcessions(id);
+  return c.json(concessions);
+});
+
+fees.post('/records/:id/concession', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const body = await c.req.json();
+  const repo = new FeesRepository(c.env.DB);
+  const service = new FeesService(repo);
+  try {
+    const concessionId = await service.applyConcession(user.institution_id, { student_fee_record_id: id, ...body }, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'APPLY_CONCESSION', 'fees', concessionId, `Applied ${body.discount_type} concession of ${body.discount_value} to fee record ${id}`);
+    return c.json({ id: concessionId }, 201);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+fees.delete('/concessions/:id', requireRole('admin', 'super_admin', 'Principal', 'Accountant'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new FeesRepository(c.env.DB);
+  const service = new FeesService(repo);
+  try {
+    await service.removeConcession(id, user.institution_id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'REMOVE_CONCESSION', 'fees', id, `Removed concession`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+// --- INSTALLMENTS ---
+fees.get('/records/:id/installments', async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new FeesRepository(c.env.DB);
+  const service = new FeesService(repo);
+  const record = await repo.getRecordById(id);
+  if (!record || record.institution_id !== user.institution_id) return c.json({ error: 'Not found' }, 404);
+  const installments = await service.listInstallments(id);
+  return c.json(installments);
+});
+
+fees.post('/records/:id/installments', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const body = await c.req.json();
+  const repo = new FeesRepository(c.env.DB);
+  const service = new FeesService(repo);
+  try {
+    await service.createInstallmentPlan(user.institution_id, { student_fee_record_id: id, student_id: body.student_id, installments: body.installments }, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'CREATE_INSTALLMENT_PLAN', 'fees', id, `Created installment plan with ${body.installments.length} installments`);
+    return c.json({ success: true }, 201);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+fees.patch('/installments/:id/pay', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const body = await c.req.json();
+  const repo = new FeesRepository(c.env.DB);
+  const service = new FeesService(repo);
+  try {
+    await service.payInstallment(id, user.institution_id, body.amount || 0, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'PAY_INSTALLMENT', 'fees', id, `Paid installment ₹${body.amount}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
 export default fees;

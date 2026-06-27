@@ -1,0 +1,247 @@
+import React, { useEffect, useState } from 'react';
+import Layout from '../components/Layout';
+import { api } from '../services/api';
+import { Award, Save, RefreshCw } from 'lucide-react';
+
+interface GradeScale {
+  id?: string;
+  grade: string;
+  min_percent: number;
+  max_percent: number;
+  grade_point: number;
+  remarks: string;
+  is_passing: number;
+  sort_order: number;
+}
+
+export default function GradeSettings() {
+  const [scales, setScales] = useState<GradeScale[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchScales();
+  }, []);
+
+  const fetchScales = async () => {
+    try {
+      setLoading(true);
+      const data = await api.get('/grades/scales');
+      setScales(data);
+    } catch (err) {
+      console.error('Error fetching grade scales:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoadDefaults = async () => {
+    if (!confirm('Are you sure you want to load default grading scales? This will overwrite your current configuration.')) {
+      return;
+    }
+    try {
+      setSaving(true);
+      await api.post('/grades/scales/seed', {});
+      alert('Default grading scales loaded successfully!');
+      fetchScales();
+    } catch (err) {
+      alert('Error loading defaults');
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRowChange = (index: number, field: keyof GradeScale, value: any) => {
+    setScales(prev => prev.map((s, i) => {
+      if (i === index) {
+        return {
+          ...s,
+          [field]: field === 'grade' || field === 'remarks' ? value : Number(value)
+        };
+      }
+      return s;
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      // Validate sort orders and percentages
+      const payload = scales.map((s, idx) => ({
+        grade: s.grade,
+        min_percent: s.min_percent,
+        max_percent: s.max_percent,
+        grade_point: s.grade_point,
+        remarks: s.remarks,
+        is_passing: s.is_passing,
+        sort_order: s.sort_order || (idx + 1)
+      }));
+      await api.put('/grades/scales', { scales: payload });
+      alert('Grading scales updated successfully!');
+      fetchScales();
+    } catch (err: any) {
+      alert(err.message || 'Error saving grading scales');
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddRow = () => {
+    setScales(prev => [
+      ...prev,
+      {
+        grade: '',
+        min_percent: 0,
+        max_percent: 100,
+        grade_point: 0,
+        remarks: '',
+        is_passing: 1,
+        sort_order: prev.length + 1
+      }
+    ]);
+  };
+
+  const handleRemoveRow = (index: number) => {
+    setScales(prev => prev.filter((_, i) => i !== index));
+  };
+
+  return (
+    <Layout>
+      <div className="page-header">
+        <div>
+          <h2>Grade Settings</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+            Configure default marks-to-grade scaling ranges used across exams and report card generation.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn btn-outline" onClick={handleLoadDefaults} disabled={loading || saving}>
+            <RefreshCw size={16} style={{ marginRight: '0.25rem' }} /> Load Default Scale
+          </button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={loading || saving || scales.length === 0}>
+            <Save size={16} style={{ marginRight: '0.25rem' }} /> Save Changes
+          </button>
+        </div>
+      </div>
+
+      <div style={{
+        padding: '1rem 1.25rem',
+        backgroundColor: '#eff6ff',
+        borderLeft: '4px solid #3b82f6',
+        borderRadius: '6px',
+        fontSize: '0.875rem',
+        color: '#1e3a8a',
+        lineHeight: '1.5',
+        marginBottom: '1rem'
+      }}>
+        <strong>💡 Page Guidance:</strong> Setup grade metrics for all student exams. Map percentage boundaries (Min% and Max%) to specific letter grades (e.g. A+, A, B) and GPA values (0.0 - 10.0). Click <em>Load Default Scale</em> to populate with the standard Indian grading scheme, or click <em>Save Changes</em> to persist edits.
+      </div>
+
+      <div className="card" style={{ padding: '1.5rem' }}>
+        {loading ? <p>Loading grade scale configuration...</p> : (
+          <div>
+            <table className="table" style={{ marginBottom: '1.5rem' }}>
+              <thead>
+                <tr>
+                  <th>Grade</th>
+                  <th>Min %</th>
+                  <th>Max %</th>
+                  <th>Grade Point (GPA)</th>
+                  <th>Remarks / Description</th>
+                  <th>Status</th>
+                  <th>Sort Order</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scales.map((s, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      <input
+                        type="text"
+                        value={s.grade}
+                        onChange={(e) => handleRowChange(idx, 'grade', e.target.value)}
+                        placeholder="e.g. A+"
+                        style={{ width: '80px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={s.min_percent}
+                        onChange={(e) => handleRowChange(idx, 'min_percent', e.target.value)}
+                        style={{ width: '80px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={s.max_percent}
+                        onChange={(e) => handleRowChange(idx, 'max_percent', e.target.value)}
+                        style={{ width: '80px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={s.grade_point}
+                        onChange={(e) => handleRowChange(idx, 'grade_point', e.target.value)}
+                        style={{ width: '80px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={s.remarks || ''}
+                        onChange={(e) => handleRowChange(idx, 'remarks', e.target.value)}
+                        placeholder="e.g. Outstanding"
+                        style={{ width: '100%', minWidth: '150px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
+                      />
+                    </td>
+                    <td>
+                      <select
+                        value={s.is_passing}
+                        onChange={(e) => handleRowChange(idx, 'is_passing', e.target.value)}
+                        style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
+                      >
+                        <option value={1}>Pass</option>
+                        <option value={0}>Fail</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={s.sort_order}
+                        onChange={(e) => handleRowChange(idx, 'sort_order', e.target.value)}
+                        style={{ width: '70px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
+                      />
+                    </td>
+                    <td>
+                      <button className="btn btn-sm btn-outline btn-danger" onClick={() => handleRemoveRow(idx)}>
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {scales.length === 0 && (
+                  <tr>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '3rem' }}>
+                      <Award size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
+                      <p style={{ color: 'var(--text-muted)' }}>No grading scales defined yet. Click 'Load Default Scale' or add a custom row.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <button className="btn btn-outline" onClick={handleAddRow}>
+              + Add Custom Grade Row
+            </button>
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
+}

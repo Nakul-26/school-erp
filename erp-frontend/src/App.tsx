@@ -38,6 +38,17 @@ import BulkImport from './pages/BulkImport';
 import SystemSettings from './pages/SystemSettings';
 import TeachingAllocationHub from './pages/TeachingAllocationHub';
 import ApprovalsInbox from './pages/ApprovalsInbox';
+import LeaveTypes from './pages/LeaveTypes';
+import MyLeaveApplications from './pages/MyLeaveApplications';
+import LeaveApprovals from './pages/LeaveApprovals';
+import AdmissionInquiries from './pages/AdmissionInquiries';
+import AdmissionApplications from './pages/AdmissionApplications';
+import GradeSettings from './pages/GradeSettings';
+import SalaryStructures from './pages/SalaryStructures';
+import PayrollRuns from './pages/PayrollRuns';
+import PayrollRunDetail from './pages/PayrollRunDetail';
+import StudentLeaveApprovals from './pages/StudentLeaveApprovals';
+import HomeworkList from './pages/HomeworkList';
 
 
 
@@ -252,6 +263,72 @@ function App() {
           <Route path="/settings" element={
             <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}>
               <SystemSettings />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/settings/grades" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}>
+              <GradeSettings />
+            </ProtectedRoute>
+          } />
+
+          {/* Sprint A1 — Leave Management */}
+          <Route path="/leave/types" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}>
+              <LeaveTypes />
+            </ProtectedRoute>
+          } />
+          <Route path="/leave/my" element={
+            <ProtectedRoute>
+              <MyLeaveApplications />
+            </ProtectedRoute>
+          } />
+          <Route path="/leave/approvals" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}>
+              <LeaveApprovals />
+            </ProtectedRoute>
+          } />
+
+          {/* Sprint A2 — Admission Management */}
+          <Route path="/admissions/inquiries" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}>
+              <AdmissionInquiries />
+            </ProtectedRoute>
+          } />
+          <Route path="/admissions/applications" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}>
+              <AdmissionApplications />
+            </ProtectedRoute>
+          } />
+
+          {/* Sprint C1 — Basic Payroll */}
+          <Route path="/payroll/salary-structures" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}>
+              <SalaryStructures />
+            </ProtectedRoute>
+          } />
+          <Route path="/payroll/runs" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}>
+              <PayrollRuns />
+            </ProtectedRoute>
+          } />
+          <Route path="/payroll/runs/:id" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}>
+              <PayrollRunDetail />
+            </ProtectedRoute>
+          } />
+
+          {/* Sprint C3 — Student Leave Applications */}
+          <Route path="/student-leaves/approvals" element={
+            <ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher']}>
+              <StudentLeaveApprovals />
+            </ProtectedRoute>
+          } />
+
+          {/* Sprint C4 — Homework */}
+          <Route path="/homework" element={
+            <ProtectedRoute>
+              <HomeworkList />
             </ProtectedRoute>
           } />
           

@@ -59,6 +59,9 @@ export default function Exams() {
   
   const [showExamModal, setShowExamModal] = useState(false);
   const [showSubjectModal, setShowSubjectModal] = useState(false);
+  const [selectedReportCard, setSelectedReportCard] = useState<any | null>(null);
+  const [showReportCardModal, setShowReportCardModal] = useState(false);
+  const [loadingReportCard, setLoadingReportCard] = useState(false);
   
   // Forms
   const [examForm, setExamForm] = useState({
@@ -276,6 +279,20 @@ export default function Exams() {
       alert('Error loading results sheet');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenReportCard = async (examId: string, studentId: string) => {
+    try {
+      setLoadingReportCard(true);
+      setShowReportCardModal(true);
+      const data = await api.get(`/grades/report-card/${examId}/${studentId}`);
+      setSelectedReportCard(data);
+    } catch (err: any) {
+      alert(err.message || 'Error loading report card');
+      setShowReportCardModal(false);
+    } finally {
+      setLoadingReportCard(false);
     }
   };
 
@@ -725,6 +742,7 @@ export default function Exams() {
                     <th>Percentage</th>
                     <th>Calculated Grade</th>
                     <th>Result Card</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -744,11 +762,19 @@ export default function Exams() {
                           {res.result}
                         </span>
                       </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button
+                          className="btn btn-sm btn-outline"
+                          onClick={() => handleOpenReportCard(selectedExam.id, res.student_id)}
+                        >
+                          📋 Report Card
+                        </button>
+                      </td>
                     </tr>
                   ))}
                   {examResults.length === 0 && (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: 'center', padding: '3rem' }}>
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '3rem' }}>
                         <p style={{ color: 'var(--text-muted)' }}>No marks have been graded for this exam event yet.</p>
                       </td>
                     </tr>
@@ -759,6 +785,126 @@ export default function Exams() {
           </div>
         </>
       )}
+      {showReportCardModal && (
+        <div className="modal-overlay no-print" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px', width: '90%' }}>
+            <div className="modal-header">
+              <h3>Student Report Card</h3>
+              <button onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>✕</button>
+            </div>
+            <div className="modal-body">
+              {loadingReportCard ? <p>Building report card...</p> : selectedReportCard ? (
+                <div id="printable-report-card" style={{ padding: '1rem', backgroundColor: '#fff', color: '#000' }}>
+                  <div style={{ textAlign: 'center', marginBottom: '1.5rem', borderBottom: '2px solid #000', paddingBottom: '1rem' }}>
+                    <h2 style={{ margin: 0, textTransform: 'uppercase' }}>Academic Report Card</h2>
+                    <h3 style={{ margin: '0.25rem 0 0 0', fontWeight: 'normal', color: '#555' }}>Institution Name</h3>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                    <div>
+                      <p style={{ margin: '0.25rem 0' }}><strong>Student Name:</strong> {selectedReportCard.student.first_name} {selectedReportCard.student.last_name}</p>
+                      <p style={{ margin: '0.25rem 0' }}><strong>Roll Number:</strong> {selectedReportCard.student.roll_number || '-'}</p>
+                      <p style={{ margin: '0.25rem 0' }}><strong>Admission No:</strong> {selectedReportCard.student.admission_number}</p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ margin: '0.25rem 0' }}><strong>Exam:</strong> {selectedReportCard.exam.name}</p>
+                      <p style={{ margin: '0.25rem 0' }}><strong>Academic Year:</strong> {selectedReportCard.exam.academic_year}</p>
+                      <p style={{ margin: '0.25rem 0' }}><strong>Program:</strong> {selectedReportCard.exam.course}</p>
+                    </div>
+                  </div>
+
+                  <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #000' }}>
+                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Code</th>
+                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Name</th>
+                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Max Marks</th>
+                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Obtained</th>
+                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Percentage</th>
+                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Grade</th>
+                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>GP</th>
+                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Result</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedReportCard.subjects.map((sub: any, idx: number) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
+                          <td style={{ padding: '0.5rem' }}>{sub.subject_code}</td>
+                          <td style={{ padding: '0.5rem' }}>{sub.subject_name}</td>
+                          <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.max_marks}</td>
+                          <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.marks_obtained}</td>
+                          <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.percent}%</td>
+                          <td style={{ textAlign: 'center', padding: '0.5rem', fontWeight: 'bold' }}>{sub.grade}</td>
+                          <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.grade_point}</td>
+                          <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                            <span style={{ color: sub.is_passing ? 'var(--success)' : 'var(--danger)', fontWeight: 'bold' }}>
+                              {sub.is_passing ? 'PASS' : 'FAIL'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      <tr style={{ fontWeight: 'bold', borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
+                        <td colSpan={2} style={{ padding: '0.5rem' }}>GRAND TOTAL</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.max_marks}</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.marks_obtained}</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.percent}%</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.grade}</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.grade_point}</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                          <span style={{ color: selectedReportCard.result === 'PASS' ? 'var(--success)' : 'var(--danger)' }}>
+                            {selectedReportCard.result}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1.5rem', fontSize: '0.9rem', borderTop: '1px dashed #ccc', paddingTop: '1rem' }}>
+                    <div>
+                      <p><strong>Rank in Class:</strong> {selectedReportCard.total.rank || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p><strong>Attendance:</strong> {selectedReportCard.attendance_percent !== null ? `${selectedReportCard.attendance_percent}%` : 'N/A'}</p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p><strong>Overall Result:</strong> <span style={{ fontWeight: 'bold', color: selectedReportCard.result === 'PASS' ? 'var(--success)' : 'var(--danger)' }}>{selectedReportCard.result}</span></p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem', fontSize: '0.8rem', color: '#555' }}>
+                    <div style={{ borderTop: '1px solid #000', width: '150px', textAlign: 'center', paddingTop: '0.25rem' }}>Class Teacher</div>
+                    <div style={{ borderTop: '1px solid #000', width: '150px', textAlign: 'center', paddingTop: '0.25rem' }}>Controller of Exams</div>
+                    <div style={{ borderTop: '1px solid #000', width: '150px', textAlign: 'center', paddingTop: '0.25rem' }}>Principal</div>
+                  </div>
+                </div>
+              ) : <p>No report card data loaded</p>}
+            </div>
+            <div className="modal-footer no-print">
+              <button className="btn btn-outline" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>Close</button>
+              <button className="btn btn-primary" onClick={() => window.print()} disabled={!selectedReportCard}>Print Report Card</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-report-card, #printable-report-card * {
+            visibility: visible;
+          }
+          #printable-report-card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}</style>
     </Layout>
   );
 }

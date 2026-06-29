@@ -85,7 +85,7 @@ async function runTests() {
 
   // 2. Institution Setup
   console.log('🏢 [2/10] Testing Organization / Institution Setup...');
-  const instId = 'inst-oxford';
+  const instId = 'inst-greenwood';
   
   // Get details
   const getInstRes = await request(`/institutions/${instId}`);
@@ -159,7 +159,10 @@ async function runTests() {
   
   // Retrieve the created user and check roles
   const getUserRes = await request(`/users/${newUserId}`);
-  if (!getUserRes.ok) throw new Error(`Retrieve user failed`);
+  if (!getUserRes.ok) {
+    console.error('Retrieve user failed:', getUserRes.status, getUserRes.data);
+    throw new Error(`Retrieve user failed`);
+  }
   const assignedRoles = getUserRes.data.roles || [];
   console.log(`- User roles in DB: [${assignedRoles.join(', ')}]`);
   
@@ -174,17 +177,18 @@ async function runTests() {
   const getLogsRes = await request('/audit-logs');
   if (!getLogsRes.ok) throw new Error(`Get audit logs failed: ${JSON.stringify(getLogsRes.data)}`);
   
-  console.log(`- Total audit logs retrieved: ${getLogsRes.data.length}`);
+  const logsArray = Array.isArray(getLogsRes.data) ? getLogsRes.data : getLogsRes.data.data;
+  console.log(`- Total audit logs retrieved: ${logsArray.length}`);
   
-  const recentLogs = getLogsRes.data.slice(0, 5);
+  const recentLogs = logsArray.slice(0, 5);
   console.log('- Recent actions tracked:');
   recentLogs.forEach(log => {
     console.log(`  * [${log.action}] ${log.description} (${new Date(log.timestamp).toLocaleTimeString()})`);
   });
   
-  const hasLoginLog = getLogsRes.data.some(log => log.action === 'LOGIN');
-  const hasUpdateInstLog = getLogsRes.data.some(log => log.action === 'UPDATE_INSTITUTION');
-  const hasCreateUserLog = getLogsRes.data.some(log => log.action === 'CREATE_USER');
+  const hasLoginLog = logsArray.some(log => log.action === 'LOGIN');
+  const hasUpdateInstLog = logsArray.some(log => log.action === 'UPDATE_INSTITUTION');
+  const hasCreateUserLog = logsArray.some(log => log.action === 'CREATE_USER');
   
   if (!hasLoginLog || !hasUpdateInstLog || !hasCreateUserLog) {
     throw new Error('Required audit log actions were not recorded in the database');
@@ -318,6 +322,7 @@ async function runTests() {
   const getLogsRes2 = await request('/audit-logs');
   if (!getLogsRes2.ok) throw new Error('Get audit logs for phase 2 failed');
   
+  const logsArray2 = Array.isArray(getLogsRes2.data) ? getLogsRes2.data : getLogsRes2.data.data;
   const actionsToCheck = [
     'CREATE_ACADEMIC_YEAR',
     'CREATE_DEPARTMENT',
@@ -327,7 +332,7 @@ async function runTests() {
   ];
   
   for (const action of actionsToCheck) {
-    const hasLog = getLogsRes2.data.some(log => log.action === action);
+    const hasLog = logsArray2.some(log => log.action === action);
     if (!hasLog) {
       throw new Error(`Audit log for action "${action}" was not found`);
     }

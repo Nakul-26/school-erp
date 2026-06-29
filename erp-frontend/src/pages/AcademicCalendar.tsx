@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { Plus, Trash2, Calendar as CalendarIcon, Tag, MapPin, Clock } from 'lucide-react';
@@ -88,6 +89,11 @@ export default function AcademicCalendar() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="School Calendar"
+        description="Use this page to track and schedule school events, exams, meetings, and holidays."
+        steps={["View scheduled activities in a calendar monthly layout.","Double-click a date to add a new school event, holiday, or meeting.","Filter by category to view only exams, holidays, or events."]}
+      />
       <div className="page-header">
         <div>
           <h2>Academic Calendar</h2>

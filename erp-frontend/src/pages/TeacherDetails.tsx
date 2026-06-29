@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -366,7 +367,12 @@ export default function TeacherDetails() {
     }
   };
 
-  if (loading) return <Layout><p style={{ textAlign: 'center', padding: '3rem' }}>Loading teacher profile...</p></Layout>;
+  if (loading) return <Layout>
+      <PageGuidance
+        title="Staff Profile"
+        description="Use this page to view a teacher's personal files, assigned classes, and leaves."
+        steps={["Inspect contact information and employment details.","Check the subjects and classes this teacher is assigned to teach.","Review their attendance record and leave history."]}
+      /><p style={{ textAlign: 'center', padding: '3rem' }}>Loading teacher profile...</p></Layout>;
   if (!teacher) return <Layout><p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Teacher profile not found.</p></Layout>;
 
   // Timeline building

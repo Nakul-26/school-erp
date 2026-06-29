@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { 
@@ -250,6 +251,11 @@ export default function SystemSettings() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="System Settings"
+        description="Use this page to enable or disable features, manage security settings, and configure defaults."
+        steps={["Toggle optional modules (like leaves, payroll, or admissions).","Set rules for default passwords and session times.","Manage global settings for your school portal."]}
+      />
       <div className="page-header">
         <div>
           <h2>Institution Settings</h2>

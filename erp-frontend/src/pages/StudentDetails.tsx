@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -399,7 +400,12 @@ export default function StudentDetails() {
     setPromoteForm(updatedForm);
   };
 
-  if (loading) return <Layout><p style={{ textAlign: 'center', padding: '3rem' }}>Loading student profile...</p></Layout>;
+  if (loading) return <Layout>
+      <PageGuidance
+        title="Student Profile"
+        description="Use this page to inspect a student's personal information, attendance record, and exam grades."
+        steps={["Read personal details, contact info, and parent profiles.","Check their attendance percentage and detailed daily record.","Review report cards and outstanding school fees."]}
+      /><p style={{ textAlign: 'center', padding: '3rem' }}>Loading student profile...</p></Layout>;
   if (!student) return <Layout><p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Student profile not found.</p></Layout>;
 
   // Calculate fees statistics

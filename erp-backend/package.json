@@ -9,7 +9,8 @@
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
     "db:execute": "wrangler d1 execute erp-db --local --file=db/schema.sql",
-    "seed-demo": "node seed-demo.js"
+    "seed-demo": "node seed-demo.js",
+    "seed-school": "wrangler d1 execute erp-db --local --file=db/seed-school.sql"
   },
   "keywords": [],
   "author": "",

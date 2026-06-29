@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { Plus, Search, Shield, UserCog, Edit, Trash2 } from 'lucide-react';
@@ -123,6 +124,11 @@ export default function ManageUsers() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="User Accounts"
+        description="Use this page to set up login accounts for teachers, administrators, and office staff."
+        steps={["Click \"Add User\" to register a new user account.","Enter their name, username, email, and choose their role.","Use the edit or delete buttons to manage existing accounts."]}
+      />
       <div className="page-header">
         <div>
           <h2>User Management</h2>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { ClipboardCheck, X, Check, AlertTriangle } from 'lucide-react';
@@ -123,6 +124,11 @@ export default function LeaveApprovals() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Leave Approvals"
+        description="Use this page to review leave requests submitted by teachers. Check the leave dates and reason before approving or rejecting the request. You can also filter requests by status or academic year."
+        steps={["View pending, approved, and rejected teacher leave requests.","Filter by status or academic year to inspect specific records.","Click Approve or Reject to update and save the status."]}
+      />
       <div className="page-header">
         <div>
           <h2><ClipboardCheck size={22} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />Leave Approvals</h2>
@@ -140,17 +146,7 @@ export default function LeaveApprovals() {
         </div>
       </div>
 
-      <div style={{
-        padding: '1rem 1.25rem',
-        backgroundColor: '#eff6ff',
-        borderLeft: '4px solid #3b82f6',
-        borderRadius: '6px',
-        fontSize: '0.875rem',
-        color: '#1e3a8a',
-        lineHeight: '1.5'
-      }}>
-        <strong>💡 Page Guidance:</strong> Admin and HOD dashboard to review leave applications requested by teachers. You can filter applications by status (All, Pending, Approved, Rejected) and Academic Year. Under <em>Pending</em> applications, click Approve or Reject to update and save the status.
-      </div>
+      
 
       {/* Filter Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>

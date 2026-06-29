@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
@@ -12,6 +13,11 @@ export default function Profile() {
   if (!user) {
     return (
       <Layout>
+      <PageGuidance
+        title="My Profile"
+        description="Use this page to view your account details, upload a profile photo, and change your password."
+        steps={["Review your assigned school roles and details.","Upload a professional profile photo.","Update your password to keep your account secure."]}
+      />
         <div style={{ padding: '2rem', textAlign: 'center' }}>
           <p>Please log in to view this page.</p>
         </div>

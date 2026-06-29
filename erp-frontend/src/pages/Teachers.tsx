@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, Search, Eye, Edit3, Trash2 } from 'lucide-react';
+import { Plus, Search, Eye, Edit3, Trash2, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Teachers() {
@@ -418,80 +418,19 @@ export default function Teachers() {
 
   return (
     <Layout>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2>Teachers</h2>
-        <button className="btn btn-primary" onClick={handleAddTeacherClick}>
-          <Plus size={18} /> Add Teacher
-        </button>
-      </div>
+      {showModal ? (
+        <>
+          <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => setShowModal(false)}>
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)' }}>Add New Teacher Walkthrough</h2>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Follow the steps to register a new teacher and set up their portal account.</p>
+            </div>
+          </div>
 
-      <div className="card filters" style={{ marginBottom: '1rem' }}>
-        <div className="search-container">
-          <Search size={18} />
-          <input 
-            type="text" 
-            placeholder="Search by name, ID, or department..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="card">
-        {loading ? <p>Loading...</p> : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Emp. ID</th>
-                <th>Name</th>
-                <th>Department</th>
-                <th>Designation</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTeachers.map(t => (
-                <tr key={t.id}>
-                  <td>{t.employee_id}</td>
-                  <td>{t.first_name} {t.middle_name ? t.middle_name + ' ' : ''}{t.last_name}</td>
-                  <td>{t.department || '-'}</td>
-                  <td>{t.designation || '-'}</td>
-                  <td>
-                    <span className={`badge badge-${t.status === 'ACTIVE' ? 'success' : 'secondary'}`}>
-                      {t.status}
-                    </span>
-                  </td>
-                  <td style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Link to={`/teachers/${t.id}`} className="btn btn-sm btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <Eye size={14} /> View
-                    </Link>
-                    <button 
-                      onClick={() => handleEditClick(t)} 
-                      className="btn btn-sm btn-secondary"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                    >
-                      <Edit3 size={14} /> Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredTeachers.length === 0 && (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No teachers found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Creation Modal */}
-      {showModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '720px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Add New Teacher</h3>
-            
+          <div className="card" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
             {/* Step Indicators */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative', padding: '0 1rem' }}>
               <div style={{ position: 'absolute', top: '50%', left: '1rem', right: '1rem', height: '2px', backgroundColor: '#e2e8f0', transform: 'translateY(-50%)', zIndex: 0 }} />
@@ -539,7 +478,6 @@ export default function Teachers() {
             </div>
 
             <form onSubmit={handleSubmit}>
-              
               {/* Step 1: Personal Details */}
               {createStep === 1 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -673,7 +611,7 @@ export default function Teachers() {
                           placeholder="e.g. john.smith"
                         />
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
-                          Unique identifier used to access the portal. Alphanumeric, dots, dashes, or underscores.
+                          Unique identifier used to access the portal.
                         </span>
                       </div>
 
@@ -698,20 +636,9 @@ export default function Teachers() {
                           />
                         </div>
                       </div>
-
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-main)', marginTop: '0.5rem' }}>
-                        <input 
-                          type="checkbox" 
-                          defaultChecked 
-                          disabled
-                          style={{ accentColor: 'var(--primary)' }}
-                        />
-                        <span>Require password change on first login</span>
-                      </label>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1.25rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: '#f8fafc', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                      <span style={{ fontSize: '1.25rem', color: 'var(--primary)' }}>○</span>
                       <span>Login account will be created later.</span>
                     </div>
                   )}
@@ -740,21 +667,6 @@ export default function Teachers() {
                       <div><strong style={{ color: 'var(--text-muted)' }}>Qualification:</strong> {form.qualification || 'N/A'}</div>
                       <div><strong style={{ color: 'var(--text-muted)' }}>Experience:</strong> {form.experience || 'N/A'}</div>
                     </div>
-                    {form.selectedSubjects && form.selectedSubjects.length > 0 && (
-                      <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
-                        <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.82rem', marginBottom: '0.25rem' }}>Assigned Subjects:</strong>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                          {form.selectedSubjects.map((subId: string) => {
-                            const sub = subjects.find(s => s.id === subId);
-                            return sub ? (
-                              <span key={subId} className="badge badge-secondary" style={{ fontSize: '0.75rem' }}>
-                                {sub.subject_name}
-                              </span>
-                            ) : null;
-                          })}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div style={{ backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1.25rem' }}>
@@ -764,7 +676,6 @@ export default function Teachers() {
                         <div><strong style={{ color: 'var(--text-muted)' }}>Username:</strong> {form.username}</div>
                         <div><strong style={{ color: 'var(--text-muted)' }}>Password:</strong> {form.password}</div>
                         <div><strong style={{ color: 'var(--text-muted)' }}>Role:</strong> Teacher</div>
-                        <div><strong style={{ color: 'var(--text-muted)' }}>First Login Reset:</strong> Yes</div>
                       </div>
                     ) : (
                       <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
@@ -772,10 +683,6 @@ export default function Teachers() {
                       </div>
                     )}
                   </div>
-
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>
-                    Please verify all information above is correct before confirming.
-                  </p>
                 </div>
               )}
 
@@ -801,7 +708,78 @@ export default function Teachers() {
               </div>
             </form>
           </div>
+        </>
+      ) : (
+        <>
+          <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2>Teachers</h2>
+        <button className="btn btn-primary" onClick={handleAddTeacherClick}>
+          <Plus size={18} /> Add Teacher
+        </button>
+      </div>
+
+      <div className="card filters" style={{ marginBottom: '1rem' }}>
+        <div className="search-container">
+          <Search size={18} />
+          <input 
+            type="text" 
+            placeholder="Search by name, ID, or department..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
+      </div>
+
+      <div className="card">
+        {loading ? <p>Loading...</p> : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Emp. ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTeachers.map(t => (
+                <tr key={t.id}>
+                  <td>{t.employee_id}</td>
+                  <td>{t.first_name} {t.middle_name ? t.middle_name + ' ' : ''}{t.last_name}</td>
+                  <td>{t.department || '-'}</td>
+                  <td>{t.designation || '-'}</td>
+                  <td>
+                    <span className={`badge badge-${t.status === 'ACTIVE' ? 'success' : 'secondary'}`}>
+                      {t.status}
+                    </span>
+                  </td>
+                  <td style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Link to={`/teachers/${t.id}`} className="btn btn-sm btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Eye size={14} /> View
+                    </Link>
+                    <button 
+                      onClick={() => handleEditClick(t)} 
+                      className="btn btn-sm btn-secondary"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                    >
+                      <Edit3 size={14} /> Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {filteredTeachers.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No teachers found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+        </>
       )}
 
       {/* Success Dialog */}

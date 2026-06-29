@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { Plus, Search, Eye, Edit3, Trash2, Shield, Users, BookOpen, RefreshCw, Info, Calendar, ArrowLeft } from 'lucide-react';
@@ -172,6 +173,11 @@ export default function Departments() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Departments"
+        description="Use this page to organize your school into main divisions like Primary, Secondary, or subject groups."
+        steps={["Click \"Add Department\" to create a new division.","Enter the name and assign a head teacher to lead it.","Manage or update department details from the list below."]}
+      />
       {/* Page Header */}
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>

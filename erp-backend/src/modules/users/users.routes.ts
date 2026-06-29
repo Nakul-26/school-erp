@@ -35,26 +35,30 @@ users.get('/', requirePermission('user.manage'), async (c) => {
 });
 
 users.get('/:id', async (c) => {
-  const user = c.get('user');
-  const id = c.req.param('id')!;
-  const repo = new UserRepository(c.env.DB);
-  const service = new UserService(repo);
-  
-  const targetUser = await service.getUser(id);
-  if (!targetUser) return c.json({ error: 'User not found' }, 404);
-  
-  // Security check: only self or users with user.manage permission from same institution
-  const isSelf = targetUser.id === user.sub;
-  const userPermissions = await repo.getUserPermissions(user.sub);
-  const hasUserManage = userPermissions.includes('user.manage');
-  const isSameInst = targetUser.institution_id === user.institution_id;
-  
-  const canReadTarget = isSelf || (hasUserManage && isSameInst);
-  if (!canReadTarget) {
-    return c.json({ error: 'Unauthorized' }, 403);
+  try {
+    const user = c.get('user');
+    const id = c.req.param('id')!;
+    const repo = new UserRepository(c.env.DB);
+    const service = new UserService(repo);
+    
+    const targetUser = await service.getUser(id);
+    if (!targetUser) return c.json({ error: 'User not found' }, 404);
+    
+    // Security check: only self or users with user.manage permission from same institution
+    const isSelf = targetUser.id === user.sub;
+    const userPermissions = await repo.getUserPermissions(user.sub);
+    const hasUserManage = userPermissions.includes('user.manage');
+    const isSameInst = targetUser.institution_id === user.institution_id;
+    
+    const canReadTarget = isSelf || (hasUserManage && isSameInst);
+    if (!canReadTarget) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    return c.json(targetUser);
+  } catch (err: any) {
+    return c.json({ error: err.message, stack: err.stack }, 500);
   }
-  
-  return c.json(targetUser);
 });
 
 users.post('/', requirePermission('user.manage'), async (c) => {

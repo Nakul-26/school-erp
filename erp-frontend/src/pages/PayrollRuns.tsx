@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -63,6 +64,11 @@ export default function PayrollRuns() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Payroll Process"
+        description="Use this page to calculate monthly salaries for teachers and staff. Select the month and year, then click **Calculate Payroll**. The system automatically considers attendance, approved leaves, and salary settings before generating payslips."
+        steps={["Select target Month and Year.","Click Calculate Monthly Payroll to compute earnings and apply LOP deductions.","Review calculation details and click Finalize & Release to publish payslips to teacher portals."]}
+      />
       <div className="page-header">
         <div>
           <h2>Payroll Process Logs</h2>
@@ -72,18 +78,7 @@ export default function PayrollRuns() {
         </div>
       </div>
 
-      <div style={{
-        padding: '1rem 1.25rem',
-        backgroundColor: '#eff6ff',
-        borderLeft: '4px solid #3b82f6',
-        borderRadius: '6px',
-        fontSize: '0.875rem',
-        color: '#1e3a8a',
-        lineHeight: '1.5',
-        marginBottom: '1.5rem'
-      }}>
-        <strong>💡 Page Guidance:</strong> Initiate monthly payroll calculations. Select month and year, then click <em>Calculate Monthly Payroll</em>. The engine runs on salary structure formulas and cross-references attendance registers to apply LOP deductions automatically.
-      </div>
+      
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
         {/* Left Form card */}

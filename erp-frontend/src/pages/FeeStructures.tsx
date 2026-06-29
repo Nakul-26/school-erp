@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { Plus, Trash2, Calendar, BookOpen, Layers, IndianRupee } from 'lucide-react';
@@ -93,6 +94,11 @@ export default function FeeStructures() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Fee Structures"
+        description="Use this page to set the fee amounts for different grades and terms."
+        steps={["Define fee types (e.g. Tuition Fee, Exam Fee).","Set the exact amount required for each Grade level.","These rates will automatically generate fee balances for students."]}
+      />
       <div className="page-header">
         <div>
           <h2>Fee Structures</h2>

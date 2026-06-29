@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Bell, Check, Award, Clock, Megaphone, CheckSquare } from 'lucide-react';
+import { Bell, Check, Award, Clock, Megaphone, CheckSquare, Plus, AlertCircle, RefreshCw } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface NotificationRecord {
   id: string;
@@ -13,8 +14,48 @@ interface NotificationRecord {
 }
 
 export default function Notifications() {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Broadcaster state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    title: '',
+    message: '',
+    type: 'general' as const,
+    target_role: 'all' // 'all', 'Teacher', 'Student'
+  });
+  const [creating, setCreating] = useState(false);
+
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const isAdmin = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'Super Admin'].includes(r));
+
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createForm.title.trim() || !createForm.message.trim()) {
+      alert('Title and message are required.');
+      return;
+    }
+    try {
+      setCreating(true);
+      await api.post('/notifications', createForm);
+      alert('Alert broadcasted successfully!');
+      setShowCreateModal(false);
+      setCreateForm({
+        title: '',
+        message: '',
+        type: 'general',
+        target_role: 'all'
+      });
+      fetchNotifications();
+    } catch (err) {
+      console.error('Error creating notification:', err);
+      alert('Failed to send notification.');
+    } finally {
+      setCreating(false);
+    }
+  };
 
   useEffect(() => {
     fetchNotifications();
@@ -115,11 +156,18 @@ export default function Notifications() {
             In-app alerts and live updates for academic and administrative schedules
           </p>
         </div>
-        {unreadCount > 0 && (
-          <button className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={handleMarkAllRead}>
-            <CheckSquare size={16} /> Mark all as read
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          {isAdmin && (
+            <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => setShowCreateModal(true)}>
+              <Plus size={16} /> Send Alert
+            </button>
+          )}
+          {unreadCount > 0 && (
+            <button className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={handleMarkAllRead}>
+              <CheckSquare size={16} /> Mark all as read
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="notifications-container" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -200,6 +248,70 @@ export default function Notifications() {
           ))
         )}
       </div>
+
+      {showCreateModal && (
+        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
+          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Broadcast System Alert</h3>
+            
+            <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label>Target Audience *</label>
+                <select 
+                  value={createForm.target_role} 
+                  onChange={e => setCreateForm({...createForm, target_role: e.target.value})}
+                >
+                  <option value="all">All Active Users</option>
+                  <option value="Teacher">All Teachers</option>
+                  <option value="Student">All Students</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Alert Type</label>
+                <select 
+                  value={createForm.type} 
+                  onChange={e => setCreateForm({...createForm, type: e.target.value as any})}
+                >
+                  <option value="general">General Broadcast</option>
+                  <option value="announcement">Announcement / Memo</option>
+                  <option value="exam">Academic Exam Alert</option>
+                  <option value="attendance">Attendance / Attendance Note</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Alert Title *</label>
+                <input 
+                  required 
+                  type="text" 
+                  value={createForm.title} 
+                  onChange={e => setCreateForm({...createForm, title: e.target.value})} 
+                  placeholder="e.g. Scheduled Power Outage"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Alert Message *</label>
+                <textarea 
+                  required 
+                  value={createForm.message} 
+                  onChange={e => setCreateForm({...createForm, message: e.target.value})} 
+                  placeholder="Details of the alert..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+                <button type="button" onClick={() => setShowCreateModal(false)} className="btn btn-secondary">Cancel</button>
+                <button type="submit" disabled={creating} className="btn btn-primary">
+                  {creating ? 'Sending...' : 'Broadcast Alert'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

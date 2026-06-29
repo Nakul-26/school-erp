@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { BookOpen, Plus, Trash2, Calendar, Clipboard } from 'lucide-react';
@@ -128,6 +129,11 @@ export default function HomeworkList() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Academic Homework"
+        description="Use this page to give homework, assignments, or projects to students. Select the class, subject, and due date, then enter the instructions. Students and parents can view the homework from their portal."
+        steps={["Click Create Homework to add a new assignment.","Select the target section, subject, due date, and fill instructions.","Students and parents will see this homework instantly in their portal."]}
+      />
       <div className="page-header">
         <div>
           <h2>Academic Homework Logs</h2>
@@ -142,18 +148,7 @@ export default function HomeworkList() {
         )}
       </div>
 
-      <div style={{
-        padding: '1rem 1.25rem',
-        backgroundColor: '#eff6ff',
-        borderLeft: '4px solid #3b82f6',
-        borderRadius: '6px',
-        fontSize: '0.875rem',
-        color: '#1e3a8a',
-        lineHeight: '1.5',
-        marginBottom: '1.5rem'
-      }}>
-        <strong>💡 Page Guidance:</strong> Class homework portal. Teachers can assign new homework to their designated sections and select specific subjects, instructions, and target due dates. Students and parents can log in to view current homework lists and submission schedules.
-      </div>
+      
 
       {/* Filter panel */}
       <div className="card" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem' }}>

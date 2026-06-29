@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { Award, Save, RefreshCw } from 'lucide-react';
@@ -109,6 +110,11 @@ export default function GradeSettings() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Grade Settings"
+        description="Use this page to decide how exam marks are converted into grades like A+, A, B, and C. These settings are used automatically while preparing exam results and report cards."
+        steps={["Set percentage limits (Min% and Max%) and link them to letter grades.","Click Load Default Scale to fill standard grading schemes.","Click Save Changes to apply settings across all school exams."]}
+      />
       <div className="page-header">
         <div>
           <h2>Grade Settings</h2>
@@ -126,18 +132,7 @@ export default function GradeSettings() {
         </div>
       </div>
 
-      <div style={{
-        padding: '1rem 1.25rem',
-        backgroundColor: '#eff6ff',
-        borderLeft: '4px solid #3b82f6',
-        borderRadius: '6px',
-        fontSize: '0.875rem',
-        color: '#1e3a8a',
-        lineHeight: '1.5',
-        marginBottom: '1rem'
-      }}>
-        <strong>💡 Page Guidance:</strong> Setup grade metrics for all student exams. Map percentage boundaries (Min% and Max%) to specific letter grades (e.g. A+, A, B) and GPA values (0.0 - 10.0). Click <em>Load Default Scale</em> to populate with the standard Indian grading scheme, or click <em>Save Changes</em> to persist edits.
-      </div>
+      
 
       <div className="card" style={{ padding: '1.5rem' }}>
         {loading ? <p>Loading grade scale configuration...</p> : (

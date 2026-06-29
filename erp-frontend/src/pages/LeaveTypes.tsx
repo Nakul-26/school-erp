@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { BookOpen, Plus, Trash2, Edit, RefreshCw, X } from 'lucide-react';
@@ -119,6 +120,11 @@ export default function LeaveTypes() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Leave Types"
+        description="Use this page to create different types of leave such as Sick Leave, Casual Leave, and Earned Leave. After creating the leave types, click **Give Leave Balance** to assign the yearly leave limit to all active teachers."
+        steps={["Define different leave categories and their respective day counts.","Click Give Leave Balance to allocate yearly limits to active teachers.","Verify allocated quotas inside My Leave Applications."]}
+      />
       <div className="page-header">
         <div>
           <h2><BookOpen size={22} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />Leave Types</h2>
@@ -129,7 +135,7 @@ export default function LeaveTypes() {
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button className="btn btn-outline" onClick={() => setShowSeedModal(true)}>
             <RefreshCw size={16} style={{ marginRight: '0.4rem' }} />
-            Seed Balances for Year
+            Give Leave Balance
           </button>
           <button className="btn btn-primary" onClick={openAddModal}>
             <Plus size={16} style={{ marginRight: '0.4rem' }} />
@@ -138,17 +144,7 @@ export default function LeaveTypes() {
         </div>
       </div>
 
-      <div style={{
-        padding: '1rem 1.25rem',
-        backgroundColor: '#eff6ff',
-        borderLeft: '4px solid #3b82f6',
-        borderRadius: '6px',
-        fontSize: '0.875rem',
-        color: '#1e3a8a',
-        lineHeight: '1.5'
-      }}>
-        <strong>💡 Page Guidance:</strong> This page allows administrators to define the different types of leaves (like SL - Sick Leave, CL - Casual Leave) and their yearly quotas. Once defined, click <em>Seed Balances for Year</em> to allocate this quota to all currently active teachers for the selected academic year.
-      </div>
+      
 
       <div className="card">
         {loading ? (

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import WorkspaceShell from '../components/WorkspaceShell';
 import { api } from '../services/api';
@@ -367,6 +368,11 @@ export default function AcademicYears() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="School Years"
+        description="Use this page to set up and manage the calendar years for school operations."
+        steps={["Create a new school year (e.g. 2026-27) with its start and end dates.","Mark the current school year so the system displays the correct student records.","Switch between years to view historic school records."]}
+      />
       <WorkspaceShell
         title="Academic Years Workspace"
         breadcrumbs={[{ label: 'Institution Admin', to: '/settings' }, { label: 'Academic Years' }]}

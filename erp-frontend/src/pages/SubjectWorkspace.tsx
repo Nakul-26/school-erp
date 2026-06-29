@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -382,6 +383,11 @@ export default function SubjectWorkspace() {
   if (loading) {
     return (
       <Layout>
+      <PageGuidance
+        title="Subject Portal"
+        description="Use this page to manage syllabus documents, teaching notes, and exam schedules for a subject."
+        steps={["Upload notes, syllabus files, or worksheets for students.","Track teacher allocations and lesson schedules.","Create assessments and view student performance lists."]}
+      />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem' }}>
           <div style={{ height: '40px', width: '300px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} className="animate-pulse"></div>
           <div style={{ height: '100px', backgroundColor: '#e2e8f0', borderRadius: '8px' }} className="animate-pulse"></div>

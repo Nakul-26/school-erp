@@ -3,7 +3,7 @@ import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { 
   Plus, Search, Eye, Edit2, ChevronLeft, ChevronRight, 
-  Check, Calendar, User, Phone, Mail, GraduationCap, Grid, List 
+  Check, Calendar, User, Phone, Mail, GraduationCap, Grid, List, ArrowLeft 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -449,7 +449,213 @@ export default function Students() {
 
   return (
     <Layout>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      {showAddModal ? (
+        <>
+          <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => { setShowAddModal(false); resetAddForm(); }}>
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)' }}>Student Admission Walkthrough</h2>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Follow the steps to register and enroll a new student profile.</p>
+            </div>
+          </div>
+
+          <div className="card" style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem' }}>
+            {/* Stepper Progress bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
+              {[
+                { s: 1, label: 'Personal' },
+                { s: 2, label: 'Academic' },
+                { s: 3, label: 'Guardian' },
+                { s: 4, label: 'Review' }
+              ].map(st => (
+                <div key={st.s} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: step === st.s ? 'var(--primary)' : step > st.s ? '#10b981' : '#64748b', fontWeight: step === st.s ? 700 : 500 }}>
+                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: step === st.s ? '#e0e7ff' : step > st.s ? '#d1fae5' : '#f1f5f9', color: step === st.s ? 'var(--primary)' : step > st.s ? '#065f46' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                    {step > st.s ? <Check size={14} /> : st.s}
+                  </div>
+                  <span style={{ fontSize: '0.8rem' }} className="stepper-label">{st.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleAddSubmit}>
+              {/* STEP 1: Personal Info */}
+              {step === 1 && (
+                <div>
+                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 1: Personal Information</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                    <div className="form-group">
+                      <label>First Name *</label>
+                      <input required type="text" value={addForm.first_name} onChange={e => setAddForm({...addForm, first_name: e.target.value})} placeholder="e.g. Alice" />
+                    </div>
+                    <div className="form-group">
+                      <label>Middle Name (Optional)</label>
+                      <input type="text" value={addForm.middle_name} onChange={e => setAddForm({...addForm, middle_name: e.target.value})} placeholder="e.g. Marie" />
+                    </div>
+                    <div className="form-group">
+                      <label>Last Name *</label>
+                      <input required type="text" value={addForm.last_name} onChange={e => setAddForm({...addForm, last_name: e.target.value})} placeholder="e.g. Wonder" />
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="form-group">
+                      <label>Admission Number *</label>
+                      <input required type="text" value={addForm.admission_number} onChange={e => setAddForm({...addForm, admission_number: e.target.value})} placeholder="e.g. ADM-2001" />
+                    </div>
+                    <div className="form-group">
+                      <label>Roll Number (Optional)</label>
+                      <input type="text" value={addForm.roll_number} onChange={e => setAddForm({...addForm, roll_number: e.target.value})} placeholder="e.g. CSE-A-12" />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Email Address</label>
+                    <input type="email" value={addForm.email} onChange={e => setAddForm({...addForm, email: e.target.value})} placeholder="alice@example.com" />
+                  </div>
+                  <div className="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" value={addForm.phone} onChange={e => setAddForm({...addForm, phone: e.target.value})} placeholder="e.g. +91 99999 88888" />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="form-group">
+                      <label>Gender</label>
+                      <select value={addForm.gender} onChange={e => setAddForm({...addForm, gender: e.target.value})}>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Date of Birth</label>
+                      <input type="date" value={addForm.date_of_birth} onChange={e => setAddForm({...addForm, date_of_birth: e.target.value})} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 2: Academic Info */}
+              {step === 2 && (
+                <div>
+                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 2: Academic Assignment</h4>
+                  
+                  <div className="form-group">
+                    <label>Academic Year *</label>
+                    <select required value={addForm.academic_year_id} onChange={e => setAddForm({...addForm, academic_year_id: e.target.value})}>
+                      <option value="">-- Select Academic Year --</option>
+                      {academicYears.map(y => (
+                        <option key={y.id} value={y.id}>{y.name} {y.is_current ? '(Current)' : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>{getProgramLabel()} *</label>
+                    <select required value={addForm.course_id} onChange={e => setAddForm({...addForm, course_id: e.target.value})}>
+                      <option value="">-- Select {getProgramLabel()} --</option>
+                      {programs.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Section / Class *</label>
+                    <select required value={addForm.section_id} onChange={e => setAddForm({...addForm, section_id: e.target.value})}>
+                      <option value="">-- Select Section --</option>
+                      {sections
+                        .filter(s => !addForm.course_id || s.course_id === addForm.course_id)
+                        .map(s => (
+                          <option key={s.id} value={s.id}>{s.name} (Year {s.year_number})</option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 3: Guardian Info */}
+              {step === 3 && (
+                <div>
+                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 3: Guardian Details</h4>
+                  
+                  <div className="form-group">
+                    <label>Guardian Name</label>
+                    <input type="text" value={addForm.guardian_name} onChange={e => setAddForm({...addForm, guardian_name: e.target.value})} placeholder="Full name of Father/Mother/Guardian" />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Relationship</label>
+                    <select value={addForm.guardian_relationship} onChange={e => setAddForm({...addForm, guardian_relationship: e.target.value})}>
+                      <option value="Father">Father</option>
+                      <option value="Mother">Mother</option>
+                      <option value="Guardian">Guardian</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Guardian Phone</label>
+                    <input type="text" value={addForm.guardian_phone} onChange={e => setAddForm({...addForm, guardian_phone: e.target.value})} placeholder="Phone number" />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Guardian Email</label>
+                    <input type="email" value={addForm.guardian_email} onChange={e => setAddForm({...addForm, guardian_email: e.target.value})} placeholder="guardian@example.com" />
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 4: Review Details */}
+              {step === 4 && (
+                <div>
+                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 4: Review and Verify</h4>
+                  
+                  <div style={{ backgroundColor: '#f8fafc', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.875rem' }}>
+                    <div>
+                      <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Personal</strong>
+                      <div>Name: <strong>{addForm.first_name} {addForm.middle_name ? addForm.middle_name + ' ' : ''}{addForm.last_name}</strong></div>
+                      <div>Admission No: <strong>{addForm.admission_number}</strong> | Roll No: <strong>{addForm.roll_number || '-'}</strong></div>
+                      <div>Gender: {addForm.gender} | DOB: {addForm.date_of_birth || '-'}</div>
+                      <div>Phone: {addForm.phone || '-'} | Email: {addForm.email || '-'}</div>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.75rem' }}>
+                      <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Academic Enrollment</strong>
+                      <div>Year: {academicYears.find(y => y.id === addForm.academic_year_id)?.name || '-'}</div>
+                      <div>{getProgramLabel()}: {programs.find(p => p.id === addForm.course_id)?.name || '-'}</div>
+                      <div>Section: {sections.find(s => s.id === addForm.section_id)?.name || '-'}</div>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.75rem' }}>
+                      <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Guardian Contacts</strong>
+                      <div>Name: {addForm.guardian_name || '-'} ({addForm.guardian_relationship})</div>
+                      <div>Phone: {addForm.guardian_phone || '-'} | Email: {addForm.guardian_email || '-'}</div>
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '1rem', textAlign: 'center' }}>
+                    Confirming will automatically register the student profile, establish the class enrollment record, and instantiate ledger entries matching active fee structures.
+                  </p>
+                </div>
+              )}
+
+              {/* Stepper Buttons */}
+              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+                <button type="button" onClick={() => { setShowAddModal(false); resetAddForm(); }} className="btn btn-secondary">Cancel</button>
+                {step > 1 && (
+                  <button type="button" onClick={handlePrevStep} className="btn btn-outline">Back</button>
+                )}
+                {step < 4 ? (
+                  <button type="button" onClick={handleNextStep} className="btn btn-primary">Next</button>
+                ) : (
+                  <button type="submit" className="btn btn-primary">Admit Student</button>
+                )}
+              </div>
+            </form>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)' }}>Student Hub</h2>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Manage student admissions, enrollments, profiles, and fee ledgers.</p>
@@ -814,204 +1020,7 @@ export default function Students() {
         </div>
       )}
 
-      {/* Multi-Step Add Student Form Modal */}
-      {showAddModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '640px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)', animation: 'slideUp 0.3s ease-out', position: 'relative' }}>
-            
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Student Admission Walkthrough</h3>
-            
-            {/* Stepper Progress bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
-              {[
-                { s: 1, label: 'Personal' },
-                { s: 2, label: 'Academic' },
-                { s: 3, label: 'Guardian' },
-                { s: 4, label: 'Review' }
-              ].map(st => (
-                <div key={st.s} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: step === st.s ? 'var(--primary)' : step > st.s ? '#10b981' : '#64748b', fontWeight: step === st.s ? 700 : 500 }}>
-                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: step === st.s ? '#e0e7ff' : step > st.s ? '#d1fae5' : '#f1f5f9', color: step === st.s ? 'var(--primary)' : step > st.s ? '#065f46' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                    {step > st.s ? <Check size={14} /> : st.s}
-                  </div>
-                  <span style={{ fontSize: '0.8rem' }} className="stepper-label">{st.label}</span>
-                </div>
-              ))}
-            </div>
-
-            <form onSubmit={handleAddSubmit}>
-              {/* STEP 1: Personal Info */}
-              {step === 1 && (
-                <div>
-                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 1: Personal Information</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                    <div className="form-group">
-                      <label>First Name *</label>
-                      <input required type="text" value={addForm.first_name} onChange={e => setAddForm({...addForm, first_name: e.target.value})} placeholder="e.g. Alice" />
-                    </div>
-                    <div className="form-group">
-                      <label>Middle Name (Optional)</label>
-                      <input type="text" value={addForm.middle_name} onChange={e => setAddForm({...addForm, middle_name: e.target.value})} placeholder="e.g. Marie" />
-                    </div>
-                    <div className="form-group">
-                      <label>Last Name *</label>
-                      <input required type="text" value={addForm.last_name} onChange={e => setAddForm({...addForm, last_name: e.target.value})} placeholder="e.g. Wonder" />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="form-group">
-                      <label>Admission Number *</label>
-                      <input required type="text" value={addForm.admission_number} onChange={e => setAddForm({...addForm, admission_number: e.target.value})} placeholder="e.g. ADM-2001" />
-                    </div>
-                    <div className="form-group">
-                      <label>Roll Number (Optional)</label>
-                      <input type="text" value={addForm.roll_number} onChange={e => setAddForm({...addForm, roll_number: e.target.value})} placeholder="e.g. CSE-A-12" />
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Email Address</label>
-                    <input type="email" value={addForm.email} onChange={e => setAddForm({...addForm, email: e.target.value})} placeholder="alice@example.com" />
-                  </div>
-                  <div className="form-group">
-                    <label>Phone Number</label>
-                    <input type="text" value={addForm.phone} onChange={e => setAddForm({...addForm, phone: e.target.value})} placeholder="e.g. +91 99999 88888" />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="form-group">
-                      <label>Gender</label>
-                      <select value={addForm.gender} onChange={e => setAddForm({...addForm, gender: e.target.value})}>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>Date of Birth</label>
-                      <input type="date" value={addForm.date_of_birth} onChange={e => setAddForm({...addForm, date_of_birth: e.target.value})} />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 2: Academic Info */}
-              {step === 2 && (
-                <div>
-                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 2: Academic Assignment</h4>
-                  
-                  <div className="form-group">
-                    <label>Academic Year *</label>
-                    <select required value={addForm.academic_year_id} onChange={e => setAddForm({...addForm, academic_year_id: e.target.value})}>
-                      <option value="">-- Select Academic Year --</option>
-                      {academicYears.map(y => (
-                        <option key={y.id} value={y.id}>{y.name} {y.is_current ? '(Current)' : ''}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>{getProgramLabel()} *</label>
-                    <select required value={addForm.course_id} onChange={e => setAddForm({...addForm, course_id: e.target.value})}>
-                      <option value="">-- Select {getProgramLabel()} --</option>
-                      {programs.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Section / Class *</label>
-                    <select required value={addForm.section_id} onChange={e => setAddForm({...addForm, section_id: e.target.value})}>
-                      <option value="">-- Select Section --</option>
-                      {sections
-                        .filter(s => !addForm.course_id || s.course_id === addForm.course_id)
-                        .map(s => (
-                          <option key={s.id} value={s.id}>{s.name} (Year {s.year_number})</option>
-                        ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 3: Guardian Info */}
-              {step === 3 && (
-                <div>
-                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 3: Guardian Details</h4>
-                  
-                  <div className="form-group">
-                    <label>Guardian Name</label>
-                    <input type="text" value={addForm.guardian_name} onChange={e => setAddForm({...addForm, guardian_name: e.target.value})} placeholder="Full name of Father/Mother/Guardian" />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Relationship</label>
-                    <select value={addForm.guardian_relationship} onChange={e => setAddForm({...addForm, guardian_relationship: e.target.value})}>
-                      <option value="Father">Father</option>
-                      <option value="Mother">Mother</option>
-                      <option value="Guardian">Guardian</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Guardian Phone</label>
-                    <input type="text" value={addForm.guardian_phone} onChange={e => setAddForm({...addForm, guardian_phone: e.target.value})} placeholder="Phone number" />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Guardian Email</label>
-                    <input type="email" value={addForm.guardian_email} onChange={e => setAddForm({...addForm, guardian_email: e.target.value})} placeholder="guardian@example.com" />
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 4: Review Details */}
-              {step === 4 && (
-                <div>
-                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 4: Review and Verify</h4>
-                  
-                  <div style={{ backgroundColor: '#f8fafc', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.875rem' }}>
-                    <div>
-                      <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Personal</strong>
-                      <div>Name: <strong>{addForm.first_name} {addForm.middle_name ? addForm.middle_name + ' ' : ''}{addForm.last_name}</strong></div>
-                      <div>Admission No: <strong>{addForm.admission_number}</strong> | Roll No: <strong>{addForm.roll_number || '-'}</strong></div>
-                      <div>Gender: {addForm.gender} | DOB: {addForm.date_of_birth || '-'}</div>
-                      <div>Phone: {addForm.phone || '-'} | Email: {addForm.email || '-'}</div>
-                    </div>
-
-                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.75rem' }}>
-                      <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Academic Enrollment</strong>
-                      <div>Year: {academicYears.find(y => y.id === addForm.academic_year_id)?.name || '-'}</div>
-                      <div>{getProgramLabel()}: {programs.find(p => p.id === addForm.course_id)?.name || '-'}</div>
-                      <div>Section: {sections.find(s => s.id === addForm.section_id)?.name || '-'}</div>
-                    </div>
-
-                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.75rem' }}>
-                      <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Guardian Contacts</strong>
-                      <div>Name: {addForm.guardian_name || '-'} ({addForm.guardian_relationship})</div>
-                      <div>Phone: {addForm.guardian_phone || '-'} | Email: {addForm.guardian_email || '-'}</div>
-                    </div>
-                  </div>
-
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '1rem', textAlign: 'center' }}>
-                    Confirming will automatically register the student profile, establish the class enrollment record, and instantiate ledger entries matching active fee structures.
-                  </p>
-                </div>
-              )}
-
-              {/* Stepper Buttons */}
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
-                <button type="button" onClick={() => { setShowAddModal(false); resetAddForm(); }} className="btn btn-secondary">Cancel</button>
-                {step > 1 && (
-                  <button type="button" onClick={handlePrevStep} className="btn btn-outline">Back</button>
-                )}
-                {step < 4 ? (
-                  <button type="button" onClick={handleNextStep} className="btn btn-primary">Next</button>
-                ) : (
-                  <button type="submit" className="btn btn-primary">Admit Student</button>
-                )}
-              </div>
-            </form>
-          </div>
-        </div>
+        </>
       )}
 
       {/* Edit Student Modal */}

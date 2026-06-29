@@ -1,3 +1,4 @@
+import { PageGuidance } from '../components/PageGuidance';
 import { useEffect, useState, useCallback } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -84,6 +85,11 @@ export default function AuditLogs() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Activity Log"
+        description="Use this page to review a list of actions and updates made by users in the system."
+        steps={["See who made changes, what they changed, and when.","Use the search filters to find activities for a specific date or module.","Browse the pages to see older activities."]}
+      />
       <div className="page-header">
         <div>
           <h2>System Audit Logs</h2>

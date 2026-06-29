@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -348,7 +349,7 @@ export default function StudentFees() {
       const d = new Date();
       d.setMonth(d.getMonth() + i);
       initial.push({
-        due_date: d.toISOString().split('T')[0],
+        due_date: d.toISOString().split('T')[0] || '',
         amount: i === count - 1 ? record.total_amount - (splitAmount * (count - 1)) : splitAmount
       });
     }
@@ -371,7 +372,7 @@ export default function StudentFees() {
       const d = new Date();
       d.setMonth(d.getMonth() + i);
       next.push({
-        due_date: d.toISOString().split('T')[0],
+        due_date: d.toISOString().split('T')[0] || '',
         amount: i === count - 1 ? selectedFeeRecord.total_amount - (splitAmount * (count - 1)) : splitAmount
       });
     }
@@ -452,6 +453,11 @@ export default function StudentFees() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Fee Collection"
+        description="Use this page to collect school fees, view ledgers, and print receipts."
+        steps={["Search for a student to open their fee ledger.","Click Collect Fee to record Cash, UPI, or Card payments.","Print payment receipts for parents immediately."]}
+      />
       {view === 'list' && (
         <>
           <div className="page-header">

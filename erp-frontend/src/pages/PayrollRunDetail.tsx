@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -93,6 +94,11 @@ export default function PayrollRunDetail() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Payroll Calculations"
+        description="Use this page to inspect individual payslip details calculated for a specific month and release them."
+        steps={["View salary breakdowns, allowances, and deductions per teacher.","Click View next to any teacher to open and inspect their payslip advice.","Click Finalize & Release to publish the payslips to teachers."]}
+      />
       <div className="page-header no-print">
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => navigate('/payroll/runs')}>
@@ -114,18 +120,7 @@ export default function PayrollRunDetail() {
         )}
       </div>
 
-      <div className="no-print" style={{
-        padding: '1rem 1.25rem',
-        backgroundColor: '#eff6ff',
-        borderLeft: '4px solid #3b82f6',
-        borderRadius: '6px',
-        fontSize: '0.875rem',
-        color: '#1e3a8a',
-        lineHeight: '1.5',
-        marginBottom: '1.5rem'
-      }}>
-        <strong>💡 Page Guidance:</strong> View salaries calculated for the month. Click <em>View</em> next to any teacher to open, inspect, and print their monthly payslip advice. If everything looks correct, click <em>Finalize & Release</em> at the top to publish payslips to teacher portals.
-      </div>
+      
 
       <div className="card no-print" style={{ padding: '1.5rem' }}>
         {loading ? <p>Loading run details...</p> : (

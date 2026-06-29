@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { Calendar, Check, X } from 'lucide-react';
@@ -78,6 +79,11 @@ export default function StudentLeaveApprovals() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Student Leave Inbox"
+        description="Use this page to review leave requests submitted for students by their parents or teachers. Read the reason for leave, then approve or reject the request. Approved leaves are included in the student's attendance record."
+        steps={["Review student leave applications sorted by status.","Click Approve or Reject after checking the leave dates and reasons.","Approved leaves automatically update the student's attendance register."]}
+      />
       <div className="page-header">
         <div>
           <h2>Student Leave Inbox</h2>
@@ -87,18 +93,7 @@ export default function StudentLeaveApprovals() {
         </div>
       </div>
 
-      <div style={{
-        padding: '1rem 1.25rem',
-        backgroundColor: '#eff6ff',
-        borderLeft: '4px solid #3b82f6',
-        borderRadius: '6px',
-        fontSize: '0.875rem',
-        color: '#1e3a8a',
-        lineHeight: '1.5',
-        marginBottom: '1.5rem'
-      }}>
-        <strong>💡 Page Guidance:</strong> Class teachers and HODs review leave applications requested for students. Click on the status filter buttons (Pending, Approved, Rejected) to view applications. Click <em>Approve</em> or <em>Reject</em> to apply reviews.
-      </div>
+      
 
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
         {(['Pending', 'Approved', 'Rejected'] as const).map(tab => (

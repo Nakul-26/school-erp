@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -279,6 +280,11 @@ export default function SectionWorkspace() {
   if (loading) {
     return (
       <Layout>
+      <PageGuidance
+        title="Class Workspace"
+        description="Use this page to manage the weekly timetable, enrolled students, and teacher assignments for this class section."
+        steps={["View all students enrolled in this class section.","Assign teachers to teach specific subjects in this section.","Review and build the section's weekly timetable."]}
+      />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '1rem' }}>
           <Activity className="spinner" size={48} style={{ color: 'var(--primary)' }} />
           <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Initializing Section Workspace...</p>

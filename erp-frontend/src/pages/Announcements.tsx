@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -95,6 +96,11 @@ export default function Announcements() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Announcements"
+        description="Use this page to write and post notice board announcements for students, teachers, or parents."
+        steps={["Click \"Create Announcement\" to write a new notice.","Select whether to show it to students, teachers, or parents.","Manage, edit, or delete existing announcements."]}
+      />
       <div className="page-header">
         <div>
           <h2>Announcements & Broadcasts</h2>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -75,7 +76,12 @@ export default function InstitutionSetup() {
     }
   };
 
-  if (loading) return <Layout><p>Loading institution profile...</p></Layout>;
+  if (loading) return <Layout>
+      <PageGuidance
+        title="School Profile"
+        description="Use this page to enter and update your school's general details, contact information, and logo."
+        steps={["Fill in the school's official name, address, phone number, and email.","Upload the school logo that will appear on receipts and report cards.","Click \"Save Changes\" to update the details."]}
+      /><p>Loading institution profile...</p></Layout>;
 
   return (
     <Layout>

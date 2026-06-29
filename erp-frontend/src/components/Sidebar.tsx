@@ -1,37 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { 
-  LayoutDashboard, 
-  UserCog, 
-  Building2, 
-  ClipboardList, 
-  Calendar, 
-  Layers, 
-  GraduationCap, 
-  School, 
-  BookOpen,
-  Clock,
-  CalendarDays,
-  ClipboardCheck,
-  Users,
-  UserCheck,
-  Award,
-  Megaphone,
-  Bell,
-  FileSpreadsheet,
-  IndianRupee,
-  Receipt,
-  BarChart3,
-  Upload,
-  Settings,
-  CheckSquare,
-  UserPlus,
-  Briefcase,
-  Landmark,
-  Clipboard,
-  ChevronDown,
-  ChevronRight
+import {
+  LayoutDashboard, GraduationCap, UserCheck, School, ClipboardCheck,
+  Award, IndianRupee, Settings, Megaphone, Bell, UserCog,
+  ChevronDown, ChevronRight, LogOut, Users, Calendar,
+  ClipboardList, FileSpreadsheet, Building2, Layers, BookOpen,
+  BarChart3, Landmark, CalendarDays, UserPlus, Clipboard, CheckSquare
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -41,24 +16,24 @@ interface SidebarProps {
 export default function Sidebar({ onNavigate }: SidebarProps) {
   const userStr = localStorage.getItem('erp_user');
   const user = userStr ? JSON.parse(userStr) : null;
-  const roles = user?.roles || (user?.role ? [user.role] : []);
-  
-  const isAdmin = roles.includes('super_admin') || roles.includes('Super Admin') || roles.includes('admin') || roles.includes('Principal');
-  const isHOD = roles.includes('HOD') || roles.includes('hod');
-  const isTeacher = roles.includes('Teacher') || roles.includes('teacher');
-  const isAccountant = roles.includes('Accountant') || roles.includes('accountant');
+  const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
+  const navigate = useNavigate();
+
+  const isAdmin = roles.some(r => ['super_admin', 'Super Admin', 'admin', 'Principal'].includes(r));
+  const isHOD = roles.some(r => ['HOD', 'hod'].includes(r));
+  const isTeacher = roles.some(r => ['Teacher', 'teacher'].includes(r));
+  const isAccountant = roles.some(r => ['Accountant', 'accountant'].includes(r));
+  const canAdmin = isAdmin || isHOD;
+  const canStaff = isAdmin || isHOD || isTeacher;
 
   const [unreadCount, setUnreadCount] = useState(0);
   const navRef = useRef<HTMLDivElement>(null);
-  
-  // Sidebar category toggles for collapsing (persisted)
-  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>(() => {
-    const saved = sessionStorage.getItem('sidebar_collapsed_categories');
+
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    const saved = sessionStorage.getItem('sidebar_v2_collapsed');
     return saved ? JSON.parse(saved) : {
-      'Setup & System': false,
-      'Academics': false,
-      'Finance & HR': false,
-      'Admissions': false
+      Admissions: false, People: false, Academics: false,
+      'Finance & HR': false, Reports: false, 'Settings & Setup': true,
     };
   });
 
@@ -66,210 +41,183 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     const fetchUnread = async () => {
       try {
         const data = await api.get('/notifications');
-        const count = data.filter((n: any) => n.is_read === 0).length;
-        setUnreadCount(count);
-      } catch (err) {
-        console.error(err);
-      }
+        setUnreadCount(data.filter((n: any) => n.is_read === 0).length);
+      } catch { /* silent */ }
     };
-
     fetchUnread();
     window.addEventListener('notifications_updated', fetchUnread);
-    const interval = setInterval(fetchUnread, 30000);
-
-    return () => {
-      window.removeEventListener('notifications_updated', fetchUnread);
-      clearInterval(interval);
-    };
+    const iv = setInterval(fetchUnread, 30000);
+    return () => { window.removeEventListener('notifications_updated', fetchUnread); clearInterval(iv); };
   }, []);
 
-  // Restore scroll position on mount
   useEffect(() => {
-    const savedScroll = sessionStorage.getItem('sidebar_scroll_top');
-    if (savedScroll && navRef.current) {
-      navRef.current.scrollTop = Number(savedScroll);
-    }
+    const s = sessionStorage.getItem('sidebar_scroll_top');
+    if (s && navRef.current) navRef.current.scrollTop = Number(s);
   }, []);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    sessionStorage.setItem('sidebar_scroll_top', String(e.currentTarget.scrollTop));
-  };
-
-  const toggleCategory = (cat: string) => {
-    setCollapsedCategories(prev => {
-      const next = { ...prev, [cat]: !prev[cat] };
-      sessionStorage.setItem('sidebar_collapsed_categories', JSON.stringify(next));
+  const toggle = (key: string) => {
+    setCollapsed(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      sessionStorage.setItem('sidebar_v2_collapsed', JSON.stringify(next));
       return next;
     });
   };
 
-  // Group links dynamically based on roles
-  const groups: Array<{
-    title: string;
-    links: Array<{ to: string; label: string; icon: any; badge?: number }>;
-  }> = [];
+  const handleLogout = () => {
+    localStorage.removeItem('erp_token');
+    localStorage.removeItem('erp_user');
+    navigate('/login');
+  };
 
-  // 1. Overview & General Links (Uncollapsible)
-  const overviewLinks = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/announcements', label: 'Announcements', icon: Megaphone },
-    { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
-    { to: '/profile', label: 'My Profile', icon: UserCog }
+  const displayName = user?.name || user?.email?.split('@')[0] || 'User';
+  const initials = displayName.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
+  const roleLabel = roles[0] || 'Staff';
+
+  type Link = { to: string; label: string; icon: any; badge?: number };
+  type Group = { key: string; label: string; links: Link[]; always?: boolean };
+
+  const groups: Group[] = [
+    {
+      key: '__overview', label: '', always: true,
+      links: [
+        { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { to: '/announcements', label: 'Announcements', icon: Megaphone },
+        { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+      ],
+    },
   ];
-  groups.push({ title: 'Overview', links: overviewLinks });
 
-  // 2. Admissions Portal
-  const admissionLinks: any[] = [];
-  if (isAdmin || isHOD) {
-    admissionLinks.push(
-      { to: '/admissions/inquiries', label: 'Inquiries', icon: UserPlus },
-      { to: '/admissions/applications', label: 'Applications', icon: Briefcase }
-    );
-  }
-  if (admissionLinks.length > 0) {
-    groups.push({ title: 'Admissions', links: admissionLinks });
-  }
+  if (canAdmin) groups.push({
+    key: 'Admissions', label: 'Admissions',
+    links: [{ to: '/admissions', label: 'Admission Pipeline', icon: UserPlus }],
+  });
 
-  // 3. Core Academics Portal
-  const academicLinks: any[] = [];
-  if (isAdmin || isHOD || isTeacher) {
+  const peopleLinks: Link[] = [];
+  if (canStaff) peopleLinks.push({ to: '/students', label: 'Students', icon: Users });
+  if (canAdmin) peopleLinks.push({ to: '/teachers', label: 'Teachers', icon: UserCheck });
+  if (peopleLinks.length) groups.push({ key: 'People', label: 'People', links: peopleLinks });
+
+  const academicLinks: Link[] = [];
+  if (canAdmin) {
     academicLinks.push(
-      { to: '/students', label: 'Students List', icon: Users },
-      { to: '/timetable', label: 'Weekly Timetable', icon: CalendarDays },
-      { to: '/attendance', label: 'Student Attendance', icon: ClipboardCheck },
-      { to: '/homework', label: 'Homework Logs', icon: Clipboard },
-      { to: '/exams', label: 'Exams & Grading', icon: Award }
-    );
-  }
-  if (isAdmin || isHOD) {
-    academicLinks.push(
-      { to: '/teachers', label: 'Teachers Directory', icon: UserCheck },
-      { to: '/teacher-attendance', label: 'Teacher Attendance', icon: UserCheck }
-    );
-  }
-  academicLinks.push({ to: '/calendar', label: 'Academic Calendar', icon: Calendar });
-
-  if (academicLinks.length > 0) {
-    groups.push({ title: 'Academics', links: academicLinks });
-  }
-
-  // 4. Finance & HR Portal
-  const financeHRLinks: any[] = [];
-  if (isAdmin || isHOD || isAccountant) {
-    financeHRLinks.push({ to: '/fee-structures', label: 'Fee Structures', icon: IndianRupee });
-  }
-  if (isAdmin || isHOD || isTeacher || isAccountant) {
-    financeHRLinks.push({ to: '/student-fees', label: 'Student Fees', icon: Receipt });
-  }
-  if (isAdmin || isAccountant) {
-    financeHRLinks.push({ to: '/fee-reports', label: 'Fee Reports', icon: BarChart3 });
-  }
-  if (isAdmin) {
-    financeHRLinks.push(
-      { to: '/payroll/salary-structures', label: 'Staff Salary Scales', icon: Landmark },
-      { to: '/payroll/runs', label: 'Monthly Payroll', icon: Landmark }
-    );
-  }
-  if (isAdmin || isHOD) {
-    financeHRLinks.push(
-      { to: '/leave/types', label: 'Leave Quotas', icon: BookOpen },
-      { to: '/leave/approvals', label: 'Staff Leaves Inbox', icon: ClipboardCheck }
-    );
-  }
-  if (isAdmin || isHOD || isTeacher) {
-    financeHRLinks.push({ to: '/student-leaves/approvals', label: 'Student Leaves Inbox', icon: ClipboardCheck });
-  }
-  financeHRLinks.push({ to: '/leave/my', label: 'My Leave History', icon: CalendarDays });
-
-  if (financeHRLinks.length > 0) {
-    groups.push({ title: 'Finance & HR', links: financeHRLinks });
-  }
-
-  // 5. System Setup & Configuration
-  const setupLinks: any[] = [];
-  if (isAdmin || isHOD) {
-    setupLinks.push(
-      { to: '/academic-years', label: 'Academic Years', icon: Calendar },
-      { to: '/departments', label: 'Departments', icon: Layers },
-      { to: '/programs', label: 'Courses/Programs', icon: GraduationCap },
-      { to: '/classes', label: 'Classes/Sections', icon: School },
+      { to: '/classes', label: 'Classes & Sections', icon: School },
       { to: '/subjects', label: 'Subjects', icon: BookOpen },
-      { to: '/allocations', label: 'Teaching Allocations', icon: ClipboardList },
-      { to: '/timetable-slots', label: 'Timetable Slots', icon: Clock },
-      { to: '/approvals', label: 'Approvals Inbox', icon: CheckSquare }
     );
   }
-  if (isAdmin) {
-    setupLinks.push(
+  if (canStaff) {
+    academicLinks.push(
+      { to: '/timetable', label: 'Timetable', icon: CalendarDays },
+      { to: '/attendance', label: 'Attendance', icon: ClipboardCheck },
+      { to: '/homework', label: 'Homework', icon: Clipboard },
+      { to: '/exams', label: 'Exams & Results', icon: Award },
+    );
+  }
+  academicLinks.push({ to: '/calendar', label: 'School Calendar', icon: Calendar });
+  if (academicLinks.length) groups.push({ key: 'Academics', label: 'Academics', links: academicLinks });
+
+  const financeLinks: Link[] = [];
+  if (isAdmin || isHOD || isAccountant) financeLinks.push({ to: '/fee-structures', label: 'Fee Plans', icon: IndianRupee });
+  if (canStaff || isAccountant) financeLinks.push({ to: '/student-fees', label: 'Student Fees', icon: IndianRupee });
+  if (isAdmin) financeLinks.push(
+    { to: '/payroll/salary-structures', label: 'Salary Scales', icon: Landmark },
+    { to: '/payroll/runs', label: 'Payroll Runs', icon: Landmark },
+  );
+  if (canAdmin) financeLinks.push(
+    { to: '/leave/types', label: 'Leave Quotas', icon: BookOpen },
+    { to: '/leave/approvals', label: 'Leave Approvals', icon: CheckSquare },
+  );
+  if (canStaff) financeLinks.push({ to: '/student-leaves/approvals', label: 'Student Leave', icon: CheckSquare });
+  financeLinks.push({ to: '/leave/my', label: 'My Leave', icon: CalendarDays });
+  if (financeLinks.length) groups.push({ key: 'Finance & HR', label: 'Finance & HR', links: financeLinks });
+
+  if (canAdmin) groups.push({
+    key: 'Reports', label: 'Reports',
+    links: [
+      { to: '/reports', label: 'All Reports', icon: BarChart3 },
+    ],
+  });
+
+  if (canAdmin || isAdmin) {
+    const setupLinks: Link[] = [];
+    if (canAdmin) setupLinks.push(
+      { to: '/academic-years', label: 'School Years', icon: Calendar },
+      { to: '/departments', label: 'Departments', icon: Layers },
+      { to: '/approvals', label: 'Approvals Inbox', icon: CheckSquare },
+    );
+    if (isAdmin) setupLinks.push(
       { to: '/users', label: 'Manage Users', icon: UserCog },
-      { to: '/institution-setup', label: 'Institution Setup', icon: Building2 },
+      { to: '/institution-setup', label: 'School Profile', icon: Building2 },
       { to: '/settings', label: 'System Settings', icon: Settings },
-      { to: '/settings/grades', label: 'Grade Scaling', icon: Award },
+      { to: '/settings/grades', label: 'Grade Scales', icon: Award },
       { to: '/audit-logs', label: 'Audit Logs', icon: ClipboardList },
-      { to: '/exports', label: 'Data Export', icon: FileSpreadsheet },
-      { to: '/imports', label: 'Bulk Import', icon: Upload }
+      { to: '/data-tools', label: 'Data Tools', icon: FileSpreadsheet },
     );
-  }
-  if (setupLinks.length > 0) {
-    groups.push({ title: 'Setup & System', links: setupLinks });
+    groups.push({ key: 'Settings & Setup', label: 'Settings & Setup', links: setupLinks });
   }
 
   return (
-    <div className="sidebar" style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#0f172a' }}>
-      <div className="sidebar-header" style={{ padding: '1.5rem', borderBottom: '1px solid #1e293b' }}>
-        <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.2rem', color: '#38bdf8', letterSpacing: '-0.025em' }}>School ERP</h3>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#0d1117' }}>
+      {/* Brand */}
+      <div style={{ padding: '1.125rem 1rem', borderBottom: '1px solid #161b22', flexShrink: 0 }}>
+        <div className="sidebar-brand">
+          <div className="sidebar-brand-icon">
+            <School size={16} color="white" />
+          </div>
+          <div className="sidebar-brand-text">
+            <span className="sidebar-brand-name">School ERP</span>
+            <span className="sidebar-brand-tag">Management Portal</span>
+          </div>
+        </div>
       </div>
-      
-      <nav className="sidebar-nav" ref={navRef} onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
-        {groups.map((group) => {
-          const isOverview = group.title === 'Overview';
-          const isCollapsed = collapsedCategories[group.title];
 
+      {/* Nav */}
+      <nav
+        ref={navRef}
+        onScroll={(e) => sessionStorage.setItem('sidebar_scroll_top', String(e.currentTarget.scrollTop))}
+        style={{
+          flex: 1, overflowY: 'auto', padding: '0.625rem',
+          display: 'flex', flexDirection: 'column',
+          scrollbarWidth: 'thin', scrollbarColor: '#1e293b transparent',
+        }}
+      >
+        {groups.map((group) => {
+          const isOverview = group.key === '__overview';
+          const isCollapsed = !isOverview && !group.always && collapsed[group.key];
           return (
-            <div key={group.title} style={{ marginBottom: '1.25rem' }}>
-              {/* Category Header */}
-              {!isOverview ? (
-                <div 
-                  onClick={() => toggleCategory(group.title)}
-                  style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    padding: '0.4rem 0.5rem', 
-                    fontSize: '0.7rem', 
-                    fontWeight: 700, 
-                    color: '#64748b', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    cursor: 'pointer',
-                    borderRadius: '4px',
-                    userSelect: 'none'
+            <div key={group.key} style={{ marginBottom: isOverview ? '0.5rem' : '0' }}>
+              {!isOverview && (
+                <div
+                  onClick={() => toggle(group.key)}
+                  style={{
+                    padding: '0.5rem 0.625rem 0.25rem',
+                    fontSize: '0.6rem', fontWeight: 800,
+                    color: '#3d4e5e', textTransform: 'uppercase', letterSpacing: '0.1em',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center',
+                    justifyContent: 'space-between', userSelect: 'none', marginTop: '0.5rem',
                   }}
-                  className="sidebar-category-header"
                 >
-                  <span>{group.title}</span>
-                  {isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-                </div>
-              ) : (
-                <div style={{ padding: '0.4rem 0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {group.title}
+                  <span>{group.label}</span>
+                  <span style={{ opacity: 0.5 }}>
+                    {isCollapsed ? <ChevronRight size={9} /> : <ChevronDown size={9} />}
+                  </span>
                 </div>
               )}
-
-              {/* Links list */}
-              {(!isCollapsed || isOverview) && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.25rem', paddingLeft: isOverview ? '0' : '0.25rem' }}>
+              {(!isCollapsed || isOverview || group.always) && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '0.125rem' }}>
                   {group.links.map((link) => (
-                    <NavLink 
-                      key={link.to} 
-                      to={link.to} 
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
                       className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
                       onClick={onNavigate}
                     >
-                      <link.icon size={16} />
-                      <span>{link.label}</span>
-                      {link.badge !== undefined && link.badge > 0 && (
-                        <span className="badge badge-danger" style={{ marginLeft: 'auto', padding: '0.15rem 0.4rem', fontSize: '0.7rem' }}>
+                      <link.icon size={14} />
+                      <span style={{ flex: 1 }}>{link.label}</span>
+                      {(link.badge ?? 0) > 0 && (
+                        <span style={{
+                          background: '#ef4444', color: 'white', borderRadius: '9999px',
+                          padding: '0.1rem 0.4rem', fontSize: '0.65rem', fontWeight: 700, lineHeight: 1.4,
+                        }}>
                           {link.badge}
                         </span>
                       )}
@@ -280,7 +228,24 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
             </div>
           );
         })}
+
+        <div style={{ marginTop: 'auto', paddingTop: '0.625rem', borderTop: '1px solid #161b22' }}>
+          <NavLink to="/profile" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={onNavigate}>
+            <UserCog size={14} />
+            <span>My Profile</span>
+          </NavLink>
+        </div>
       </nav>
+
+      {/* User pill */}
+      <div className="sidebar-user-pill" style={{ cursor: 'pointer' }} onClick={handleLogout} title="Click to logout">
+        <div className="sidebar-user-avatar">{initials}</div>
+        <div className="sidebar-user-info">
+          <div className="sidebar-user-name">{displayName}</div>
+          <div className="sidebar-user-role">{roleLabel} · tap to logout</div>
+        </div>
+        <LogOut size={13} style={{ color: '#475569', flexShrink: 0 }} />
+      </div>
     </div>
   );
 }

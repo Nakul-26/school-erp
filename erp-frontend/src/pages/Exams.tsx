@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { Plus, Trash2, Calendar, ClipboardCheck, ArrowLeft, Check, X, ShieldAlert, Award, FileSpreadsheet, Layers } from 'lucide-react';
@@ -307,6 +308,11 @@ export default function Exams() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Exams & Results"
+        description="Use this page to create exams, schedule exam papers, and enter student marks."
+        steps={["Create exam events (e.g., Term 1 Exam) and set overall dates.","Add subjects and specify maximum and passing marks.","Click \"Enter Marks\" next to a subject to record student scores."]}
+      />
       {view === 'list' && (
         <>
           <div className="page-header">

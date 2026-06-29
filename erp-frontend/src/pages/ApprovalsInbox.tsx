@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import WorkspaceShell from '../components/WorkspaceShell';

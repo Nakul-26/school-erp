@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { CalendarDays, Plus, X, FileText } from 'lucide-react';
@@ -139,6 +140,11 @@ export default function MyLeaveApplications() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="My Leave Applications"
+        description="Use this page to check your available leave balance and apply for leave. Select the leave type, choose the dates, and enter the reason. Your request will be sent to your HOD or Principal for approval."
+        steps={["Check remaining balances for Casual, Sick, or Earned leaves.","Click Apply for Leave and choose the date ranges and reasons.","Track your request's approval status in real-time."]}
+      />
       <div className="page-header">
         <div>
           <h2><CalendarDays size={22} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />My Leave Applications</h2>
@@ -161,17 +167,7 @@ export default function MyLeaveApplications() {
         </div>
       </div>
 
-      <div style={{
-        padding: '1rem 1.25rem',
-        backgroundColor: '#eff6ff',
-        borderLeft: '4px solid #3b82f6',
-        borderRadius: '6px',
-        fontSize: '0.875rem',
-        color: '#1e3a8a',
-        lineHeight: '1.5'
-      }}>
-        <strong>💡 Page Guidance:</strong> Here, you can monitor your allocated leave quota for the selected academic year. You can view your Casual (CL), Sick (SL), and Earned (EL) leave metrics. Click <em>Apply for Leave</em> to fill a request. All submitted leaves will route to the inbox of the designated HOD or Principal for approval.
-      </div>
+      
 
       {/* Balance Cards */}
       {balances.length > 0 && (

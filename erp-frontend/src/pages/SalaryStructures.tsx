@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { Landmark, Save } from 'lucide-react';
@@ -98,6 +99,11 @@ export default function SalaryStructures() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Staff Salary Structures"
+        description="Use this page to set the standard salary details for teachers and staff. Enter the basic salary, allowances, and deductions. These settings are used automatically when monthly salaries are calculated."
+        steps={["Configure basic pay, allowances (HRA, DA), and tax deductions for each employee.","Click Save inline to persist salary structural settings.","Calculations are used automatically during the monthly payroll runs."]}
+      />
       <div className="page-header">
         <div>
           <h2>Staff Salary Structures</h2>
@@ -107,18 +113,7 @@ export default function SalaryStructures() {
         </div>
       </div>
 
-      <div style={{
-        padding: '1rem 1.25rem',
-        backgroundColor: '#eff6ff',
-        borderLeft: '4px solid #3b82f6',
-        borderRadius: '6px',
-        fontSize: '0.875rem',
-        color: '#1e3a8a',
-        lineHeight: '1.5',
-        marginBottom: '1.25rem'
-      }}>
-        <strong>💡 Page Guidance:</strong> Manage salary structure models for all teachers. Enter Basic Salary, DA (Dearness Allowance), HRA (House Rent Allowance), and other components along with PF/tax withholdings. Make changes inline and click <em>Save</em> per row to apply changes.
-      </div>
+      
 
       <div className="card" style={{ padding: '1.5rem' }}>
         {loading ? <p>Loading staff salary details...</p> : (

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
@@ -71,6 +72,40 @@ export default function Dashboard() {
   const renderAdminDashboard = () => {
     return (
       <div className="portal-dashboard">
+        {/* Setup Checklist */}
+        {(!(stats?.totalStudents) || !(stats?.totalTeachers)) && (
+          <div className="setup-checklist" style={{ marginBottom: '1.5rem' }}>
+            <div className="setup-checklist-header">
+              <div className="setup-checklist-icon">
+                <CheckCircle size={20} />
+              </div>
+              <div>
+                <div className="setup-checklist-title">Get your school set up</div>
+                <div className="setup-checklist-subtitle">Complete these steps to start using all features</div>
+              </div>
+            </div>
+            <div className="setup-checklist-steps">
+              {([
+                { label: 'School Profile', desc: 'Add your school name and basic info', to: '/institution-setup', done: true },
+                { label: 'Set Up School Year', desc: 'Create the current academic year', to: '/academic-years', done: !!(stats?.upcomingExams > 0 || stats?.totalStudents > 0) },
+                { label: 'Add Classes & Subjects', desc: 'Define classes, sections, and subjects', to: '/classes', done: false },
+                { label: 'Add Teachers', desc: 'Invite your teaching staff', to: '/teachers', done: !!(stats?.totalTeachers > 0) },
+                { label: 'Admit First Students', desc: 'Add students and assign them to classes', to: '/students', done: !!(stats?.totalStudents > 0) },
+              ] as { label: string; desc: string; to: string; done: boolean }[]).map((step, i) => (
+                <Link key={i} to={step.to} className={`setup-step${step.done ? ' setup-step-done' : ''}`}>
+                  <div className={`setup-step-icon ${step.done ? 'setup-step-icon-done' : 'setup-step-icon-pending'}`}>
+                    {step.done ? '\u2713' : (i + 1)}
+                  </div>
+                  <div className="setup-step-body">
+                    <div className="setup-step-label">{step.label}</div>
+                    <div className="setup-step-desc">{step.desc}</div>
+                  </div>
+                  {!step.done && <div className="setup-step-cta">Start →</div>}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="stats-grid">
           <div className="stat-card card">
             <div className="icon" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)' }}>
@@ -379,6 +414,11 @@ export default function Dashboard() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Dashboard Overview"
+        description="Use this page to get a quick summary of the school's daily activities, student counts, and important alerts."
+        steps={["Check the total number of students and staff members in the school.","Look at today's attendance rate and pending tasks.","Read the latest announcements posted on the board."]}
+      />
       <div className="page-header">
         <h1>Dashboard Overview</h1>
         <button className="btn btn-outline" onClick={logout}>
@@ -388,7 +428,7 @@ export default function Dashboard() {
 
       {loading ? (
         <div className="loading-state">
-          <p>Analyzing statistics & loading portal details...</p>
+          <p>Analyzing statistics &amp; loading portal details...</p>
         </div>
       ) : error ? (
         <div className="alert alert-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -649,6 +689,106 @@ export default function Dashboard() {
         .table th {
           font-weight: 600;
           color: var(--text-muted);
+        }
+        /* Setup checklist styles */
+        .setup-checklist {
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 1.5rem;
+        }
+        .setup-checklist-header {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 1.25rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid var(--border);
+        }
+        .setup-checklist-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: rgba(79, 70, 229, 0.1);
+          color: var(--primary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .setup-checklist-title {
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--text-main);
+        }
+        .setup-checklist-subtitle {
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          margin-top: 0.15rem;
+        }
+        .setup-checklist-steps {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        .setup-step {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 0.875rem 1rem;
+          border-radius: var(--radius-sm);
+          border: 1px solid var(--border);
+          text-decoration: none;
+          color: var(--text-main);
+          background: #fafbfc;
+          transition: all 0.2s;
+        }
+        .setup-step:hover {
+          border-color: var(--primary);
+          background: rgba(79, 70, 229, 0.03);
+        }
+        .setup-step-done {
+          opacity: 0.6;
+          background: #f6ffed;
+          border-color: #b7eb8f;
+        }
+        .setup-step-icon {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.8rem;
+          font-weight: 700;
+          flex-shrink: 0;
+        }
+        .setup-step-icon-done {
+          background: #52c41a;
+          color: white;
+        }
+        .setup-step-icon-pending {
+          background: var(--primary);
+          color: white;
+        }
+        .setup-step-body {
+          flex: 1;
+        }
+        .setup-step-label {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--text-main);
+        }
+        .setup-step-desc {
+          font-size: 0.775rem;
+          color: var(--text-muted);
+          margin-top: 0.1rem;
+        }
+        .setup-step-cta {
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: var(--primary);
+          white-space: nowrap;
         }
       `}</style>
     </Layout>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { ArrowLeft, Check, X, Clock, HelpCircle, Calendar, UserCheck } from 'lucide-react';
@@ -79,6 +80,11 @@ export default function TeacherAttendance() {
 
   return (
     <Layout>
+      <PageGuidance
+        title="Staff Attendance"
+        description="Use this page to record daily attendance logs for teachers and school staff."
+        steps={["Select the date.","Mark each staff member as Present, Absent, Half Day, or On Leave.","Click Save to log daily staff attendance."]}
+      />
       <div className="page-header">
         <div>
           <h2>Teacher Attendance</h2>

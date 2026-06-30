@@ -138,7 +138,12 @@ app.get('/dashboard/stats', authMiddleware, async (c) => {
   }
 
   if (isStudent) {
-    const student = await db.prepare('SELECT id, first_name, last_name, roll_number, admission_number FROM students WHERE user_id = ? AND institution_id = ? AND is_active = 1').bind(user.sub, user.institution_id).first<{ id: string; first_name: string; last_name: string; roll_number: string; admission_number: string }>();
+    const student = await db.prepare(`
+      SELECT s.id, s.first_name, s.last_name, s.roll_number, s.admission_number, se.course_id, se.semester 
+      FROM students s
+      LEFT JOIN student_enrollments se ON s.id = se.student_id AND se.is_active = 1
+      WHERE s.user_id = ? AND s.institution_id = ? AND s.is_active = 1
+    `).bind(user.sub, user.institution_id).first<{ id: string; first_name: string; last_name: string; roll_number: string; admission_number: string; course_id: string | null; semester: number | null }>();
     if (!student) {
       return c.json({ error: 'Student profile not found' }, 404);
     }
@@ -198,11 +203,12 @@ app.get('/dashboard/stats', authMiddleware, async (c) => {
 
   if (isParent) {
     const { results: children } = await db.prepare(`
-      SELECT s.id, s.first_name, s.last_name, s.roll_number, s.admission_number, g.relationship
+      SELECT s.id, s.first_name, s.last_name, s.roll_number, s.admission_number, g.relationship, se.course_id, se.semester
       FROM guardians g
       JOIN students s ON g.student_id = s.id
+      LEFT JOIN student_enrollments se ON s.id = se.student_id AND se.is_active = 1
       WHERE g.user_id = ? AND g.is_active = 1 AND s.is_active = 1
-    `).bind(user.sub).all<{ id: string; first_name: string; last_name: string; roll_number: string; admission_number: string; relationship: string }>();
+    `).bind(user.sub).all<{ id: string; first_name: string; last_name: string; roll_number: string; admission_number: string; relationship: string; course_id: string | null; semester: number | null }>();
 
     const childrenDetails = [];
 

@@ -54,6 +54,31 @@ timetable.post('/', async (c) => {
   if (isLocked) {
     return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
+
+  // Check section conflict
+  const sectionConflict = await c.env.DB.prepare(`
+    SELECT 1 FROM weekly_timetable 
+    WHERE section_id = ? AND slot_id = ? AND day_of_week = ? AND is_active = 1
+  `).bind(input.section_id, input.slot_id, input.day_of_week).first();
+  if (sectionConflict) {
+    return c.json({ error: 'This time slot is already occupied for this class section.' }, 400);
+  }
+
+  // Check teacher conflict
+  if (input.teacher_id) {
+    const teacherConflict = await c.env.DB.prepare(`
+      SELECT s.name as section_name, sub.subject_name
+      FROM weekly_timetable wt
+      JOIN sections s ON wt.section_id = s.id
+      JOIN subjects sub ON wt.subject_id = sub.id
+      WHERE wt.teacher_id = ? AND wt.slot_id = ? AND wt.day_of_week = ? AND wt.is_active = 1
+    `).bind(input.teacher_id, input.slot_id, input.day_of_week).first<any>();
+    if (teacherConflict) {
+      return c.json({ 
+        error: `Conflict: Teacher is already teaching in Section "${teacherConflict.section_name}" (${teacherConflict.subject_name}) at this time.` 
+      }, 400);
+    }
+  }
   
   try {
     const id = await service.createEntry(user.institution_id, input, user.sub);
@@ -81,6 +106,36 @@ timetable.put('/:id', async (c) => {
   const isLockedNew = input.academic_year_id ? await isYearLockedOrArchived(c.env.DB, input.academic_year_id) : false;
   if (isLockedOld || isLockedNew) {
     return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
+  }
+
+  // Check section conflict (excluding current entry id)
+  const sectId = input.section_id || existing.section_id;
+  const slotId = input.slot_id || existing.slot_id;
+  const day = input.day_of_week || existing.day_of_week;
+  const teacherId = input.hasOwnProperty('teacher_id') ? input.teacher_id : existing.teacher_id;
+
+  const sectionConflict = await c.env.DB.prepare(`
+    SELECT 1 FROM weekly_timetable 
+    WHERE section_id = ? AND slot_id = ? AND day_of_week = ? AND id != ? AND is_active = 1
+  `).bind(sectId, slotId, day, id).first();
+  if (sectionConflict) {
+    return c.json({ error: 'This time slot is already occupied for this class section.' }, 400);
+  }
+
+  // Check teacher conflict (excluding current entry id)
+  if (teacherId) {
+    const teacherConflict = await c.env.DB.prepare(`
+      SELECT s.name as section_name, sub.subject_name
+      FROM weekly_timetable wt
+      JOIN sections s ON wt.section_id = s.id
+      JOIN subjects sub ON wt.subject_id = sub.id
+      WHERE wt.teacher_id = ? AND wt.slot_id = ? AND wt.day_of_week = ? AND wt.id != ? AND wt.is_active = 1
+    `).bind(teacherId, slotId, day, id).first<any>();
+    if (teacherConflict) {
+      return c.json({ 
+        error: `Conflict: Teacher is already teaching in Section "${teacherConflict.section_name}" (${teacherConflict.subject_name}) at this time.` 
+      }, 400);
+    }
   }
   
   try {

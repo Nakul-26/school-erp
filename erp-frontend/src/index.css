@@ -1399,3 +1399,34 @@ select, input[type="date"], input[type="text"], input[type="email"], input[type=
   color: var(--text-main); line-height: 1;
 }
 .stat-card .info .sub-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+/* ── Print Media Queries ─────────────────────────────────────────────────── */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  
+  #printable-report-card, #printable-report-card *, 
+  .receipt-print-container, .receipt-print-container * {
+    visibility: visible !important;
+  }
+  
+  #printable-report-card, .receipt-print-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: white !important;
+  }
+}

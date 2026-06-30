@@ -17,7 +17,11 @@ import {
   AlertTriangle, 
   CheckCircle,
   AlertCircle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Printer,
+  Eye,
+  Download,
+  ArrowRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -34,9 +38,105 @@ export default function Dashboard() {
   // Parent state for active child
   const [selectedChildIndex, setSelectedChildIndex] = useState(0);
 
+  // Additional portal views state
+  const [exams, setExams] = useState<any[]>([]);
+  const [ledgerRecords, setLedgerRecords] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
+  
+  // Modals for Report Card & Receipts
+  const [selectedReportCard, setSelectedReportCard] = useState<any | null>(null);
+  const [showReportCardModal, setShowReportCardModal] = useState(false);
+  const [loadingReportCard, setLoadingReportCard] = useState(false);
+  
+  const [selectedReceipt, setSelectedReceipt] = useState<any | null>(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [loadingReceipt, setLoadingReceipt] = useState(false);
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (!stats) return;
+    
+    const isStudent = stats.role === 'student';
+    const isParent = stats.role === 'parent';
+    
+    const fetchPortalDetails = async () => {
+      try {
+        if (isStudent && stats.studentInfo?.id) {
+          const studId = stats.studentInfo.id;
+          const [examsData, ledgerData, paymentsData] = await Promise.all([
+            api.get('/exams').catch(() => []),
+            api.get(`/fees/ledger/${studId}`).catch(() => []),
+            api.get(`/fees/payments?student_id=${studId}`).catch(() => [])
+          ]);
+          setExams(examsData);
+          setLedgerRecords(ledgerData);
+          setPayments(paymentsData);
+        } else if (isParent && stats.children && stats.children.length > 0) {
+          const child = stats.children[selectedChildIndex];
+          if (child?.id) {
+            const [examsData, ledgerData, paymentsData] = await Promise.all([
+              api.get('/exams').catch(() => []),
+              api.get(`/fees/ledger/${child.id}`).catch(() => []),
+              api.get(`/fees/payments?student_id=${child.id}`).catch(() => [])
+            ]);
+            setExams(examsData);
+            setLedgerRecords(ledgerData);
+            setPayments(paymentsData);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading portal details:', err);
+      }
+    };
+    
+    fetchPortalDetails();
+  }, [stats, selectedChildIndex]);
+
+  const handleOpenReportCard = async (examId: string, studentId: string) => {
+    try {
+      setLoadingReportCard(true);
+      setShowReportCardModal(true);
+      const data = await api.get(`/grades/report-card/${examId}/${studentId}`);
+      setSelectedReportCard(data);
+    } catch (err: any) {
+      alert(err.message || 'Error loading report card');
+      setShowReportCardModal(false);
+    } finally {
+      setLoadingReportCard(false);
+    }
+  };
+
+  const handleOpenReceipt = async (payment: any) => {
+    try {
+      setLoadingReceipt(true);
+      setShowReceiptModal(true);
+      
+      let receipt;
+      if (payment.receipt_number) {
+        receipt = await api.get(`/fees/receipts/${payment.receipt_number}`);
+      } else {
+        const receiptsList = await api.get('/fees/receipts');
+        const match = receiptsList.find((r: any) => r.payment_id === payment.id);
+        if (match) {
+          receipt = await api.get(`/fees/receipts/${match.id}`);
+        }
+      }
+      
+      if (!receipt) {
+        throw new Error('Receipt record not found in system.');
+      }
+      
+      setSelectedReceipt(receipt);
+    } catch (err: any) {
+      alert(err.message || 'Error loading fee receipt');
+      setShowReceiptModal(false);
+    } finally {
+      setLoadingReceipt(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -219,8 +319,13 @@ export default function Dashboard() {
     const fees = stats?.fees;
     const results = stats?.results || [];
 
+    // Filter exams for student
+    const studentExams = exams.filter(
+      (e: any) => e.course_id === sInfo?.course_id && e.semester === sInfo?.semester && e.status !== 'DRAFT'
+    );
+
     return (
-      <div className="portal-dashboard student-portal">
+      <div className="portal-dashboard student-portal" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <div className="stats-grid">
           {/* Attendance Overview */}
           <div className="stat-card card">
@@ -250,42 +355,167 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Exam Results Summary */}
-        <div className="card dashboard-section" style={{ marginTop: '2rem' }}>
-          <h3>Latest Exam Results</h3>
-          {results.length === 0 ? (
-            <p className="no-data">No exam results published yet.</p>
-          ) : (
-            <div className="table-responsive">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Exam</th>
-                    <th>Subject</th>
-                    <th>Marks</th>
-                    <th>Percentage</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((r: any, idx: number) => {
-                    const percentage = Math.round((r.marks_obtained / r.max_marks) * 100);
-                    return (
-                      <tr key={idx}>
-                        <td><strong>{r.exam_name}</strong></td>
-                        <td>{r.subject_name}</td>
-                        <td>{r.marks_obtained} / {r.max_marks}</td>
-                        <td>
-                          <span className={`badge ${percentage >= 40 ? 'badge-success' : 'badge-danger'}`}>
-                            {percentage}%
-                          </span>
-                        </td>
+        <div className="dashboard-content-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
+          
+          {/* Left Column: Academics */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {/* Exam Results Summary */}
+            <div className="card dashboard-section">
+              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Latest Subject Marks</h3>
+              {results.length === 0 ? (
+                <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No exam results published yet.</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table" style={{ fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr>
+                        <th>Exam</th>
+                        <th>Subject</th>
+                        <th>Marks</th>
+                        <th>Percentage</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {results.map((r: any, idx: number) => {
+                        const percentage = Math.round((r.marks_obtained / r.max_marks) * 100);
+                        return (
+                          <tr key={idx}>
+                            <td><strong>{r.exam_name}</strong></td>
+                            <td>{r.subject_name}</td>
+                            <td>{r.marks_obtained} / {r.max_marks}</td>
+                            <td>
+                              <span className={`badge ${percentage >= 40 ? 'badge-success' : 'badge-danger'}`}>
+                                {percentage}%
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Official Report Cards */}
+            <div className="card dashboard-section">
+              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Official Report Cards</h3>
+              {studentExams.length === 0 ? (
+                <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No official report cards available for download yet.</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table" style={{ fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr>
+                        <th>Exam Title</th>
+                        <th>Timeline</th>
+                        <th style={{ textAlign: 'right' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {studentExams.map((e: any) => (
+                        <tr key={e.id}>
+                          <td><strong>{e.name}</strong></td>
+                          <td>{new Date(e.start_date).toLocaleDateString()} - {new Date(e.end_date).toLocaleDateString()}</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <button 
+                              className="btn btn-sm btn-primary" 
+                              onClick={() => handleOpenReportCard(e.id, sInfo.id)}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                            >
+                              <Printer size={12} /> View &amp; Print
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column: Fees and Collections */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {/* Fee Ledger Installments */}
+            <div className="card dashboard-section">
+              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Fee Ledger details</h3>
+              {ledgerRecords.length === 0 ? (
+                <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No fee allocations found for your account.</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table" style={{ fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr>
+                        <th>Fee Component</th>
+                        <th>Due Date</th>
+                        <th style={{ textAlign: 'right' }}>Amount Due</th>
+                        <th style={{ textAlign: 'center' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ledgerRecords.map((rec: any) => (
+                        <tr key={rec.id}>
+                          <td><strong>{rec.fee_type}</strong></td>
+                          <td>{new Date(rec.due_date).toLocaleDateString()}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 'bold' }}>₹{rec.total_amount.toLocaleString('en-IN')}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span className={`badge ${
+                              rec.status === 'PAID' ? 'badge-success' : rec.status === 'PARTIAL' ? 'badge-warning' : 'badge-danger'
+                            }`}>
+                              {rec.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Payment Receipts History */}
+            <div className="card dashboard-section">
+              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Payment History &amp; Receipts</h3>
+              {payments.length === 0 ? (
+                <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No payment transactions logged in the system.</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table" style={{ fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr>
+                        <th>Date Paid</th>
+                        <th>Fee Type</th>
+                        <th>Method</th>
+                        <th style={{ textAlign: 'right' }}>Amount</th>
+                        <th style={{ textAlign: 'right' }}>Receipt</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments.map((p: any) => (
+                        <tr key={p.id}>
+                          <td>{new Date(p.payment_date).toLocaleDateString()}</td>
+                          <td>{p.fee_type}</td>
+                          <td>{p.payment_method}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--success)' }}>₹{p.amount.toLocaleString('en-IN')}</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <button 
+                              className="btn btn-sm btn-outline" 
+                              onClick={() => handleOpenReceipt(p)}
+                              style={{ padding: '0.25rem 0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                            >
+                              <Printer size={12} /> Receipt
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+          
         </div>
       </div>
     );
@@ -306,11 +536,16 @@ export default function Dashboard() {
     const activeChild = children[selectedChildIndex];
     const results = activeChild?.results || [];
 
+    // Filter exams for active child
+    const childExams = exams.filter(
+      (e: any) => e.course_id === activeChild?.course_id && e.semester === activeChild?.semester && e.status !== 'DRAFT'
+    );
+
     return (
-      <div className="portal-dashboard parent-portal">
+      <div className="portal-dashboard parent-portal" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         {/* Child Selector Tabs */}
         {children.length > 1 && (
-          <div className="child-selector">
+          <div className="child-selector" style={{ marginBottom: '0.5rem' }}>
             {children.map((child: any, idx: number) => (
               <button
                 key={child.student_id}
@@ -323,10 +558,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="selected-child-overview">
-          <div className="welcome-section card" style={{ background: '#f1f5f9', color: 'var(--text-main)', marginBottom: '2rem' }}>
-            <h4>Overview for: <strong>{activeChild.name}</strong></h4>
-            <p>Roll No: {activeChild.roll_number || 'N/A'} | Relationship: {activeChild.relationship}</p>
+        <div className="selected-child-overview" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div className="welcome-section card" style={{ background: '#f1f5f9', color: 'var(--text-main)', margin: 0, padding: '1.25rem 1.5rem' }}>
+            <h4 style={{ margin: 0, fontSize: '1rem' }}>Academic overview for: <strong>{activeChild.name}</strong></h4>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Roll Number: {activeChild.roll_number || 'N/A'} | Relationship: {activeChild.relationship}
+            </p>
           </div>
 
           <div className="stats-grid">
@@ -362,42 +599,165 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Child Results Table */}
-          <div className="card dashboard-section" style={{ marginTop: '2rem' }}>
-            <h3>Academic Performance (Latest Results)</h3>
-            {results.length === 0 ? (
-              <p className="no-data">No results published yet for this student.</p>
-            ) : (
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Exam</th>
-                      <th>Subject</th>
-                      <th>Marks</th>
-                      <th>Percentage</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {results.map((r: any, idx: number) => {
-                      const percentage = Math.round((r.marks_obtained / r.max_marks) * 100);
-                      return (
-                        <tr key={idx}>
-                          <td><strong>{r.exam_name}</strong></td>
-                          <td>{r.subject_name}</td>
-                          <td>{r.marks_obtained} / {r.max_marks}</td>
-                          <td>
-                            <span className={`badge ${percentage >= 40 ? 'badge-success' : 'badge-danger'}`}>
-                              {percentage}%
-                            </span>
-                          </td>
+          <div className="dashboard-content-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
+            {/* Left Column: Academics */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              {/* Child Results Table */}
+              <div className="card dashboard-section">
+                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Latest Subject Marks</h3>
+                {results.length === 0 ? (
+                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No results published yet for this student.</p>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table" style={{ fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr>
+                          <th>Exam</th>
+                          <th>Subject</th>
+                          <th>Marks</th>
+                          <th>Percentage</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody>
+                        {results.map((r: any, idx: number) => {
+                          const percentage = Math.round((r.marks_obtained / r.max_marks) * 100);
+                          return (
+                            <tr key={idx}>
+                              <td><strong>{r.exam_name}</strong></td>
+                              <td>{r.subject_name}</td>
+                              <td>{r.marks_obtained} / {r.max_marks}</td>
+                              <td>
+                                <span className={`badge ${percentage >= 40 ? 'badge-success' : 'badge-danger'}`}>
+                                  {percentage}%
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Child Official Report Cards */}
+              <div className="card dashboard-section">
+                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Official Report Cards</h3>
+                {childExams.length === 0 ? (
+                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No official report cards available for download yet.</p>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table" style={{ fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr>
+                          <th>Exam Title</th>
+                          <th>Timeline</th>
+                          <th style={{ textAlign: 'right' }}>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {childExams.map((e: any) => (
+                          <tr key={e.id}>
+                            <td><strong>{e.name}</strong></td>
+                            <td>{new Date(e.start_date).toLocaleDateString()} - {new Date(e.end_date).toLocaleDateString()}</td>
+                            <td style={{ textAlign: 'right' }}>
+                              <button 
+                                className="btn btn-sm btn-primary" 
+                                onClick={() => handleOpenReportCard(e.id, activeChild.id)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                              >
+                                <Printer size={12} /> View &amp; Print
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: Fees Ledger */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              {/* Child Fee Ledger */}
+              <div className="card dashboard-section">
+                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Fee Ledger details</h3>
+                {ledgerRecords.length === 0 ? (
+                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No fee allocations found for this child.</p>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table" style={{ fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr>
+                          <th>Fee Component</th>
+                          <th>Due Date</th>
+                          <th style={{ textAlign: 'right' }}>Amount Due</th>
+                          <th style={{ textAlign: 'center' }}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ledgerRecords.map((rec: any) => (
+                          <tr key={rec.id}>
+                            <td><strong>{rec.fee_type}</strong></td>
+                            <td>{new Date(rec.due_date).toLocaleDateString()}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 'bold' }}>₹{rec.total_amount.toLocaleString('en-IN')}</td>
+                            <td style={{ textAlign: 'center' }}>
+                              <span className={`badge ${
+                                rec.status === 'PAID' ? 'badge-success' : rec.status === 'PARTIAL' ? 'badge-warning' : 'badge-danger'
+                              }`}>
+                                {rec.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Child Payment Receipts */}
+              <div className="card dashboard-section">
+                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Payment History &amp; Receipts</h3>
+                {payments.length === 0 ? (
+                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No payment transactions logged in the system.</p>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table" style={{ fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr>
+                          <th>Date Paid</th>
+                          <th>Fee Type</th>
+                          <th>Method</th>
+                          <th style={{ textAlign: 'right' }}>Amount</th>
+                          <th style={{ textAlign: 'right' }}>Receipt</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {payments.map((p: any) => (
+                          <tr key={p.id}>
+                            <td>{new Date(p.payment_date).toLocaleDateString()}</td>
+                            <td>{p.fee_type}</td>
+                            <td>{p.payment_method}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--success)' }}>₹{p.amount.toLocaleString('en-IN')}</td>
+                            <td style={{ textAlign: 'right' }}>
+                              <button 
+                                className="btn btn-sm btn-outline" 
+                                onClick={() => handleOpenReceipt(p)}
+                                style={{ padding: '0.25rem 0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                              >
+                                <Printer size={12} /> Receipt
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -791,6 +1151,196 @@ export default function Dashboard() {
           white-space: nowrap;
         }
       `}</style>
+
+      {/* Report Card Modal */}
+      {showReportCardModal && (
+        <div className="modal-overlay no-print" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Student Academic Report Card</h3>
+              <button onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+            </div>
+            
+            {loadingReportCard ? (
+              <p style={{ textAlign: 'center', padding: '2rem' }}>Building report card layout...</p>
+            ) : selectedReportCard ? (
+              <div id="printable-report-card" style={{ padding: '1rem', backgroundColor: '#fff', color: '#000', fontFamily: 'Inter, sans-serif' }}>
+                <div style={{ textAlign: 'center', marginBottom: '1.5rem', borderBottom: '2px solid #000', paddingBottom: '1rem' }}>
+                  <h2 style={{ margin: 0, textTransform: 'uppercase', fontSize: '1.4rem', fontWeight: 800 }}>Academic Report Card</h2>
+                  <h3 style={{ margin: '0.25rem 0 0 0', fontWeight: 'bold', fontSize: '1.1rem', color: '#1e293b' }}>{selectedReportCard.exam.institution_name || 'Greenwood High School'}</h3>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+                  <div>
+                    <p style={{ margin: '0.25rem 0' }}><strong>Student Name:</strong> {selectedReportCard.student.first_name} {selectedReportCard.student.last_name}</p>
+                    <p style={{ margin: '0.25rem 0' }}><strong>Roll Number:</strong> {selectedReportCard.student.roll_number || '-'}</p>
+                    <p style={{ margin: '0.25rem 0' }}><strong>Admission No:</strong> {selectedReportCard.student.admission_number}</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ margin: '0.25rem 0' }}><strong>Exam:</strong> {selectedReportCard.exam.name}</p>
+                    <p style={{ margin: '0.25rem 0' }}><strong>Academic Year:</strong> {selectedReportCard.exam.academic_year}</p>
+                    <p style={{ margin: '0.25rem 0' }}><strong>Program:</strong> {selectedReportCard.exam.course}</p>
+                  </div>
+                </div>
+
+                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #000', backgroundColor: '#f8fafc' }}>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Code</th>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Name</th>
+                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Max Marks</th>
+                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Obtained</th>
+                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Percentage</th>
+                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Grade</th>
+                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>GP</th>
+                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedReportCard.subjects.map((sub: any, idx: number) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '0.5rem' }}>{sub.subject_code}</td>
+                        <td style={{ padding: '0.5rem' }}>{sub.subject_name}</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.max_marks}</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.marks_obtained}</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.percent}%</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem', fontWeight: 'bold' }}>{sub.grade}</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.grade_point}</td>
+                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                          <span style={{ color: sub.is_passing ? 'var(--success)' : 'var(--danger)', fontWeight: 'bold' }}>
+                            {sub.is_passing ? 'PASS' : 'FAIL'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    <tr style={{ fontWeight: 'bold', borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
+                      <td colSpan={2} style={{ padding: '0.5rem' }}>GRAND TOTAL</td>
+                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.max_marks}</td>
+                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.marks_obtained}</td>
+                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.percent}%</td>
+                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.grade}</td>
+                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.grade_point}</td>
+                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                        <span style={{ color: selectedReportCard.result === 'PASS' ? 'var(--success)' : 'var(--danger)' }}>
+                          {selectedReportCard.result}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1.5rem', fontSize: '0.85rem', borderTop: '1px dashed #ccc', paddingTop: '1rem' }}>
+                  <div>
+                    <p><strong>Rank in Class:</strong> {selectedReportCard.total.rank || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p><strong>Attendance:</strong> {selectedReportCard.attendance_percent !== null ? `${selectedReportCard.attendance_percent}%` : 'N/A'}</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p><strong>Overall Result:</strong> <span style={{ fontWeight: 'bold', color: selectedReportCard.result === 'PASS' ? 'var(--success)' : 'var(--danger)' }}>{selectedReportCard.result}</span></p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem', fontSize: '0.75rem', color: '#555' }}>
+                  <div style={{ borderTop: '1px solid #000', width: '140px', textAlign: 'center', paddingTop: '0.25rem' }}>Class Teacher</div>
+                  <div style={{ borderTop: '1px solid #000', width: '140px', textAlign: 'center', paddingTop: '0.25rem' }}>Controller of Exams</div>
+                  <div style={{ borderTop: '1px solid #000', width: '140px', textAlign: 'center', paddingTop: '0.25rem' }}>Principal</div>
+                </div>
+              </div>
+            ) : <p style={{ textAlign: 'center', padding: '2rem' }}>No report card data loaded</p>}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }} className="no-print">
+              <button className="btn btn-outline" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>Close</button>
+              <button className="btn btn-primary" onClick={() => window.print()} disabled={!selectedReportCard}>
+                <Printer size={16} /> Print Report Card
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fee Receipt Modal */}
+      {showReceiptModal && (
+        <div className="modal-overlay no-print" onClick={() => { setShowReceiptModal(false); setSelectedReceipt(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '750px', width: '90%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Fee Payment Receipt</h3>
+              <button onClick={() => { setShowReceiptModal(false); setSelectedReceipt(null); }} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+            </div>
+
+            {loadingReceipt ? (
+              <p style={{ textAlign: 'center', padding: '2rem' }}>Loading receipt information...</p>
+            ) : selectedReceipt ? (
+              <div className="receipt-print-container" style={{ padding: '1.5rem', fontFamily: 'Courier New, monospace', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: '#fff', color: '#000' }}>
+                <div style={{ textAlign: 'center', borderBottom: '2px dashed #cbd5e1', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>{selectedReceipt.institution_name}</h2>
+                  <p style={{ margin: '0.25rem 0 0 0', color: '#475569', fontSize: '0.8rem' }}>{selectedReceipt.institution_address || 'Education Campus Road, IN'}</p>
+                  <h3 style={{ fontSize: '1.1rem', letterSpacing: '0.05em', marginTop: '0.75rem', textDecoration: 'underline' }}>FEES PAYMENT RECEIPT</h3>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                  <div>
+                    <div><strong>Receipt No:</strong> {selectedReceipt.receipt_number}</div>
+                    <div><strong>Date:</strong> {new Date(selectedReceipt.receipt_date).toLocaleDateString(undefined, { dateStyle: 'long' })}</div>
+                    <div><strong>Student Name:</strong> {selectedReceipt.first_name} {selectedReceipt.last_name}</div>
+                    <div><strong>Admission ID:</strong> {selectedReceipt.admission_number}</div>
+                  </div>
+                  <div>
+                    <div><strong>Academic Year:</strong> {selectedReceipt.academic_year_name}</div>
+                    <div><strong>Program:</strong> {selectedReceipt.course_name}</div>
+                    <div><strong>Roll Number:</strong> {selectedReceipt.roll_number || '-'}</div>
+                  </div>
+                </div>
+
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2rem', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px dashed #cbd5e1', borderTop: '2px dashed #cbd5e1' }}>
+                      <th style={{ textAlign: 'left', padding: '0.5rem 0' }}>FEE DESCRIPTION</th>
+                      <th style={{ textAlign: 'right', padding: '0.5rem 0' }}>TOTAL DUE</th>
+                      <th style={{ textAlign: 'right', padding: '0.5rem 0' }}>PAID AMOUNT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '2px dashed #e2e8f0' }}>
+                      <td style={{ padding: '0.75rem 0' }}>{selectedReceipt.fee_type} Payment ({selectedReceipt.payment_method})</td>
+                      <td style={{ textAlign: 'right', padding: '0.75rem 0' }}>₹{selectedReceipt.total_amount.toLocaleString('en-IN')}</td>
+                      <td style={{ textAlign: 'right', padding: '0.75rem 0', fontWeight: 'bold' }}>₹{selectedReceipt.paid_amount.toLocaleString('en-IN')}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontSize: '0.85rem' }}>
+                  <div>
+                    <div><strong>Payment Method:</strong> {selectedReceipt.payment_method}</div>
+                    {selectedReceipt.transaction_reference && <div><strong>Txn Reference:</strong> {selectedReceipt.transaction_reference}</div>}
+                    {selectedReceipt.remarks && <div><strong>Remarks:</strong> {selectedReceipt.remarks}</div>}
+                  </div>
+                  <div style={{ textAlign: 'right', width: '220px' }}>
+                    <div style={{ borderBottom: '1px solid #cbd5e1', paddingBottom: '0.25rem', marginBottom: '0.25rem' }}>
+                      <strong>Ledger Paid:</strong> ₹{selectedReceipt.total_paid.toLocaleString('en-IN')}
+                    </div>
+                    <div>
+                      <strong>Ledger Due:</strong> ₹{(selectedReceipt.total_amount - selectedReceipt.total_paid).toLocaleString('en-IN')}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '2px dashed #cbd5e1', marginTop: '2rem', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#475569' }}>
+                  <div>* Computer generated receipt. No physical signature required.</div>
+                  <div>Authorized Signatory</div>
+                </div>
+              </div>
+            ) : <p style={{ textAlign: 'center', padding: '2rem' }}>No receipt details loaded</p>}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }} className="no-print">
+              <button className="btn btn-outline" onClick={() => { setShowReceiptModal(false); setSelectedReceipt(null); }}>Close</button>
+              <button className="btn btn-primary" onClick={() => window.print()} disabled={!selectedReceipt}>
+                <Printer size={16} /> Print Receipt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

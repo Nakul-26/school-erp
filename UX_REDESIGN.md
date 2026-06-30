@@ -88,6 +88,12 @@ When a new school logs in, show a guided setup checklist on the Dashboard instea
 - [ ] Contextual help tooltips on complex pages
 - [ ] Mobile sidebar improvements
 
+### Phase A — Revenue & Compliance (DONE)
+- [x] High-fidelity print styles for Report Cards (PDF)
+- [x] High-fidelity print styles for Fee Receipts (PDF)
+- [x] Timetable double-booking validation & conflict detection (backend check)
+- [x] Parent & Student Dashboard portals (added full Fee Ledgers, Payment Receipts downloads, and Report Cards printing)
+
 ---
 
 ## Language Changes

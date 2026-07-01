@@ -81,6 +81,19 @@ export default function Reports() {
   const [feeMonthly, setFeeMonthly] = useState<FeeMonthlyRow[]>([]);
   const [feeDefaulters, setFeeDefaulters] = useState<FeeDefaulterRow[]>([]);
   const [feeLoading, setFeeLoading] = useState(true);
+  const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
+
+  const sendFeeReminder = async (studentId: string, pendingAmount: number) => {
+    try {
+      setSendingReminderId(studentId);
+      await api.post('/fees/reminder', { student_id: studentId, pending_amount: pendingAmount });
+      alert('Fee reminder email sent successfully to the parent/guardian.');
+    } catch (err: any) {
+      alert(err.message || 'Failed to send fee reminder.');
+    } finally {
+      setSendingReminderId(null);
+    }
+  };
 
   // ── Effects ───────────────────────────────────────────────────────────────
 
@@ -446,6 +459,7 @@ export default function Reports() {
                       <th>Student</th>
                       <th>Program</th>
                       <th style={{ textAlign: 'right' }}>Dues Outstanding</th>
+                      <th style={{ textAlign: 'center' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -456,6 +470,16 @@ export default function Reports() {
                         <td>{row.course_name}</td>
                         <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#f5222d' }}>
                           ₹{row.pending_amount.toLocaleString('en-IN')}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            className="btn btn-outline"
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', borderColor: 'var(--warning)', color: 'var(--warning)', cursor: 'pointer' }}
+                            onClick={() => sendFeeReminder(row.student_id, row.pending_amount)}
+                            disabled={sendingReminderId === row.student_id}
+                          >
+                            {sendingReminderId === row.student_id ? 'Sending...' : 'Send Reminder'}
+                          </button>
                         </td>
                       </tr>
                     ))}

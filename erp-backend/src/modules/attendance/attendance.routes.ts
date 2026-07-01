@@ -121,7 +121,7 @@ attendance.post('/sessions/:id/attendance', async (c) => {
     try {
       const notifRepo = new NotificationRepository(c.env.DB);
       const notifService = new NotificationService(notifRepo, c.env.DB);
-      await notifService.notifyAttendanceMarked(user.institution_id, id);
+      await notifService.notifyAttendanceMarked(user.institution_id, id, c.env);
     } catch (err) {
       console.error('Failed to trigger attendance notification:', err);
     }

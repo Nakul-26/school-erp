@@ -6,7 +6,8 @@ import {
   Award, IndianRupee, Settings, Megaphone, Bell, UserCog,
   ChevronDown, ChevronRight, LogOut, Users, Calendar,
   ClipboardList, FileSpreadsheet, Building2, Layers, BookOpen,
-  BarChart3, Landmark, CalendarDays, UserPlus, Clipboard, CheckSquare
+  BarChart3, Landmark, CalendarDays, UserPlus, Clipboard, CheckSquare,
+  Library, Bus
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -112,6 +113,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       { to: '/exams', label: 'Exams & Results', icon: Award },
     );
   }
+  academicLinks.push({ to: '/library', label: 'Library Catalog', icon: Library });
   academicLinks.push({ to: '/calendar', label: 'School Calendar', icon: Calendar });
   if (academicLinks.length) groups.push({ key: 'Academics', label: 'Academics', links: academicLinks });
 
@@ -127,6 +129,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     { to: '/leave/approvals', label: 'Leave Approvals', icon: CheckSquare },
   );
   if (canStaff) financeLinks.push({ to: '/student-leaves/approvals', label: 'Student Leave', icon: CheckSquare });
+  financeLinks.push({ to: '/transport', label: 'Transport Routes', icon: Bus });
   financeLinks.push({ to: '/leave/my', label: 'My Leave', icon: CalendarDays });
   if (financeLinks.length) groups.push({ key: 'Finance & HR', label: 'Finance & HR', links: financeLinks });
 

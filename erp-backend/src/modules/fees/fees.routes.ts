@@ -338,4 +338,68 @@ fees.patch('/installments/:id/pay', requireRole('admin', 'super_admin', 'Princip
   }
 });
 
+fees.post('/reminder', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
+  const user = c.get('user');
+  const { student_id, pending_amount } = await c.req.json();
+
+  if (!student_id || !pending_amount) {
+    return c.json({ error: 'student_id and pending_amount are required' }, 400);
+  }
+
+  // 1. Fetch student info
+  const student = await c.env.DB.prepare(`
+    SELECT first_name, last_name, admission_number 
+    FROM students 
+    WHERE id = ? AND institution_id = ? AND is_active = 1
+  `).bind(student_id, user.institution_id).first<{ first_name: string; last_name: string; admission_number: string }>();
+
+  if (!student) {
+    return c.json({ error: 'Student not found' }, 404);
+  }
+
+  const studentName = `${student.first_name} ${student.last_name}`;
+
+  // 2. Fetch parent/guardians
+  const guardians = await c.env.DB.prepare(`
+    SELECT name, COALESCE(email, '') as email
+    FROM guardians
+    WHERE student_id = ? AND is_active = 1
+  `).bind(student_id).all<{ name: string; email: string }>();
+
+  if (!guardians.results || guardians.results.length === 0) {
+    return c.json({ error: 'No parent or guardian linked to this student.' }, 404);
+  }
+
+  const { sendEmail } = await import('../../utils/email');
+  let sentCount = 0;
+
+  for (const guardian of guardians.results) {
+    if (guardian.email) {
+      try {
+        await sendEmail(c.env, {
+          to: guardian.email,
+          subject: `Fee Outstanding Reminder: ${studentName}`,
+          html: `
+            <div style="font-family: sans-serif; padding: 20px; line-height: 1.6; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+              <h2 style="color: #ea580c; margin-top: 0;">Fee Due Outstanding Reminder</h2>
+              <p>Dear ${guardian.name || 'Parent/Guardian'},</p>
+              <p>This is a friendly reminder that an outstanding amount of <strong>₹${pending_amount.toLocaleString('en-IN')}</strong> is due for the fee component linked to your child, <strong>${studentName}</strong> (Admission ID: ${student.admission_number}).</p>
+              <p>We request you to kindly clear the outstanding balance at your earliest convenience. You can view details or check invoices directly on your Parent Portal.</p>
+              <p>If you have already made this payment, please disregard this notice or contact the school finance department to verify the transaction.</p>
+              <hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 20px 0;" />
+              <p style="font-size: 0.8rem; color: #64748b;">This is an automated notification from your School ERP Portal.</p>
+            </div>
+          `
+        });
+        sentCount++;
+      } catch (err) {
+        console.error(`Failed to send fee reminder to ${guardian.email}:`, err);
+      }
+    }
+  }
+
+  await createAuditLog(c.env.DB, user.sub, 'SEND_FEE_REMINDER', 'fees', student_id, `Dispatched outstanding fee reminder to ${sentCount} parents of ${studentName}`);
+  return c.json({ success: true, message: `Reminder sent successfully to ${sentCount} guardians.` });
+});
+
 export default fees;

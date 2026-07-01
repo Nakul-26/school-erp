@@ -43,6 +43,8 @@ import HomeworkList from './pages/HomeworkList';
 import Admissions from './pages/Admissions';
 import DataTools from './pages/DataTools';
 import Reports from './pages/Reports';
+import Library from './pages/Library';
+import Transport from './pages/Transport';
 import TimetablePage from './pages/TimetablePage';
 
 function App() {
@@ -98,6 +100,8 @@ function App() {
           {/* ── Communication ────────────────────────────────────────────── */}
           <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+          <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
+          <Route path="/transport" element={<ProtectedRoute><Transport /></ProtectedRoute>} />
 
           {/* ── Finance ─────────────────────────────────────────────────── */}
           <Route path="/fee-structures" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant']}><FeeStructures /></ProtectedRoute>} />

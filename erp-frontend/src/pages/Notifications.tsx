@@ -18,6 +18,13 @@ export default function Notifications() {
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Toast notification state
+  const [toast, setToast] = useState<{message: string; type: 'success'|'error'} | null>(null);
+  const showToast = (message: string, type: 'success'|'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
   // Broadcaster state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({
@@ -34,13 +41,13 @@ export default function Notifications() {
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createForm.title.trim() || !createForm.message.trim()) {
-      alert('Title and message are required.');
+      showToast('Title and message are required.', 'error');
       return;
     }
     try {
       setCreating(true);
       await api.post('/notifications', createForm);
-      alert('Alert broadcasted successfully!');
+      showToast('Alert broadcasted successfully!');
       setShowCreateModal(false);
       setCreateForm({
         title: '',
@@ -51,7 +58,7 @@ export default function Notifications() {
       fetchNotifications();
     } catch (err) {
       console.error('Error creating notification:', err);
-      alert('Failed to send notification.');
+      showToast('Failed to send notification.', 'error');
     } finally {
       setCreating(false);
     }
@@ -310,6 +317,19 @@ export default function Notifications() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999,
+          padding: '1rem 1.5rem', borderRadius: 'var(--radius-md)',
+          background: toast.type === 'success' ? '#10b981' : '#ef4444',
+          color: 'white', fontWeight: 700, fontSize: '0.875rem',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+          display: 'flex', alignItems: 'center', gap: '0.5rem'
+        }}>
+          {toast.type === 'success' ? '✓' : '✕'} {toast.message}
         </div>
       )}
     </Layout>

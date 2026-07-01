@@ -74,6 +74,13 @@ export default function StudentDetails() {
   const [showChangeSectionModal, setShowChangeSectionModal] = useState(false);
   const [changeSectionForm, setChangeSectionForm] = useState({ section_id: '' });
 
+  // Transport allocation state
+  const [transportRoutes, setTransportRoutes] = useState<any[]>([]);
+  const [allocation, setAllocation] = useState<any>(null);
+  const [transportForm, setTransportForm] = useState({ route_id: '', pickup_point: '' });
+  const [submittingTransport, setSubmittingTransport] = useState(false);
+  const [showTransportModal, setShowTransportModal] = useState(false);
+
   const setActiveTab = (tab: string) => {
     setSearchParams({ tab });
   };
@@ -125,7 +132,8 @@ export default function StudentDetails() {
     try {
       const [
         studentData, guardiansData, enrollmentsData, yearsData, programsData, sectionsData, 
-        attendanceData, ledgerData, paymentsData, documentsData, notesData
+        attendanceData, ledgerData, paymentsData, documentsData, notesData,
+        routesData, allocationsData
       ] = await Promise.all([
         api.get(`/students/${id}`),
         api.get(`/guardians/student/${id}`),
@@ -137,7 +145,9 @@ export default function StudentDetails() {
         api.get(`/fees/ledger/${id}`).catch(() => []),
         api.get(`/fees/payments?student_id=${id}`).catch(() => []),
         api.get(`/students/${id}/documents`).catch(() => []),
-        api.get(`/students/${id}/notes`).catch(() => [])
+        api.get(`/students/${id}/notes`).catch(() => []),
+        api.get('/transport/routes').catch(() => []),
+        api.get('/transport/allocations').catch(() => [])
       ]);
       
       setStudent(studentData);
@@ -156,6 +166,18 @@ export default function StudentDetails() {
       setPayments(paymentsData || []);
       setDocuments(documentsData || []);
       setNotes(notesData || []);
+      setTransportRoutes(routesData || []);
+
+      const stuAllocation = (allocationsData || []).find((a: any) => a.student_id === id);
+      setAllocation(stuAllocation || null);
+      if (stuAllocation) {
+        setTransportForm({
+          route_id: stuAllocation.route_id || '',
+          pickup_point: stuAllocation.pickup_point || ''
+        });
+      } else {
+        setTransportForm({ route_id: '', pickup_point: '' });
+      }
 
       // Populate health card form
       setHealthForm({
@@ -223,6 +245,45 @@ export default function StudentDetails() {
     } catch (err) {
       console.error(err);
       alert('Failed to delete note');
+    }
+  };
+
+  const handleTransportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transportForm.route_id) return;
+    try {
+      setSubmittingTransport(true);
+      await api.post('/transport/allocations', {
+        student_id: id,
+        route_id: transportForm.route_id,
+        pickup_point: transportForm.pickup_point
+      });
+      
+      const allocationsData = await api.get('/transport/allocations').catch(() => []);
+      const stuAllocation = (allocationsData || []).find((a: any) => a.student_id === id);
+      setAllocation(stuAllocation || null);
+      setShowTransportModal(false);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error saving transport route assignment');
+    } finally {
+      setSubmittingTransport(false);
+    }
+  };
+
+  const handleRemoveTransport = async () => {
+    if (!confirm('Are you sure you want to remove this student from the transport route?')) return;
+    try {
+      setSubmittingTransport(true);
+      await api.delete(`/transport/allocations/${id}`);
+      setAllocation(null);
+      setTransportForm({ route_id: '', pickup_point: '' });
+      setShowTransportModal(false);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error removing transport route assignment');
+    } finally {
+      setSubmittingTransport(false);
     }
   };
 
@@ -779,6 +840,66 @@ export default function StudentDetails() {
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* Transport Route Section */}
+            <div style={{ marginTop: '2.5rem', borderTop: '1px solid var(--border)', paddingTop: '2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <div>
+                  <h4 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', margin: 0 }}>
+                    🚌 Transport Route Assignment
+                  </h4>
+                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Manage bus routing and pick-up/drop-off settings for this student profile.
+                  </p>
+                </div>
+                <button 
+                  className="btn btn-outline btn-sm"
+                  onClick={() => setShowTransportModal(true)}
+                >
+                  {allocation ? 'Change Bus Route' : 'Assign Bus Route'}
+                </button>
+              </div>
+
+              {allocation ? (
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+                  gap: '1.25rem',
+                  padding: '1.25rem', 
+                  background: '#f8fafc', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: 'var(--radius-md)'
+                }}>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Assigned Route</span>
+                    <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{allocation.route_name || 'Route Details'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Vehicle Number</span>
+                    <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{allocation.vehicle_number || 'N/A'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Pickup / Drop point</span>
+                    <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{allocation.pickup_point || 'Not specified'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Monthly Fare</span>
+                    <strong style={{ fontSize: '0.9rem', color: 'var(--primary)' }}>₹{allocation.monthly_charge || 0}</strong>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ 
+                  padding: '1.5rem', 
+                  border: '1px dashed var(--border)', 
+                  borderRadius: 'var(--radius-md)', 
+                  textAlign: 'center',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.85rem'
+                }}>
+                  This student is not currently assigned to any transport route.
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1588,6 +1709,77 @@ export default function StudentDetails() {
                 >
                   Change Section
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Transport Route Modal */}
+      {showTransportModal && (
+        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
+          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-main)' }}>
+              {allocation ? 'Change Transport Route' : 'Assign Transport Route'}
+            </h3>
+            <form onSubmit={handleTransportSubmit}>
+              
+              <div className="form-group">
+                <label>Select Transport Route *</label>
+                <select 
+                  value={transportForm.route_id} 
+                  onChange={e => setTransportForm({ ...transportForm, route_id: e.target.value })}
+                  required
+                >
+                  <option value="">-- Choose Route --</option>
+                  {transportRoutes.map(route => (
+                    <option key={route.id} value={route.id}>
+                      {route.route_name} (₹{route.monthly_charge}/mo, {route.vehicle_number})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label>Pickup / Drop Point Name (Optional)</label>
+                <input 
+                  type="text" 
+                  value={transportForm.pickup_point} 
+                  onChange={e => setTransportForm({ ...transportForm, pickup_point: e.target.value })}
+                  placeholder="e.g. Main Gate, Sector 15 Cross"
+                />
+              </div>
+
+              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+                {allocation ? (
+                  <button 
+                    type="button" 
+                    onClick={handleRemoveTransport} 
+                    className="btn btn-danger"
+                    disabled={submittingTransport}
+                    style={{ marginRight: 'auto' }}
+                  >
+                    Remove Route
+                  </button>
+                ) : <div />}
+                
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowTransportModal(false)} 
+                    className="btn btn-secondary"
+                    disabled={submittingTransport}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={submittingTransport}
+                  >
+                    {submittingTransport ? 'Saving...' : 'Save Assignment'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

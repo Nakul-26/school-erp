@@ -127,12 +127,11 @@ export default function Certificates() {
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  // Auto-select if only one match
                   const matches = students.filter(s =>
                     `${s.first_name} ${s.last_name}`.toLowerCase().includes(e.target.value.toLowerCase()) ||
-                    s.admission_number.includes(e.target.value)
+                    (s.admission_number && s.admission_number.includes(e.target.value))
                   );
-                  if (matches.length === 1) setSelectedStudentId(matches[0].id);
+                  if (matches.length === 1 && matches[0]) setSelectedStudentId(matches[0].id);
                   else if (e.target.value === '') setSelectedStudentId('');
                 }}
                 style={{ paddingLeft: '2.25rem', marginBottom: searchQuery.length >= 1 ? '0.375rem' : 0 }}

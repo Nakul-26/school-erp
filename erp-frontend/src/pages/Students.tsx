@@ -84,6 +84,16 @@ export default function Students() {
   // Edit form state
   const [editForm, setEditForm] = useState<any>(null);
 
+  // Auto-select section if only one is available for the selected program
+  useEffect(() => {
+    if (addForm.course_id) {
+      const filtered = sections.filter(s => s.course_id === addForm.course_id);
+      if (filtered.length === 1) {
+        setAddForm(prev => ({ ...prev, section_id: filtered[0].id }));
+      }
+    }
+  }, [addForm.course_id, sections]);
+
   // Load Dropdown Metadata
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -96,6 +106,17 @@ export default function Students() {
         setAcademicYears(years || []);
         setPrograms(progs || []);
         setSections(secs || []);
+
+        // Auto-select current academic year
+        const currentYear = (years || []).find((y: any) => y.is_current === 1 || y.is_current === true);
+        if (currentYear) {
+          setAddForm(prev => ({ ...prev, academic_year_id: currentYear.id }));
+        }
+
+        // Auto-select program if only one exists
+        if (progs && progs.length === 1) {
+          setAddForm(prev => ({ ...prev, course_id: progs[0].id }));
+        }
 
         if (user?.institution_id) {
           const inst = await api.get(`/institutions/${user.institution_id}`);

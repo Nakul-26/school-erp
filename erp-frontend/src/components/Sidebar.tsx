@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronRight, LogOut, Users, Calendar,
   ClipboardList, FileSpreadsheet, Building2, Layers, BookOpen,
   BarChart3, Landmark, CalendarDays, UserPlus, Clipboard, CheckSquare,
-  Library, Bus
+  Library, Bus, MessageSquare
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,6 +29,30 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
 
   const [unreadCount, setUnreadCount] = useState(0);
   const navRef = useRef<HTMLDivElement>(null);
+
+  // Multi-branch state (Phase C)
+  const [branches, setBranches] = useState<any[]>([]);
+  const isSuperAdmin = roles.some(r => ['super_admin', 'Super Admin'].includes(r));
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      api.get('/institutions')
+        .then(data => setBranches(data))
+        .catch(err => console.error('Failed to load branches:', err));
+    }
+  }, [isSuperAdmin]);
+
+  const handleBranchSwitch = async (instId: string) => {
+    if (!instId) return;
+    try {
+      const res = await api.post('/auth/switch-branch', { institution_id: instId });
+      localStorage.setItem('erp_token', res.token);
+      localStorage.setItem('erp_user', JSON.stringify(res.user));
+      window.location.reload();
+    } catch (err) {
+      alert('Failed to switch branch.');
+    }
+  };
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
     const saved = sessionStorage.getItem('sidebar_v2_collapsed');
@@ -84,6 +108,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { to: '/announcements', label: 'Announcements', icon: Megaphone },
         { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+        { to: '/messaging', label: 'Direct Messages', icon: MessageSquare },
       ],
     },
   ];
@@ -137,6 +162,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     key: 'Reports', label: 'Reports',
     links: [
       { to: '/reports', label: 'All Reports', icon: BarChart3 },
+      { to: '/certificates', label: 'Official Certificates', icon: Award },
     ],
   });
 
@@ -161,16 +187,40 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#0d1117' }}>
       {/* Brand */}
-      <div style={{ padding: '1.125rem 1rem', borderBottom: '1px solid #161b22', flexShrink: 0 }}>
+      <div style={{ padding: '1.125rem 1rem 0.75rem 1rem', borderBottom: '1px solid #161b22', flexShrink: 0 }}>
         <div className="sidebar-brand">
           <div className="sidebar-brand-icon">
             <School size={16} color="white" />
           </div>
           <div className="sidebar-brand-text">
-            <span className="sidebar-brand-name">School ERP</span>
+            <span className="sidebar-brand-name">{user?.institution_name || 'School ERP'}</span>
             <span className="sidebar-brand-tag">Management Portal</span>
           </div>
         </div>
+
+        {isSuperAdmin && branches.length > 0 && (
+          <div style={{ marginTop: '0.75rem' }}>
+            <select
+              value={user?.institution_id || ''}
+              onChange={(e) => handleBranchSwitch(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.35rem 0.5rem',
+                fontSize: '0.75rem',
+                backgroundColor: '#1f2937',
+                border: '1px solid #374151',
+                color: '#e5e7eb',
+                borderRadius: 'var(--radius-xs)',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">-- Switch Branch --</option>
+              {branches.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Nav */}

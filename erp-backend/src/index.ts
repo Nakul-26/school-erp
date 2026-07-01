@@ -38,6 +38,7 @@ import studentLeaves from './modules/student-leaves/student-leaves.routes';
 import homework from './modules/homework/homework.routes';
 import library from './modules/library/library.routes';
 import transport from './modules/transport/transport.routes';
+import messaging from './modules/messaging/messaging.routes';
 
 
 const app = new Hono<{ Bindings: Env }>();
@@ -316,6 +317,7 @@ app.route('/student-leaves', studentLeaves);
 app.route('/homework', homework);
 app.route('/library', library);
 app.route('/transport', transport);
+app.route('/messaging', messaging);
 
 
 export default app;

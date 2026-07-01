@@ -45,6 +45,8 @@ import DataTools from './pages/DataTools';
 import Reports from './pages/Reports';
 import Library from './pages/Library';
 import Transport from './pages/Transport';
+import Certificates from './pages/Certificates';
+import Messaging from './pages/Messaging';
 import TimetablePage from './pages/TimetablePage';
 
 function App() {
@@ -102,6 +104,8 @@ function App() {
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           <Route path="/transport" element={<ProtectedRoute><Transport /></ProtectedRoute>} />
+          <Route path="/certificates" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Certificates /></ProtectedRoute>} />
+          <Route path="/messaging" element={<ProtectedRoute><Messaging /></ProtectedRoute>} />
 
           {/* ── Finance ─────────────────────────────────────────────────── */}
           <Route path="/fee-structures" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant']}><FeeStructures /></ProtectedRoute>} />

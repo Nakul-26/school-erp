@@ -402,4 +402,84 @@ fees.post('/reminder', requireRole('admin', 'super_admin', 'Principal', 'HOD', '
   return c.json({ success: true, message: `Reminder sent successfully to ${sentCount} guardians.` });
 });
 
+fees.post('/records/:id/pay-online', async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const { amount, payment_method, transaction_reference } = await c.req.json();
+
+  if (!amount || amount <= 0) {
+    return c.json({ error: 'Valid payment amount is required' }, 400);
+  }
+
+  const db = c.env.DB;
+
+  // 1. Fetch student fee record
+  const record = await db.prepare(`
+    SELECT * FROM student_fee_records WHERE id = ? AND institution_id = ? AND is_active = 1
+  `).bind(id, user.institution_id).first<{
+    student_id: string;
+    academic_year_id: string;
+    course_id: string;
+    year_number: number;
+    fee_type: string;
+    total_amount: number;
+    paid_amount: number;
+  }>();
+
+  if (!record) {
+    return c.json({ error: 'Fee ledger record not found' }, 404);
+  }
+
+  const remaining = record.total_amount - record.paid_amount;
+  if (amount > remaining) {
+    return c.json({ error: `Amount ₹${amount} exceeds the remaining balance ₹${remaining}` }, 400);
+  }
+
+  const newPaidAmount = record.paid_amount + amount;
+  const newStatus = newPaidAmount >= record.total_amount ? 'PAID' : 'PARTIAL';
+
+  // 2. Insert fee payment
+  const paymentId = crypto.randomUUID();
+  const today = new Date().toISOString().split('T')[0];
+  await db.prepare(`
+    INSERT INTO fee_payments (id, institution_id, student_fee_record_id, amount_paid, payment_date, payment_method, transaction_reference, remarks)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'Self-service online payment')
+  `).bind(
+    paymentId,
+    user.institution_id,
+    id,
+    amount,
+    today,
+    payment_method || 'Online',
+    transaction_reference || `TXN-${Date.now()}`
+  ).run();
+
+  // 3. Generate receipt
+  const receiptId = crypto.randomUUID();
+  const receiptNo = `REC-${Date.now().toString().slice(-8)}`;
+  await db.prepare(`
+    INSERT INTO fee_receipts (id, institution_id, student_fee_record_id, payment_id, receipt_number, receipt_date, amount)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    receiptId,
+    user.institution_id,
+    id,
+    paymentId,
+    receiptNo,
+    today,
+    amount
+  ).run();
+
+  // 4. Update student fee record ledger
+  await db.prepare(`
+    UPDATE student_fee_records 
+    SET paid_amount = ?, status = ?, updated_at = (datetime('now'))
+    WHERE id = ?
+  `).bind(newPaidAmount, newStatus, id).run();
+
+  await createAuditLog(db, user.sub, 'PAY_FEE_ONLINE', 'fees', id, `Self paid ₹${amount} online via ${payment_method}`);
+
+  return c.json({ success: true, receipt_number: receiptNo });
+});
+
 export default fees;

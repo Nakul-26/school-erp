@@ -21,7 +21,10 @@ import {
   Printer,
   Eye,
   Download,
-  ArrowRight
+  ArrowRight,
+  CreditCard,
+  Smartphone,
+  Check
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -51,6 +54,99 @@ export default function Dashboard() {
   const [selectedReceipt, setSelectedReceipt] = useState<any | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [loadingReceipt, setLoadingReceipt] = useState(false);
+
+  // Online Fee Payments state (Phase C)
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedFeeRecord, setSelectedFeeRecord] = useState<any | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<'Card' | 'UPI'>('UPI');
+  const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [upiTimer, setUpiTimer] = useState<number>(60);
+  const [simulatingUpiSuccess, setSimulatingUpiSuccess] = useState(false);
+  
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCVV, setCardCVV] = useState('');
+  const [cardName, setCardName] = useState('');
+
+  const handlePayOnlineInit = (rec: any) => {
+    setSelectedFeeRecord(rec);
+    const remaining = rec.total_amount - rec.paid_amount;
+    setPaymentAmount(String(remaining));
+    setPaymentMethod('UPI');
+    setUpiTimer(60);
+    setSimulatingUpiSuccess(false);
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCVV('');
+    setCardName('');
+    setShowPaymentModal(true);
+  };
+
+  useEffect(() => {
+    let interval: any;
+    if (showPaymentModal && paymentMethod === 'UPI' && upiTimer > 0 && !simulatingUpiSuccess) {
+      interval = setInterval(() => {
+        setUpiTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [showPaymentModal, paymentMethod, upiTimer, simulatingUpiSuccess]);
+
+  const triggerSimulateScan = async () => {
+    if (submittingPayment) return;
+    setSimulatingUpiSuccess(true);
+    setSubmittingPayment(true);
+    setTimeout(async () => {
+      try {
+        const remaining = selectedFeeRecord.total_amount - selectedFeeRecord.paid_amount;
+        const amt = Number(paymentAmount) || remaining;
+        const res = await api.post(`/fees/records/${selectedFeeRecord.id}/pay-online`, {
+          amount: amt,
+          payment_method: 'UPI-Online',
+          transaction_reference: `UPI-TXN-${Date.now().toString().slice(-6)}`
+        });
+        alert(`Payment Successful! Receipt generated: ${res.receipt_number}`);
+        setShowPaymentModal(false);
+        fetchDashboardData();
+      } catch (err: any) {
+        alert(err.message || 'Payment processing failed');
+        setSimulatingUpiSuccess(false);
+      } finally {
+        setSubmittingPayment(false);
+      }
+    }, 2500);
+  };
+
+  const handleCardPaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cardNumber || !cardExpiry || !cardCVV || !cardName) {
+      return alert('Please fill in all credit/debit card fields.');
+    }
+    try {
+      setSubmittingPayment(true);
+      const remaining = selectedFeeRecord.total_amount - selectedFeeRecord.paid_amount;
+      const amt = Number(paymentAmount) || remaining;
+      const res = await api.post(`/fees/records/${selectedFeeRecord.id}/pay-online`, {
+        amount: amt,
+        payment_method: 'Card-Online',
+        transaction_reference: `CRD-TXN-${Date.now().toString().slice(-6)}`
+      });
+      alert(`Payment Successful! Receipt generated: ${res.receipt_number}`);
+      setShowPaymentModal(false);
+      fetchDashboardData();
+    } catch (err: any) {
+      alert(err.message || 'Card authorization failed');
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -451,6 +547,7 @@ export default function Dashboard() {
                         <th>Due Date</th>
                         <th style={{ textAlign: 'right' }}>Amount Due</th>
                         <th style={{ textAlign: 'center' }}>Status</th>
+                        <th style={{ textAlign: 'center' }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -458,13 +555,26 @@ export default function Dashboard() {
                         <tr key={rec.id}>
                           <td><strong>{rec.fee_type}</strong></td>
                           <td>{new Date(rec.due_date).toLocaleDateString()}</td>
-                          <td style={{ textAlign: 'right', fontWeight: 'bold' }}>₹{rec.total_amount.toLocaleString('en-IN')}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 'bold' }}>₹{(rec.total_amount - rec.paid_amount).toLocaleString('en-IN')}</td>
                           <td style={{ textAlign: 'center' }}>
                             <span className={`badge ${
                               rec.status === 'PAID' ? 'badge-success' : rec.status === 'PARTIAL' ? 'badge-warning' : 'badge-danger'
                             }`}>
                               {rec.status}
                             </span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            {rec.status !== 'PAID' ? (
+                              <button
+                                className="btn btn-outline"
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', borderColor: 'var(--primary)', color: 'var(--primary)', cursor: 'pointer' }}
+                                onClick={() => handlePayOnlineInit(rec)}
+                              >
+                                Pay Online
+                              </button>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Paid</span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -694,6 +804,7 @@ export default function Dashboard() {
                           <th>Due Date</th>
                           <th style={{ textAlign: 'right' }}>Amount Due</th>
                           <th style={{ textAlign: 'center' }}>Status</th>
+                          <th style={{ textAlign: 'center' }}>Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -701,13 +812,26 @@ export default function Dashboard() {
                           <tr key={rec.id}>
                             <td><strong>{rec.fee_type}</strong></td>
                             <td>{new Date(rec.due_date).toLocaleDateString()}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 'bold' }}>₹{rec.total_amount.toLocaleString('en-IN')}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 'bold' }}>₹{(rec.total_amount - rec.paid_amount).toLocaleString('en-IN')}</td>
                             <td style={{ textAlign: 'center' }}>
                               <span className={`badge ${
                                 rec.status === 'PAID' ? 'badge-success' : rec.status === 'PARTIAL' ? 'badge-warning' : 'badge-danger'
                               }`}>
                                 {rec.status}
                               </span>
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              {rec.status !== 'PAID' ? (
+                                <button
+                                  className="btn btn-outline"
+                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', borderColor: 'var(--primary)', color: 'var(--primary)', cursor: 'pointer' }}
+                                  onClick={() => handlePayOnlineInit(rec)}
+                                >
+                                  Pay Online
+                                </button>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Paid</span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -1338,6 +1462,132 @@ export default function Dashboard() {
                 <Printer size={16} /> Print Receipt
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Online Payments Checkout Modal (Phase C) */}
+      {showPaymentModal && selectedFeeRecord && (
+        <div className="modal-overlay no-print" onClick={() => setShowPaymentModal(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '550px', width: '90%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Online Fee Checkout</h3>
+              <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+            </div>
+
+            <div style={{ backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+              <div><strong>Fee Component:</strong> {selectedFeeRecord.fee_type}</div>
+              <div><strong>Dues Outstanding:</strong> ₹{(selectedFeeRecord.total_amount - selectedFeeRecord.paid_amount).toLocaleString('en-IN')}</div>
+            </div>
+
+            <div className="page-tabs" style={{ display: 'flex', gap: '0.25rem', marginBottom: '1.5rem', background: '#f1f5f9', padding: '0.25rem', borderRadius: 'var(--radius-full)', width: '100%' }}>
+              <button type="button" className={`page-tab ${paymentMethod === 'UPI' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setPaymentMethod('UPI')}>
+                UPI QR Code
+              </button>
+              <button type="button" className={`page-tab ${paymentMethod === 'Card' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setPaymentMethod('Card')}>
+                Debit / Credit Card
+              </button>
+            </div>
+
+            {paymentMethod === 'UPI' ? (
+              <div style={{ textAlign: 'center', padding: '1rem' }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                  Scan the secure UPI QR Code using your banking app (GPay, PhonePe, BHIM, etc.) to pay.
+                </p>
+                
+                <div style={{ margin: '1.5rem auto', padding: '1rem', width: '200px', height: '200px', border: '2px solid var(--border)', borderRadius: '12px', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  {/* Simulated QR Code Graphic */}
+                  <div style={{ width: '160px', height: '160px', backgroundImage: 'radial-gradient(var(--text-main) 60%, transparent 60%)', backgroundSize: '12px 12px', opacity: simulatingUpiSuccess ? 0.15 : 0.85 }} />
+                  <Smartphone size={32} style={{ position: 'absolute', color: 'var(--primary)' }} />
+                  {simulatingUpiSuccess && (
+                    <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="spinner" style={{ border: '4px solid rgba(99, 102, 241, 0.1)', borderTop: '4px solid var(--primary)', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }} />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)' }}>Verifying Payment...</span>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                  QR Code expires in: <span style={{ color: 'var(--danger)', fontWeight: 800 }}>{upiTimer}s</span>
+                </div>
+
+                <div style={{ marginTop: '2rem' }}>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary" 
+                    style={{ width: '100%' }}
+                    onClick={triggerSimulateScan}
+                    disabled={submittingPayment}
+                  >
+                    {submittingPayment ? 'Processing Approval...' : 'Simulate UPI Scanner App Approval'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleCardPaymentSubmit}>
+                <div className="form-group">
+                  <label>Cardholder Name</label>
+                  <input
+                    type="text"
+                    placeholder="John Doe"
+                    value={cardName}
+                    onChange={e => setCardName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginTop: '1rem' }}>
+                  <label>Card Number</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      maxLength={19}
+                      placeholder="4111 2222 3333 4444"
+                      value={cardNumber}
+                      onChange={e => setCardNumber(e.target.value.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim())}
+                      required
+                    />
+                    <CreditCard size={18} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                  <div className="form-group">
+                    <label>Expiration Date</label>
+                    <input
+                      type="text"
+                      maxLength={5}
+                      placeholder="MM/YY"
+                      value={cardExpiry}
+                      onChange={e => setCardExpiry(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>CVV / CVC</label>
+                    <input
+                      type="password"
+                      maxLength={3}
+                      placeholder="123"
+                      value={cardCVV}
+                      onChange={e => setCardCVV(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '2rem' }}>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                    disabled={submittingPayment}
+                  >
+                    {submittingPayment ? 'Authorizing Card Transaction...' : `Authorize Payment of ₹${Number(paymentAmount).toLocaleString('en-IN')}`}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

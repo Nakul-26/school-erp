@@ -43,6 +43,11 @@ export default function Transport() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState<{message: string; type: 'success'|'error'} | null>(null);
+  const showToast = (message: string, type: 'success'|'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   // Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -106,17 +111,17 @@ export default function Transport() {
   const handleRouteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!routeForm.route_name || routeForm.monthly_charge === undefined) {
-      return alert('Route name and monthly charge are required');
+      showToast('Route name and monthly charge are required', 'error'); return;
     }
 
     try {
       setSubmitting(true);
       if (editingRoute) {
         await api.put(`/transport/routes/${editingRoute.id}`, routeForm);
-        alert('Route updated successfully');
+        showToast('Route updated successfully');
       } else {
         await api.post('/transport/routes', routeForm);
-        alert('Route added successfully');
+        showToast('Route added successfully');
       }
       setShowRouteModal(false);
       setEditingRoute(null);
@@ -131,7 +136,7 @@ export default function Transport() {
       });
       fetchData();
     } catch (err) {
-      alert('Error saving route details');
+      showToast('Error saving route details', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -140,18 +145,18 @@ export default function Transport() {
   const handleAssignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assignForm.student_id || !assignForm.route_id) {
-      return alert('Student and Route selection are required');
+      showToast('Student and Route selection are required', 'error'); return;
     }
 
     try {
       setSubmitting(true);
       await api.post('/transport/allocations', assignForm);
-      alert('Student assigned to route successfully');
+      showToast('Student assigned to route successfully');
       setShowAssignModal(false);
       setAssignForm({ student_id: '', route_id: '', pickup_point: '' });
       fetchData();
     } catch (err) {
-      alert('Error assigning student');
+      showToast('Error assigning student', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -161,10 +166,10 @@ export default function Transport() {
     if (!confirm('Are you sure you want to remove this student from transport service?')) return;
     try {
       await api.delete(`/transport/allocations/${studentId}`);
-      alert('Student removed from transport service');
+      showToast('Student removed from transport service');
       fetchData();
     } catch (err) {
-      alert('Error unassigning student');
+      showToast('Error unassigning student', 'error');
     }
   };
 
@@ -174,14 +179,14 @@ export default function Transport() {
       await api.delete(`/transport/routes/${id}`);
       fetchData();
     } catch (err) {
-      alert('Error deleting route');
+      showToast('Error deleting route', 'error');
     }
   };
 
   const handleGenerateBilling = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!billingForm.billing_month_name || !billingForm.due_date) {
-      return alert('Billing Month and Due Date are required');
+      showToast('Billing Month and Due Date are required', 'error'); return;
     }
 
     if (!confirm(`Generate transport fees for all assigned students for "${billingForm.billing_month_name}"? This will add fee invoices directly to the outstanding ledgers.`)) return;
@@ -189,10 +194,10 @@ export default function Transport() {
     try {
       setSubmitting(true);
       const res = await api.post('/transport/billing/generate', billingForm);
-      alert(res.message || 'Billing generated successfully.');
+      showToast(res.message || 'Billing generated successfully.');
       setBillingForm({ billing_month_name: '', due_date: '' });
     } catch (err: any) {
-      alert(err.message || 'Failed to generate billing.');
+      showToast(err.message || 'Failed to generate billing.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -316,6 +321,24 @@ export default function Transport() {
                             <span><strong>Phone:</strong> {route.driver_phone}</span>
                           </div>
                         )}
+                      </div>
+
+                      <div style={{ marginTop: '0.875rem', paddingTop: '0.875rem', borderTop: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.375rem' }}>
+                          <span>Capacity</span>
+                          <span style={{ fontWeight: 700 }}>{(route as any).allocated_count || 0} / {(route as any).capacity || (route as any).vehicle_capacity || '?'} seats</span>
+                        </div>
+                        <div style={{ height: '6px', borderRadius: '999px', background: 'var(--border)', overflow: 'hidden' }}>
+                          <div style={{
+                            height: '100%',
+                            borderRadius: '999px',
+                            width: `${Math.min(100, (((route as any).allocated_count || 0) / ((route as any).capacity || (route as any).vehicle_capacity || 1)) * 100)}%`,
+                            background: (((route as any).allocated_count || 0) / ((route as any).capacity || (route as any).vehicle_capacity || 1)) > 0.8
+                              ? '#ef4444' : (((route as any).allocated_count || 0) / ((route as any).capacity || (route as any).vehicle_capacity || 1)) > 0.5
+                              ? '#f59e0b' : '#10b981',
+                            transition: 'width 0.4s ease'
+                          }} />
+                        </div>
                       </div>
                     </div>
 
@@ -614,6 +637,18 @@ export default function Transport() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999,
+          padding: '1rem 1.5rem', borderRadius: 'var(--radius-md)',
+          background: toast.type === 'success' ? '#10b981' : '#ef4444',
+          color: 'white', fontWeight: 700, fontSize: '0.875rem',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+          display: 'flex', alignItems: 'center', gap: '0.5rem', maxWidth: '380px'
+        }}>
+          {toast.type === 'success' ? '✓' : '✕'} {toast.message}
         </div>
       )}
     </Layout>

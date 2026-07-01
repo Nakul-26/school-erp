@@ -114,53 +114,78 @@ export default function Certificates() {
 
       {/* Control panel */}
       <div className="card no-print" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', alignItems: 'flex-end' }}>
-          
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', alignItems: 'flex-start' }}>
+
+          {/* Student Picker */}
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>Search &amp; Select Student</label>
+            <label>Search Student</label>
             <div style={{ position: 'relative' }}>
-              <select
-                value={selectedStudentId}
-                onChange={(e) => setSelectedStudentId(e.target.value)}
-                style={{ width: '100%', padding: '0.5rem 0.5rem 0.5rem 2rem' }}
-              >
-                <option value="">-- Select Student --</option>
-                {filteredStudents.map(s => (
-                  <option key={s.id} value={s.id}>
-                    {s.first_name} {s.last_name} ({s.admission_number})
-                  </option>
-                ))}
-              </select>
-              <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none', zIndex: 1 }} />
+              <input
+                type="text"
+                placeholder="Type student name or admission number..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  // Auto-select if only one match
+                  const matches = students.filter(s =>
+                    `${s.first_name} ${s.last_name}`.toLowerCase().includes(e.target.value.toLowerCase()) ||
+                    s.admission_number.includes(e.target.value)
+                  );
+                  if (matches.length === 1) setSelectedStudentId(matches[0].id);
+                  else if (e.target.value === '') setSelectedStudentId('');
+                }}
+                style={{ paddingLeft: '2.25rem', marginBottom: searchQuery.length >= 1 ? '0.375rem' : 0 }}
+              />
             </div>
+            {searchQuery.length >= 1 && (
+              <div style={{ maxHeight: '160px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', backgroundColor: '#fff', boxShadow: 'var(--shadow-md)' }}>
+                {filteredStudents.length === 0 ? (
+                  <div style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>No students found</div>
+                ) : filteredStudents.map(s => (
+                  <div
+                    key={s.id}
+                    onClick={() => { setSelectedStudentId(s.id); setSearchQuery(`${s.first_name} ${s.last_name}`); }}
+                    style={{
+                      padding: '0.625rem 1rem', cursor: 'pointer', fontSize: '0.85rem',
+                      backgroundColor: selectedStudentId === s.id ? 'var(--primary-soft)' : 'transparent',
+                      color: selectedStudentId === s.id ? 'var(--primary)' : 'var(--text-main)',
+                      fontWeight: selectedStudentId === s.id ? 700 : 400,
+                      borderBottom: '1px solid var(--border)',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                    }}
+                    onMouseEnter={e => { if (selectedStudentId !== s.id) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-main)'; }}
+                    onMouseLeave={e => { if (selectedStudentId !== s.id) (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
+                  >
+                    <span>{s.first_name} {s.last_name}</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{s.admission_number}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {selectedStudentId && student && (
+              <div style={{ marginTop: '0.375rem', fontSize: '0.775rem', color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                ✓ {student.first_name} {student.last_name} selected
+              </div>
+            )}
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>Credential Template Type</label>
+            <label>Credential Type</label>
             <select
               value={selectedTemplate}
               onChange={(e) => setSelectedTemplate(e.target.value as any)}
               style={{ width: '100%', padding: '0.5rem' }}
             >
-              <option value="idcard">Student ID Badge</option>
-              <option value="bonafide">Bonafide Certificate</option>
-              <option value="tc">Transfer Certificate (TC)</option>
+              <option value="idcard">🪪 Student ID Badge</option>
+              <option value="bonafide">📄 Bonafide Certificate</option>
+              <option value="tc">📋 Transfer Certificate (TC)</option>
             </select>
           </div>
 
-          <button className="btn btn-primary" onClick={handlePrint} disabled={!selectedStudentId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', height: '40px' }}>
+          <button className="btn btn-primary" onClick={handlePrint} disabled={!selectedStudentId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', height: '40px', alignSelf: 'flex-end' }}>
             <Printer size={16} /> Print Document
           </button>
-        </div>
-
-        <div style={{ marginTop: '1rem' }}>
-          <input
-            type="text"
-            placeholder="Type student name to filter dropdown..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ maxWidth: '350px', marginBottom: 0, padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
-          />
         </div>
       </div>
 

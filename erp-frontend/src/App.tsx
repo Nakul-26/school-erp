@@ -48,6 +48,7 @@ import Transport from './pages/Transport';
 import Certificates from './pages/Certificates';
 import Messaging from './pages/Messaging';
 import TimetablePage from './pages/TimetablePage';
+import SchoolSetup from './pages/SchoolSetup';
 
 function App() {
   return (
@@ -136,6 +137,7 @@ function App() {
           <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><SystemSettings /></ProtectedRoute>} />
           <Route path="/settings/grades" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><GradeSettings /></ProtectedRoute>} />
           <Route path="/audit-logs" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><AuditLogs /></ProtectedRoute>} />
+          <Route path="/setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><SchoolSetup /></ProtectedRoute>} />
 
           {/* ── Data Tools (V2 merged) ───────────────────────────────────── */}
           <Route path="/data-tools" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><DataTools /></ProtectedRoute>} />

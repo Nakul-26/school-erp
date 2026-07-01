@@ -37,6 +37,13 @@ export default function Students() {
   const [showBulkSectionModal, setShowBulkSectionModal] = useState(false);
   const [bulkSectionId, setBulkSectionId] = useState('');
 
+  // Toast notifications
+  const [toast, setToast] = useState<{message: string; type: 'success'|'error'} | null>(null);
+  const showToast = (message: string, type: 'success'|'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -176,7 +183,7 @@ export default function Students() {
       fetchStudents();
     } catch (err: any) {
       console.error(err);
-      alert(`Bulk action failed: ${err.message}`);
+      showToast(`Bulk action failed: ${err.message}`, 'error');
       setLoading(false);
     }
   };
@@ -206,8 +213,7 @@ export default function Students() {
   const handleNextStep = () => {
     if (step === 1) {
       if (!addForm.first_name || !addForm.last_name || !addForm.admission_number) {
-        alert('Please fill in all required fields (First Name, Last Name, Admission Number)');
-        return;
+        showToast('Please fill in all required fields (First Name, Last Name, Admission Number)', 'error'); return;
       }
       
       const nameRegex = /^[a-zA-Z\s.]+$/;
@@ -219,39 +225,31 @@ export default function Students() {
       const phone = addForm.phone.trim();
 
       if (firstName.length < 2 || !nameRegex.test(firstName)) {
-        alert('First Name must be at least 2 characters and contain only letters.');
-        return;
+        showToast('First Name must be at least 2 characters and contain only letters.', 'error'); return;
       }
       if (middleName && !nameRegex.test(middleName)) {
-        alert('Middle Name must contain only letters.');
-        return;
+        showToast('Middle Name must contain only letters.', 'error'); return;
       }
       if (lastName.length < 1 || !nameRegex.test(lastName)) {
-        alert('Last Name must be at least 1 character and contain only letters.');
-        return;
+        showToast('Last Name must be at least 1 character and contain only letters.', 'error'); return;
       }
       if (admissionNumber.length < 3) {
-        alert('Admission Number must be at least 3 characters.');
-        return;
+        showToast('Admission Number must be at least 3 characters.', 'error'); return;
       }
       const admRegex = /^[a-zA-Z0-9_\-\/]+$/;
       if (!admRegex.test(admissionNumber)) {
-        alert('Admission Number must contain only alphanumeric characters, dashes, underscores, or slashes.');
-        return;
+        showToast('Admission Number must contain only alphanumeric characters, dashes, underscores, or slashes.', 'error'); return;
       }
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        alert('Please enter a valid email address.');
-        return;
+        showToast('Please enter a valid email address.', 'error'); return;
       }
       if (phone && !/^[0-9+\s-]{8,15}$/.test(phone)) {
-        alert('Please enter a valid phone number (8-15 digits).');
-        return;
+        showToast('Please enter a valid phone number (8-15 digits).', 'error'); return;
       }
     }
     if (step === 2) {
       if (!addForm.academic_year_id || !addForm.course_id || !addForm.section_id) {
-        alert(`Please select the Academic Year, ${getProgramLabel()}, and Section`);
-        return;
+        showToast(`Please select the Academic Year, ${getProgramLabel()}, and Section`, 'error'); return;
       }
     }
     if (step === 3) {
@@ -261,16 +259,13 @@ export default function Students() {
       const nameRegex = /^[a-zA-Z\s.]+$/;
 
       if (guardianName && !nameRegex.test(guardianName)) {
-        alert('Guardian Name must contain only letters.');
-        return;
+        showToast('Guardian Name must contain only letters.', 'error'); return;
       }
       if (guardianEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guardianEmail)) {
-        alert('Please enter a valid guardian email address.');
-        return;
+        showToast('Please enter a valid guardian email address.', 'error'); return;
       }
       if (guardianPhone && !/^[0-9+\s-]{8,15}$/.test(guardianPhone)) {
-        alert('Please enter a valid guardian phone number (8-15 digits).');
-        return;
+        showToast('Please enter a valid guardian phone number (8-15 digits).', 'error'); return;
       }
     }
     setStep(prev => prev + 1);
@@ -285,12 +280,13 @@ export default function Students() {
     e.preventDefault();
     try {
       await api.post('/students', addForm);
+      showToast(`${addForm.first_name} ${addForm.last_name} added successfully!`);
       setShowAddModal(false);
       resetAddForm();
       fetchStudents();
     } catch (err) {
       console.error(err);
-      alert('Error creating student record.');
+      showToast('Error creating student record.', 'error');
     }
   };
 
@@ -1224,6 +1220,18 @@ export default function Students() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999,
+          padding: '1rem 1.5rem', borderRadius: 'var(--radius-md)',
+          background: toast.type === 'success' ? '#10b981' : '#ef4444',
+          color: 'white', fontWeight: 700, fontSize: '0.875rem',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+          display: 'flex', alignItems: 'center', gap: '0.5rem', maxWidth: '380px'
+        }}>
+          {toast.type === 'success' ? '✓' : '✕'} {toast.message}
         </div>
       )}
     </Layout>

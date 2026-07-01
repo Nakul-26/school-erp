@@ -141,4 +141,13 @@ messaging.post('/read/:contactId', authMiddleware, async (c) => {
   return c.json({ success: true });
 });
 
+messaging.get('/unread-count', authMiddleware, async (c) => {
+  const user = c.get('user');
+  await ensureMessagingTables(c.env.DB);
+  const result = await c.env.DB.prepare(
+    'SELECT COUNT(*) as count FROM direct_messages WHERE institution_id = ? AND receiver_id = ? AND is_read = 0'
+  ).bind(user.institution_id, user.sub).first<{ count: number }>();
+  return c.json({ count: result?.count ?? 0 });
+});
+
 export default messaging;

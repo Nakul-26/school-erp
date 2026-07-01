@@ -71,6 +71,13 @@ export default function Library() {
     due_date: ''
   });
 
+  const [studentSearch, setStudentSearch] = useState('');
+  const [toast, setToast] = useState<{message: string; type: 'success'|'error'} | null>(null);
+  const showToast = (message: string, type: 'success'|'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
   const userRoles = user?.roles || (user?.role ? [user.role] : []);
   const canManage = userRoles.some(r => 
     ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal', 'HOD', 'hod', 'Teacher', 'teacher', 'Accountant', 'accountant'].includes(r)
@@ -102,75 +109,69 @@ export default function Library() {
 
   const handleBookSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bookForm.title || !bookForm.author) return alert('Title and Author are required');
+    if (!bookForm.title || !bookForm.author) return showToast('Title and Author are required', 'error');
 
     try {
       if (editingBook) {
         await api.put(`/library/books/${editingBook.id}`, bookForm);
-        alert('Book updated successfully');
+        showToast('Book updated successfully');
       } else {
         await api.post('/library/books', bookForm);
-        alert('Book added to catalog successfully');
+        showToast('Book added to catalog successfully');
       }
       setShowBookModal(false);
       setEditingBook(null);
       setBookForm({ title: '', author: '', isbn: '', category: 'General', total_copies: 1, rack_location: '' });
       fetchData();
     } catch (err) {
-      alert('Error saving book details');
+      showToast('Error saving book details', 'error');
     }
   };
 
   const handleIssueSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!issueForm.book_id || !issueForm.student_id || !issueForm.due_date) {
-      return alert('All fields are required to issue a book');
+      return showToast('All fields are required to issue a book', 'error');
     }
 
     try {
       await api.post('/library/transactions/issue', issueForm);
-      alert('Book issued successfully');
+      showToast('Book issued successfully');
       setShowIssueModal(false);
+      setStudentSearch('');
       setIssueForm({ book_id: '', student_id: '', due_date: '' });
       fetchData();
     } catch (err: any) {
-      alert(err.message || 'Error issuing book');
+      showToast(err.message || 'Error issuing book', 'error');
     }
   };
 
   const handleReturnBook = async (id: string) => {
-    if (!confirm('Are you sure you want to mark this book as returned?')) return;
     try {
       const res = await api.post(`/library/transactions/${id}/return`, {});
-      if (res.fine_amount > 0) {
-        alert(`Book returned successfully. Overdue fine calculated: ₹${res.fine_amount}`);
-      } else {
-        alert('Book returned successfully.');
-      }
+      showToast(res.fine_amount > 0 ? `Book returned. Overdue fine: ₹${res.fine_amount}` : 'Book returned successfully');
       fetchData();
     } catch (err) {
-      alert('Error returning book');
+      showToast('Error returning book', 'error');
     }
   };
 
   const handlePayFine = async (id: string) => {
-    if (!confirm('Mark this fine as paid?')) return;
     try {
       await api.post(`/library/transactions/${id}/pay-fine`, {});
-      alert('Fine cleared successfully');
+      showToast('Fine cleared successfully');
       fetchData();
     } catch (err) {
-      alert('Error clearing fine');
+      showToast('Error clearing fine', 'error');
     }
   };
 
   const handleDeleteBook = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this book from the catalog?')) return;
     try {
       await api.delete(`/library/books/${id}`);
       fetchData();
     } catch (err) {
-      alert('Error deleting book');
+      showToast('Error deleting book', 'error');
     }
   };
 
@@ -564,17 +565,39 @@ export default function Library() {
               </div>
 
               <div className="form-group">
-                <label>Select Student Recipient</label>
-                <select
-                  value={issueForm.student_id}
-                  onChange={(e) => setIssueForm({ ...issueForm, student_id: e.target.value })}
-                  required
-                >
-                  <option value="">-- Choose Student --</option>
-                  {students.map(s => (
-                    <option key={s.id} value={s.id}>{s.first_name} {s.last_name} (ID: {s.admission_number})</option>
-                  ))}
-                </select>
+                <label>Find Student</label>
+                <input
+                  type="text"
+                  placeholder="Type student name or admission number..."
+                  value={studentSearch}
+                  onChange={(e) => { setStudentSearch(e.target.value); setIssueForm({...issueForm, student_id: ''}); }}
+                  style={{ marginBottom: '0.5rem' }}
+                />
+                {studentSearch.length >= 2 && (
+                  <select
+                    value={issueForm.student_id}
+                    onChange={(e) => setIssueForm({ ...issueForm, student_id: e.target.value })}
+                    required
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">-- Select student --</option>
+                    {students
+                      .filter(s =>
+                        `${s.first_name} ${s.last_name}`.toLowerCase().includes(studentSearch.toLowerCase()) ||
+                        s.admission_number.includes(studentSearch)
+                      )
+                      .map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.first_name} {s.last_name} ({s.admission_number})
+                        </option>
+                      ))}
+                  </select>
+                )}
+                {studentSearch.length < 2 && (
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.25rem 0 0' }}>
+                    Type at least 2 characters to search
+                  </p>
+                )}
               </div>
 
               <div className="form-group">
@@ -588,7 +611,7 @@ export default function Library() {
               </div>
 
               <div className="modal-actions" style={{ marginTop: '2rem' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowIssueModal(false)}>
+                <button type="button" className="btn btn-secondary" onClick={() => { setShowIssueModal(false); setStudentSearch(''); }}>
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary">
@@ -597,6 +620,18 @@ export default function Library() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999,
+          padding: '1rem 1.5rem', borderRadius: 'var(--radius-md)',
+          background: toast.type === 'success' ? '#10b981' : '#ef4444',
+          color: 'white', fontWeight: 700, fontSize: '0.875rem',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+          display: 'flex', alignItems: 'center', gap: '0.5rem'
+        }}>
+          {toast.type === 'success' ? '✓' : '✕'} {toast.message}
         </div>
       )}
     </Layout>

@@ -28,6 +28,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const canStaff = isAdmin || isHOD || isTeacher;
 
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const navRef = useRef<HTMLDivElement>(null);
 
   // Multi-branch state (Phase C)
@@ -67,6 +68,10 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       try {
         const data = await api.get('/notifications');
         setUnreadCount(data.filter((n: any) => n.is_read === 0).length);
+      } catch { /* silent */ }
+      try {
+        const msgData = await api.get('/messaging/unread-count');
+        setUnreadMessages(msgData.count || 0);
       } catch { /* silent */ }
     };
     fetchUnread();
@@ -108,7 +113,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { to: '/announcements', label: 'Announcements', icon: Megaphone },
         { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
-        { to: '/messaging', label: 'Direct Messages', icon: MessageSquare },
+        { to: '/messaging', label: 'Direct Messages', icon: MessageSquare, badge: unreadMessages },
       ],
     },
   ];
@@ -138,7 +143,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       { to: '/exams', label: 'Exams & Results', icon: Award },
     );
   }
-  academicLinks.push({ to: '/library', label: 'Library Catalog', icon: Library });
+  academicLinks.push({ to: '/library', label: 'Library', icon: Library });
   academicLinks.push({ to: '/calendar', label: 'School Calendar', icon: Calendar });
   if (academicLinks.length) groups.push({ key: 'Academics', label: 'Academics', links: academicLinks });
 
@@ -150,12 +155,11 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     { to: '/payroll/runs', label: 'Payroll Runs', icon: Landmark },
   );
   if (canAdmin) financeLinks.push(
-    { to: '/leave/types', label: 'Leave Quotas', icon: BookOpen },
     { to: '/leave/approvals', label: 'Leave Approvals', icon: CheckSquare },
   );
   if (canStaff) financeLinks.push({ to: '/student-leaves/approvals', label: 'Student Leave', icon: CheckSquare });
-  financeLinks.push({ to: '/transport', label: 'Transport Routes', icon: Bus });
   financeLinks.push({ to: '/leave/my', label: 'My Leave', icon: CalendarDays });
+  financeLinks.push({ to: '/transport', label: 'Transport', icon: Bus });
   if (financeLinks.length) groups.push({ key: 'Finance & HR', label: 'Finance & HR', links: financeLinks });
 
   if (canAdmin) groups.push({
@@ -169,17 +173,10 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   if (canAdmin || isAdmin) {
     const setupLinks: Link[] = [];
     if (canAdmin) setupLinks.push(
-      { to: '/academic-years', label: 'School Years', icon: Calendar },
-      { to: '/departments', label: 'Departments', icon: Layers },
       { to: '/approvals', label: 'Approvals Inbox', icon: CheckSquare },
     );
-    if (isAdmin) setupLinks.push(
-      { to: '/users', label: 'Manage Users', icon: UserCog },
-      { to: '/institution-setup', label: 'School Profile', icon: Building2 },
-      { to: '/settings', label: 'System Settings', icon: Settings },
-      { to: '/settings/grades', label: 'Grade Scales', icon: Award },
-      { to: '/audit-logs', label: 'Audit Logs', icon: ClipboardList },
-      { to: '/data-tools', label: 'Data Tools', icon: FileSpreadsheet },
+    if (isAdmin || canAdmin) setupLinks.push(
+      { to: '/setup', label: 'School Setup', icon: Settings },
     );
     groups.push({ key: 'Settings & Setup', label: 'Settings & Setup', links: setupLinks });
   }

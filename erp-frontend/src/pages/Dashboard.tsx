@@ -61,6 +61,7 @@ export default function Dashboard() {
   const [paymentAmount, setPaymentAmount] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'Card' | 'UPI'>('UPI');
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState<{receiptNumber: string} | null>(null);
   const [upiTimer, setUpiTimer] = useState<number>(60);
   const [simulatingUpiSuccess, setSimulatingUpiSuccess] = useState(false);
   
@@ -80,6 +81,7 @@ export default function Dashboard() {
     setCardExpiry('');
     setCardCVV('');
     setCardName('');
+    setPaymentSuccess(null);
     setShowPaymentModal(true);
   };
 
@@ -112,8 +114,7 @@ export default function Dashboard() {
           payment_method: 'UPI-Online',
           transaction_reference: `UPI-TXN-${Date.now().toString().slice(-6)}`
         });
-        alert(`Payment Successful! Receipt generated: ${res.receipt_number}`);
-        setShowPaymentModal(false);
+        setPaymentSuccess({ receiptNumber: res.receipt_number });
         fetchDashboardData();
       } catch (err: any) {
         alert(err.message || 'Payment processing failed');
@@ -138,8 +139,7 @@ export default function Dashboard() {
         payment_method: 'Card-Online',
         transaction_reference: `CRD-TXN-${Date.now().toString().slice(-6)}`
       });
-      alert(`Payment Successful! Receipt generated: ${res.receipt_number}`);
-      setShowPaymentModal(false);
+      setPaymentSuccess({ receiptNumber: res.receipt_number });
       fetchDashboardData();
     } catch (err: any) {
       alert(err.message || 'Card authorization failed');
@@ -1472,121 +1472,149 @@ export default function Dashboard() {
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '550px', width: '90%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Online Fee Checkout</h3>
-              <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => { setShowPaymentModal(false); setPaymentSuccess(null); }} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
             </div>
 
-            <div style={{ backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-              <div><strong>Fee Component:</strong> {selectedFeeRecord.fee_type}</div>
-              <div><strong>Dues Outstanding:</strong> ₹{(selectedFeeRecord.total_amount - selectedFeeRecord.paid_amount).toLocaleString('en-IN')}</div>
-            </div>
-
-            <div className="page-tabs" style={{ display: 'flex', gap: '0.25rem', marginBottom: '1.5rem', background: '#f1f5f9', padding: '0.25rem', borderRadius: 'var(--radius-full)', width: '100%' }}>
-              <button type="button" className={`page-tab ${paymentMethod === 'UPI' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setPaymentMethod('UPI')}>
-                UPI QR Code
-              </button>
-              <button type="button" className={`page-tab ${paymentMethod === 'Card' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setPaymentMethod('Card')}>
-                Debit / Credit Card
-              </button>
-            </div>
-
-            {paymentMethod === 'UPI' ? (
-              <div style={{ textAlign: 'center', padding: '1rem' }}>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                  Scan the secure UPI QR Code using your banking app (GPay, PhonePe, BHIM, etc.) to pay.
+            {paymentSuccess ? (
+              <div style={{ textAlign: 'center', padding: '1.5rem 0.5rem' }}>
+                <div style={{
+                  width: '72px', height: '72px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 1.5rem', fontSize: '2rem', color: 'white',
+                  boxShadow: '0 8px 24px rgba(16,185,129,0.3)'
+                }}>✓</div>
+                <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.35rem', fontWeight: 800 }}>Payment Successful!</h3>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+                  Your payment has been processed and recorded.
                 </p>
-                
-                <div style={{ margin: '1.5rem auto', padding: '1rem', width: '200px', height: '200px', border: '2px solid var(--border)', borderRadius: '12px', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                  {/* Simulated QR Code Graphic */}
-                  <div style={{ width: '160px', height: '160px', backgroundImage: 'radial-gradient(var(--text-main) 60%, transparent 60%)', backgroundSize: '12px 12px', opacity: simulatingUpiSuccess ? 0.15 : 0.85 }} />
-                  <Smartphone size={32} style={{ position: 'absolute', color: 'var(--primary)' }} />
-                  {simulatingUpiSuccess && (
-                    <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                      <div className="spinner" style={{ border: '4px solid rgba(99, 102, 241, 0.1)', borderTop: '4px solid var(--primary)', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }} />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)' }}>Verifying Payment...</span>
-                    </div>
-                  )}
+                <div style={{ background: 'var(--bg-main)', borderRadius: 'var(--radius-sm)', padding: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Receipt Number</div>
+                  <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary)', letterSpacing: '0.05em' }}>
+                    {paymentSuccess.receiptNumber}
+                  </div>
                 </div>
-
-                <div style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                  QR Code expires in: <span style={{ color: 'var(--danger)', fontWeight: 800 }}>{upiTimer}s</span>
-                </div>
-
-                <div style={{ marginTop: '2rem' }}>
-                  <button 
-                    type="button" 
-                    className="btn btn-primary" 
-                    style={{ width: '100%' }}
-                    onClick={triggerSimulateScan}
-                    disabled={submittingPayment}
-                  >
-                    {submittingPayment ? 'Processing Approval...' : 'Simulate UPI Scanner App Approval'}
-                  </button>
-                </div>
+                <button className="btn btn-primary" style={{ width: '100%' }}
+                  onClick={() => { setShowPaymentModal(false); setPaymentSuccess(null); setSelectedFeeRecord(null); }}>
+                  Done
+                </button>
               </div>
             ) : (
-              <form onSubmit={handleCardPaymentSubmit}>
-                <div className="form-group">
-                  <label>Cardholder Name</label>
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    value={cardName}
-                    onChange={e => setCardName(e.target.value)}
-                    required
-                  />
+              <>
+                <div style={{ backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+                  <div><strong>Fee Component:</strong> {selectedFeeRecord.fee_type}</div>
+                  <div><strong>Dues Outstanding:</strong> ₹{(selectedFeeRecord.total_amount - selectedFeeRecord.paid_amount).toLocaleString('en-IN')}</div>
                 </div>
 
-                <div className="form-group" style={{ marginTop: '1rem' }}>
-                  <label>Card Number</label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="text"
-                      maxLength={19}
-                      placeholder="4111 2222 3333 4444"
-                      value={cardNumber}
-                      onChange={e => setCardNumber(e.target.value.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim())}
-                      required
-                    />
-                    <CreditCard size={18} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                  <div className="form-group">
-                    <label>Expiration Date</label>
-                    <input
-                      type="text"
-                      maxLength={5}
-                      placeholder="MM/YY"
-                      value={cardExpiry}
-                      onChange={e => setCardExpiry(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>CVV / CVC</label>
-                    <input
-                      type="password"
-                      maxLength={3}
-                      placeholder="123"
-                      value={cardCVV}
-                      onChange={e => setCardCVV(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '2rem' }}>
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary" 
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                    disabled={submittingPayment}
-                  >
-                    {submittingPayment ? 'Authorizing Card Transaction...' : `Authorize Payment of ₹${Number(paymentAmount).toLocaleString('en-IN')}`}
+                <div className="page-tabs" style={{ display: 'flex', gap: '0.25rem', marginBottom: '1.5rem', background: '#f1f5f9', padding: '0.25rem', borderRadius: 'var(--radius-full)', width: '100%' }}>
+                  <button type="button" className={`page-tab ${paymentMethod === 'UPI' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setPaymentMethod('UPI')}>
+                    UPI QR Code
+                  </button>
+                  <button type="button" className={`page-tab ${paymentMethod === 'Card' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setPaymentMethod('Card')}>
+                    Debit / Credit Card
                   </button>
                 </div>
-              </form>
+
+                {paymentMethod === 'UPI' ? (
+                  <div style={{ textAlign: 'center', padding: '1rem' }}>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                      Scan the secure UPI QR Code using your banking app (GPay, PhonePe, BHIM, etc.) to pay.
+                    </p>
+                    
+                    <div style={{ margin: '1.5rem auto', padding: '1rem', width: '200px', height: '200px', border: '2px solid var(--border)', borderRadius: '12px', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                      {/* Simulated QR Code Graphic */}
+                      <div style={{ width: '160px', height: '160px', backgroundImage: 'radial-gradient(var(--text-main) 60%, transparent 60%)', backgroundSize: '12px 12px', opacity: simulatingUpiSuccess ? 0.15 : 0.85 }} />
+                      <Smartphone size={32} style={{ position: 'absolute', color: 'var(--primary)' }} />
+                      {simulatingUpiSuccess && (
+                        <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                          <div className="spinner" style={{ border: '4px solid rgba(99, 102, 241, 0.1)', borderTop: '4px solid var(--primary)', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }} />
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)' }}>Verifying Payment...</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                      QR Code expires in: <span style={{ color: 'var(--danger)', fontWeight: 800 }}>{upiTimer}s</span>
+                    </div>
+
+                    <div style={{ marginTop: '2rem' }}>
+                      <button 
+                        type="button" 
+                        className="btn btn-primary" 
+                        style={{ width: '100%' }}
+                        onClick={triggerSimulateScan}
+                        disabled={submittingPayment}
+                      >
+                        {submittingPayment ? 'Processing Approval...' : 'Simulate UPI Scanner App Approval'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleCardPaymentSubmit}>
+                    <div className="form-group">
+                      <label>Cardholder Name</label>
+                      <input
+                        type="text"
+                        placeholder="John Doe"
+                        value={cardName}
+                        onChange={e => setCardName(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ marginTop: '1rem' }}>
+                      <label>Card Number</label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="text"
+                          maxLength={19}
+                          placeholder="4111 2222 3333 4444"
+                          value={cardNumber}
+                          onChange={e => setCardNumber(e.target.value.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim())}
+                          required
+                        />
+                        <CreditCard size={18} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                      <div className="form-group">
+                        <label>Expiration Date</label>
+                        <input
+                          type="text"
+                          maxLength={5}
+                          placeholder="MM/YY"
+                          value={cardExpiry}
+                          onChange={e => setCardExpiry(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>CVV / CVC</label>
+                        <input
+                          type="password"
+                          maxLength={3}
+                          placeholder="123"
+                          value={cardCVV}
+                          onChange={e => setCardCVV(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: '2rem' }}>
+                      <button 
+                        type="submit" 
+                        className="btn btn-primary" 
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                        disabled={submittingPayment}
+                      >
+                        {submittingPayment ? 'Authorizing Card Transaction...' : `Authorize Payment of ₹${Number(paymentAmount).toLocaleString('en-IN')}`}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </>
             )}
           </div>
         </div>

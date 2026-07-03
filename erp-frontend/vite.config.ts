@@ -1,30 +1,79 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const BACKEND = 'http://localhost:8787';
+
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
     proxy: {
-      '/auth': 'http://localhost:8787',
-      '/students': 'http://localhost:8787',
-      '/attendance': 'http://localhost:8787',
-      '/timetable': 'http://localhost:8787',
-      '/exams': 'http://localhost:8787',
-      '/fees': 'http://localhost:8787',
-      '/comms': 'http://localhost:8787',
-      '/dashboard': 'http://localhost:8787',
-      '/subjects': 'http://localhost:8787',
-      '/users': 'http://localhost:8787',
-      '/academic-years': 'http://localhost:8787',
-      '/programs': 'http://localhost:8787',
-      '/sections': 'http://localhost:8787',
-      '/guardians': 'http://localhost:8787',
-      '/teachers': 'http://localhost:8787',
-      '/teacher-assignments': 'http://localhost:8787',
-      '/enrollments': 'http://localhost:8787',
-      '/institutions': 'http://localhost:8787',
-      '/api': 'http://localhost:8787'
+      // Core
+      '/auth': BACKEND,
+      '/dashboard': BACKEND,
+      '/institutions': BACKEND,
+      '/users': BACKEND,
+      '/roles': BACKEND,
+      '/audit-logs': BACKEND,
+      '/system': BACKEND,
+      '/system-settings': BACKEND,
+      '/approvals': BACKEND,
+
+      // People
+      '/students': BACKEND,
+      '/guardians': BACKEND,
+      '/teachers': BACKEND,
+      '/teacher-assignments': BACKEND,
+      '/enrollments': BACKEND,
+      '/alumni': BACKEND,
+      '/visitors': BACKEND,
+
+      // Admissions
+      '/admissions': BACKEND,
+
+      // Academics
+      '/academic-years': BACKEND,
+      '/academic-calendar': BACKEND,
+      '/departments': BACKEND,
+      '/programs': BACKEND,
+      '/sections': BACKEND,
+      '/subjects': BACKEND,
+      '/teaching-allocations': BACKEND,
+      '/timetable-slots': BACKEND,
+      '/weekly-timetable': BACKEND,
+
+      // Attendance
+      '/attendance': BACKEND,
+      '/teacher-attendance': BACKEND,
+
+      // Exams & Grades
+      '/exams': BACKEND,
+      '/grades': BACKEND,
+
+      // Homework
+      '/homework': BACKEND,
+
+      // Communication
+      '/announcements': BACKEND,
+      '/notifications': BACKEND,
+      '/messaging': BACKEND,
+
+      // Finance
+      '/fees': BACKEND,
+      '/payroll': BACKEND,
+
+      // Leave
+      '/leave': BACKEND,
+      '/student-leaves': BACKEND,
+
+      // Library, Transport, Assets
+      '/library': BACKEND,
+      '/transport': BACKEND,
+      '/assets': BACKEND,
+
+      // Legacy
+      '/comms': BACKEND,
+      '/api': BACKEND,
     }
   }
 })

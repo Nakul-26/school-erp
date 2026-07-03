@@ -791,6 +791,55 @@ CREATE TABLE IF NOT EXISTS academic_year_rollover_logs (
 
 CREATE INDEX IF NOT EXISTS idx_rollover_logs_institution ON academic_year_rollover_logs(institution_id);
 
+-- 39. Visitor Register
+CREATE TABLE IF NOT EXISTS visitors (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  name TEXT NOT NULL,
+  purpose TEXT NOT NULL,
+  host_name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  in_time TEXT NOT NULL,
+  out_time TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_visitors_institution ON visitors(institution_id);
+
+-- 40. Assets & Inventory
+CREATE TABLE IF NOT EXISTS assets (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  assigned_to TEXT,
+  room TEXT,
+  condition TEXT NOT NULL DEFAULT 'Good',
+  purchase_date TEXT,
+  value REAL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_assets_institution ON assets(institution_id);
+
+-- 41. Alumni Database
+CREATE TABLE IF NOT EXISTS alumni (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  student_id TEXT REFERENCES students(id),
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  graduation_year INTEGER NOT NULL,
+  current_status TEXT,
+  institution TEXT,
+  contact TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_alumni_institution ON alumni(institution_id);
+
+
 
 
 

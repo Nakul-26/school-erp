@@ -8,6 +8,8 @@ import {
   Plus, Trash2, Calendar, ClipboardCheck, ArrowLeft, 
   Check, X, AlertTriangle, HelpCircle, Clock, UserCheck
 } from 'lucide-react';
+import SkeletonLoader from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
 
 // --- INTERFACES ---
 interface AttendanceSession {
@@ -299,7 +301,19 @@ export default function Attendance() {
           </div>
 
           <div className="card">
-            {stdLoading ? <p>Loading session logs...</p> : (
+            {stdLoading ? (
+              <SkeletonLoader type="table" rows={4} cols={6} />
+            ) : stdSessions.length === 0 ? (
+              <EmptyState
+                title="No Attendance Registers Created"
+                description="Start a new class period or ad-hoc session to begin logging student attendance registers."
+                icon={ClipboardCheck}
+                action={{
+                  label: "Start Class Session",
+                  onClick: () => setStdView('new')
+                }}
+              />
+            ) : (
               <div className="table-responsive">
                 <table className="table">
                   <thead>
@@ -332,14 +346,6 @@ export default function Attendance() {
                         </td>
                       </tr>
                     ))}
-                    {stdSessions.length === 0 && (
-                      <tr>
-                        <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                          <ClipboardCheck size={32} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
-                          No student registers created yet.
-                        </td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
@@ -455,84 +461,170 @@ export default function Attendance() {
           </div>
 
           <div className="card">
-            {stdLoading ? <p>Loading students...</p> : (
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '120px' }}>Roll No</th>
-                      <th>Student</th>
-                      <th>Status Marks</th>
-                      <th>Reason Remarks</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {studentRecords.map((rec) => (
-                      <tr key={rec.student_id}>
-                        <td><strong>{rec.roll_number || '-'}</strong></td>
-                        <td>{rec.first_name} {rec.last_name}</td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '0.25rem' }}>
-                            <button
-                              type="button"
-                              className={`btn btn-sm ${rec.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
-                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: rec.status === 'present' ? 1 : 0.65 }}
-                              onClick={() => handleMarkStudentStatus(rec.student_id, 'present')}
-                            >
-                              Present
-                            </button>
-                            <button
-                              type="button"
-                              className={`btn btn-sm ${rec.status === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
-                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: rec.status === 'absent' ? 1 : 0.65 }}
-                              onClick={() => handleMarkStudentStatus(rec.student_id, 'absent')}
-                            >
-                              Absent
-                            </button>
-                            <button
-                              type="button"
-                              className={`btn btn-sm ${rec.status === 'late' ? 'btn-warning' : 'btn-secondary'}`}
-                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: rec.status === 'late' ? 1 : 0.65 }}
-                              onClick={() => handleMarkStudentStatus(rec.student_id, 'late')}
-                            >
-                              Late
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-secondary"
-                              style={{
-                                padding: '0.3rem 0.6rem', fontSize: '0.75rem',
-                                backgroundColor: rec.status === 'excused' ? '#64748b' : '',
-                                color: rec.status === 'excused' ? '#fff' : '',
-                                opacity: rec.status === 'excused' ? 1 : 0.65
-                              }}
-                              onClick={() => handleMarkStudentStatus(rec.student_id, 'excused')}
-                            >
-                              Excused
-                            </button>
-                          </div>
-                        </td>
-                        <td>
-                          <input
-                            type="text"
-                            value={rec.remarks || ''}
-                            onChange={(e) => handleStudentRemarksChange(rec.student_id, e.target.value)}
-                            placeholder="e.g. sick leave"
-                            style={{ padding: '0.35rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.8rem' }}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                    {studentRecords.length === 0 && (
+            {stdLoading ? (
+              <SkeletonLoader type="table" rows={6} cols={4} />
+            ) : (
+              <>
+                <div className="table-responsive attendance-table-desktop">
+                  <table className="table">
+                    <thead>
                       <tr>
-                        <td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>
-                          No students found. Add student enrollments first.
-                        </td>
+                        <th style={{ width: '120px' }}>Roll No</th>
+                        <th>Student</th>
+                        <th>Status Marks</th>
+                        <th>Reason Remarks</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {studentRecords.map((rec) => (
+                        <tr key={rec.student_id}>
+                          <td><strong>{rec.roll_number || '-'}</strong></td>
+                          <td>{rec.first_name} {rec.last_name}</td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                              <button
+                                type="button"
+                                className={`btn btn-sm ${rec.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
+                                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: rec.status === 'present' ? 1 : 0.65 }}
+                                onClick={() => handleMarkStudentStatus(rec.student_id, 'present')}
+                              >
+                                Present
+                              </button>
+                              <button
+                                type="button"
+                                className={`btn btn-sm ${rec.status === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
+                                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: rec.status === 'absent' ? 1 : 0.65 }}
+                                onClick={() => handleMarkStudentStatus(rec.student_id, 'absent')}
+                              >
+                                Absent
+                              </button>
+                              <button
+                                type="button"
+                                className={`btn btn-sm ${rec.status === 'late' ? 'btn-warning' : 'btn-secondary'}`}
+                                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: rec.status === 'late' ? 1 : 0.65 }}
+                                onClick={() => handleMarkStudentStatus(rec.student_id, 'late')}
+                              >
+                                Late
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-secondary"
+                                style={{
+                                  padding: '0.3rem 0.6rem', fontSize: '0.75rem',
+                                  backgroundColor: rec.status === 'excused' ? '#64748b' : '',
+                                  color: rec.status === 'excused' ? '#fff' : '',
+                                  opacity: rec.status === 'excused' ? 1 : 0.65
+                                }}
+                                onClick={() => handleMarkStudentStatus(rec.student_id, 'excused')}
+                              >
+                                Excused
+                              </button>
+                            </div>
+                          </td>
+                          <td>
+                            <input
+                              type="text"
+                              value={rec.remarks || ''}
+                              onChange={(e) => handleStudentRemarksChange(rec.student_id, e.target.value)}
+                              placeholder="e.g. sick leave"
+                              style={{ padding: '0.35rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.8rem' }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                      {studentRecords.length === 0 && (
+                        <tr>
+                          <td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>
+                            No students found. Add student enrollments first.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="attendance-mobile-cards">
+                  {studentRecords.map((rec) => (
+                    <div key={rec.student_id} className="attendance-mobile-card card" style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.75rem',
+                      padding: '1rem',
+                      marginBottom: '1rem',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Roll No: {rec.roll_number || '-'}</span>
+                          <h4 style={{ margin: '0.15rem 0 0 0', fontSize: '0.95rem', fontWeight: 700 }}>{rec.first_name} {rec.last_name}</h4>
+                        </div>
+                        <div>
+                          <span className={`badge ${
+                            rec.status === 'present' ? 'badge-success' :
+                            rec.status === 'absent' ? 'badge-danger' :
+                            rec.status === 'late' ? 'badge-warning' : 'badge-secondary'
+                          }`} style={{ textTransform: 'capitalize', fontSize: '0.7rem' }}>
+                            {rec.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.25rem' }}>
+                        <button
+                          type="button"
+                          className={`btn btn-sm ${rec.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
+                          style={{ padding: '0.4rem 0.25rem', fontSize: '0.72rem', opacity: rec.status === 'present' ? 1 : 0.65 }}
+                          onClick={() => handleMarkStudentStatus(rec.student_id, 'present')}
+                        >
+                          Present
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-sm ${rec.status === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
+                          style={{ padding: '0.4rem 0.25rem', fontSize: '0.72rem', opacity: rec.status === 'absent' ? 1 : 0.65 }}
+                          onClick={() => handleMarkStudentStatus(rec.student_id, 'absent')}
+                        >
+                          Absent
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn btn-sm ${rec.status === 'late' ? 'btn-warning' : 'btn-secondary'}`}
+                          style={{ padding: '0.4rem 0.25rem', fontSize: '0.72rem', opacity: rec.status === 'late' ? 1 : 0.65 }}
+                          onClick={() => handleMarkStudentStatus(rec.student_id, 'late')}
+                        >
+                          Late
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-secondary"
+                          style={{
+                            padding: '0.4rem 0.25rem', fontSize: '0.72rem',
+                            backgroundColor: rec.status === 'excused' ? '#64748b' : '',
+                            color: rec.status === 'excused' ? '#fff' : '',
+                            opacity: rec.status === 'excused' ? 1 : 0.65
+                          }}
+                          onClick={() => handleMarkStudentStatus(rec.student_id, 'excused')}
+                        >
+                          Excused
+                        </button>
+                      </div>
+
+                      <div>
+                        <input
+                          type="text"
+                          value={rec.remarks || ''}
+                          onChange={(e) => handleStudentRemarksChange(rec.student_id, e.target.value)}
+                          placeholder="Add remarks (e.g. sick leave)"
+                          style={{ width: '100%', padding: '0.45rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.8rem' }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {studentRecords.length === 0 && (
+                    <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No students found.</p>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </>
@@ -563,90 +655,177 @@ export default function Attendance() {
         </div>
 
         <div className="card">
-          {tchrLoading ? <p>Loading teacher list...</p> : (
-            <div className="table-responsive">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Emp ID</th>
-                    <th>Teacher Name</th>
-                    <th>Dept & Designation</th>
-                    <th>Status</th>
-                    <th>Remarks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tchrRecords.map((t) => (
-                    <tr key={t.teacher_id}>
-                      <td><strong>{t.employee_id}</strong></td>
-                      <td>{t.first_name} {t.last_name}</td>
-                      <td>
-                        <span style={{ fontWeight: 600 }}>{t.department}</span>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.designation}</span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
-                          <button
-                            type="button"
-                            className={`btn btn-sm ${t.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
-                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: t.status === 'present' ? 1 : 0.65 }}
-                            onClick={() => handleMarkTeacherStatus(t.teacher_id, 'present')}
-                          >
-                            Present
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn btn-sm ${t.status === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
-                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: t.status === 'absent' ? 1 : 0.65 }}
-                            onClick={() => handleMarkTeacherStatus(t.teacher_id, 'absent')}
-                          >
-                            Absent
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn btn-sm ${t.status === 'half_day' ? 'btn-warning' : 'btn-secondary'}`}
-                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: t.status === 'half_day' ? 1 : 0.65 }}
-                            onClick={() => handleMarkTeacherStatus(t.teacher_id, 'half_day')}
-                          >
-                            Half Day
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-secondary"
-                            style={{
-                              padding: '0.3rem 0.6rem', fontSize: '0.75rem',
-                              backgroundColor: t.status === 'on_leave' ? '#64748b' : '',
-                              color: t.status === 'on_leave' ? '#fff' : '',
-                              opacity: t.status === 'on_leave' ? 1 : 0.65
-                            }}
-                            onClick={() => handleMarkTeacherStatus(t.teacher_id, 'on_leave')}
-                          >
-                            On Leave
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={t.remarks || ''}
-                          onChange={(e) => handleTeacherRemarksChange(t.teacher_id, e.target.value)}
-                          placeholder="Add comments..."
-                          style={{ padding: '0.35rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.8rem' }}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                  {tchrRecords.length === 0 && (
+          {tchrLoading ? (
+            <SkeletonLoader type="table" rows={6} cols={5} />
+          ) : (
+            <>
+              <div className="table-responsive attendance-table-desktop">
+                <table className="table">
+                  <thead>
                     <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                        <UserCheck size={32} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
-                        No active teachers found in the directory.
-                      </td>
+                      <th>Emp ID</th>
+                      <th>Teacher Name</th>
+                      <th>Dept & Designation</th>
+                      <th>Status</th>
+                      <th>Remarks</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {tchrRecords.map((t) => (
+                      <tr key={t.teacher_id}>
+                        <td><strong>{t.employee_id}</strong></td>
+                        <td>{t.first_name} {t.last_name}</td>
+                        <td>
+                          <span style={{ fontWeight: 600 }}>{t.department}</span>
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.designation}</span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button
+                              type="button"
+                              className={`btn btn-sm ${t.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
+                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: t.status === 'present' ? 1 : 0.65 }}
+                              onClick={() => handleMarkTeacherStatus(t.teacher_id, 'present')}
+                            >
+                              Present
+                            </button>
+                            <button
+                              type="button"
+                              className={`btn btn-sm ${t.status === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
+                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: t.status === 'absent' ? 1 : 0.65 }}
+                              onClick={() => handleMarkTeacherStatus(t.teacher_id, 'absent')}
+                            >
+                              Absent
+                            </button>
+                            <button
+                              type="button"
+                              className={`btn btn-sm ${t.status === 'half_day' ? 'btn-warning' : 'btn-secondary'}`}
+                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: t.status === 'half_day' ? 1 : 0.65 }}
+                              onClick={() => handleMarkTeacherStatus(t.teacher_id, 'half_day')}
+                            >
+                              Half Day
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-secondary"
+                              style={{
+                                padding: '0.3rem 0.6rem', fontSize: '0.75rem',
+                                backgroundColor: t.status === 'on_leave' ? '#64748b' : '',
+                                color: t.status === 'on_leave' ? '#fff' : '',
+                                opacity: t.status === 'on_leave' ? 1 : 0.65
+                              }}
+                              onClick={() => handleMarkTeacherStatus(t.teacher_id, 'on_leave')}
+                            >
+                              On Leave
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            value={t.remarks || ''}
+                            onChange={(e) => handleTeacherRemarksChange(t.teacher_id, e.target.value)}
+                            placeholder="Add comments..."
+                            style={{ padding: '0.35rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.8rem' }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                    {tchrRecords.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                          <UserCheck size={32} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
+                          No active teachers found in the directory.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="attendance-mobile-cards">
+                {tchrRecords.map((t) => (
+                  <div key={t.teacher_id} className="attendance-mobile-card card" style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                    padding: '1rem',
+                    marginBottom: '1rem',
+                    border: '1px solid var(--border)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {t.employee_id}</span>
+                        <h4 style={{ margin: '0.15rem 0 0 0', fontSize: '0.95rem', fontWeight: 700 }}>{t.first_name} {t.last_name}</h4>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.department} · {t.designation}</span>
+                      </div>
+                      <div>
+                        <span className={`badge ${
+                          t.status === 'present' ? 'badge-success' :
+                          t.status === 'absent' ? 'badge-danger' :
+                          t.status === 'half_day' ? 'badge-warning' : 'badge-secondary'
+                        }`} style={{ textTransform: 'capitalize', fontSize: '0.7rem' }}>
+                          {t.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.25rem' }}>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${t.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
+                        style={{ padding: '0.4rem 0.25rem', fontSize: '0.72rem', opacity: t.status === 'present' ? 1 : 0.65 }}
+                        onClick={() => handleMarkTeacherStatus(t.teacher_id, 'present')}
+                      >
+                        Present
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${t.status === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
+                        style={{ padding: '0.4rem 0.25rem', fontSize: '0.72rem', opacity: t.status === 'absent' ? 1 : 0.65 }}
+                        onClick={() => handleMarkTeacherStatus(t.teacher_id, 'absent')}
+                      >
+                        Absent
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${t.status === 'half_day' ? 'btn-warning' : 'btn-secondary'}`}
+                        style={{ padding: '0.4rem 0.25rem', fontSize: '0.72rem', opacity: t.status === 'half_day' ? 1 : 0.65 }}
+                        onClick={() => handleMarkTeacherStatus(t.teacher_id, 'half_day')}
+                      >
+                        Half Day
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-secondary"
+                        style={{
+                          padding: '0.4rem 0.25rem', fontSize: '0.72rem',
+                          backgroundColor: t.status === 'on_leave' ? '#64748b' : '',
+                          color: t.status === 'on_leave' ? '#fff' : '',
+                          opacity: t.status === 'on_leave' ? 1 : 0.65
+                        }}
+                        onClick={() => handleMarkTeacherStatus(t.teacher_id, 'on_leave')}
+                      >
+                        Leave
+                      </button>
+                    </div>
+
+                    <div>
+                      <input
+                        type="text"
+                        value={t.remarks || ''}
+                        onChange={(e) => handleTeacherRemarksChange(t.teacher_id, e.target.value)}
+                        placeholder="Add remarks..."
+                        style={{ width: '100%', padding: '0.45rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.8rem' }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {tchrRecords.length === 0 && (
+                  <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No teachers found.</p>
+                )}
+              </div>
+            </>
           )}
         </div>
       </>

@@ -3,6 +3,7 @@ import { Env, JwtPayload } from '../../types';
 import { NotificationRepository } from './notifications.repository';
 import { NotificationService } from './notifications.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
+import push from './push.routes';
 
 const notifications = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -79,5 +80,7 @@ notifications.post('/read-all', async (c) => {
   await service.markAllAsRead(user.institution_id, user.sub);
   return c.json({ success: true });
 });
+
+notifications.route('/push', push);
 
 export default notifications;

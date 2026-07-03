@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { Plus, Trash2, Clock, Calendar, BookOpen, User } from 'lucide-react';
+import SkeletonLoader from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -36,6 +38,12 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 export default function TimetablePage() {
   const [activeTab, setActiveTab] = useState<'weekly' | 'periods'>('weekly');
+  const getTodayDayName = () => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const today = days[new Date().getDay()] || 'Monday';
+    return today === 'Sunday' ? 'Monday' : today;
+  };
+  const [selectedDayMobile, setSelectedDayMobile] = useState<string>(getTodayDayName());
 
   // ── Class Periods (formerly TimetableSlots) state ──────────────────────────
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
@@ -232,57 +240,179 @@ export default function TimetablePage() {
       </div>
 
       {selectedSection ? (
-        <div className="card" style={{ overflowX: 'auto', padding: '1rem' }}>
-          {weeklyLoading ? <p>Loading schedule...</p> : (
-            <table className="table" style={{ borderCollapse: 'collapse', width: '100%', minWidth: '800px' }}>
-              <thead>
-                <tr>
-                  <th style={{ width: '120px', border: '1px solid var(--border)' }}>Day</th>
-                  {weeklySlots.map(slot => (
-                    <th key={slot.id} style={{ border: '1px solid var(--border)', textAlign: 'center', padding: '1rem' }}>
-                      <div style={{ fontWeight: 700 }}>{slot.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '0.25rem' }}>
-                        {slot.start_time} - {slot.end_time}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {DAYS.map(day => (
-                  <tr key={day}>
-                    <td style={{ fontWeight: 700, border: '1px solid var(--border)', backgroundColor: '#f8fafc', padding: '1rem' }}>
+        <div className="card" style={{ padding: '1rem' }}>
+          {weeklyLoading ? (
+            <SkeletonLoader type="table" rows={6} cols={6} />
+          ) : weeklySlots.length === 0 ? (
+            <EmptyState
+              title="No Class Periods Configured"
+              description="Define class periods (breaks and subject periods) in the 'Class Periods' tab first to structure a weekly schedule."
+              icon={Clock}
+              action={{
+                label: "Manage Class Periods",
+                onClick: () => setActiveTab('periods')
+              }}
+            />
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <div className="table-responsive timetable-table-desktop" style={{ overflowX: 'auto' }}>
+                <table className="table" style={{ borderCollapse: 'collapse', width: '100%', minWidth: '800px' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '120px', border: '1px solid var(--border)' }}>Day</th>
+                      {weeklySlots.map(slot => (
+                        <th key={slot.id} style={{ border: '1px solid var(--border)', textAlign: 'center', padding: '1rem' }}>
+                          <div style={{ fontWeight: 700 }}>{slot.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '0.25rem' }}>
+                            {slot.start_time} - {slot.end_time}
+                          </div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {DAYS.map(day => (
+                      <tr key={day}>
+                        <td style={{ fontWeight: 700, border: '1px solid var(--border)', backgroundColor: '#f8fafc', padding: '1rem' }}>
+                          {day}
+                        </td>
+                        {weeklySlots.map(slot => {
+                          const entry = getCellEntry(day, slot.id);
+                          return (
+                            <td
+                              key={slot.id}
+                              onClick={() => !entry && handleCellClick(day, slot.id)}
+                              style={{
+                                border: '1px solid var(--border)',
+                                verticalAlign: 'top',
+                                padding: '0.5rem',
+                                height: '110px',
+                                cursor: entry ? 'default' : 'pointer',
+                                backgroundColor: entry ? (slot.slot_type === 'break' ? '#f1f5f9' : '#e0e7ff') : '#ffffff',
+                                transition: 'background-color 0.2s',
+                              }}
+                              onMouseEnter={(e) => { if (!entry) e.currentTarget.style.backgroundColor = '#f5f3ff'; }}
+                              onMouseLeave={(e) => { if (!entry) e.currentTarget.style.backgroundColor = '#ffffff'; }}
+                            >
+                              {entry ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                                  <div>
+                                    <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                      <BookOpen size={12} />
+                                      <span>{entry.subject_code}</span>
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginTop: '0.25rem' }}>
+                                      {entry.subject_name}
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                      <User size={12} />
+                                      <span>{entry.teacher_name || 'No Teacher'}</span>
+                                    </div>
+                                  </div>
+                                  <button
+                                    className="btn btn-sm"
+                                    onClick={(e) => handleWeeklyDelete(entry.id, e)}
+                                    style={{
+                                      alignSelf: 'flex-end',
+                                      padding: '0.2rem 0.4rem',
+                                      fontSize: '0.75rem',
+                                      color: 'var(--danger)',
+                                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      marginTop: '0.5rem',
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '0.8rem', opacity: 0.4 }}>
+                                  <Plus size={14} style={{ marginRight: '0.25rem' }} /> Assign
+                                </div>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Timeline View */}
+              <div className="timetable-timeline-mobile">
+                <div className="day-selector-scroll" style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  overflowX: 'auto',
+                  paddingBottom: '0.75rem',
+                  marginBottom: '1.25rem',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}>
+                  {DAYS.map(day => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => setSelectedDayMobile(day)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        borderRadius: '20px',
+                        border: '1px solid var(--border)',
+                        background: selectedDayMobile === day ? 'var(--primary)' : 'white',
+                        color: selectedDayMobile === day ? 'white' : 'var(--text-main)',
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        boxShadow: selectedDayMobile === day ? '0 2px 6px rgba(99,102,241,0.2)' : 'none'
+                      }}
+                    >
                       {day}
-                    </td>
-                    {weeklySlots.map(slot => {
-                      const entry = getCellEntry(day, slot.id);
-                      return (
-                        <td
-                          key={slot.id}
-                          onClick={() => !entry && handleCellClick(day, slot.id)}
-                          style={{
-                            border: '1px solid var(--border)',
-                            verticalAlign: 'top',
-                            padding: '0.5rem',
-                            height: '110px',
-                            cursor: entry ? 'default' : 'pointer',
-                            backgroundColor: entry ? (slot.slot_type === 'break' ? '#f1f5f9' : '#e0e7ff') : '#ffffff',
-                            transition: 'background-color 0.2s',
-                          }}
-                          onMouseEnter={(e) => { if (!entry) e.currentTarget.style.backgroundColor = '#f5f3ff'; }}
-                          onMouseLeave={(e) => { if (!entry) e.currentTarget.style.backgroundColor = '#ffffff'; }}
-                        >
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {weeklySlots.map(slot => {
+                    const entry = getCellEntry(selectedDayMobile, slot.id);
+                    return (
+                      <div
+                        key={slot.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '1rem',
+                          padding: '1rem',
+                          border: '1px solid var(--border)',
+                          borderRadius: 'var(--radius-sm)',
+                          background: entry ? (slot.slot_type === 'break' ? '#f8fafc' : '#f0f4ff') : 'white'
+                        }}
+                      >
+                        <div style={{ width: '85px', flexShrink: 0 }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{slot.name}</span>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                            <Clock size={10} />
+                            <span>{slot.start_time}</span>
+                          </div>
+                        </div>
+
+                        <div style={{ width: '1px', alignSelf: 'stretch', background: 'var(--border)' }}></div>
+
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           {entry ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                               <div>
-                                <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                  <BookOpen size={12} />
-                                  <span>{entry.subject_code}</span>
-                                </div>
-                                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginTop: '0.25rem' }}>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700 }}>
+                                  {entry.subject_code}
+                                </span>
+                                <h4 style={{ margin: '0.15rem 0 0 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
                                   {entry.subject_name}
-                                </div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                </h4>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                   <User size={12} />
                                   <span>{entry.teacher_name || 'No Teacher'}</span>
                                 </div>
@@ -291,14 +421,12 @@ export default function TimetablePage() {
                                 className="btn btn-sm"
                                 onClick={(e) => handleWeeklyDelete(entry.id, e)}
                                 style={{
-                                  alignSelf: 'flex-end',
                                   padding: '0.2rem 0.4rem',
-                                  fontSize: '0.75rem',
+                                  fontSize: '0.7rem',
                                   color: 'var(--danger)',
                                   backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                   border: 'none',
                                   borderRadius: '4px',
-                                  marginTop: '0.5rem',
                                   cursor: 'pointer',
                                 }}
                               >
@@ -306,17 +434,24 @@ export default function TimetablePage() {
                               </button>
                             </div>
                           ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '0.8rem', opacity: 0.4 }}>
-                              <Plus size={14} style={{ marginRight: '0.25rem' }} /> Assign
+                            <div
+                              onClick={() => handleCellClick(selectedDayMobile, slot.id)}
+                              style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer', height: '100%' }}
+                            >
+                              <Plus size={14} style={{ opacity: 0.5 }} />
+                              <span style={{ opacity: 0.6 }}>Tap to assign...</span>
                             </div>
                           )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {weeklySlots.length === 0 && (
+                    <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No class periods configured.</p>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </div>
       ) : (
@@ -363,7 +498,17 @@ export default function TimetablePage() {
     <>
       <div className="card">
         {slotsLoading ? (
-          <p>Loading periods...</p>
+          <SkeletonLoader type="table" rows={4} cols={4} />
+        ) : slots.length === 0 ? (
+          <EmptyState
+            title="No Class Periods Defined"
+            description="Create breaks and lecture slots to build your school's weekly schedule."
+            icon={Clock}
+            action={{
+              label: "Create Class Period",
+              onClick: () => setShowSlotModal(true)
+            }}
+          />
         ) : (
           <table className="table">
             <thead>
@@ -396,14 +541,7 @@ export default function TimetablePage() {
                   </td>
                 </tr>
               ))}
-              {slots.length === 0 && (
-                <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', padding: '3rem' }}>
-                    <Clock size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
-                    <p style={{ color: 'var(--text-muted)' }}>No class periods defined yet.</p>
-                  </td>
-                </tr>
-              )}
+              {/* Empty state is handled above by wrapper */}
             </tbody>
           </table>
         )}

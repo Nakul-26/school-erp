@@ -7,8 +7,9 @@ import {
   ChevronDown, ChevronRight, LogOut, Users, Calendar,
   ClipboardList, FileSpreadsheet, Building2, Layers, BookOpen,
   BarChart3, Landmark, CalendarDays, UserPlus, Clipboard, CheckSquare,
-  Library, Bus, MessageSquare
+  Library, Bus, MessageSquare, Package
 } from 'lucide-react';
+import { isAllowedNav } from '../config/roleNav';
 
 interface SidebarProps {
   onNavigate?: () => void;
@@ -106,7 +107,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   type Link = { to: string; label: string; icon: any; badge?: number };
   type Group = { key: string; label: string; links: Link[]; always?: boolean };
 
-  const groups: Group[] = [
+  const allGroups: Group[] = [
     {
       key: '__overview', label: '', always: true,
       links: [
@@ -116,70 +117,69 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/messaging', label: 'Direct Messages', icon: MessageSquare, badge: unreadMessages },
       ],
     },
+    {
+      key: 'Admissions', label: 'Admissions',
+      links: [{ to: '/admissions', label: 'Admission Pipeline', icon: UserPlus }],
+    },
+    {
+      key: 'People', label: 'People',
+      links: [
+        { to: '/students', label: 'Students', icon: Users },
+        { to: '/teachers', label: 'Teachers', icon: UserCheck },
+        { to: '/alumni', label: 'Alumni Directory', icon: GraduationCap },
+        { to: '/visitors', label: 'Visitor Log', icon: ClipboardList },
+      ],
+    },
+    {
+      key: 'Academics', label: 'Academics',
+      links: [
+        { to: '/classes', label: 'Classes & Sections', icon: School },
+        { to: '/subjects', label: 'Subjects', icon: BookOpen },
+        { to: '/timetable', label: 'Timetable', icon: CalendarDays },
+        { to: '/attendance', label: 'Attendance', icon: ClipboardCheck },
+        { to: '/homework', label: 'Homework', icon: Clipboard },
+        { to: '/exams', label: 'Exams & Results', icon: Award },
+        { to: '/library', label: 'Library', icon: Library },
+        { to: '/calendar', label: 'School Calendar', icon: Calendar },
+      ],
+    },
+    {
+      key: 'Finance & HR', label: 'Finance & HR',
+      links: [
+        { to: '/fee-structures', label: 'Fee Plans', icon: IndianRupee },
+        { to: '/student-fees', label: 'Student Fees', icon: IndianRupee },
+        { to: '/payroll/salary-structures', label: 'Salary Scales', icon: Landmark },
+        { to: '/payroll/runs', label: 'Payroll Runs', icon: Landmark },
+        { to: '/leave/approvals', label: 'Leave Approvals', icon: CheckSquare },
+        { to: '/student-leaves/approvals', label: 'Student Leave', icon: CheckSquare },
+        { to: '/leave/my', label: 'My Leave', icon: CalendarDays },
+        { to: '/transport', label: 'Transport', icon: Bus },
+        { to: '/assets', label: 'School Assets', icon: Package },
+      ],
+    },
+    {
+      key: 'Reports', label: 'Reports',
+      links: [
+        { to: '/reports', label: 'All Reports', icon: BarChart3 },
+        { to: '/certificates', label: 'Official Certificates', icon: Award },
+      ],
+    },
+    {
+      key: 'Settings & Setup', label: 'Settings & Setup',
+      links: [
+        { to: '/approvals', label: 'Approvals Inbox', icon: CheckSquare },
+        { to: '/setup', label: 'School Setup', icon: Settings },
+      ],
+    },
   ];
 
-  if (canAdmin) groups.push({
-    key: 'Admissions', label: 'Admissions',
-    links: [{ to: '/admissions', label: 'Admission Pipeline', icon: UserPlus }],
-  });
-
-  const peopleLinks: Link[] = [];
-  if (canStaff) peopleLinks.push({ to: '/students', label: 'Students', icon: Users });
-  if (canAdmin) peopleLinks.push({ to: '/teachers', label: 'Teachers', icon: UserCheck });
-  if (peopleLinks.length) groups.push({ key: 'People', label: 'People', links: peopleLinks });
-
-  const academicLinks: Link[] = [];
-  if (canAdmin) {
-    academicLinks.push(
-      { to: '/classes', label: 'Classes & Sections', icon: School },
-      { to: '/subjects', label: 'Subjects', icon: BookOpen },
-    );
-  }
-  if (canStaff) {
-    academicLinks.push(
-      { to: '/timetable', label: 'Timetable', icon: CalendarDays },
-      { to: '/attendance', label: 'Attendance', icon: ClipboardCheck },
-      { to: '/homework', label: 'Homework', icon: Clipboard },
-      { to: '/exams', label: 'Exams & Results', icon: Award },
-    );
-  }
-  academicLinks.push({ to: '/library', label: 'Library', icon: Library });
-  academicLinks.push({ to: '/calendar', label: 'School Calendar', icon: Calendar });
-  if (academicLinks.length) groups.push({ key: 'Academics', label: 'Academics', links: academicLinks });
-
-  const financeLinks: Link[] = [];
-  if (isAdmin || isHOD || isAccountant) financeLinks.push({ to: '/fee-structures', label: 'Fee Plans', icon: IndianRupee });
-  if (canStaff || isAccountant) financeLinks.push({ to: '/student-fees', label: 'Student Fees', icon: IndianRupee });
-  if (isAdmin) financeLinks.push(
-    { to: '/payroll/salary-structures', label: 'Salary Scales', icon: Landmark },
-    { to: '/payroll/runs', label: 'Payroll Runs', icon: Landmark },
-  );
-  if (canAdmin) financeLinks.push(
-    { to: '/leave/approvals', label: 'Leave Approvals', icon: CheckSquare },
-  );
-  if (canStaff) financeLinks.push({ to: '/student-leaves/approvals', label: 'Student Leave', icon: CheckSquare });
-  financeLinks.push({ to: '/leave/my', label: 'My Leave', icon: CalendarDays });
-  financeLinks.push({ to: '/transport', label: 'Transport', icon: Bus });
-  if (financeLinks.length) groups.push({ key: 'Finance & HR', label: 'Finance & HR', links: financeLinks });
-
-  if (canAdmin) groups.push({
-    key: 'Reports', label: 'Reports',
-    links: [
-      { to: '/reports', label: 'All Reports', icon: BarChart3 },
-      { to: '/certificates', label: 'Official Certificates', icon: Award },
-    ],
-  });
-
-  if (canAdmin || isAdmin) {
-    const setupLinks: Link[] = [];
-    if (canAdmin) setupLinks.push(
-      { to: '/approvals', label: 'Approvals Inbox', icon: CheckSquare },
-    );
-    if (isAdmin || canAdmin) setupLinks.push(
-      { to: '/setup', label: 'School Setup', icon: Settings },
-    );
-    groups.push({ key: 'Settings & Setup', label: 'Settings & Setup', links: setupLinks });
-  }
+  const groups: Group[] = allGroups.map(group => {
+    const filteredLinks = group.links.filter(link => {
+      if (link.to === '/dashboard') return true;
+      return isAllowedNav(roles, link.to);
+    });
+    return { ...group, links: filteredLinks };
+  }).filter(group => group.always || group.links.length > 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#0d1117' }}>

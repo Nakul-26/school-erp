@@ -70,6 +70,7 @@ INSERT OR REPLACE INTO roles (id, name, description) VALUES ('role-hod', 'HOD', 
 INSERT OR REPLACE INTO roles (id, name, description) VALUES ('role-teacher', 'Teacher', 'Academic instruction and attendance marking');
 INSERT OR REPLACE INTO roles (id, name, description) VALUES ('role-student', 'Student', 'Student access to grades and schedules');
 INSERT OR REPLACE INTO roles (id, name, description) VALUES ('role-accountant', 'Accountant', 'Fee collection and financial tracking');
+INSERT OR REPLACE INTO roles (id, name, description) VALUES ('role-parent', 'Parent', 'Guardian/Parent access to child records');
 
 -- 3. Create Permissions
 INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-user-manage', 'user.manage', 'Create, update, and delete users');
@@ -135,6 +136,11 @@ INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-a
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-accountant', 'perm-fees-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-accountant', 'perm-student-view');
 
+-- Parent gets child records view
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-parent', 'perm-student-view');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-parent', 'perm-att-view');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-parent', 'perm-fees-view');
+
 -- 5. Create Users (Password: admin123)
 -- Admin User (Principal)
 INSERT OR REPLACE INTO users (id, institution_id, username, email, password_hash, name, is_active) 
@@ -163,6 +169,9 @@ VALUES ('user-alice', 'inst-greenwood', 'alice', 'alice@greenwood.edu', 'a1625fb
 INSERT OR REPLACE INTO users (id, institution_id, username, email, password_hash, name, is_active)
 VALUES ('user-bob', 'inst-greenwood', 'bobbrown', 'bob@greenwood.edu', 'a1625fb1fc2abbe73fa1ebbd2561166d:414f12d9746240fa304e155cb24be800994e560ff3386725f5630bb7899e671b', 'Bob Brown', 1);
 
+INSERT OR REPLACE INTO users (id, institution_id, username, email, password_hash, name, is_active)
+VALUES ('user-parent', 'inst-greenwood', 'parent', 'parent@oxford.edu', 'a1625fb1fc2abbe73fa1ebbd2561166d:414f12d9746240fa304e155cb24be800994e560ff3386725f5630bb7899e671b', 'Robert Doe (Parent)', 1);
+
 -- 6. User Roles Mapping
 INSERT OR REPLACE INTO user_roles (user_id, role_id) VALUES ('user-admin', 'role-principal');
 INSERT OR REPLACE INTO user_roles (user_id, role_id) VALUES ('user-smith', 'role-teacher');
@@ -172,6 +181,7 @@ INSERT OR REPLACE INTO user_roles (user_id, role_id) VALUES ('user-john', 'role-
 INSERT OR REPLACE INTO user_roles (user_id, role_id) VALUES ('user-jane', 'role-student');
 INSERT OR REPLACE INTO user_roles (user_id, role_id) VALUES ('user-alice', 'role-student');
 INSERT OR REPLACE INTO user_roles (user_id, role_id) VALUES ('user-bob', 'role-student');
+INSERT OR REPLACE INTO user_roles (user_id, role_id) VALUES ('user-parent', 'role-parent');
 
 -- 7. Create Academic Year
 INSERT OR REPLACE INTO academic_years (id, institution_id, name, start_date, end_date, is_current, is_active)
@@ -284,7 +294,7 @@ VALUES ('student-ivy', 'inst-greenwood', null, 'ADM-2026-010', '1010', 'Ivy', 'T
 
 -- 14. Create Guardians
 INSERT OR REPLACE INTO guardians (id, student_id, user_id, name, relationship, phone, email, occupation, is_active)
-VALUES ('guard-john', 'student-john', null, 'Robert Doe', 'Father', '555-0901', 'robert.doe@gmail.com', 'Business owner', 1);
+VALUES ('guard-john', 'student-john', 'user-parent', 'Robert Doe', 'Father', '555-0901', 'parent@oxford.edu', 'Business owner', 1);
 
 INSERT OR REPLACE INTO guardians (id, student_id, user_id, name, relationship, phone, email, occupation, is_active)
 VALUES ('guard-jane', 'student-jane', null, 'Susan Smith', 'Mother', '555-0902', 'susan.smith@gmail.com', 'Software Engineer', 1);

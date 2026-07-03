@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, ArrowRight, Eye, UserPlus, CheckCircle, XCircle, ClipboardList } from 'lucide-react';
+import { 
+  Plus, ArrowRight, Eye, UserPlus, CheckCircle, XCircle, ClipboardList,
+  Search, Calendar, User, Phone, Mail, FileText, ChevronRight, HelpCircle
+} from 'lucide-react';
+import SkeletonLoader from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
 
 // ─── Shared Interfaces ────────────────────────────────────────────────────────
 
@@ -11,7 +16,12 @@ interface AcademicYear {
   name: string;
 }
 
-// ─── Inquiry Interfaces & Constants ──────────────────────────────────────────
+interface Program {
+  id: string;
+  name: string;
+}
+
+// ─── Inquiry Interfaces ────────────────────────────────────────────────────────
 
 interface Inquiry {
   id: string;
@@ -29,19 +39,7 @@ interface Inquiry {
   created_at: string;
 }
 
-const INQ_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  New:       { bg: '#eff6ff', color: '#3b82f6' },
-  Contacted: { bg: '#f5f3ff', color: '#8b5cf6' },
-  Applied:   { bg: '#fffbeb', color: '#f59e0b' },
-  Admitted:  { bg: '#f0fdf4', color: '#16a34a' },
-  Rejected:  { bg: '#fef2f2', color: '#dc2626' },
-};
-
-const ALL_INQ_STATUSES = ['New', 'Contacted', 'Applied', 'Admitted', 'Rejected'] as const;
-
-// ─── Application Interfaces & Constants ──────────────────────────────────────
-
-interface Program { id: string; name: string; }
+// ─── Application Interfaces ──────────────────────────────────────────────────
 
 interface Application {
   id: string;
@@ -69,28 +67,42 @@ interface Application {
   created_at: string;
 }
 
-const APP_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  Submitted:      { bg: '#eff6ff', color: '#3b82f6' },
-  'Under Review': { bg: '#f5f3ff', color: '#8b5cf6' },
-  Approved:       { bg: '#f0fdf4', color: '#16a34a' },
-  Rejected:       { bg: '#fef2f2', color: '#dc2626' },
-};
+// ─── Kanban Board Interfaces ──────────────────────────────────────────────────
 
-const ALL_APP_STATUSES = ['Submitted', 'Under Review', 'Approved', 'Rejected'] as const;
+type BoardStage = 'lead' | 'applied' | 'outcome';
 
-// ─── Component ────────────────────────────────────────────────────────────────
+interface BoardCard {
+  id: string;
+  type: 'inquiry' | 'application';
+  title: string;
+  subtitle: string; // Parent name
+  phone: string;
+  email: string;
+  classLabel: string;
+  classValue: string; // for filtering
+  yearId: string;
+  status: string;
+  createdDate: string;
+  rawItem: any;
+}
 
 export default function Admissions() {
-  // Page-level tab (inquiries vs applications)
-  const [activeTab, setActiveTab] = useState<'inquiries' | 'applications'>('inquiries');
-
   // Shared state
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // ── Inquiry state ──────────────────────────────────────────────────────────
+  // Raw states
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [inqLoading, setInqLoading] = useState(true);
-  const [inqStatusFilter, setInqStatusFilter] = useState<string>('All');
+  const [applications, setApplications] = useState<Application[]>([]);
+
+  // Search and Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [classFilter, setClassFilter] = useState('All');
+  const [yearFilter, setYearFilter] = useState('All');
+
+  // Drag over columns tracking (for styling)
+  const [dragOverStage, setDragOverStage] = useState<BoardStage | null>(null);
 
   // Inquiry – Add modal
   const [inqShowAdd, setInqShowAdd] = useState(false);
@@ -106,13 +118,6 @@ export default function Admissions() {
 
   // Inquiry – Detail modal
   const [detailInquiry, setDetailInquiry] = useState<Inquiry | null>(null);
-
-  // ── Application state ──────────────────────────────────────────────────────
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [appLoading, setAppLoading] = useState(true);
-  const [appStatusFilter, setAppStatusFilter] = useState<string>('All');
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Application – Add modal
   const [appShowAdd, setAppShowAdd] = useState(false);
@@ -138,46 +143,38 @@ export default function Admissions() {
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    fetchInquiryData();
-    fetchApplicationData();
-  }, []);
-
-  const fetchInquiryData = async () => {
+  const fetchData = async () => {
     try {
-      setInqLoading(true);
-      const [inqs, years] = await Promise.all([
+      setLoading(true);
+      const [inqs, apps, years, progs] = await Promise.all([
         api.get('/admissions/inquiries'),
-        api.get('/academic-years'),
-      ]);
-      setInquiries(inqs);
-      setAcademicYears(years);
-    } catch (err) {
-      console.error('Error fetching admission inquiries:', err);
-    } finally {
-      setInqLoading(false);
-    }
-  };
-
-  const fetchApplicationData = async () => {
-    try {
-      setAppLoading(true);
-      const [apps, years, progs] = await Promise.all([
         api.get('/admissions/applications'),
         api.get('/academic-years'),
         api.get('/programs'),
       ]);
+      setInquiries(inqs);
       setApplications(apps);
-      setAcademicYears(years); // shared – last writer wins (same data)
+      setAcademicYears(years);
       setPrograms(progs);
+
+      // Default form fields to current active year if found
+      if (years.length > 0) {
+        const currentYear = years.find((y: any) => y.is_current) || years[0];
+        setInqAddForm(f => ({ ...f, academic_year_id: currentYear.id }));
+        setAppAddForm(f => ({ ...f, academic_year_id: currentYear.id }));
+      }
     } catch (err) {
-      console.error('Error fetching admission applications:', err);
+      console.error('Error fetching admission data:', err);
     } finally {
-      setAppLoading(false);
+      setLoading(false);
     }
   };
 
-  // ── Inquiry handlers ───────────────────────────────────────────────────────
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
 
   const handleInqAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,7 +192,8 @@ export default function Admissions() {
         student_name: '', parent_name: '', parent_phone: '', parent_email: '',
         date_of_birth: '', applying_for_class: '', source: 'Walk-in', notes: '', academic_year_id: '',
       });
-      fetchInquiryData();
+      alert('Admission inquiry added successfully!');
+      fetchData();
     } catch (err: any) {
       alert(err.message || 'Failed to create inquiry');
     } finally {
@@ -211,16 +209,14 @@ export default function Admissions() {
         academic_year_id: convertInquiry.academic_year_id || undefined,
       });
       setConvertInquiry(null);
-      fetchInquiryData();
-      fetchApplicationData();
+      alert('Inquiry converted to application successfully!');
+      fetchData();
     } catch (err: any) {
       alert(err.message || 'Failed to convert inquiry');
     } finally {
       setConvertLoading(false);
     }
   };
-
-  // ── Application handlers ───────────────────────────────────────────────────
 
   const handleAppAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,7 +238,8 @@ export default function Admissions() {
         parent_name: '', parent_phone: '', parent_email: '',
         previous_school: '', previous_class: '',
       });
-      fetchApplicationData();
+      alert('Admission application created successfully!');
+      fetchData();
     } catch (err: any) {
       alert(err.message || 'Failed to create application');
     } finally {
@@ -256,9 +253,8 @@ export default function Admissions() {
     try {
       const result = await api.patch(`/admissions/applications/${approveApp.id}/approve`, {});
       setApproveApp(null);
-      setSuccessMsg(`Student record created! Admission No: ${result.admissionNumber}`);
-      setTimeout(() => setSuccessMsg(null), 6000);
-      fetchApplicationData();
+      alert(`Application approved! Student record created with Admission No: ${result.admissionNumber}`);
+      fetchData();
     } catch (err: any) {
       alert(err.message || 'Failed to approve application');
     } finally {
@@ -273,7 +269,8 @@ export default function Admissions() {
       await api.patch(`/admissions/applications/${rejectApp.id}/reject`, { reason: rejectReason });
       setRejectApp(null);
       setRejectReason('');
-      fetchApplicationData();
+      alert('Application rejected.');
+      fetchData();
     } catch (err: any) {
       alert(err.message || 'Failed to reject application');
     } finally {
@@ -281,311 +278,625 @@ export default function Admissions() {
     }
   };
 
-  // ── Derived data ───────────────────────────────────────────────────────────
-
-  const inqCounts = ALL_INQ_STATUSES.reduce((acc, s) => {
-    acc[s] = inquiries.filter(i => i.status === s).length;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const filteredInquiries = inqStatusFilter === 'All'
-    ? inquiries
-    : inquiries.filter(i => i.status === inqStatusFilter);
-
-  const filteredApplications = appStatusFilter === 'All'
-    ? applications
-    : applications.filter(a => a.status === appStatusFilter);
-
-  // ── Sub-components ─────────────────────────────────────────────────────────
-
-  const InqStatusBadge = ({ status }: { status: string }) => {
-    const style = INQ_STATUS_COLORS[status] || { bg: '#f3f4f6', color: '#374151' };
-    return (
-      <span style={{
-        display: 'inline-block', padding: '0.2rem 0.65rem', borderRadius: '9999px',
-        fontSize: '0.75rem', fontWeight: 600, background: style.bg, color: style.color,
-      }}>{status}</span>
-    );
+  const updateInquiryStatus = async (id: string, status: 'New' | 'Contacted') => {
+    try {
+      await api.patch(`/admissions/inquiries/${id}`, { status });
+      alert(`Inquiry marked as ${status}.`);
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to update inquiry status');
+    }
   };
 
-  const AppStatusBadge = ({ status }: { status: string }) => {
-    const style = APP_STATUS_COLORS[status] || { bg: '#f3f4f6', color: '#374151' };
-    return (
-      <span style={{
-        display: 'inline-block', padding: '0.2rem 0.65rem', borderRadius: '9999px',
-        fontSize: '0.75rem', fontWeight: 600, background: style.bg, color: style.color,
-      }}>{status}</span>
-    );
+  // ── Drag & Drop ─────────────────────────────────────────────────────────────
+
+  const handleDragStart = (e: React.DragEvent, cardId: string, cardType: 'inquiry' | 'application', currentStage: BoardStage) => {
+    e.dataTransfer.setData('cardId', cardId);
+    e.dataTransfer.setData('cardType', cardType);
+    e.dataTransfer.setData('currentStage', currentStage);
   };
 
-  // ── Render helpers ─────────────────────────────────────────────────────────
+  const handleDragOver = (e: React.DragEvent, stage: BoardStage) => {
+    e.preventDefault();
+    setDragOverStage(stage);
+  };
 
-  const renderInquiries = () => (
-    <>
-      {/* Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-        {ALL_INQ_STATUSES.map(status => {
-          const style = INQ_STATUS_COLORS[status] || { bg: '#f3f4f6', color: '#374151' };
-          return (
-            <div key={status} className="card" style={{ padding: '1rem 1.25rem', borderLeft: `4px solid ${style.color}`, margin: 0 }}>
-              <div style={{ fontSize: '1.75rem', fontWeight: 700, color: style.color }}>{inqCounts[status] || 0}</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>{status}</div>
-            </div>
-          );
-        })}
-      </div>
+  const handleDragLeave = () => {
+    setDragOverStage(null);
+  };
 
-      {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-        {['All', ...ALL_INQ_STATUSES].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setInqStatusFilter(tab)}
-            style={{
-              padding: '0.4rem 1rem', borderRadius: '9999px', border: '1px solid var(--border)',
-              cursor: 'pointer', fontSize: '0.85rem',
-              fontWeight: inqStatusFilter === tab ? 600 : 400,
-              background: inqStatusFilter === tab ? 'var(--primary)' : 'transparent',
-              color: inqStatusFilter === tab ? '#fff' : 'var(--text-muted)',
-              transition: 'all 0.2s',
-            }}
-          >{tab}</button>
-        ))}
-      </div>
+  const handleDrop = async (e: React.DragEvent, targetStage: BoardStage) => {
+    e.preventDefault();
+    setDragOverStage(null);
 
-      {/* Table */}
-      <div className="card">
-        {inqLoading ? (
-          <p style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading inquiries...</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Student Name</th>
-                <th>Parent</th>
-                <th>Phone</th>
-                <th>Applying For</th>
-                <th>Source</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredInquiries.map(inq => (
-                <tr key={inq.id}>
-                  <td><strong>{inq.student_name}</strong></td>
-                  <td>{inq.parent_name}</td>
-                  <td>{inq.parent_phone}</td>
-                  <td>{inq.applying_for_class}</td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{inq.source}</td>
-                  <td><InqStatusBadge status={inq.status} /></td>
-                  <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    {new Date(inq.created_at).toLocaleDateString()}
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.4rem' }}>
-                      <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => setDetailInquiry(inq)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                      >
-                        <Eye size={13} /> Details
-                      </button>
-                      {(inq.status === 'New' || inq.status === 'Contacted') && (
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => setConvertInquiry(inq)}
-                          style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                        >
-                          Convert <ArrowRight size={13} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filteredInquiries.length === 0 && (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    <UserPlus size={32} style={{ marginBottom: '0.5rem' }} />
-                    <p>No inquiries found{inqStatusFilter !== 'All' ? ` with status "${inqStatusFilter}"` : ''}.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </>
-  );
+    const cardId = e.dataTransfer.getData('cardId');
+    const cardType = e.dataTransfer.getData('cardType');
+    const currentStage = e.dataTransfer.getData('currentStage') as BoardStage;
 
-  const renderApplications = () => (
-    <>
-      {/* Success Banner */}
-      {successMsg && (
-        <div style={{
-          background: '#f0fdf4', border: '1px solid #16a34a', color: '#16a34a',
-          padding: '0.75rem 1.25rem', borderRadius: '8px', marginBottom: '1rem',
-          display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500,
-        }}>
-          <CheckCircle size={18} /> {successMsg}
-        </div>
-      )}
+    if (currentStage === targetStage) return;
 
-      {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-        {['All', ...ALL_APP_STATUSES].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setAppStatusFilter(tab)}
-            style={{
-              padding: '0.4rem 1rem', borderRadius: '9999px', border: '1px solid var(--border)',
-              cursor: 'pointer', fontSize: '0.85rem',
-              fontWeight: appStatusFilter === tab ? 600 : 400,
-              background: appStatusFilter === tab ? 'var(--primary)' : 'transparent',
-              color: appStatusFilter === tab ? '#fff' : 'var(--text-muted)',
-              transition: 'all 0.2s',
-            }}
-          >{tab}</button>
-        ))}
-      </div>
+    if (targetStage === 'lead') {
+      if (cardType === 'inquiry') {
+        // Move back to lead (e.g. status New or Contacted)
+        updateInquiryStatus(cardId, 'New');
+      } else {
+        alert('Cannot move a formal application to leads stage.');
+      }
+    } else if (targetStage === 'applied') {
+      if (cardType === 'inquiry') {
+        const inq = inquiries.find(i => i.id === cardId);
+        if (inq) {
+          setConvertInquiry(inq);
+        }
+      } else {
+        alert('Application is already submitted.');
+      }
+    } else if (targetStage === 'outcome') {
+      if (cardType === 'application') {
+        const app = applications.find(a => a.id === cardId);
+        if (app) {
+          setApproveApp(app);
+        }
+      } else {
+        alert('Please convert inquiry to a formal application first to finalize outcomes.');
+      }
+    }
+  };
 
-      {/* Table */}
-      <div className="card">
-        {appLoading ? (
-          <p style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading applications...</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>App No.</th>
-                <th>Student Name</th>
-                <th>Applying For</th>
-                <th>Parent</th>
-                <th>Phone</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredApplications.map(app => (
-                <tr key={app.id}>
-                  <td><code style={{ fontSize: '0.8rem' }}>{app.application_number}</code></td>
-                  <td><strong>{app.student_first_name} {app.student_last_name}</strong></td>
-                  <td>{app.course_name || '—'}</td>
-                  <td>{app.parent_name}</td>
-                  <td style={{ fontSize: '0.85rem' }}>{app.parent_phone}</td>
-                  <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    {new Date(app.created_at).toLocaleDateString()}
-                  </td>
-                  <td><AppStatusBadge status={app.status} /></td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                      <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => setDetailApp(app)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                      >
-                        <Eye size={12} /> View
-                      </button>
-                      {(app.status === 'Submitted' || app.status === 'Under Review') && (
-                        <>
-                          <button
-                            className="btn btn-sm"
-                            onClick={() => setApproveApp(app)}
-                            style={{ background: '#16a34a', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                          >
-                            <CheckCircle size={12} /> Approve
-                          </button>
-                          <button
-                            className="btn btn-sm"
-                            onClick={() => { setRejectApp(app); setRejectReason(''); }}
-                            style={{ background: '#dc2626', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                          >
-                            <XCircle size={12} /> Reject
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filteredApplications.length === 0 && (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    <ClipboardList size={32} style={{ marginBottom: '0.5rem' }} />
-                    <p>No applications found{appStatusFilter !== 'All' ? ` with status "${appStatusFilter}"` : ''}.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </>
-  );
+  // ── Derived Kanban Cards ─────────────────────────────────────────────────────
 
-  // ── Main render ────────────────────────────────────────────────────────────
+  // Column 1: Leads & Inquiries
+  const leadCards: BoardCard[] = inquiries
+    .filter(i => i.status === 'New' || i.status === 'Contacted')
+    .map(i => ({
+      id: i.id,
+      type: 'inquiry',
+      title: i.student_name,
+      subtitle: i.parent_name,
+      phone: i.parent_phone,
+      email: i.parent_email || '',
+      classLabel: i.applying_for_class,
+      classValue: i.applying_for_class,
+      yearId: i.academic_year_id || '',
+      status: i.status,
+      createdDate: i.created_at,
+      rawItem: i
+    }));
+
+  // Column 2: Applied & In-Review Applications
+  const appliedCards: BoardCard[] = applications
+    .filter(a => a.status === 'Submitted' || a.status === 'Under Review')
+    .map(a => ({
+      id: a.id,
+      type: 'application',
+      title: `${a.student_first_name} ${a.student_last_name}`,
+      subtitle: a.parent_name,
+      phone: a.parent_phone,
+      email: a.parent_email || '',
+      classLabel: a.course_name || 'Class',
+      classValue: a.applying_for_course_id || '',
+      yearId: a.academic_year_id,
+      status: a.status,
+      createdDate: a.created_at,
+      rawItem: a
+    }));
+
+  // Column 3: Outcomes (Finalized admissions or rejections)
+  const outcomeCards: BoardCard[] = [
+    ...applications
+      .filter(a => a.status === 'Approved' || a.status === 'Rejected')
+      .map(a => ({
+        id: a.id,
+        type: 'application' as const,
+        title: `${a.student_first_name} ${a.student_last_name}`,
+        subtitle: a.parent_name,
+        phone: a.parent_phone,
+        email: a.parent_email || '',
+        classLabel: a.course_name || 'Class',
+        classValue: a.applying_for_course_id || '',
+        yearId: a.academic_year_id,
+        status: a.status === 'Approved' ? 'Admitted' : 'Rejected',
+        createdDate: a.created_at,
+        rawItem: a
+      })),
+    // Include inquiries marked Admitted/Rejected that did not spawn an application
+    ...inquiries
+      .filter(i => (i.status === 'Admitted' || i.status === 'Rejected') && !applications.some(a => a.inquiry_id === i.id))
+      .map(i => ({
+        id: i.id,
+        type: 'inquiry' as const,
+        title: i.student_name,
+        subtitle: i.parent_name,
+        phone: i.parent_phone,
+        email: i.parent_email || '',
+        classLabel: i.applying_for_class,
+        classValue: i.applying_for_class,
+        yearId: i.academic_year_id || '',
+        status: i.status,
+        createdDate: i.created_at,
+        rawItem: i
+      }))
+  ];
+
+  // Apply filters
+  const applyFilters = (cards: BoardCard[]) => {
+    return cards.filter(card => {
+      const matchesSearch = 
+        card.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card.subtitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card.phone.includes(searchTerm) ||
+        card.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesClass = 
+        classFilter === 'All' || 
+        card.classValue === classFilter || 
+        card.classLabel.toLowerCase().includes(classFilter.toLowerCase());
+
+      const matchesYear = 
+        yearFilter === 'All' || 
+        card.yearId === yearFilter;
+
+      return matchesSearch && matchesClass && matchesYear;
+    });
+  };
+
+  const filteredLeads = applyFilters(leadCards);
+  const filteredApplied = applyFilters(appliedCards);
+  const filteredOutcomes = applyFilters(outcomeCards);
+
+  // Status Style Maps
+  const getBadgeStyle = (status: string) => {
+    const s = status.toLowerCase();
+    if (s === 'new' || s === 'submitted') return { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' };
+    if (s === 'contacted' || s === 'under review') return { bg: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' };
+    if (s === 'admitted' || s === 'approved') return { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
+    if (s === 'rejected') return { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' };
+    return { bg: '#f3f4f6', color: '#374151' };
+  };
+
+  // Unique class options for filtering
+  const uniqueClassOptions = Array.from(
+    new Set([
+      ...programs.map(p => p.name),
+      ...inquiries.map(i => i.applying_for_class)
+    ])
+  ).filter(Boolean);
 
   return (
     <Layout>
       <PageGuidance
-        title="Admissions"
-        description="Use this page to manage the full admissions pipeline. Record new inquiries from prospective parents, track their progress, and convert them into formal applications. Once submitted, review and approve applications to create student records."
+        title="Admissions & Inquiry Workspace"
+        description="Track candidate progress from their initial inquiry and campus walk-in to formal application reviews and final student admissions. Drag and drop cards across columns to progress candidate stages."
         steps={[
-          'Switch to Inquiries to record walk-in, phone, or online leads.',
-          'Update inquiry status and convert ready leads to Applications.',
-          'Switch to Applications to review, approve, or reject submissions.',
+          'Add walking inquiries or prospects in the Leads column.',
+          'Drag inquiries into the Applied column to trigger application conversions.',
+          'Review applications, then drag to Outcome to approve/reject and auto-create student records.'
         ]}
       />
 
-      {/* Page Header */}
-      <div className="page-header">
+      {/* Header */}
+      <div className="page-header" style={{ marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h2>Admissions</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-            Manage inquiries and applications for new students
+          <h2>Admissions & Inquiry Pipeline</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+            Unified board management for lead generation and candidate enrollment
           </p>
         </div>
-        {activeTab === 'inquiries' ? (
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
-            className="btn btn-primary"
+            className="btn btn-outline"
             onClick={() => setInqShowAdd(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
           >
             <Plus size={16} /> Add Inquiry
           </button>
-        ) : (
           <button
             className="btn btn-primary"
             onClick={() => setAppShowAdd(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
           >
             <Plus size={16} /> New Application
           </button>
-        )}
+        </div>
       </div>
 
-      {/* Page-level Tabs */}
-      <div className="page-tabs" style={{ marginBottom: '1.5rem' }}>
-        <button
-          className={`page-tab${activeTab === 'inquiries' ? ' active' : ''}`}
-          onClick={() => setActiveTab('inquiries')}
-        >
-          Inquiries
-        </button>
-        <button
-          className={`page-tab${activeTab === 'applications' ? ' active' : ''}`}
-          onClick={() => setActiveTab('applications')}
-        >
-          Applications
-        </button>
+      {/* Filters Panel */}
+      <div className="card" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+          {/* Search bar */}
+          <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
+            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              placeholder="Search candidate name, parent, phone..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.5rem 1rem 0.5rem 2.25rem',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                fontSize: '0.875rem'
+              }}
+            />
+          </div>
+
+          {/* Class Filter */}
+          <div style={{ minWidth: '180px' }}>
+            <select
+              value={classFilter}
+              onChange={e => setClassFilter(e.target.value)}
+              style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem' }}
+            >
+              <option value="All">All Grades/Classes</option>
+              {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {uniqueClassOptions.map(clsName => {
+                if (programs.some(p => p.name === clsName)) return null;
+                return <option key={clsName} value={clsName}>{clsName}</option>;
+              })}
+            </select>
+          </div>
+
+          {/* Year Filter */}
+          <div style={{ minWidth: '180px' }}>
+            <select
+              value={yearFilter}
+              onChange={e => setYearFilter(e.target.value)}
+              style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem' }}
+            >
+              <option value="All">All Academic Years</option>
+              {academicYears.map(y => <option key={y.id} value={y.id}>{y.name}</option>)}
+            </select>
+          </div>
+        </div>
       </div>
 
-      {/* Tab Content */}
-      {activeTab === 'inquiries' ? renderInquiries() : renderApplications()}
+      {loading ? (
+        <SkeletonLoader type="card" count={3} />
+      ) : (
+        /* Kanban Board Grid */
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '1.5rem',
+          alignItems: 'start'
+        }}>
+          {/* COLUMN 1: Leads & Inquiries */}
+          <div
+            onDragOver={(e) => handleDragOver(e, 'lead')}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, 'lead')}
+            style={{
+              background: '#f8fafc',
+              border: dragOverStage === 'lead' ? '2px dashed var(--primary)' : '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '1rem',
+              minHeight: '550px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              transition: 'background 0.2s'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }} />
+                Leads & Inquiries
+              </h3>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '12px', background: '#e2e8f0', color: 'var(--text-secondary)' }}>
+                {filteredLeads.length}
+              </span>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {filteredLeads.map(card => {
+                const badge = getBadgeStyle(card.status);
+                return (
+                  <div
+                    key={card.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, card.id, card.type, 'lead')}
+                    style={{
+                      background: 'white',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      cursor: 'grab',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                      transition: 'transform 0.15s, box-shadow 0.15s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                        {card.classLabel}
+                      </span>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', background: badge.bg, color: badge.color }}>
+                        {card.status}
+                      </span>
+                    </div>
+
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                      {card.title}
+                    </h4>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <User size={12} style={{ opacity: 0.6 }} />
+                        <span>{card.subtitle}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <Phone size={12} style={{ opacity: 0.6 }} />
+                        <span>{card.phone}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '0.5rem' }}>
+                      <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => setDetailInquiry(card.rawItem)}
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                      >
+                        <Eye size={11} /> Details
+                      </button>
+
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        {card.status === 'New' && (
+                          <button
+                            className="btn btn-sm"
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#f1f5f9', border: 'none', color: 'var(--text-main)' }}
+                            onClick={() => updateInquiryStatus(card.id, 'Contacted')}
+                          >
+                            Mark Called
+                          </button>
+                        )}
+                        <button
+                          className="btn btn-sm btn-primary"
+                          onClick={() => setConvertInquiry(card.rawItem)}
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.15rem' }}
+                        >
+                          Convert <ArrowRight size={11} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {filteredLeads.length === 0 && (
+                <EmptyState
+                  title="No Inquiries"
+                  description="No active inquiries or phone leads found in this filter."
+                  icon={UserPlus}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* COLUMN 2: Applied & In Review */}
+          <div
+            onDragOver={(e) => handleDragOver(e, 'applied')}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, 'applied')}
+            style={{
+              background: '#f8fafc',
+              border: dragOverStage === 'applied' ? '2px dashed var(--primary)' : '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '1rem',
+              minHeight: '550px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              transition: 'background 0.2s'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6' }} />
+                Applied & In-Review
+              </h3>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '12px', background: '#e2e8f0', color: 'var(--text-secondary)' }}>
+                {filteredApplied.length}
+              </span>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {filteredApplied.map(card => {
+                const badge = getBadgeStyle(card.status);
+                return (
+                  <div
+                    key={card.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, card.id, card.type, 'applied')}
+                    style={{
+                      background: 'white',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      cursor: 'grab',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                      transition: 'transform 0.15s, box-shadow 0.15s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                      <code style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--primary)' }}>
+                        {card.rawItem.application_number}
+                      </code>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', background: badge.bg, color: badge.color }}>
+                        {card.status}
+                      </span>
+                    </div>
+
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                      {card.title}
+                    </h4>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <ChevronRight size={11} style={{ opacity: 0.6 }} />
+                        <span>Applying Grade: <strong>{card.classLabel}</strong></span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <User size={12} style={{ opacity: 0.6 }} />
+                        <span>{card.subtitle}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <Phone size={12} style={{ opacity: 0.6 }} />
+                        <span>{card.phone}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '0.5rem' }}>
+                      <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => setDetailApp(card.rawItem)}
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                      >
+                        <Eye size={11} /> View App
+                      </button>
+
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button
+                          className="btn btn-sm btn-outline"
+                          onClick={() => { setRejectApp(card.rawItem); setRejectReason(''); }}
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', border: '1px solid #ef4444', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.15rem' }}
+                        >
+                          <XCircle size={11} /> Reject
+                        </button>
+                        <button
+                          className="btn btn-sm"
+                          onClick={() => setApproveApp(card.rawItem)}
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#10b981', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.15rem' }}
+                        >
+                          <CheckCircle size={11} /> Admit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {filteredApplied.length === 0 && (
+                <EmptyState
+                  title="No Applications"
+                  description="Drag inquires here to convert, or add a new formal application."
+                  icon={ClipboardList}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* COLUMN 3: Outcomes */}
+          <div
+            onDragOver={(e) => handleDragOver(e, 'outcome')}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, 'outcome')}
+            style={{
+              background: '#f8fafc',
+              border: dragOverStage === 'outcome' ? '2px dashed var(--primary)' : '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '1rem',
+              minHeight: '550px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              transition: 'background 0.2s'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+                Closed Outcomes
+              </h3>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '12px', background: '#e2e8f0', color: 'var(--text-secondary)' }}>
+                {filteredOutcomes.length}
+              </span>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {filteredOutcomes.map(card => {
+                const badge = getBadgeStyle(card.status);
+                return (
+                  <div
+                    key={card.id}
+                    style={{
+                      background: 'white',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                      opacity: 0.9
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                        {card.classLabel}
+                      </span>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', background: badge.bg, color: badge.color }}>
+                        {card.status}
+                      </span>
+                    </div>
+
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                      {card.title}
+                    </h4>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <User size={12} style={{ opacity: 0.6 }} />
+                        <span>{card.subtitle}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <FileText size={12} style={{ opacity: 0.6 }} />
+                        <span>Flow Type: <strong>{card.type.toUpperCase()}</strong></span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '0.5rem' }}>
+                      <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => {
+                          if (card.type === 'inquiry') {
+                            setDetailInquiry(card.rawItem);
+                          } else {
+                            setDetailApp(card.rawItem);
+                          }
+                        }}
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2', width: '100%', justifyContent: 'center' }}
+                      >
+                        <Eye size={11} /> View Record
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {filteredOutcomes.length === 0 && (
+                <EmptyState
+                  title="No Outcomes"
+                  description="Admitted and rejected profiles will appear in this column."
+                  icon={CheckCircle}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           MODALS — INQUIRIES
@@ -700,7 +1011,7 @@ export default function Admissions() {
                 Convert <strong>{convertInquiry.student_name}</strong>'s inquiry into a formal admission application?
               </p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                This will create an application record and mark this inquiry as <strong>Applied</strong>. You can review and approve the application from the Applications tab.
+                This will create an application record and mark this inquiry as <strong>Applied</strong>. You can review and approve the application from the Applied tab.
               </p>
             </div>
             <div className="modal-footer">
@@ -740,7 +1051,14 @@ export default function Admissions() {
                     <tr key={label} style={{ borderBottom: '1px solid var(--border)' }}>
                       <td style={{ padding: '0.6rem 0.5rem', color: 'var(--text-muted)', width: '40%' }}>{label}</td>
                       <td style={{ padding: '0.6rem 0.5rem', fontWeight: 500 }}>
-                        {label === 'Status' ? <InqStatusBadge status={String(value)} /> : value}
+                        {label === 'Status' ? (
+                          <span style={{
+                            display: 'inline-block', padding: '0.2rem 0.65rem', borderRadius: '9999px',
+                            fontSize: '0.75rem', fontWeight: 600,
+                            background: getBadgeStyle(String(value)).bg,
+                            color: getBadgeStyle(String(value)).color,
+                          }}>{String(value)}</span>
+                        ) : value}
                       </td>
                     </tr>
                   ))}
@@ -883,7 +1201,14 @@ export default function Admissions() {
                     <tr key={label} style={{ borderBottom: '1px solid var(--border)' }}>
                       <td style={{ padding: '0.55rem 0.5rem', color: 'var(--text-muted)', width: '42%' }}>{label}</td>
                       <td style={{ padding: '0.55rem 0.5rem', fontWeight: 500 }}>
-                        {label === 'Status' ? <AppStatusBadge status={String(value)} /> : value}
+                        {label === 'Status' ? (
+                          <span style={{
+                            display: 'inline-block', padding: '0.2rem 0.65rem', borderRadius: '9999px',
+                            fontSize: '0.75rem', fontWeight: 600,
+                            background: getBadgeStyle(String(value)).bg,
+                            color: getBadgeStyle(String(value)).color,
+                          }}>{String(value)}</span>
+                        ) : value}
                       </td>
                     </tr>
                   ))}

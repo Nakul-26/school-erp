@@ -3,6 +3,12 @@ import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
+import SkeletonLoader from '../components/SkeletonLoader';
+import AdminDashboard from './dashboards/AdminDashboard';
+import TeacherDashboard from './dashboards/TeacherDashboard';
+import StudentDashboard from './dashboards/StudentDashboard';
+import ParentDashboard from './dashboards/ParentDashboard';
+import AccountantDashboard from './dashboards/AccountantDashboard';
 import { 
   Users, 
   BookOpen, 
@@ -45,7 +51,8 @@ export default function Dashboard() {
   const [exams, setExams] = useState<any[]>([]);
   const [ledgerRecords, setLedgerRecords] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
-  
+  const [homework, setHomework] = useState<any[]>([]);
+
   // Modals for Report Card & Receipts
   const [selectedReportCard, setSelectedReportCard] = useState<any | null>(null);
   const [showReportCardModal, setShowReportCardModal] = useState(false);
@@ -162,25 +169,31 @@ export default function Dashboard() {
       try {
         if (isStudent && stats.studentInfo?.id) {
           const studId = stats.studentInfo.id;
-          const [examsData, ledgerData, paymentsData] = await Promise.all([
+          const secId = stats.studentInfo.section_id;
+          const [examsData, ledgerData, paymentsData, hwData] = await Promise.all([
             api.get('/exams').catch(() => []),
             api.get(`/fees/ledger/${studId}`).catch(() => []),
-            api.get(`/fees/payments?student_id=${studId}`).catch(() => [])
+            api.get(`/fees/payments?student_id=${studId}`).catch(() => []),
+            secId ? api.get(`/homework?section_id=${secId}`).catch(() => []) : Promise.resolve([])
           ]);
           setExams(examsData);
           setLedgerRecords(ledgerData);
           setPayments(paymentsData);
+          setHomework(hwData);
         } else if (isParent && stats.children && stats.children.length > 0) {
           const child = stats.children[selectedChildIndex];
           if (child?.id) {
-            const [examsData, ledgerData, paymentsData] = await Promise.all([
+            const secId = child.section_id;
+            const [examsData, ledgerData, paymentsData, hwData] = await Promise.all([
               api.get('/exams').catch(() => []),
               api.get(`/fees/ledger/${child.id}`).catch(() => []),
-              api.get(`/fees/payments?student_id=${child.id}`).catch(() => [])
+              api.get(`/fees/payments?student_id=${child.id}`).catch(() => []),
+              secId ? api.get(`/homework?section_id=${secId}`).catch(() => []) : Promise.resolve([])
             ]);
             setExams(examsData);
             setLedgerRecords(ledgerData);
             setPayments(paymentsData);
+            setHomework(hwData);
           }
         }
       } catch (err) {
@@ -257,642 +270,14 @@ export default function Dashboard() {
     }
   };
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(val);
-  };
-
-  const renderAdminDashboard = () => {
-    return (
-      <div className="portal-dashboard">
-        {/* Setup Checklist */}
-        {(!(stats?.totalStudents) || !(stats?.totalTeachers)) && (
-          <div className="setup-checklist" style={{ marginBottom: '1.5rem' }}>
-            <div className="setup-checklist-header">
-              <div className="setup-checklist-icon">
-                <CheckCircle size={20} />
-              </div>
-              <div>
-                <div className="setup-checklist-title">Get your school set up</div>
-                <div className="setup-checklist-subtitle">Complete these steps to start using all features</div>
-              </div>
-            </div>
-            <div className="setup-checklist-steps">
-              {([
-                { label: 'School Profile', desc: 'Add your school name and basic info', to: '/institution-setup', done: true },
-                { label: 'Set Up School Year', desc: 'Create the current academic year', to: '/academic-years', done: !!(stats?.upcomingExams > 0 || stats?.totalStudents > 0) },
-                { label: 'Add Classes & Subjects', desc: 'Define classes, sections, and subjects', to: '/classes', done: false },
-                { label: 'Add Teachers', desc: 'Invite your teaching staff', to: '/teachers', done: !!(stats?.totalTeachers > 0) },
-                { label: 'Admit First Students', desc: 'Add students and assign them to classes', to: '/students', done: !!(stats?.totalStudents > 0) },
-              ] as { label: string; desc: string; to: string; done: boolean }[]).map((step, i) => (
-                <Link key={i} to={step.to} className={`setup-step${step.done ? ' setup-step-done' : ''}`}>
-                  <div className={`setup-step-icon ${step.done ? 'setup-step-icon-done' : 'setup-step-icon-pending'}`}>
-                    {step.done ? '\u2713' : (i + 1)}
-                  </div>
-                  <div className="setup-step-body">
-                    <div className="setup-step-label">{step.label}</div>
-                    <div className="setup-step-desc">{step.desc}</div>
-                  </div>
-                  {!step.done && <div className="setup-step-cta">Start →</div>}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-        <div className="stats-grid">
-          <div className="stat-card card">
-            <div className="icon" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)' }}>
-              <Users size={24} />
-            </div>
-            <div className="info">
-              <h3>Total Students</h3>
-              <div className="value">{stats?.totalStudents || 0}</div>
-            </div>
-          </div>
-          
-          <div className="stat-card card">
-            <div className="icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>
-              <Users size={24} />
-            </div>
-            <div className="info">
-              <h3>Total Teachers</h3>
-              <div className="value">{stats?.totalTeachers || 0}</div>
-            </div>
-          </div>
-          
-          <div className="stat-card card">
-            <div className="icon" style={{ background: 'rgba(245, 185, 11, 0.1)', color: 'var(--warning)' }}>
-              <Clock size={24} />
-            </div>
-            <div className="info">
-              <h3>Overall Attendance</h3>
-              <div className="value">{stats?.overallAttendance || 0}%</div>
-            </div>
-          </div>
-          
-          <div className="stat-card card">
-            <div className="icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>
-              <IndianRupee size={24} />
-            </div>
-            <div className="info">
-              <h3>Fee Collection</h3>
-              <div className="value">{formatCurrency(stats?.feeCollection || 0)}</div>
-            </div>
-          </div>
-
-          <div className="stat-card card">
-            <div className="icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}>
-              <Award size={24} />
-            </div>
-            <div className="info">
-              <h3>Upcoming Exams</h3>
-              <div className="value">{stats?.upcomingExams || 0}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTeacherDashboard = () => {
-    return (
-      <div className="portal-dashboard">
-        <div className="stats-grid">
-          <div className="stat-card card">
-            <div className="icon" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)' }}>
-              <Calendar size={24} />
-            </div>
-            <div className="info">
-              <h3>Classes Today</h3>
-              <div className="value">{stats?.classesToday || 0}</div>
-            </div>
-          </div>
-          
-          <div className="stat-card card">
-            <div className="icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>
-              <Users size={24} />
-            </div>
-            <div className="info">
-              <h3>My Students</h3>
-              <div className="value">{stats?.totalStudents || 0}</div>
-            </div>
-          </div>
-          
-          <div className="stat-card card">
-            <div className="icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}>
-              <Award size={24} />
-            </div>
-            <div className="info">
-              <h3>Pending Marks Entry</h3>
-              <div className="value">{stats?.pendingMarks || 0}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="teacher-actions card" style={{ marginTop: '2rem' }}>
-          <h3>Quick Controls</h3>
-          <div className="quick-actions-grid">
-            <Link to="/attendance" className="action-btn">
-              <FileSpreadsheet size={20} />
-              <span>Mark Student Attendance</span>
-            </Link>
-            <Link to="/exams" className="action-btn">
-              <Award size={20} />
-              <span>Enter Exam Marks</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderStudentDashboard = () => {
-    const sInfo = stats?.studentInfo;
-    const att = stats?.attendance;
-    const fees = stats?.fees;
-    const results = stats?.results || [];
-
-    // Filter exams for student
-    const studentExams = exams.filter(
-      (e: any) => e.course_id === sInfo?.course_id && e.semester === sInfo?.semester && e.status !== 'DRAFT'
-    );
-
-    return (
-      <div className="portal-dashboard student-portal" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div className="stats-grid">
-          {/* Attendance Overview */}
-          <div className="stat-card card">
-            <div className="icon" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)' }}>
-              <Clock size={24} />
-            </div>
-            <div className="info">
-              <h3>Attendance %</h3>
-              <div className="value">{att?.percentage || 0}%</div>
-              <span className="sub-text">{att?.present || 0} of {att?.total || 0} sessions present</span>
-            </div>
-          </div>
-
-          {/* Dues Status */}
-          <div className="stat-card card">
-            <div className="icon" style={{ 
-              background: (fees?.due > 0) ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', 
-              color: (fees?.due > 0) ? 'var(--danger)' : 'var(--success)' 
-            }}>
-              <IndianRupee size={24} />
-            </div>
-            <div className="info">
-              <h3>Outstanding Dues</h3>
-              <div className="value">{formatCurrency(fees?.due || 0)}</div>
-              <span className="sub-text">Paid: {formatCurrency(fees?.paid || 0)} / Total: {formatCurrency(fees?.total || 0)}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-content-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
-          
-          {/* Left Column: Academics */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* Exam Results Summary */}
-            <div className="card dashboard-section">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Latest Subject Marks</h3>
-              {results.length === 0 ? (
-                <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No exam results published yet.</p>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table" style={{ fontSize: '0.85rem' }}>
-                    <thead>
-                      <tr>
-                        <th>Exam</th>
-                        <th>Subject</th>
-                        <th>Marks</th>
-                        <th>Percentage</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.map((r: any, idx: number) => {
-                        const percentage = Math.round((r.marks_obtained / r.max_marks) * 100);
-                        return (
-                          <tr key={idx}>
-                            <td><strong>{r.exam_name}</strong></td>
-                            <td>{r.subject_name}</td>
-                            <td>{r.marks_obtained} / {r.max_marks}</td>
-                            <td>
-                              <span className={`badge ${percentage >= 40 ? 'badge-success' : 'badge-danger'}`}>
-                                {percentage}%
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Official Report Cards */}
-            <div className="card dashboard-section">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Official Report Cards</h3>
-              {studentExams.length === 0 ? (
-                <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No official report cards available for download yet.</p>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table" style={{ fontSize: '0.85rem' }}>
-                    <thead>
-                      <tr>
-                        <th>Exam Title</th>
-                        <th>Timeline</th>
-                        <th style={{ textAlign: 'right' }}>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {studentExams.map((e: any) => (
-                        <tr key={e.id}>
-                          <td><strong>{e.name}</strong></td>
-                          <td>{new Date(e.start_date).toLocaleDateString()} - {new Date(e.end_date).toLocaleDateString()}</td>
-                          <td style={{ textAlign: 'right' }}>
-                            <button 
-                              className="btn btn-sm btn-primary" 
-                              onClick={() => handleOpenReportCard(e.id, sInfo.id)}
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                            >
-                              <Printer size={12} /> View &amp; Print
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column: Fees and Collections */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* Fee Ledger Installments */}
-            <div className="card dashboard-section">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Fee Ledger details</h3>
-              {ledgerRecords.length === 0 ? (
-                <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No fee allocations found for your account.</p>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table" style={{ fontSize: '0.85rem' }}>
-                    <thead>
-                      <tr>
-                        <th>Fee Component</th>
-                        <th>Due Date</th>
-                        <th style={{ textAlign: 'right' }}>Amount Due</th>
-                        <th style={{ textAlign: 'center' }}>Status</th>
-                        <th style={{ textAlign: 'center' }}>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ledgerRecords.map((rec: any) => (
-                        <tr key={rec.id}>
-                          <td><strong>{rec.fee_type}</strong></td>
-                          <td>{new Date(rec.due_date).toLocaleDateString()}</td>
-                          <td style={{ textAlign: 'right', fontWeight: 'bold' }}>₹{(rec.total_amount - rec.paid_amount).toLocaleString('en-IN')}</td>
-                          <td style={{ textAlign: 'center' }}>
-                            <span className={`badge ${
-                              rec.status === 'PAID' ? 'badge-success' : rec.status === 'PARTIAL' ? 'badge-warning' : 'badge-danger'
-                            }`}>
-                              {rec.status}
-                            </span>
-                          </td>
-                          <td style={{ textAlign: 'center' }}>
-                            {rec.status !== 'PAID' ? (
-                              <button
-                                className="btn btn-outline"
-                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', borderColor: 'var(--primary)', color: 'var(--primary)', cursor: 'pointer' }}
-                                onClick={() => handlePayOnlineInit(rec)}
-                              >
-                                Pay Online
-                              </button>
-                            ) : (
-                              <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Paid</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Payment Receipts History */}
-            <div className="card dashboard-section">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Payment History &amp; Receipts</h3>
-              {payments.length === 0 ? (
-                <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No payment transactions logged in the system.</p>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table" style={{ fontSize: '0.85rem' }}>
-                    <thead>
-                      <tr>
-                        <th>Date Paid</th>
-                        <th>Fee Type</th>
-                        <th>Method</th>
-                        <th style={{ textAlign: 'right' }}>Amount</th>
-                        <th style={{ textAlign: 'right' }}>Receipt</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payments.map((p: any) => (
-                        <tr key={p.id}>
-                          <td>{new Date(p.payment_date).toLocaleDateString()}</td>
-                          <td>{p.fee_type}</td>
-                          <td>{p.payment_method}</td>
-                          <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--success)' }}>₹{p.amount.toLocaleString('en-IN')}</td>
-                          <td style={{ textAlign: 'right' }}>
-                            <button 
-                              className="btn btn-sm btn-outline" 
-                              onClick={() => handleOpenReceipt(p)}
-                              style={{ padding: '0.25rem 0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                            >
-                              <Printer size={12} /> Receipt
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-          
-        </div>
-      </div>
-    );
-  };
-
-  const renderParentDashboard = () => {
-    const children = stats?.children || [];
-    if (children.length === 0) {
-      return (
-        <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <AlertCircle size={48} style={{ color: 'var(--secondary)', marginBottom: '1rem' }} />
-          <h3>No Children Linked</h3>
-          <p>Please contact your institution administration to link your parent account with your children.</p>
-        </div>
-      );
-    }
-
-    const activeChild = children[selectedChildIndex];
-    const results = activeChild?.results || [];
-
-    // Filter exams for active child
-    const childExams = exams.filter(
-      (e: any) => e.course_id === activeChild?.course_id && e.semester === activeChild?.semester && e.status !== 'DRAFT'
-    );
-
-    return (
-      <div className="portal-dashboard parent-portal" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        {/* Child Selector Tabs */}
-        {children.length > 1 && (
-          <div className="child-selector" style={{ marginBottom: '0.5rem' }}>
-            {children.map((child: any, idx: number) => (
-              <button
-                key={child.student_id}
-                className={`child-tab ${selectedChildIndex === idx ? 'active' : ''}`}
-                onClick={() => setSelectedChildIndex(idx)}
-              >
-                {child.name}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="selected-child-overview" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <div className="welcome-section card" style={{ background: '#f1f5f9', color: 'var(--text-main)', margin: 0, padding: '1.25rem 1.5rem' }}>
-            <h4 style={{ margin: 0, fontSize: '1rem' }}>Academic overview for: <strong>{activeChild.name}</strong></h4>
-            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Roll Number: {activeChild.roll_number || 'N/A'} | Relationship: {activeChild.relationship}
-            </p>
-          </div>
-
-          <div className="stats-grid">
-            {/* Child Attendance */}
-            <div className="stat-card card">
-              <div className="icon" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)' }}>
-                <Clock size={24} />
-              </div>
-              <div className="info">
-                <h3>Attendance %</h3>
-                <div className="value">{activeChild.attendance?.percentage || 0}%</div>
-                <span className="sub-text">
-                  Present: {activeChild.attendance?.present} of {activeChild.attendance?.total} classes
-                </span>
-              </div>
-            </div>
-
-            {/* Child Fees Status */}
-            <div className="stat-card card">
-              <div className="icon" style={{ 
-                background: (activeChild.fees?.due > 0) ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', 
-                color: (activeChild.fees?.due > 0) ? 'var(--danger)' : 'var(--success)' 
-              }}>
-                <IndianRupee size={24} />
-              </div>
-              <div className="info">
-                <h3>Outstanding Fees</h3>
-                <div className="value">{formatCurrency(activeChild.fees?.due || 0)}</div>
-                <span className="sub-text">
-                  Paid: {formatCurrency(activeChild.fees?.paid || 0)} / Total: {formatCurrency(activeChild.fees?.total || 0)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="dashboard-content-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
-            {/* Left Column: Academics */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              {/* Child Results Table */}
-              <div className="card dashboard-section">
-                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Latest Subject Marks</h3>
-                {results.length === 0 ? (
-                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No results published yet for this student.</p>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table" style={{ fontSize: '0.85rem' }}>
-                      <thead>
-                        <tr>
-                          <th>Exam</th>
-                          <th>Subject</th>
-                          <th>Marks</th>
-                          <th>Percentage</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {results.map((r: any, idx: number) => {
-                          const percentage = Math.round((r.marks_obtained / r.max_marks) * 100);
-                          return (
-                            <tr key={idx}>
-                              <td><strong>{r.exam_name}</strong></td>
-                              <td>{r.subject_name}</td>
-                              <td>{r.marks_obtained} / {r.max_marks}</td>
-                              <td>
-                                <span className={`badge ${percentage >= 40 ? 'badge-success' : 'badge-danger'}`}>
-                                  {percentage}%
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {/* Child Official Report Cards */}
-              <div className="card dashboard-section">
-                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Official Report Cards</h3>
-                {childExams.length === 0 ? (
-                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No official report cards available for download yet.</p>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table" style={{ fontSize: '0.85rem' }}>
-                      <thead>
-                        <tr>
-                          <th>Exam Title</th>
-                          <th>Timeline</th>
-                          <th style={{ textAlign: 'right' }}>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {childExams.map((e: any) => (
-                          <tr key={e.id}>
-                            <td><strong>{e.name}</strong></td>
-                            <td>{new Date(e.start_date).toLocaleDateString()} - {new Date(e.end_date).toLocaleDateString()}</td>
-                            <td style={{ textAlign: 'right' }}>
-                              <button 
-                                className="btn btn-sm btn-primary" 
-                                onClick={() => handleOpenReportCard(e.id, activeChild.id)}
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                              >
-                                <Printer size={12} /> View &amp; Print
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column: Fees Ledger */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              {/* Child Fee Ledger */}
-              <div className="card dashboard-section">
-                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Fee Ledger details</h3>
-                {ledgerRecords.length === 0 ? (
-                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No fee allocations found for this child.</p>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table" style={{ fontSize: '0.85rem' }}>
-                      <thead>
-                        <tr>
-                          <th>Fee Component</th>
-                          <th>Due Date</th>
-                          <th style={{ textAlign: 'right' }}>Amount Due</th>
-                          <th style={{ textAlign: 'center' }}>Status</th>
-                          <th style={{ textAlign: 'center' }}>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ledgerRecords.map((rec: any) => (
-                          <tr key={rec.id}>
-                            <td><strong>{rec.fee_type}</strong></td>
-                            <td>{new Date(rec.due_date).toLocaleDateString()}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 'bold' }}>₹{(rec.total_amount - rec.paid_amount).toLocaleString('en-IN')}</td>
-                            <td style={{ textAlign: 'center' }}>
-                              <span className={`badge ${
-                                rec.status === 'PAID' ? 'badge-success' : rec.status === 'PARTIAL' ? 'badge-warning' : 'badge-danger'
-                              }`}>
-                                {rec.status}
-                              </span>
-                            </td>
-                            <td style={{ textAlign: 'center' }}>
-                              {rec.status !== 'PAID' ? (
-                                <button
-                                  className="btn btn-outline"
-                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', borderColor: 'var(--primary)', color: 'var(--primary)', cursor: 'pointer' }}
-                                  onClick={() => handlePayOnlineInit(rec)}
-                                >
-                                  Pay Online
-                                </button>
-                              ) : (
-                                <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Paid</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {/* Child Payment Receipts */}
-              <div className="card dashboard-section">
-                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Payment History &amp; Receipts</h3>
-                {payments.length === 0 ? (
-                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No payment transactions logged in the system.</p>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table" style={{ fontSize: '0.85rem' }}>
-                      <thead>
-                        <tr>
-                          <th>Date Paid</th>
-                          <th>Fee Type</th>
-                          <th>Method</th>
-                          <th style={{ textAlign: 'right' }}>Amount</th>
-                          <th style={{ textAlign: 'right' }}>Receipt</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {payments.map((p: any) => (
-                          <tr key={p.id}>
-                            <td>{new Date(p.payment_date).toLocaleDateString()}</td>
-                            <td>{p.fee_type}</td>
-                            <td>{p.payment_method}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--success)' }}>₹{p.amount.toLocaleString('en-IN')}</td>
-                            <td style={{ textAlign: 'right' }}>
-                              <button 
-                                className="btn btn-sm btn-outline" 
-                                onClick={() => handleOpenReceipt(p)}
-                                style={{ padding: '0.25rem 0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                              >
-                                <Printer size={12} /> Receipt
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // Standalone sub-dashboards are now rendered as imported components.
 
   const getPortalRoleLabel = () => {
     if (stats?.role === 'admin') return 'Administrator';
     if (stats?.role === 'teacher') return 'Teaching Faculty';
     if (stats?.role === 'student') return 'Student Portal';
     if (stats?.role === 'parent') return 'Parent/Guardian Portal';
+    if (stats?.role === 'accountant') return 'Accountant Portal';
     return user?.role || 'User';
   };
 
@@ -911,8 +296,9 @@ export default function Dashboard() {
       </div>
 
       {loading ? (
-        <div className="loading-state">
-          <p>Analyzing statistics &amp; loading portal details...</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <SkeletonLoader type="card" count={3} />
+          <SkeletonLoader type="table" rows={3} cols={4} />
         </div>
       ) : error ? (
         <div className="alert alert-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -927,10 +313,35 @@ export default function Dashboard() {
           </div>
 
           {/* Render Portal Dashboard View */}
-          {stats?.role === 'admin' && renderAdminDashboard()}
-          {stats?.role === 'teacher' && renderTeacherDashboard()}
-          {stats?.role === 'student' && renderStudentDashboard()}
-          {stats?.role === 'parent' && renderParentDashboard()}
+          {stats?.role === 'admin' && <AdminDashboard stats={stats} />}
+          {stats?.role === 'teacher' && <TeacherDashboard stats={stats} />}
+          {stats?.role === 'student' && (
+            <StudentDashboard
+              stats={stats}
+              exams={exams}
+              ledgerRecords={ledgerRecords}
+              payments={payments}
+              homework={homework}
+              handleOpenReportCard={handleOpenReportCard}
+              handlePayOnlineInit={handlePayOnlineInit}
+              handleOpenReceipt={handleOpenReceipt}
+            />
+          )}
+          {stats?.role === 'parent' && (
+            <ParentDashboard
+              stats={stats}
+              selectedChildIndex={selectedChildIndex}
+              setSelectedChildIndex={setSelectedChildIndex}
+              exams={exams}
+              ledgerRecords={ledgerRecords}
+              payments={payments}
+              homework={homework}
+              handleOpenReportCard={handleOpenReportCard}
+              handlePayOnlineInit={handlePayOnlineInit}
+              handleOpenReceipt={handleOpenReceipt}
+            />
+          )}
+          {stats?.role === 'accountant' && <AccountantDashboard stats={stats} />}
 
           {/* General Bottom Section: Announcements & Notifications */}
           <div className="dashboard-grid" style={{ marginTop: '2.5rem' }}>

@@ -39,6 +39,7 @@ import homework from './modules/homework/homework.routes';
 import library from './modules/library/library.routes';
 import transport from './modules/transport/transport.routes';
 import messaging from './modules/messaging/messaging.routes';
+import { visitors, assets, alumni } from './modules/remaining.routes';
 
 
 const app = new Hono<{ Bindings: Env }>();
@@ -61,6 +62,41 @@ app.get('/dashboard/stats', authMiddleware, async (c) => {
   const isTeacher = userRoles.some(r => ['Teacher', 'HOD', 'teacher', 'hod'].includes(r));
   const isStudent = userRoles.some(r => ['Student', 'student'].includes(r));
   const isParent = userRoles.some(r => ['Parent', 'parent', 'Guardian', 'guardian'].includes(r));
+  const isAccountant = userRoles.some(r => ['Accountant', 'accountant'].includes(r));
+
+  if (isAccountant) {
+    const todayResult = await db.prepare(`
+      SELECT SUM(amount) as total FROM fee_payments 
+      WHERE institution_id = ? AND date(payment_date) = date('now') AND is_active = 1
+    `).bind(user.institution_id).first<{ total: number }>();
+
+    const duesResult = await db.prepare(`
+      SELECT 
+        SUM(total_amount - paid_amount) as total_due,
+        COUNT(DISTINCT student_id) as student_count
+      FROM student_fee_records
+      WHERE institution_id = ? AND status != 'PAID' AND is_active = 1
+    `).bind(user.institution_id).first<{ total_due: number; student_count: number }>();
+
+    const receiptsCount = await db.prepare(`
+      SELECT COUNT(*) as count FROM fee_receipts
+      WHERE institution_id = ? AND date(created_at) = date('now') AND is_active = 1
+    `).bind(user.institution_id).first<{ count: number }>();
+
+    const onlinePayments = await db.prepare(`
+      SELECT COUNT(*) as count FROM fee_payments
+      WHERE institution_id = ? AND payment_method LIKE '%Online%' AND date(payment_date) = date('now') AND is_active = 1
+    `).bind(user.institution_id).first<{ count: number }>();
+
+    return c.json({
+      role: 'accountant',
+      todayCollections: todayResult?.total || 0,
+      pendingDues: duesResult?.total_due || 0,
+      pendingDuesStudents: duesResult?.student_count || 0,
+      receiptsIssuedToday: receiptsCount?.count || 0,
+      onlinePaymentsToVerify: onlinePayments?.count || 0
+    });
+  }
 
   if (isAdmin) {
     const studentsCount = await db.prepare('SELECT COUNT(*) as count FROM students WHERE institution_id = ? AND is_active = 1').bind(user.institution_id).first<{ count: number }>();
@@ -142,11 +178,11 @@ app.get('/dashboard/stats', authMiddleware, async (c) => {
 
   if (isStudent) {
     const student = await db.prepare(`
-      SELECT s.id, s.first_name, s.last_name, s.roll_number, s.admission_number, se.course_id, se.semester 
+      SELECT s.id, s.first_name, s.last_name, s.roll_number, s.admission_number, se.course_id, se.section_id, se.semester 
       FROM students s
       LEFT JOIN student_enrollments se ON s.id = se.student_id AND se.is_active = 1
       WHERE s.user_id = ? AND s.institution_id = ? AND s.is_active = 1
-    `).bind(user.sub, user.institution_id).first<{ id: string; first_name: string; last_name: string; roll_number: string; admission_number: string; course_id: string | null; semester: number | null }>();
+    `).bind(user.sub, user.institution_id).first<{ id: string; first_name: string; last_name: string; roll_number: string; admission_number: string; course_id: string | null; section_id: string | null; semester: number | null }>();
     if (!student) {
       return c.json({ error: 'Student profile not found' }, 404);
     }
@@ -206,12 +242,12 @@ app.get('/dashboard/stats', authMiddleware, async (c) => {
 
   if (isParent) {
     const { results: children } = await db.prepare(`
-      SELECT s.id, s.first_name, s.last_name, s.roll_number, s.admission_number, g.relationship, se.course_id, se.semester
+      SELECT s.id, s.first_name, s.last_name, s.roll_number, s.admission_number, g.relationship, se.course_id, se.section_id, se.semester
       FROM guardians g
       JOIN students s ON g.student_id = s.id
       LEFT JOIN student_enrollments se ON s.id = se.student_id AND se.is_active = 1
       WHERE g.user_id = ? AND g.is_active = 1 AND s.is_active = 1
-    `).bind(user.sub).all<{ id: string; first_name: string; last_name: string; roll_number: string; admission_number: string; relationship: string; course_id: string | null; semester: number | null }>();
+    `).bind(user.sub).all<{ id: string; first_name: string; last_name: string; roll_number: string; admission_number: string; relationship: string; course_id: string | null; section_id: string | null; semester: number | null }>();
 
     const childrenDetails = [];
 
@@ -254,10 +290,14 @@ app.get('/dashboard/stats', authMiddleware, async (c) => {
 
       childrenDetails.push({
         student_id: child.id,
+        id: child.id,
         name: `${child.first_name} ${child.last_name}`,
         roll_number: child.roll_number,
         admission_number: child.admission_number,
         relationship: child.relationship,
+        course_id: child.course_id,
+        section_id: child.section_id,
+        semester: child.semester,
         attendance: {
           percentage: attendancePercentage,
           present: attResult?.present || 0,
@@ -318,6 +358,8 @@ app.route('/homework', homework);
 app.route('/library', library);
 app.route('/transport', transport);
 app.route('/messaging', messaging);
-
+app.route('/visitors', visitors);
+app.route('/assets', assets);
+app.route('/alumni', alumni);
 
 export default app;

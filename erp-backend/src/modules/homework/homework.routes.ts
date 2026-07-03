@@ -29,6 +29,31 @@ homework.post('/', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teac
   try {
     const id = await service.create(user.institution_id, body, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'CREATE_HOMEWORK', 'homework', id, `Created homework in section ${body.section_id}`);
+
+    // Send notifications to students and parents in the section
+    try {
+      const { NotificationRepository } = await import('../notifications/notifications.repository');
+      const { NotificationService } = await import('../notifications/notifications.service');
+      const notifRepo = new NotificationRepository(c.env.DB);
+      const notifService = new NotificationService(notifRepo, c.env.DB);
+
+      // Get subject name for the notification
+      const subjectRow = await c.env.DB.prepare(
+        'SELECT subject_name FROM subjects WHERE id = ? LIMIT 1'
+      ).bind(body.subject_id).first<{ subject_name: string }>();
+
+      await notifService.notifyHomeworkPosted(
+        user.institution_id,
+        body.section_id,
+        subjectRow?.subject_name || 'Subject',
+        body.title,
+        body.due_date || null,
+        c.env
+      );
+    } catch (notifErr) {
+      console.warn('[Homework] Notification dispatch failed (non-fatal):', notifErr);
+    }
+
     return c.json({ id }, 201);
   } catch (e: any) {
     return c.json({ error: e.message }, 400);

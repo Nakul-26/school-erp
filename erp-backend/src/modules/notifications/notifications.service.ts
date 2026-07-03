@@ -149,4 +149,66 @@ export class NotificationService {
 
     await this.repo.createBulk(institutionId, notificationsInput);
   }
+
+  async notifyHomeworkPosted(
+    institutionId: string,
+    sectionId: string,
+    subjectName: string,
+    title: string,
+    dueDate: string | null,
+    env?: any
+  ): Promise<void> {
+    if (!this.db) return;
+
+    // Find students enrolled in this section + their parent users
+    const { results: studentUsers } = await this.db.prepare(`
+      SELECT DISTINCT s.user_id
+      FROM student_enrollments se
+      JOIN students s ON se.student_id = s.id
+      WHERE se.section_id = ? AND se.is_active = 1 AND s.is_active = 1 AND s.user_id IS NOT NULL
+    `).bind(sectionId).all<{ user_id: string }>();
+
+    // Also find parent/guardian user accounts linked to students in this section
+    const { results: parentUsers } = await this.db.prepare(`
+      SELECT DISTINCT g.user_id
+      FROM student_enrollments se
+      JOIN students s ON se.student_id = s.id
+      JOIN guardians g ON g.student_id = s.id
+      WHERE se.section_id = ? AND se.is_active = 1 AND s.is_active = 1 AND g.user_id IS NOT NULL AND g.is_active = 1
+    `).bind(sectionId).all<{ user_id: string }>();
+
+    const allUserIds = [
+      ...(studentUsers || []).map(r => r.user_id),
+      ...(parentUsers || []).map(r => r.user_id),
+    ];
+
+    const uniqueUserIds = [...new Set(allUserIds)];
+    if (uniqueUserIds.length === 0) return;
+
+    const dueDateStr = dueDate ? ` Due: ${dueDate}.` : '';
+    const notificationsInput = uniqueUserIds.map(userId => ({
+      user_id: userId,
+      title: `📚 New Homework: ${subjectName}`,
+      message: `${title}.${dueDateStr}`,
+      type: 'general' as const,
+    }));
+
+    await this.repo.createBulk(institutionId, notificationsInput);
+
+    // Also send Web Push if env is available
+    if (env) {
+      try {
+        const { sendPushToUsers } = await import('../../utils/webpush');
+        await sendPushToUsers(env, this.db, uniqueUserIds, {
+          title: `📚 New Homework: ${subjectName}`,
+          body: `${title}${dueDateStr}`,
+          icon: '/icons/icon-192.png',
+          url: '/homework',
+          tag: 'homework',
+        });
+      } catch (e) {
+        console.warn('[NotificationService] Web push failed (non-fatal):', e);
+      }
+    }
+  }
 }

@@ -649,4 +649,27 @@ system.post('/backup/restore', requireRole('admin', 'super_admin', 'Principal'),
   }
 });
 
+// --- VAPID KEY GENERATION (run once, save to .dev.vars / wrangler secrets) ---
+system.get('/vapid-keys', requireRole('admin', 'super_admin'), async (c) => {
+  // Generate an EC P-256 key pair for VAPID
+  const keyPair = await crypto.subtle.generateKey(
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    true,
+    ['sign', 'verify']
+  );
+
+  const privateKey = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+  const publicKey = await crypto.subtle.exportKey('raw', keyPair.publicKey);
+
+  const toBase64Url = (buf: ArrayBuffer) =>
+    btoa(String.fromCharCode(...new Uint8Array(buf)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+  return c.json({
+    publicKey: toBase64Url(publicKey),
+    privateKey: toBase64Url(privateKey),
+    instructions: 'Add VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY to your .dev.vars and wrangler secrets'
+  });
+});
+
 export default system;

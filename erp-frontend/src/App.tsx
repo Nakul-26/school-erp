@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
@@ -49,11 +50,15 @@ import Certificates from './pages/Certificates';
 import Messaging from './pages/Messaging';
 import TimetablePage from './pages/TimetablePage';
 import SchoolSetup from './pages/SchoolSetup';
+import Visitors from './pages/Visitors';
+import Assets from './pages/Assets';
+import Alumni from './pages/Alumni';
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <ToastProvider>
+        <Router>
         <Routes>
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
@@ -141,6 +146,12 @@ function App() {
 
           {/* ── Data Tools (V2 merged) ───────────────────────────────────── */}
           <Route path="/data-tools" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><DataTools /></ProtectedRoute>} />
+          
+          {/* ── Remaining Modules (Phase 5) ─────────────────────────────── */}
+          <Route path="/visitors" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><Visitors /></ProtectedRoute>} />
+          <Route path="/assets" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><Assets /></ProtectedRoute>} />
+          <Route path="/alumni" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><Alumni /></ProtectedRoute>} />
+          
           {/* Legacy redirects */}
           <Route path="/exports" element={<Navigate to="/data-tools" replace />} />
           <Route path="/imports" element={<Navigate to="/data-tools?tab=import" replace />} />
@@ -150,6 +161,7 @@ function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

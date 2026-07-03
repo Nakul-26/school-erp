@@ -1430,3 +1430,166 @@ select, input[type="date"], input[type="text"], input[type="email"], input[type=
     background: white !important;
   }
 }
+
+/* ==========================================================================
+   Phase 2: Tablet Sidebar Collapse & Mobile Bottom Navigation
+   ========================================================================== */
+
+/* Collapsed Sidebar on Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root {
+    --sidebar-width: 64px !important;
+  }
+
+  .sidebar {
+    width: var(--sidebar-width) !important;
+    overflow-x: hidden !important;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .sidebar:hover {
+    width: 260px !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Hide textual details and dropdowns when collapsed and not hovered */
+  .sidebar:not(:hover) .sidebar-brand-text,
+  .sidebar:not(:hover) .sidebar-user-pill .sidebar-user-info,
+  .sidebar:not(:hover) .sidebar-user-pill svg,
+  .sidebar:not(:hover) select,
+  .sidebar:not(:hover) .nav-link span:not(.lucide),
+  .sidebar:not(:hover) .nav-link span {
+    opacity: 0 !important;
+    transition: opacity 0.15s ease-out;
+  }
+
+  /* Specifically target name labels within NavLinks to keep icons visible */
+  .sidebar:not(:hover) .nav-link span {
+    display: none !important;
+  }
+
+  .sidebar:not(:hover) .sidebar-user-pill {
+    padding: 0.5rem !important;
+    justify-content: center !important;
+  }
+  .sidebar:not(:hover) .sidebar-user-pill span {
+    display: none !important;
+  }
+
+  .sidebar:not(:hover) .sidebar-brand-text {
+    display: none !important;
+  }
+
+  .sidebar:not(:hover) select {
+    display: none !important;
+  }
+  
+  /* Remove section headings in collapsed mode */
+  .sidebar:not(:hover) nav > div > div:first-child {
+    font-size: 0 !important;
+    line-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .sidebar:not(:hover) nav > div > div:first-child span {
+    display: none !important;
+  }
+}
+
+/* Mobile Bottom Navigation Layout & Style */
+.bottom-nav {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex !important;
+  }
+
+  .layout-body {
+    padding-bottom: 60px !important;
+  }
+
+  .bottom-nav-link {
+    color: #64748b !important;
+    transition: all 0.2s;
+  }
+
+  .bottom-nav-link:hover {
+    color: #e2e8f0 !important;
+  }
+
+  .bottom-nav-link.active {
+    color: var(--primary) !important;
+  }
+}
+
+/* Responsive layout controls for Attendance registers */
+@media (min-width: 768px) {
+  .attendance-mobile-cards {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .attendance-table-desktop {
+    display: none !important;
+  }
+  .attendance-mobile-cards {
+    display: block !important;
+  }
+}
+
+/* Responsive layout controls for Timetables */
+@media (min-width: 768px) {
+  .timetable-timeline-mobile {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .timetable-table-desktop {
+    display: none !important;
+  }
+  .timetable-timeline-mobile {
+    display: block !important;
+  }
+
+  /* Hide scrollbar on day selectors but keep swipability */
+  .day-selector-scroll::-webkit-scrollbar {
+    display: none !important;
+  }
+}
+
+/* Toast animations */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Skeleton loader shimmer animation */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+
+
+

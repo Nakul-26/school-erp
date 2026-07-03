@@ -45,13 +45,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for API calls
-  if (url.pathname.startsWith('/auth') ||
-      url.pathname.startsWith('/dashboard') ||
-      url.pathname.startsWith('/homework') ||
-      url.pathname.startsWith('/notifications') ||
-      url.pathname.startsWith('/attendance') ||
-      url.pathname.startsWith('/fees')) {
+  // Network-first for API calls (prevent caching backend JSON responses)
+  const isApiCall = url.origin.includes('localhost:8787') ||
+                     url.pathname.startsWith('/auth') ||
+                     url.pathname.startsWith('/dashboard') ||
+                     url.pathname.startsWith('/students') ||
+                     url.pathname.startsWith('/teachers') ||
+                     url.pathname.startsWith('/sections') ||
+                     url.pathname.startsWith('/subjects') ||
+                     url.pathname.startsWith('/exams') ||
+                     url.pathname.startsWith('/attendance') ||
+                     url.pathname.startsWith('/homework') ||
+                     url.pathname.startsWith('/announcements') ||
+                     url.pathname.startsWith('/notifications') ||
+                     url.pathname.startsWith('/fees') ||
+                     url.pathname.startsWith('/messaging') ||
+                     url.pathname.startsWith('/payroll') ||
+                     url.pathname.startsWith('/leave') ||
+                     url.pathname.startsWith('/library') ||
+                     url.pathname.startsWith('/transport') ||
+                     url.pathname.startsWith('/assets') ||
+                     url.pathname.startsWith('/visitors') ||
+                     url.pathname.startsWith('/alumni') ||
+                     url.pathname.startsWith('/classes');
+
+  if (isApiCall) {
     event.respondWith(
       fetch(event.request).catch(() => new Response(JSON.stringify({ error: 'offline' }), {
         headers: { 'Content-Type': 'application/json' }

@@ -34,6 +34,17 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET and cross-origin requests
   if (event.request.method !== 'GET') return;
 
+  // Handle navigation requests (browser page refreshes/direct entry) by serving index.html
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      caches.match('/index.html').then(cached => {
+        // Fallback to caching '/' or fetching from network if not cached
+        return cached || caches.match('/') || fetch(event.request);
+      })
+    );
+    return;
+  }
+
   // Network-first for API calls
   if (url.pathname.startsWith('/auth') ||
       url.pathname.startsWith('/dashboard') ||

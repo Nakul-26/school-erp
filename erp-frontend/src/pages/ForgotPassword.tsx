@@ -28,7 +28,7 @@ export default function ForgotPassword() {
     <div className="auth-container">
       <div className="auth-card">
         <h2>Forgot Password</h2>
-        <p style={{ marginBottom: '1rem', color: '#666' }}>Enter your email and we'll send you a reset link.</p>
+        <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>Enter your email and we'll send you a reset link.</p>
         <form onSubmit={handleSubmit}>
           <div className="input-group">
             <label>Email</label>
@@ -40,8 +40,8 @@ export default function ForgotPassword() {
               placeholder="you@college.edu"
             />
           </div>
-          {error && <p style={{ color: 'red', fontSize: '0.875rem' }}>{error}</p>}
-          {message && <p style={{ color: 'green', fontSize: '0.875rem' }}>{message}</p>}
+          {error && <p style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{error}</p>}
+          {message && <p style={{ color: 'var(--success)', fontSize: '0.875rem' }}>{message}</p>}
           <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
             {loading ? 'Sending...' : 'Send Reset Link'}
           </button>

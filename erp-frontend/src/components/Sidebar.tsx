@@ -21,10 +21,11 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
   const navigate = useNavigate();
 
-  const isAdmin = roles.some(r => ['super_admin', 'Super Admin', 'admin', 'Principal'].includes(r));
-  const isHOD = roles.some(r => ['HOD', 'hod'].includes(r));
-  const isTeacher = roles.some(r => ['Teacher', 'teacher'].includes(r));
-  const isAccountant = roles.some(r => ['Accountant', 'accountant'].includes(r));
+  const normalizedRoles = roles.map(r => r.toLowerCase().replace(' ', '_').replace('role-', ''));
+  const isAdmin = normalizedRoles.some(r => ['super_admin', 'admin', 'principal'].includes(r));
+  const isHOD = normalizedRoles.some(r => ['hod'].includes(r));
+  const isTeacher = normalizedRoles.some(r => ['teacher'].includes(r));
+  const isAccountant = normalizedRoles.some(r => ['accountant'].includes(r));
   const canAdmin = isAdmin || isHOD;
   const canStaff = isAdmin || isHOD || isTeacher;
 
@@ -34,7 +35,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
 
   // Multi-branch state (Phase C)
   const [branches, setBranches] = useState<any[]>([]);
-  const isSuperAdmin = roles.some(r => ['super_admin', 'Super Admin'].includes(r));
+  const isSuperAdmin = normalizedRoles.some(r => ['super_admin'].includes(r));
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -288,13 +289,38 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       </nav>
 
       {/* User pill */}
-      <div className="sidebar-user-pill" style={{ cursor: 'pointer' }} onClick={handleLogout} title="Click to logout">
+      <div 
+        className="sidebar-user-pill" 
+        style={{ cursor: 'pointer' }} 
+        onClick={() => { navigate('/profile'); if (onNavigate) onNavigate(); }} 
+        title="View profile"
+      >
         <div className="sidebar-user-avatar">{initials}</div>
         <div className="sidebar-user-info">
           <div className="sidebar-user-name">{displayName}</div>
-          <div className="sidebar-user-role">{roleLabel} · tap to logout</div>
+          <div className="sidebar-user-role">{roleLabel}</div>
         </div>
-        <LogOut size={13} style={{ color: '#475569', flexShrink: 0 }} />
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handleLogout(); }}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '4px',
+            color: '#475569',
+            transition: 'color 0.15s, background 0.15s'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+          title="Logout"
+        >
+          <LogOut size={13} style={{ flexShrink: 0 }} />
+        </button>
       </div>
     </div>
   );

@@ -86,7 +86,6 @@ export default function BottomNav({ roles }: BottomNavProps) {
       height: '60px',
       backgroundColor: '#0d1117',
       borderTop: '1px solid #161b22',
-      display: 'none', // Shown only via css media queries
       justifyContent: 'space-around',
       alignItems: 'center',
       zIndex: 1000,

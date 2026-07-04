@@ -67,7 +67,7 @@ export default function ResetPassword() {
               required 
             />
           </div>
-          {error && <p style={{ color: 'red', fontSize: '0.875rem' }}>{error}</p>}
+          {error && <p style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{error}</p>}
           <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
             {loading ? 'Resetting...' : 'Reset Password'}
           </button>

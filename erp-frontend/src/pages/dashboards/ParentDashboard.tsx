@@ -177,7 +177,7 @@ export default function ParentDashboard({
             )}
           </div>
 
-          <div className="dashboard-content-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
+          <div className="dashboard-content-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))', gap: '2rem' }}>
             {/* Left Column: Academics */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               {/* Child Results Table */}

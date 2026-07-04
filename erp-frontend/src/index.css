@@ -276,15 +276,25 @@ body {
   scrollbar-color: #cbd5e1 transparent;
 }
 
-.main-content::-webkit-scrollbar {
-  width: 6px;
+/* Global slim scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
-.main-content::-webkit-scrollbar-track {
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
   background: transparent;
 }
-.main-content::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
 /* ── Page Header ─────────────────────────────────────────────────────────── */
@@ -725,6 +735,14 @@ select, input[type="date"], input[type="text"], input[type="email"], input[type=
   /* Auth card: tighter padding */
   .auth-card {
     padding: 2rem 1.5rem;
+  }
+
+  /* Receipt & Report card preview responsiveness */
+  .receipt-print-container, .tc-box, #printable-report-card {
+    padding: 1rem !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 }
 
@@ -1587,6 +1605,27 @@ select, input[type="date"], input[type="text"], input[type="email"], input[type=
   }
   100% {
     background-position: 200% 0;
+  }
+}
+
+/* Messaging Page Responsive Design */
+@media (max-width: 768px) {
+  .chat-container {
+    grid-template-columns: 1fr !important;
+    height: calc(100vh - 180px) !important;
+  }
+  
+  .chat-container > div:first-child {
+    display: var(--contacts-display, flex) !important;
+  }
+  
+  .chat-container > div:last-child {
+    display: var(--chat-display, none) !important;
+  }
+
+  .mobile-back-btn {
+    display: inline-flex !important;
+    align-items: center;
   }
 }
 

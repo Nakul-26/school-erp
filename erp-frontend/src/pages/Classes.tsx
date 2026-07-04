@@ -688,7 +688,8 @@ export default function Classes() {
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Loading sections database...</span>
               </div>
             ) : (
-              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'rgba(248, 250, 252, 0.5)' }}>
                     <th style={{ textAlign: 'left', padding: '1rem' }}>Section details</th>
@@ -807,7 +808,8 @@ export default function Classes() {
                     </tr>
                   )}
                 </tbody>
-              </table>
+                </table>
+              </div>
             )}
           </div>
         </>

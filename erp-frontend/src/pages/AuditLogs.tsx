@@ -151,60 +151,62 @@ export default function AuditLogs() {
         </button>
       </form>
 
-      <div className="card" style={{ overflow: 'hidden' }}>
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
           <p style={{ padding: '2rem', color: 'var(--text-muted)', textAlign: 'center' }}>Loading audit logs...</p>
         ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th style={{ width: '170px' }}>Timestamp</th>
-                <th>User</th>
-                <th style={{ width: '200px' }}>Action</th>
-                <th style={{ width: '120px' }}>Module</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map(log => (
-                <tr key={log.id}>
-                  <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                    {new Date(log.timestamp).toLocaleString()}
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{log.user_name}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{log.user_email}</div>
-                  </td>
-                  <td>
-                    <span className={`badge ${getActionBadgeColor(log.action)}`} style={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
-                      {log.action}
-                    </span>
-                  </td>
-                  <td>
-                    <code style={{ background: '#f1f5f9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase' }}>
-                      {log.module}
-                    </code>
-                  </td>
-                  <td>
-                    <div style={{ fontSize: '0.875rem' }}>{log.description}</div>
-                    {log.record_id && (
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
-                        ID: <code style={{ background: '#f1f5f9', padding: '0.1rem 0.25rem', borderRadius: '3px' }}>{log.record_id}</code>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {logs.length === 0 && (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="table">
+              <thead>
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '3rem' }}>
-                    <ClipboardList size={32} style={{ color: 'var(--text-muted)', opacity: 0.4, display: 'block', margin: '0 auto 0.75rem' }} />
-                    <p style={{ color: 'var(--text-muted)', margin: 0 }}>No audit logs found matching your filters.</p>
-                  </td>
+                  <th style={{ width: '170px' }}>Timestamp</th>
+                  <th>User</th>
+                  <th style={{ width: '200px' }}>Action</th>
+                  <th style={{ width: '120px' }}>Module</th>
+                  <th>Description</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {logs.map(log => (
+                  <tr key={log.id}>
+                    <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                      {new Date(log.timestamp).toLocaleString()}
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{log.user_name}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{log.user_email}</div>
+                    </td>
+                    <td>
+                      <span className={`badge ${getActionBadgeColor(log.action)}`} style={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                        {log.action}
+                      </span>
+                    </td>
+                    <td>
+                      <code style={{ background: '#f1f5f9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                        {log.module}
+                      </code>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: '0.875rem' }}>{log.description}</div>
+                      {log.record_id && (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                          ID: <code style={{ background: '#f1f5f9', padding: '0.1rem 0.25rem', borderRadius: '3px' }}>{log.record_id}</code>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {logs.length === 0 && (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '3rem' }}>
+                      <ClipboardList size={32} style={{ color: 'var(--text-muted)', opacity: 0.4, display: 'block', margin: '0 auto 0.75rem' }} />
+                      <p style={{ color: 'var(--text-muted)', margin: 0 }}>No audit logs found matching your filters.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

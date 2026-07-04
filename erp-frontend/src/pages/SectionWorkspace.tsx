@@ -939,7 +939,7 @@ export default function SectionWorkspace() {
                     <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <AlertTriangle size={18} style={{ color: '#ef4444' }} /> Below Threshold (&lt; {riskThreshold}%)
                     </h4>
-                    <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ minHeight: '60px', maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {attendanceReport
                         .filter(r => {
                           const sSessions = r.total_sessions || 0;
@@ -957,7 +957,7 @@ export default function SectionWorkspace() {
                           );
                         })}
                       {atRiskStudentsCount === 0 && (
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>No students below threshold! Excellent.</span>
+                        <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', padding: '1rem 0' }}>No students below threshold! Excellent.</div>
                       )}
                     </div>
                   </div>
@@ -1258,7 +1258,7 @@ export default function SectionWorkspace() {
             {/* REPORTS TAB */}
             {activeTab === 'reports' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '1.5rem' }}>
                   {/* Top Performers Card */}
                   <div className="card" style={{ padding: '1.5rem' }}>
                     <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Top Attendance Performers</h4>
@@ -1352,7 +1352,7 @@ export default function SectionWorkspace() {
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minHeight: '80px', maxHeight: '240px', overflowY: 'auto' }}>
                           {folderDocs.map(doc => (
                             <div key={doc.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '0.4rem', backgroundColor: '#f8fafc', borderRadius: '4px', fontSize: '0.8rem' }}>
                               <span 
@@ -1371,7 +1371,7 @@ export default function SectionWorkspace() {
                             </div>
                           ))}
                           {folderDocs.length === 0 && (
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontStyle: 'italic', textAlign: 'center', padding: '1rem 0' }}>Empty Folder</span>
+                            <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic', padding: '1.5rem 0' }}>Empty Folder</div>
                           )}
                         </div>
                       </div>

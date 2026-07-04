@@ -960,7 +960,7 @@ export default function SubjectWorkspace() {
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Students with attendance levels below the mandated 75% threshold:</p>
               
-              <div style={{ marginTop: '1rem', maxHeight: '250px', overflowY: 'auto' }}>
+              <div style={{ marginTop: '1rem', minHeight: '60px', maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                 {students.filter(s => s.attendance_percent !== null && s.attendance_percent < 75).map(s => (
                   <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--border)' }}>
                     <span>{s.first_name} {s.last_name} ({s.section_name})</span>
@@ -979,7 +979,7 @@ export default function SubjectWorkspace() {
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Students struggling with low grades (average marks &lt; 40%):</p>
               
-              <div style={{ marginTop: '1rem', maxHeight: '250px', overflowY: 'auto' }}>
+              <div style={{ marginTop: '1rem', minHeight: '60px', maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                 {students.filter(s => s.marks_avg !== null && s.marks_avg < 40).map(s => (
                   <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--border)' }}>
                     <span>{s.first_name} {s.last_name} ({s.section_name})</span>

@@ -280,7 +280,7 @@ export default function Transport() {
         <>
           {activeTab === 'routes' && (
             // Route List Grid
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '1.5rem' }}>
               {filteredRoutes.length === 0 ? (
                 <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem' }}>
                   <Bus size={48} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />

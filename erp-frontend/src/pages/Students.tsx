@@ -796,7 +796,7 @@ export default function Students() {
         <>
           {viewMode === 'grid' ? (
             /* Card Grid View (Premium Dashboard Layout with Checkboxes) */
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
               {students.map(s => (
                 <div 
                   className="card" 

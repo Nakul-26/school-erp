@@ -3,7 +3,7 @@ import Layout from '../components/Layout';
 import { PageGuidance } from '../components/PageGuidance';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { Send, Search, User, MessageSquare, Shield, Clock } from 'lucide-react';
+import { Send, Search, User, MessageSquare, Shield, Clock, ArrowLeft } from 'lucide-react';
 
 interface Contact {
   id: string;
@@ -157,7 +157,9 @@ export default function Messaging() {
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
         boxShadow: 'var(--shadow-sm)',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        ['--contacts-display' as any]: activeContactId ? 'none' : 'flex',
+        ['--chat-display' as any]: activeContactId ? 'flex' : 'none'
       }} className="chat-container">
         
         {/* Left Panel: Contacts list */}
@@ -262,6 +264,14 @@ export default function Messaging() {
                 gap: '0.75rem',
                 backgroundColor: '#ffffff'
               }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveContactId('')}
+                  className="mobile-back-btn btn btn-outline btn-sm"
+                  style={{ display: 'none', padding: '0.35rem 0.5rem', marginRight: '0.5rem' }}
+                >
+                  <ArrowLeft size={16} />
+                </button>
                 <div style={{
                   width: '40px',
                   height: '40px',

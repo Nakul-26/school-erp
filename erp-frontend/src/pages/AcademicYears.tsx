@@ -395,7 +395,8 @@ export default function AcademicYears() {
                 <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Lifecycle management of terms</span>
               </div>
               <div style={{ padding: '1rem' }}>
-                <table className="table">
+                <div className="table-responsive">
+                  <table className="table">
                   <thead>
                     <tr>
                       <th>Name</th>
@@ -455,6 +456,7 @@ export default function AcademicYears() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           </div>
@@ -646,7 +648,7 @@ export default function AcademicYears() {
             </div>
 
             {students.length > 0 && (
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+              <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflowX: 'auto' }}>
                 <table className="table" style={{ margin: 0 }}>
                   <thead>
                     <tr style={{ background: '#f1f5f9' }}>

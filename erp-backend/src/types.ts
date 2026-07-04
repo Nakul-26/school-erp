@@ -6,6 +6,7 @@ export interface Env {
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
   VAPID_SUBJECT?: string;
+  FRONTEND_URL?: string;
 }
 
 export interface JwtPayload extends Record<string, unknown> {

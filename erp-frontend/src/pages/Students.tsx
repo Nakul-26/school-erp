@@ -5,19 +5,46 @@ import {
   Plus, Search, Eye, Edit2, ChevronLeft, ChevronRight, 
   Check, Calendar, User, Phone, Mail, GraduationCap, Grid, List, ArrowLeft 
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
 export default function Students() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Filter States
-  const [search, setSearch] = useState('');
-  const [selectedProgram, setSelectedProgram] = useState('');
-  const [selectedSection, setSelectedSection] = useState('');
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const toast = useToast();
+
+  const search = searchParams.get('search') || '';
+  const selectedProgram = searchParams.get('program_id') || '';
+  const selectedSection = searchParams.get('section_id') || '';
+  const selectedAcademicYear = searchParams.get('academic_year_id') || '';
+  const selectedStatus = searchParams.get('status') || '';
+
+  const updateSearchParam = (key: string, value: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (value) {
+        next.set(key, value);
+      } else {
+        next.delete(key);
+      }
+      if (key !== 'page') {
+        next.set('page', '1');
+      }
+      return next;
+    }, { replace: true });
+  };
+
+  const setSearch = (val: string | ((prev: string) => string)) => {
+    const value = typeof val === 'function' ? val(search) : val;
+    updateSearchParam('search', value);
+  };
+  const setSelectedProgram = (value: string) => updateSearchParam('program_id', value);
+  const setSelectedSection = (value: string) => updateSearchParam('section_id', value);
+  const setSelectedAcademicYear = (value: string) => updateSearchParam('academic_year_id', value);
+  const setSelectedStatus = (value: string) => updateSearchParam('status', value);
 
   // Dropdowns Metadata
   const [academicYears, setAcademicYears] = useState<any[]>([]);
@@ -25,7 +52,11 @@ export default function Students() {
   const [sections, setSections] = useState<any[]>([]);
 
   // Pagination States
-  const [page, setPage] = useState(1);
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const setPage = (val: number | ((prev: number) => number)) => {
+    const value = typeof val === 'function' ? val(page) : val;
+    updateSearchParam('page', value.toString());
+  };
   const [totalStudents, setTotalStudents] = useState(0);
   const limit = 12; // 12 cards per page (ideal for 3/4 column grid)
 
@@ -38,10 +69,9 @@ export default function Students() {
   const [bulkSectionId, setBulkSectionId] = useState('');
 
   // Toast notifications
-  const [toast, setToast] = useState<{message: string; type: 'success'|'error'} | null>(null);
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
+    if (type === 'success') toast.success(message);
+    else toast.error(message);
   };
 
   // Modals
@@ -1243,18 +1273,7 @@ export default function Students() {
           </div>
         </div>
       )}
-      {toast && (
-        <div style={{
-          position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999,
-          padding: '1rem 1.5rem', borderRadius: 'var(--radius-md)',
-          background: toast.type === 'success' ? '#10b981' : '#ef4444',
-          color: 'white', fontWeight: 700, fontSize: '0.875rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-          display: 'flex', alignItems: 'center', gap: '0.5rem', maxWidth: '380px'
-        }}>
-          {toast.type === 'success' ? '✓' : '✕'} {toast.message}
-        </div>
-      )}
+      {/* Toast notifications managed globally */}
     </Layout>
   );
 }

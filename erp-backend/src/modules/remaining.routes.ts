@@ -4,7 +4,7 @@ import { authMiddleware, requireRole } from '../middleware/auth';
 import { createAuditLog } from '../utils/audit';
 
 // Helper to generate UUIDs locally if needed
-const generateUuid = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+const generateUuid = () => crypto.randomUUID();
 
 // ─── VISITOR REGISTER ────────────────────────────────────────────────────────
 

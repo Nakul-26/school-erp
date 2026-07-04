@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS institutions (
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   institution_id TEXT NOT NULL REFERENCES institutions(id),
-  username TEXT UNIQUE NOT NULL,
+  username TEXT NOT NULL,
   email TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_by TEXT,
   updated_by TEXT,
   
+  UNIQUE(institution_id, username),
   UNIQUE(institution_id, email)
 );
 

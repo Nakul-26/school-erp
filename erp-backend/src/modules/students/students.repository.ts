@@ -313,10 +313,13 @@ export class StudentRepository {
   }
 
   async softDelete(id: string, userId?: string): Promise<void> {
-    await this.db.prepare(`
-      UPDATE students 
-      SET is_active = 0, deleted_at = datetime('now'), updated_by = ? 
-      WHERE id = ?
-    `).bind(userId || null, id).run();
+    const stmts = [
+      this.db.prepare(`UPDATE students SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE id = ?`).bind(userId || null, id),
+      this.db.prepare(`UPDATE student_enrollments SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id),
+      this.db.prepare(`UPDATE student_fee_records SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id),
+      this.db.prepare(`UPDATE guardians SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id),
+      this.db.prepare(`UPDATE student_attendance SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id)
+    ];
+    await this.db.batch(stmts);
   }
 }

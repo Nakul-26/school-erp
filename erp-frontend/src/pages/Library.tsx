@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import { PageGuidance } from '../components/PageGuidance';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { 
   Book, BookOpen, Plus, Search, Calendar, User, 
   CheckCircle, AlertCircle, XCircle, Info, Landmark, 
@@ -72,10 +73,10 @@ export default function Library() {
   });
 
   const [studentSearch, setStudentSearch] = useState('');
-  const [toast, setToast] = useState<{message: string; type: 'success'|'error'} | null>(null);
+  const toastCtx = useToast();
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
+    if (type === 'success') toastCtx.success(message);
+    else toastCtx.error(message);
   };
 
   const userRoles = user?.roles || (user?.role ? [user.role] : []);
@@ -622,18 +623,7 @@ export default function Library() {
           </div>
         </div>
       )}
-      {toast && (
-        <div style={{
-          position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999,
-          padding: '1rem 1.5rem', borderRadius: 'var(--radius-md)',
-          background: toast.type === 'success' ? '#10b981' : '#ef4444',
-          color: 'white', fontWeight: 700, fontSize: '0.875rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-          display: 'flex', alignItems: 'center', gap: '0.5rem'
-        }}>
-          {toast.type === 'success' ? '✓' : '✕'} {toast.message}
-        </div>
-      )}
+      {/* Toast notifications managed globally */}
     </Layout>
   );
 }

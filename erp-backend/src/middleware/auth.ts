@@ -36,6 +36,9 @@ export function requireRole(...roles: string[]) {
   };
 }
 
+const PERMISSION_CACHE = new Map<string, { permissions: string[]; expiresAt: number }>();
+const CACHE_TTL_MS = 30000; // 30 seconds
+
 export function requirePermission(...permissions: string[]) {
   return async (c: Context<{ Bindings: Env; Variables: { user: JwtPayload } }>, next: Next) => {
     const user = c.get('user');
@@ -47,8 +50,21 @@ export function requirePermission(...permissions: string[]) {
       return await next();
     }
 
-    const repo = new UserRepository(c.env.DB);
-    const userPermissions = await repo.getUserPermissions(user.sub);
+    const now = Date.now();
+    const cacheKey = `${user.institution_id}:${user.sub}`;
+    const cached = PERMISSION_CACHE.get(cacheKey);
+    let userPermissions: string[];
+
+    if (cached && cached.expiresAt > now) {
+      userPermissions = cached.permissions;
+    } else {
+      const repo = new UserRepository(c.env.DB);
+      userPermissions = await repo.getUserPermissions(user.sub);
+      PERMISSION_CACHE.set(cacheKey, {
+        permissions: userPermissions,
+        expiresAt: now + CACHE_TTL_MS
+      });
+    }
     
     const hasPermission = permissions.every(p => userPermissions.includes(p));
     if (!hasPermission) {

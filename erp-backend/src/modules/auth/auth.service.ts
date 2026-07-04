@@ -97,7 +97,8 @@ export class AuthService {
       const expiry = new Date(Date.now() + 3600000).toISOString();
       await this.userRepo.update(user.id, { reset_token: resetToken, reset_expires: expiry });
 
-      const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
+      const frontendUrl = this.env.FRONTEND_URL || 'http://localhost:5173';
+      const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
       await sendEmail(this.env, {
         to: email,
         subject: 'Password Reset Request',

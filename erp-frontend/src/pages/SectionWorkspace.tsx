@@ -1,3 +1,4 @@
+import './SectionWorkspace.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
@@ -285,9 +286,9 @@ export default function SectionWorkspace() {
         description="Use this page to manage the weekly timetable, enrolled students, and teacher assignments for this class section."
         steps={["View all students enrolled in this class section.","Assign teachers to teach specific subjects in this section.","Review and build the section's weekly timetable."]}
       />
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '1rem' }}>
-          <Activity className="spinner" size={48} style={{ color: 'var(--primary)' }} />
-          <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Initializing Section Workspace...</p>
+        <div className="section-workspace-col-1">
+          <Activity className="spinner section-workspace-spinner" size={48}  />
+          <p className="section-workspace-text-3">Initializing Section Workspace...</p>
         </div>
       </Layout>
     );
@@ -296,11 +297,11 @@ export default function SectionWorkspace() {
   if (!section) {
     return (
       <Layout>
-        <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <AlertTriangle size={48} style={{ color: '#ef4444', marginBottom: '1rem' }} />
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-main)' }}>Section Not Found</h3>
-          <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 1.5rem 0' }}>The requested class or section records could not be retrieved.</p>
-          <Link to="/classes" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="section-workspace-div-4">
+          <AlertTriangle size={48} className="section-workspace-AlertTriangle-5"  />
+          <h3 className="section-workspace-title-6">Section Not Found</h3>
+          <p className="section-workspace-text-7">The requested class or section records could not be retrieved.</p>
+          <Link to="/classes" className="btn btn-primary section-workspace-btn">
             <ArrowLeft size={16} /> Back to Sections List
           </Link>
         </div>
@@ -376,145 +377,106 @@ export default function SectionWorkspace() {
   return (
     <Layout>
       {/* 1. Header */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem' }}>
+      <div className="section-workspace-row-9">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-            <Link to="/classes" style={{ color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }} className="hover-underline">
+          <div className="section-workspace-row-10">
+            <Link to="/classes" className="hover-underline section-workspace-hover-underline">
               <ArrowLeft size={16} /> All Classes
             </Link>
-            <span style={{ color: 'var(--border)' }}>•</span>
+            <span className="section-workspace-span-12">•</span>
             <span style={{ display: 'inline-block', padding: '0.125rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', backgroundColor: section.is_active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)', color: section.is_active ? '#10b981' : '#ef4444' }}>
               {section.is_active ? 'Active Workspace' : 'Archived'}
             </span>
           </div>
 
-          <h2 style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--text-main)', margin: 0, letterSpacing: '-0.025em', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <h2 className="section-workspace-row-13">
             {section.name}
-            <span style={{ fontSize: '1.125rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+            <span className="section-workspace-span-14">
               ({section.academic_year_name})
             </span>
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.975rem', marginTop: '0.35rem', fontWeight: 500 }}>
+          <p className="section-workspace-text-15">
             {section.course_name} • {institutionType === 'school' ? `Class/Grade 1` : `Year ${section.year_number}`}
           </p>
         </div>
 
         {/* Quick Actions Panel */}
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button 
-            className="btn btn-secondary" 
-            onClick={() => navigate(`/attendance?section_id=${id}`)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, padding: '0.625rem 1.125rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}
-          >
-            <ClipboardCheck size={18} style={{ color: 'var(--primary)' }} /> Mark Attendance
+        <div className="section-workspace-row-16">
+          <button className="btn btn-secondary section-workspace-btn" onClick={() => navigate(`/attendance?section_id=${id}`)}>
+            <ClipboardCheck size={18} className="section-workspace-ClipboardCheck-18"  /> Mark Attendance
           </button>
           
-          <button 
-            className="btn btn-secondary" 
-            onClick={() => setShowAnnouncementModal(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, padding: '0.625rem 1.125rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}
-          >
-            <Bell size={18} style={{ color: 'var(--primary)' }} /> Broadcast Notice
+          <button className="btn btn-secondary section-workspace-btn" onClick={() => setShowAnnouncementModal(true)}>
+            <Bell size={18} className="section-workspace-Bell-20"  /> Broadcast Notice
           </button>
 
-          <button 
-            className="btn btn-secondary" 
-            onClick={() => setActiveTab('timetable')}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, padding: '0.625rem 1.125rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}
-          >
-            <Calendar size={18} style={{ color: 'var(--primary)' }} /> View Timetable
+          <button className="btn btn-secondary section-workspace-btn" onClick={() => setActiveTab('timetable')}>
+            <Calendar size={18} className="section-workspace-Calendar-22"  /> View Timetable
           </button>
 
-          <button 
-            className="btn btn-primary" 
-            onClick={() => setShowSettingsModal(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, padding: '0.625rem 1.125rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}
-          >
+          <button className="btn btn-primary section-workspace-btn" onClick={() => setShowSettingsModal(true)}>
             <Settings size={18} /> Settings
           </button>
         </div>
       </div>
 
       {/* 2. KPIs Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+      <div className="section-workspace-grid-24">
         
         {/* Class Teacher KPI */}
-        <div 
-          onClick={() => setActiveTab('teachers')}
-          style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-          className="hover-lift"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Class Teacher</span>
-            <Users size={16} style={{ color: 'var(--text-muted)' }} />
+        <div onClick={() => setActiveTab('teachers')} className="hover-lift section-workspace-hover-lift">
+          <div className="section-workspace-row-26">
+            <span className="section-workspace-span-27">Class Teacher</span>
+            <Users size={16} className="section-workspace-Users-28"  />
           </div>
-          <span style={{ display: 'block', fontSize: '1.125rem', fontWeight: 800, color: 'var(--text-main)' }}>
+          <span className="section-workspace-span-29">
             {section.class_teacher_name || 'Unassigned'}
           </span>
-          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, marginTop: '0.25rem' }}>View Profile & Contacts</span>
+          <span className="section-workspace-span-30">View Profile & Contacts</span>
         </div>
 
         {/* Room Mapped KPI */}
-        <div 
-          onClick={() => setActiveTab('settings')}
-          style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-          className="hover-lift"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Classroom Room</span>
-            <MapPin size={16} style={{ color: 'var(--text-muted)' }} />
+        <div onClick={() => setActiveTab('settings')} className="hover-lift section-workspace-hover-lift">
+          <div className="section-workspace-row-32">
+            <span className="section-workspace-span-33">Classroom Room</span>
+            <MapPin size={16} className="section-workspace-MapPin-34"  />
           </div>
-          <span style={{ display: 'block', fontSize: '1.125rem', fontWeight: 800, color: 'var(--text-main)' }}>
+          <span className="section-workspace-span-35">
             {section.room || 'No Room Mapped'}
           </span>
-          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Capacity: {section.capacity || 40} Seats</span>
+          <span className="section-workspace-span-36">Capacity: {section.capacity || 40} Seats</span>
         </div>
 
         {/* Enrollment / Fill Rate KPI */}
-        <div 
-          onClick={() => setActiveTab('students')}
-          style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-          className="hover-lift"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Students Enrolled</span>
-            <UserCheck size={16} style={{ color: 'var(--text-muted)' }} />
+        <div onClick={() => setActiveTab('students')} className="hover-lift section-workspace-hover-lift">
+          <div className="section-workspace-row-38">
+            <span className="section-workspace-span-39">Students Enrolled</span>
+            <UserCheck size={16} className="section-workspace-UserCheck-40"  />
           </div>
-          <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-main)' }}>
+          <span className="section-workspace-span-41">
             {activeStudentsCount} / {section.capacity || 40}
           </span>
-          <div style={{ width: '100%', height: '4px', backgroundColor: '#e2e8f0', borderRadius: '2px', overflow: 'hidden', marginTop: '0.5rem' }}>
+          <div className="section-workspace-div-42">
             <div style={{ width: `${Math.min(100, Math.round((activeStudentsCount / (section.capacity || 40)) * 100))}%`, height: '100%', backgroundColor: 'var(--primary)' }} />
           </div>
         </div>
 
         {/* Attendance KPI */}
-        <div 
-          onClick={() => setActiveTab('attendance')}
-          style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-          className="hover-lift"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Avg Attendance</span>
+        <div onClick={() => setActiveTab('attendance')} className="hover-lift section-workspace-hover-lift">
+          <div className="section-workspace-row-44">
+            <span className="section-workspace-span-45">Avg Attendance</span>
             <Activity size={16} style={{ color: attendancePercentage >= 85 ? '#10b981' : '#f97316' }} />
           </div>
           <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 900, color: attendancePercentage >= riskThreshold ? '#10b981' : '#ef4444' }}>
             {attendancePercentage}%
           </span>
-          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Threshold limit: 75%</span>
+          <span className="section-workspace-span-46">Threshold limit: 75%</span>
         </div>
 
         {/* Risk / Alerts KPI */}
-        <div 
-          onClick={() => {
-            setStudentsFilterRisk(true);
-            setActiveTab('students');
-          }}
-          style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-          className="hover-lift"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Students At Risk</span>
+        <div onClick={() => { setStudentsFilterRisk(true); setActiveTab('students'); }} className="hover-lift section-workspace-hover-lift">
+          <div className="section-workspace-row-48">
+            <span className="section-workspace-span-49">Students At Risk</span>
             <AlertTriangle size={16} style={{ color: atRiskStudentsCount > 0 ? '#ef4444' : 'var(--text-muted)' }} />
           </div>
           <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 900, color: atRiskStudentsCount > 0 ? '#ef4444' : 'var(--text-main)' }}>
@@ -526,25 +488,21 @@ export default function SectionWorkspace() {
         </div>
 
         {/* Fees Pending KPI */}
-        <div 
-          onClick={() => setActiveTab('reports')}
-          style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-          className="hover-lift"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Fee Defaulters</span>
-            <IndianRupee size={16} style={{ color: 'var(--text-muted)' }} />
+        <div onClick={() => setActiveTab('reports')} className="hover-lift section-workspace-hover-lift">
+          <div className="section-workspace-row-51">
+            <span className="section-workspace-span-52">Fee Defaulters</span>
+            <IndianRupee size={16} className="section-workspace-IndianRupee-53"  />
           </div>
           <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 900, color: pendingFeesCount > 0 ? '#ef4444' : 'var(--text-main)' }}>
-            {pendingFeesCount} <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>Students</span>
+            {pendingFeesCount} <span className="section-workspace-span-54">Students</span>
           </span>
-          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Click to view details</span>
+          <span className="section-workspace-span-55">Click to view details</span>
         </div>
 
       </div>
 
       {/* 3. Workspace Navigation Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', gap: '1.5rem', overflowX: 'auto', scrollbarWidth: 'none', height: '48px', alignItems: 'center' }}>
+      <div className="section-workspace-row-56">
         {[
           { tab: 'overview', label: 'Dashboard', icon: Activity },
           { tab: 'students', label: `Roster (${activeStudentsCount})`, icon: Users },
@@ -589,28 +547,28 @@ export default function SectionWorkspace() {
       </div>
 
       {/* 4. Tab Contents */}
-      <div style={{ minHeight: '400px' }}>
+      <div className="section-workspace-div-57">
         {tabLoading && activeTab !== 'overview' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem', gap: '1rem' }}>
-            <Activity className="spinner" size={32} style={{ color: 'var(--primary)' }} />
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading workspace components...</span>
+          <div className="section-workspace-col-58">
+            <Activity className="spinner section-workspace-spinner" size={32}  />
+            <span className="section-workspace-span-60">Loading workspace components...</span>
           </div>
         ) : (
           <div>
             {/* OVERVIEW DASHBOARD */}
             {activeTab === 'overview' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="section-workspace-grid-61">
+                <div className="section-workspace-col-62">
                   {/* Today's Schedule Card */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                      <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Clock size={18} style={{ color: 'var(--primary)' }} /> Today's Schedule
+                  <div className="card section-workspace-card">
+                    <div className="section-workspace-row-64">
+                      <h4 className="section-workspace-row-65">
+                        <Clock size={18} className="section-workspace-Clock-66"  /> Today's Schedule
                       </h4>
                       <button className="btn btn-sm btn-secondary" onClick={() => setActiveTab('timetable')}>Weekly Grid</button>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div className="section-workspace-col-67">
                       {todaysSchedule.map((item, index) => {
                         const status = getPeriodStatus(item.start_time, item.end_time);
                         return (
@@ -628,7 +586,7 @@ export default function SectionWorkspace() {
                               borderLeft: status === 'current' ? '4px solid var(--primary)' : '1px solid var(--border)'
                             }}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div className="section-workspace-row-68">
                               <div style={{ 
                                 padding: '0.35rem 0.75rem', 
                                 borderRadius: 'var(--radius-sm)', 
@@ -640,18 +598,18 @@ export default function SectionWorkspace() {
                                 Period {index + 1}
                               </div>
                               <div>
-                                <span style={{ fontWeight: 700, color: 'var(--text-main)', display: 'block', fontSize: '0.95rem' }}>{item.subject_name}</span>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.teacher_name}</span>
+                                <span className="section-workspace-span-69">{item.subject_name}</span>
+                                <span className="section-workspace-span-70">{item.teacher_name}</span>
                               </div>
                             </div>
 
-                            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            <div className="section-workspace-row-71">
+                              <span className="section-workspace-row-72">
                                 <Clock size={14} /> {item.start_time} - {item.end_time}
                               </span>
 
                               {status === 'current' && (
-                                <span style={{ fontSize: '0.7rem', padding: '0.125rem 0.5rem', borderRadius: '4px', backgroundColor: '#dcfce7', color: '#15803d', fontWeight: 700, textTransform: 'uppercase' }}>
+                                <span className="section-workspace-span-73">
                                   Ongoing
                                 </span>
                               )}
@@ -660,7 +618,7 @@ export default function SectionWorkspace() {
                         );
                       })}
                       {todaysSchedule.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        <div className="section-workspace-div-74">
                           No classes scheduled for today ({todayDay}). Free day!
                         </div>
                       )}
@@ -668,28 +626,28 @@ export default function SectionWorkspace() {
                   </div>
 
                   {/* Upcoming Exams List */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                      <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <FileText size={18} style={{ color: 'var(--primary)' }} /> Upcoming Exams
+                  <div className="card section-workspace-card">
+                    <div className="section-workspace-row-76">
+                      <h4 className="section-workspace-row-77">
+                        <FileText size={18} className="section-workspace-FileText-78"  /> Upcoming Exams
                       </h4>
                       <button className="btn btn-sm btn-secondary" onClick={() => setActiveTab('exams')}>Full Schedule</button>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
+                    <div className="section-workspace-grid-79">
                       {filteredExams.slice(0, 2).map(exam => (
-                        <div key={exam.id} style={{ border: '1px solid var(--border)', padding: '1rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-surface)' }}>
+                        <div key={exam.id} className="section-workspace-div-80">
                           <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', padding: '0.125rem 0.5rem', borderRadius: '4px', backgroundColor: exam.status === 'PUBLISHED' ? '#dcfce7' : '#f1f5f9', color: exam.status === 'PUBLISHED' ? '#15803d' : '#475569', display: 'inline-block', marginBottom: '0.5rem' }}>
                             {exam.status}
                           </span>
-                          <span style={{ display: 'block', fontWeight: 800, color: 'var(--text-main)', fontSize: '1rem', marginBottom: '0.25rem' }}>{exam.name}</span>
-                          <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          <span className="section-workspace-span-81">{exam.name}</span>
+                          <span className="section-workspace-span-82">
                             {new Date(exam.start_date).toLocaleDateString()} - {new Date(exam.end_date).toLocaleDateString()}
                           </span>
                         </div>
                       ))}
                       {filteredExams.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        <div className="section-workspace-div-83">
                           No upcoming exams scheduled.
                         </div>
                       )}
@@ -697,22 +655,22 @@ export default function SectionWorkspace() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="section-workspace-col-84">
                   {/* Class Teacher Details Card */}
-                  <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--bg-surface)' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem' }}>Class Teacher</h4>
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-title-86">Class Teacher</h4>
                     {section.class_teacher_name ? (
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '9999px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', fontSize: '1.25rem', fontWeight: 800 }}>
+                      <div className="section-workspace-row-87">
+                        <div className="section-workspace-row-88">
                           {section.class_teacher_name.charAt(0)}
                         </div>
                         <div>
-                          <span style={{ display: 'block', fontWeight: 700, color: 'var(--text-main)' }}>{section.class_teacher_name}</span>
-                          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Class Advisor</span>
+                          <span className="section-workspace-span-89">{section.class_teacher_name}</span>
+                          <span className="section-workspace-span-90">Class Advisor</span>
                         </div>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      <div className="section-workspace-col-91">
                         <span>No class teacher has been assigned yet.</span>
                         <button className="btn btn-sm btn-secondary" onClick={() => setShowSettingsModal(true)}>Assign Teacher</button>
                       </div>
@@ -720,32 +678,32 @@ export default function SectionWorkspace() {
                   </div>
 
                   {/* Section Health Card */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem' }}>Section Health</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-title-93">Section Health</h4>
+                    <div className="section-workspace-col-94">
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>Attendance Rate</span>
+                        <div className="section-workspace-row-95">
+                          <span className="section-workspace-span-96">Attendance Rate</span>
                           <span style={{ color: attendancePercentage >= riskThreshold ? '#10b981' : '#ef4444' }}>{attendancePercentage}%</span>
                         </div>
-                        <div style={{ width: '100%', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px' }}>
+                        <div className="section-workspace-div-97">
                           <div style={{ width: `${attendancePercentage}%`, height: '100%', borderRadius: '3px', backgroundColor: attendancePercentage >= riskThreshold ? '#10b981' : '#ef4444' }} />
                         </div>
                       </div>
 
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>Enrollment fill rate</span>
+                        <div className="section-workspace-row-98">
+                          <span className="section-workspace-span-99">Enrollment fill rate</span>
                           <span>{Math.round(activeStudentsCount / (section.capacity || 40) * 100)}%</span>
                         </div>
-                        <div style={{ width: '100%', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px' }}>
+                        <div className="section-workspace-div-100">
                           <div style={{ width: `${Math.round(activeStudentsCount / (section.capacity || 40) * 100)}%`, height: '100%', borderRadius: '3px', backgroundColor: 'var(--primary)' }} />
                         </div>
                       </div>
 
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>Fee Collection Rate</span>
+                        <div className="section-workspace-row-101">
+                          <span className="section-workspace-span-102">Fee Collection Rate</span>
                           {(() => {
                             const totalCollected = feeRecords.reduce((acc, f) => acc + (f.paid_amount || 0), 0);
                             const totalAmount = feeRecords.reduce((acc, f) => acc + (f.total_amount || 0), 0);
@@ -762,7 +720,7 @@ export default function SectionWorkspace() {
                           const totalAmount = feeRecords.reduce((acc, f) => acc + (f.total_amount || 0), 0);
                           const rate = totalAmount > 0 ? Math.round(totalCollected / totalAmount * 100) : 100;
                           return (
-                            <div style={{ width: '100%', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px' }}>
+                            <div className="section-workspace-div-103">
                               <div style={{ width: `${rate}%`, height: '100%', borderRadius: '3px', backgroundColor: '#8b5cf6' }} />
                             </div>
                           );
@@ -776,21 +734,15 @@ export default function SectionWorkspace() {
 
             {/* STUDENTS TAB */}
             {activeTab === 'students' && (
-              <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div style={{ padding: '1rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
-                  <div style={{ position: 'relative', width: '300px' }}>
-                    <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input 
-                      type="text" 
-                      placeholder="Search roster..." 
-                      value={studentsSearch} 
-                      onChange={e => setStudentsSearch(e.target.value)} 
-                      style={{ paddingLeft: '2.25rem', width: '100%' }}
-                    />
+              <div className="card section-workspace-card">
+                <div className="section-workspace-row-105">
+                  <div className="section-workspace-div-106">
+                    <Search size={16} className="section-workspace-Search-107"  />
+                    <input type="text" placeholder="Search roster..." value={studentsSearch} onChange={e => setStudentsSearch(e.target.value)} className="section-workspace-input-108"  />
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                  <div className="section-workspace-row-109">
+                    <label className="section-workspace-row-110">
                       <input 
                         type="checkbox" 
                         checked={studentsFilterRisk} 
@@ -801,15 +753,15 @@ export default function SectionWorkspace() {
                   </div>
                 </div>
 
-                <table className="table" style={{ width: '100%' }}>
+                <table className="table section-workspace-table">
                   <thead>
-                    <tr style={{ backgroundColor: 'rgba(248, 250, 252, 0.5)' }}>
-                      <th style={{ textAlign: 'left', padding: '1rem' }}>Roll No.</th>
-                      <th style={{ textAlign: 'left', padding: '1rem' }}>Student Name</th>
-                      <th style={{ textAlign: 'left', padding: '1rem' }}>Admission No.</th>
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Attendance Rate</th>
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Fee Status</th>
-                      <th style={{ textAlign: 'right', padding: '1rem' }}>Quick Actions</th>
+                    <tr className="section-workspace-tr-112">
+                      <th className="section-workspace-th-113">Roll No.</th>
+                      <th className="section-workspace-th-114">Student Name</th>
+                      <th className="section-workspace-th-115">Admission No.</th>
+                      <th className="section-workspace-th-116">Attendance Rate</th>
+                      <th className="section-workspace-th-117">Fee Status</th>
+                      <th className="section-workspace-th-118">Quick Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -837,16 +789,16 @@ export default function SectionWorkspace() {
                         const hasUnpaid = recordsForStudent.some(f => f.status !== 'PAID');
 
                         return (
-                          <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover-row">
-                            <td style={{ padding: '1rem', fontWeight: 600 }}>{s.roll_number || 'N/A'}</td>
-                            <td style={{ padding: '1rem' }}>
-                              <Link to={`/students/${s.id}`} style={{ fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }} className="hover-underline">
+                          <tr key={s.id} className="hover-row section-workspace-hover-row">
+                            <td className="section-workspace-td-120">{s.roll_number || 'N/A'}</td>
+                            <td className="section-workspace-td-121">
+                              <Link to={`/students/${s.id}`} className="hover-underline section-workspace-hover-underline">
                                 {s.first_name} {s.last_name}
                               </Link>
-                              <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.email || 'No Email Mapped'}</span>
+                              <span className="section-workspace-span-123">{s.email || 'No Email Mapped'}</span>
                             </td>
-                            <td style={{ padding: '1rem' }}><code>{s.admission_number}</code></td>
-                            <td style={{ padding: '1rem', textAlign: 'center' }}>
+                            <td className="section-workspace-td-124"><code>{s.admission_number}</code></td>
+                            <td className="section-workspace-td-125">
                               <span style={{
                                 fontWeight: 700,
                                 color: studentPct < riskThreshold ? '#ef4444' : '#10b981',
@@ -858,7 +810,7 @@ export default function SectionWorkspace() {
                                 {studentPct < riskThreshold && <AlertTriangle size={12} />}
                               </span>
                             </td>
-                            <td style={{ padding: '1rem', textAlign: 'center' }}>
+                            <td className="section-workspace-td-126">
                               <span style={{
                                 display: 'inline-block',
                                 padding: '0.25rem 0.5rem',
@@ -871,8 +823,8 @@ export default function SectionWorkspace() {
                                 {hasUnpaid ? 'Unpaid' : 'Paid'}
                               </span>
                             </td>
-                            <td style={{ padding: '1rem', textAlign: 'right' }}>
-                              <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+                            <td className="section-workspace-td-127">
+                              <div className="section-workspace-row-128">
                                 <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/students/${s.id}`)}>Profile</button>
                                 <button className="btn btn-sm btn-secondary" onClick={() => alert('Feature to notify parent triggered successfully!')}>Message Parent</button>
                               </div>
@@ -882,7 +834,7 @@ export default function SectionWorkspace() {
                       })}
                     {students.length === 0 && (
                       <tr>
-                        <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                        <td colSpan={6} className="section-workspace-td-129">
                           No students are currently enrolled in this section.
                         </td>
                       </tr>
@@ -894,15 +846,15 @@ export default function SectionWorkspace() {
 
             {/* ATTENDANCE TAB */}
             {activeTab === 'attendance' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+              <div className="section-workspace-col-130">
+                <div className="section-workspace-grid-131">
                   {/* Today's Stats Card */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Today's Attendance Work</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Total Students</span>
-                        <span style={{ fontWeight: 700 }}>{activeStudentsCount} Students</span>
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-title-133">Today's Attendance Work</h4>
+                    <div className="section-workspace-col-134">
+                      <div className="section-workspace-row-135">
+                        <span className="section-workspace-span-136">Total Students</span>
+                        <span className="section-workspace-span-137">{activeStudentsCount} Students</span>
                       </div>
                       
                       {/* Attendance Sessions marked today */}
@@ -910,36 +862,36 @@ export default function SectionWorkspace() {
                         const todayStr = new Date().toISOString().split('T')[0];
                         const sessionsToday = attendanceSessions.filter(s => s.date === todayStr);
                         return (
-                          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', marginTop: '0.25rem' }}>
-                            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Today's Sessions ({sessionsToday.length})</span>
+                          <div className="section-workspace-div-138">
+                            <span className="section-workspace-span-139">Today's Sessions ({sessionsToday.length})</span>
                             {sessionsToday.length > 0 ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              <div className="section-workspace-col-140">
                                 {sessionsToday.map(s => (
-                                  <div key={s.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem', padding: '0.4rem', backgroundColor: '#f8fafc', borderRadius: '4px' }}>
-                                    <span style={{ fontWeight: 600 }}>{s.subject_name}</span>
-                                    <span style={{ color: 'var(--text-muted)' }}>{s.start_time || 'General Slot'}</span>
+                                  <div key={s.id} className="section-workspace-row-141">
+                                    <span className="section-workspace-span-142">{s.subject_name}</span>
+                                    <span className="section-workspace-span-143">{s.start_time || 'General Slot'}</span>
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <span style={{ fontSize: '0.8rem', color: '#c2410c', fontWeight: 600 }}>No attendance sessions marked yet today.</span>
+                              <span className="section-workspace-span-144">No attendance sessions marked yet today.</span>
                             )}
                           </div>
                         );
                       })()}
 
-                      <button className="btn btn-primary" onClick={() => navigate(`/attendance?section_id=${id}`)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', width: '100%', marginTop: '0.5rem' }}>
+                      <button className="btn btn-primary section-workspace-btn" onClick={() => navigate(`/attendance?section_id=${id}`)}>
                         <ClipboardCheck size={18} /> Mark Today's Attendance
                       </button>
                     </div>
                   </div>
 
                   {/* Below Threshold List */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <AlertTriangle size={18} style={{ color: '#ef4444' }} /> Below Threshold (&lt; {riskThreshold}%)
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-row-147">
+                      <AlertTriangle size={18} className="section-workspace-AlertTriangle-148"  /> Below Threshold (&lt; {riskThreshold}%)
                     </h4>
-                    <div style={{ minHeight: '60px', maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div className="section-workspace-col-149">
                       {attendanceReport
                         .filter(r => {
                           const sSessions = r.total_sessions || 0;
@@ -950,47 +902,47 @@ export default function SectionWorkspace() {
                         .map(r => {
                           const sPct = Math.round(((r.present_count || 0) + (r.late_count || 0)) / r.total_sessions * 100);
                           return (
-                            <div key={r.student_id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '6px' }}>
-                              <span style={{ fontWeight: 650, fontSize: '0.85rem' }}>{r.first_name} {r.last_name}</span>
-                              <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '0.85rem' }}>{sPct}%</span>
+                            <div key={r.student_id} className="section-workspace-row-150">
+                              <span className="section-workspace-span-151">{r.first_name} {r.last_name}</span>
+                              <span className="section-workspace-span-152">{sPct}%</span>
                             </div>
                           );
                         })}
                       {atRiskStudentsCount === 0 && (
-                        <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', padding: '1rem 0' }}>No students below threshold! Excellent.</div>
+                        <div className="section-workspace-row-153">No students below threshold! Excellent.</div>
                       )}
                     </div>
                   </div>
                 </div>
 
                 {/* Recent Sessions list */}
-                <div className="card" style={{ padding: '1.5rem' }}>
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem' }}>Recent Attendance Sessions Log</h4>
-                  <table className="table" style={{ width: '100%' }}>
+                <div className="card section-workspace-card">
+                  <h4 className="section-workspace-title-155">Recent Attendance Sessions Log</h4>
+                  <table className="table section-workspace-table">
                     <thead>
-                      <tr style={{ backgroundColor: 'rgba(248, 250, 252, 0.5)' }}>
-                        <th style={{ textAlign: 'left', padding: '0.75rem' }}>Session Date</th>
-                        <th style={{ textAlign: 'left', padding: '0.75rem' }}>Subject Mapped</th>
-                        <th style={{ textAlign: 'left', padding: '0.75rem' }}>Teacher Assigned</th>
-                        <th style={{ textAlign: 'center', padding: '0.75rem' }}>Timetable Period</th>
-                        <th style={{ textAlign: 'right', padding: '0.75rem' }}>Actions</th>
+                      <tr className="section-workspace-tr-157">
+                        <th className="section-workspace-th-158">Session Date</th>
+                        <th className="section-workspace-th-159">Subject Mapped</th>
+                        <th className="section-workspace-th-160">Teacher Assigned</th>
+                        <th className="section-workspace-th-161">Timetable Period</th>
+                        <th className="section-workspace-th-162">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {attendanceSessions.slice(0, 5).map(session => (
-                        <tr key={session.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td style={{ padding: '0.75rem', fontWeight: 600 }}>{session.date}</td>
-                          <td style={{ padding: '0.75rem' }}>{session.subject_name}</td>
-                          <td style={{ padding: '0.75rem' }}>{session.teacher_name}</td>
-                          <td style={{ padding: '0.75rem', textAlign: 'center' }}>{session.slot_name || 'General'}</td>
-                          <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                        <tr key={session.id} className="section-workspace-tr-163">
+                          <td className="section-workspace-td-164">{session.date}</td>
+                          <td className="section-workspace-td-165">{session.subject_name}</td>
+                          <td className="section-workspace-td-166">{session.teacher_name}</td>
+                          <td className="section-workspace-td-167">{session.slot_name || 'General'}</td>
+                          <td className="section-workspace-td-168">
                             <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/attendance?session_id=${session.id}`)}>Edit Marks</button>
                           </td>
                         </tr>
                       ))}
                       {attendanceSessions.length === 0 && (
                         <tr>
-                          <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No historical attendance sessions logged.</td>
+                          <td colSpan={5} className="section-workspace-td-169">No historical attendance sessions logged.</td>
                         </tr>
                       )}
                     </tbody>
@@ -1001,29 +953,29 @@ export default function SectionWorkspace() {
 
             {/* TIMETABLE TAB */}
             {activeTab === 'timetable' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
+              <div className="section-workspace-col-170">
+                <div className="section-workspace-grid-171">
                   
                   {/* Status Panel */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Schedule status</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-title-173">Schedule status</h4>
+                    <div className="section-workspace-col-174">
                       {/* Current Period Highlight */}
                       {(() => {
                         const current = todaysSchedule.find(t => getPeriodStatus(t.start_time, t.end_time) === 'current');
                         return (
                           <div style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: current ? 'rgba(16, 185, 129, 0.05)' : '#f8fafc' }}>
-                            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Current active class</span>
+                            <span className="section-workspace-span-175">Current active class</span>
                             {current ? (
                               <>
-                                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)', display: 'block' }}>{current.subject_name}</span>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.125rem' }}>by {current.teacher_name}</span>
-                                <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.5rem' }}>
+                                <span className="section-workspace-span-176">{current.subject_name}</span>
+                                <span className="section-workspace-span-177">by {current.teacher_name}</span>
+                                <span className="section-workspace-row-178">
                                   <Clock size={12} /> Ends at {current.end_time}
                                 </span>
                               </>
                             ) : (
-                              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>No ongoing class right now. (Free Period / Break)</span>
+                              <span className="section-workspace-span-179">No ongoing class right now. (Free Period / Break)</span>
                             )}
                           </div>
                         );
@@ -1033,18 +985,18 @@ export default function SectionWorkspace() {
                       {(() => {
                         const nextSlot = todaysSchedule.find(t => getPeriodStatus(t.start_time, t.end_time) === 'upcoming');
                         return (
-                          <div style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: '#f8fafc' }}>
-                            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Next Scheduled Period</span>
+                          <div className="section-workspace-div-180">
+                            <span className="section-workspace-span-181">Next Scheduled Period</span>
                             {nextSlot ? (
                               <>
-                                <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', display: 'block' }}>{nextSlot.subject_name}</span>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.125rem' }}>by {nextSlot.teacher_name}</span>
-                                <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.5rem' }}>
+                                <span className="section-workspace-span-182">{nextSlot.subject_name}</span>
+                                <span className="section-workspace-span-183">by {nextSlot.teacher_name}</span>
+                                <span className="section-workspace-row-184">
                                   <Clock size={12} /> Starts at {nextSlot.start_time}
                                 </span>
                               </>
                             ) : (
-                              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>No upcoming classes for the rest of today.</span>
+                              <span className="section-workspace-span-185">No upcoming classes for the rest of today.</span>
                             )}
                           </div>
                         );
@@ -1053,31 +1005,31 @@ export default function SectionWorkspace() {
                   </div>
 
                   {/* Weekly Timeline Grid */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Weekly Schedule Overview</h4>
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-title-187">Weekly Schedule Overview</h4>
+                    <div className="section-workspace-div-188">
+                      <table className="section-workspace-table-189">
                         <thead>
-                          <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                            <th style={{ textAlign: 'left', padding: '0.5rem', color: 'var(--text-muted)' }}>Day</th>
-                            <th style={{ textAlign: 'left', padding: '0.5rem', color: 'var(--text-muted)' }}>Schedule slots details</th>
+                          <tr className="section-workspace-tr-190">
+                            <th className="section-workspace-th-191">Day</th>
+                            <th className="section-workspace-th-192">Schedule slots details</th>
                           </tr>
                         </thead>
                         <tbody>
                           {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
                             const slots = timetable.filter(t => t.day_of_week === day).sort((a, b) => a.start_time.localeCompare(b.start_time));
                             return (
-                              <tr key={day} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <tr key={day} className="section-workspace-tr-193">
                                 <td style={{ padding: '0.75rem 0.5rem', fontWeight: 700, color: day === todayDay ? 'var(--primary)' : 'var(--text-main)' }}>{day}</td>
-                                <td style={{ padding: '0.75rem 0.5rem' }}>
-                                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <td className="section-workspace-td-194">
+                                  <div className="section-workspace-row-195">
                                     {slots.map(s => (
-                                      <div key={s.id} style={{ padding: '0.4rem 0.625rem', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-                                        <span style={{ fontWeight: 650, color: 'var(--text-main)' }}>{s.subject_name}</span>
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{s.start_time} - {s.end_time}</span>
+                                      <div key={s.id} className="section-workspace-col-196">
+                                        <span className="section-workspace-span-197">{s.subject_name}</span>
+                                        <span className="section-workspace-span-198">{s.start_time} - {s.end_time}</span>
                                       </div>
                                     ))}
-                                    {slots.length === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No slots scheduled</span>}
+                                    {slots.length === 0 && <span className="section-workspace-span-199">No slots scheduled</span>}
                                   </div>
                                 </td>
                               </tr>
@@ -1093,9 +1045,9 @@ export default function SectionWorkspace() {
 
             {/* SUBJECTS TAB */}
             {activeTab === 'subjects' && (
-              <div className="card" style={{ padding: '1.5rem' }}>
-                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Mapped Course Subjects</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+              <div className="card section-workspace-card">
+                <h4 className="section-workspace-title-201">Mapped Course Subjects</h4>
+                <div className="section-workspace-grid-202">
                   {allSubjects
                     .filter(sub => sub.course_id === section.course_id)
                     .map(sub => {
@@ -1105,28 +1057,28 @@ export default function SectionWorkspace() {
                       const mappedTeacher = firstSlot ? firstSlot.teacher_name : 'No Teacher Assigned';
 
                       return (
-                        <div key={sub.id} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '1.25rem', backgroundColor: 'var(--bg-surface)' }}>
-                          <span style={{ float: 'right', fontSize: '0.75rem', fontWeight: 700, padding: '0.125rem 0.5rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                        <div key={sub.id} className="section-workspace-div-203">
+                          <span className="section-workspace-span-204">
                             {sub.credits || '3'} Credits
                           </span>
-                          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{sub.subject_code}</span>
-                          <span style={{ display: 'block', fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', margin: '0.25rem 0 0.75rem 0' }}>{sub.subject_name}</span>
+                          <span className="section-workspace-span-205">{sub.subject_code}</span>
+                          <span className="section-workspace-span-206">{sub.subject_name}</span>
                           
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem', fontSize: '0.85rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <span style={{ color: 'var(--text-muted)' }}>Instructor</span>
-                              <span style={{ fontWeight: 600 }}>{mappedTeacher}</span>
+                          <div className="section-workspace-col-207">
+                            <div className="section-workspace-row-208">
+                              <span className="section-workspace-span-209">Instructor</span>
+                              <span className="section-workspace-span-210">{mappedTeacher}</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <span style={{ color: 'var(--text-muted)' }}>Classes Mapped/Week</span>
-                              <span style={{ fontWeight: 600 }}>{subjectSlots.length} Classes</span>
+                            <div className="section-workspace-row-211">
+                              <span className="section-workspace-span-212">Classes Mapped/Week</span>
+                              <span className="section-workspace-span-213">{subjectSlots.length} Classes</span>
                             </div>
                           </div>
                         </div>
                       );
                     })}
                   {allSubjects.filter(sub => sub.course_id === section.course_id).length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No subjects mapped to this Program/Class.</div>
+                    <div className="section-workspace-div-214">No subjects mapped to this Program/Class.</div>
                   )}
                 </div>
               </div>
@@ -1134,37 +1086,37 @@ export default function SectionWorkspace() {
 
             {/* TEACHERS TAB */}
             {activeTab === 'teachers' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
+              <div className="section-workspace-col-215">
+                <div className="section-workspace-grid-216">
                   
                   {/* Class Teacher Card */}
-                  <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', alignSelf: 'flex-start' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Class Teacher Details</h4>
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-title-218">Class Teacher Details</h4>
                     {section.class_teacher_name ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '72px', height: '72px', borderRadius: '9999px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 800 }}>
+                      <div className="section-workspace-col-219">
+                        <div className="section-workspace-row-220">
                           {section.class_teacher_name.charAt(0)}
                         </div>
                         <div>
-                          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-main)', display: 'block' }}>{section.class_teacher_name}</span>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block' }}>Primary Section Advisor</span>
+                          <span className="section-workspace-span-221">{section.class_teacher_name}</span>
+                          <span className="section-workspace-span-222">Primary Section Advisor</span>
                         </div>
-                        <span style={{ display: 'inline-block', fontSize: '0.8rem', padding: '0.25rem 0.75rem', borderRadius: '9999px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontWeight: 700 }}>
+                        <span className="section-workspace-span-223">
                           Active Duty
                         </span>
                       </div>
                     ) : (
-                      <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1.5rem 0' }}>
-                        <Users size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
-                        <p style={{ margin: 0, fontSize: '0.9rem' }}>No Class Advisor assigned yet.</p>
+                      <div className="section-workspace-div-224">
+                        <Users size={32} className="section-workspace-Users-225"  />
+                        <p className="section-workspace-text-226">No Class Advisor assigned yet.</p>
                       </div>
                     )}
                   </div>
 
                   {/* Subject Teachers Directory */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Subject Instructors Directory</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-title-228">Subject Instructors Directory</h4>
+                    <div className="section-workspace-col-229">
                       {(() => {
                         const added = new Set();
                         const uniqueTimetableTeachers = timetable.filter(t => {
@@ -1174,22 +1126,22 @@ export default function SectionWorkspace() {
                         });
 
                         return uniqueTimetableTeachers.map(item => (
-                          <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                              <div style={{ width: '36px', height: '36px', borderRadius: '9999px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                          <div key={item.id} className="section-workspace-row-230">
+                            <div className="section-workspace-row-231">
+                              <div className="section-workspace-row-232">
                                 {item.teacher_name.charAt(0)}
                               </div>
                               <div>
-                                <span style={{ fontWeight: 700, color: 'var(--text-main)', display: 'block', fontSize: '0.95rem' }}>{item.teacher_name}</span>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Teaches: {item.subject_name}</span>
+                                <span className="section-workspace-span-233">{item.teacher_name}</span>
+                                <span className="section-workspace-span-234">Teaches: {item.subject_name}</span>
                               </div>
                             </div>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)' }}>Assigned via Timetable</span>
+                            <span className="section-workspace-span-235">Assigned via Timetable</span>
                           </div>
                         ));
                       })()}
                       {timetable.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No teachers mapped to weekly timetable slots.</div>
+                        <div className="section-workspace-div-236">No teachers mapped to weekly timetable slots.</div>
                       )}
                     </div>
                   </div>
@@ -1199,28 +1151,28 @@ export default function SectionWorkspace() {
 
             {/* EXAMS TAB */}
             {activeTab === 'exams' && (
-              <div className="card" style={{ padding: '1.5rem' }}>
-                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Exam Schedules & Statuses</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="card section-workspace-card">
+                <h4 className="section-workspace-title-238">Exam Schedules & Statuses</h4>
+                <div className="section-workspace-col-239">
                   {filteredExams.map(exam => (
-                    <div key={exam.id} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '1.25rem', display: 'flex', justifyItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div key={exam.id} className="section-workspace-row-240">
                       <div>
                         <span style={{ display: 'inline-block', fontSize: '0.7rem', padding: '0.125rem 0.5rem', borderRadius: '4px', backgroundColor: exam.status === 'PUBLISHED' ? '#dcfce7' : '#fef3c7', color: exam.status === 'PUBLISHED' ? '#15803d' : '#b45309', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem' }}>
                           {exam.status}
                         </span>
-                        <span style={{ display: 'block', fontWeight: 800, fontSize: '1.15rem', color: 'var(--text-main)' }}>{exam.name}</span>
-                        <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        <span className="section-workspace-span-241">{exam.name}</span>
+                        <span className="section-workspace-span-242">
                           Timeline: {new Date(exam.start_date).toLocaleDateString()} to {new Date(exam.end_date).toLocaleDateString()}
                         </span>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="section-workspace-row-243">
                         <button className="btn btn-secondary" onClick={() => navigate(`/exams`)}>View Exam dossier</button>
                       </div>
                     </div>
                   ))}
                   {filteredExams.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No exams scheduled for this Section.</div>
+                    <div className="section-workspace-div-244">No exams scheduled for this Section.</div>
                   )}
                 </div>
               </div>
@@ -1228,26 +1180,26 @@ export default function SectionWorkspace() {
 
             {/* ANNOUNCEMENTS TAB */}
             {activeTab === 'announcements' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>Section notices & Broadcasts</h4>
-                  <button className="btn btn-primary" onClick={() => setShowAnnouncementModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="section-workspace-col-245">
+                <div className="section-workspace-row-246">
+                  <h4 className="section-workspace-title-247">Section notices & Broadcasts</h4>
+                  <button className="btn btn-primary section-workspace-btn" onClick={() => setShowAnnouncementModal(true)}>
                     <Plus size={16} /> Broadcast notice
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="section-workspace-col-249">
                   {announcements.map(item => (
-                    <div key={item.id} className="card" style={{ padding: '1.25rem', backgroundColor: 'var(--bg-surface)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)' }}>{item.title}</span>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(item.created_at).toLocaleString()}</span>
+                    <div key={item.id} className="card section-workspace-card">
+                      <div className="section-workspace-row-251">
+                        <span className="section-workspace-span-252">{item.title}</span>
+                        <span className="section-workspace-span-253">{new Date(item.created_at).toLocaleString()}</span>
                       </div>
-                      <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: 0, lineHeight: 1.5 }}>{item.content}</p>
+                      <p className="section-workspace-text-254">{item.content}</p>
                     </div>
                   ))}
                   {announcements.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border)', borderRadius: '8px', color: 'var(--text-muted)' }}>
+                    <div className="section-workspace-div-255">
                       No notices have been broadcasted for this Section.
                     </div>
                   )}
@@ -1257,12 +1209,12 @@ export default function SectionWorkspace() {
 
             {/* REPORTS TAB */}
             {activeTab === 'reports' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '1.5rem' }}>
+              <div className="section-workspace-col-256">
+                <div className="section-workspace-grid-257">
                   {/* Top Performers Card */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Top Attendance Performers</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-title-259">Top Attendance Performers</h4>
+                    <div className="section-workspace-col-260">
                       {attendanceReport
                         .map(r => ({
                           ...r,
@@ -1271,34 +1223,34 @@ export default function SectionWorkspace() {
                         .sort((a, b) => b.pct - a.pct)
                         .slice(0, 3)
                         .map((student, index) => (
-                          <div key={student.student_id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '0.625rem', border: '1px solid var(--border)', borderRadius: '6px' }}>
-                            <span style={{ fontWeight: 650, fontSize: '0.85rem' }}>{index + 1}. {student.first_name} {student.last_name}</span>
-                            <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem' }}>{student.pct}%</span>
+                          <div key={student.student_id} className="section-workspace-row-261">
+                            <span className="section-workspace-span-262">{index + 1}. {student.first_name} {student.last_name}</span>
+                            <span className="section-workspace-span-263">{student.pct}%</span>
                           </div>
                         ))}
                     </div>
                   </div>
 
                   {/* Fee Collection Status Card */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Fee Collection progress</h4>
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-title-265">Fee Collection progress</h4>
                     {(() => {
                       const totalCollected = feeRecords.reduce((acc, f) => acc + (f.paid_amount || 0), 0);
                       const totalAmount = feeRecords.reduce((acc, f) => acc + (f.total_amount || 0), 0);
                       const rate = totalAmount > 0 ? Math.round(totalCollected / totalAmount * 100) : 100;
                       return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                          <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-                            <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary)' }}>₹{totalCollected.toLocaleString()}</span>
-                            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>collected of ₹{totalAmount.toLocaleString()} total</span>
+                        <div className="section-workspace-col-266">
+                          <div className="section-workspace-div-267">
+                            <span className="section-workspace-span-268">₹{totalCollected.toLocaleString()}</span>
+                            <span className="section-workspace-span-269">collected of ₹{totalAmount.toLocaleString()} total</span>
                           </div>
                           
                           <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+                            <div className="section-workspace-row-270">
                               <span>Collection Progress Rate</span>
                               <span>{rate}%</span>
                             </div>
-                            <div style={{ width: '100%', height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div className="section-workspace-div-271">
                               <div style={{ width: `${rate}%`, height: '100%', backgroundColor: 'var(--primary)' }} />
                             </div>
                           </div>
@@ -1308,20 +1260,20 @@ export default function SectionWorkspace() {
                   </div>
 
                   {/* Gender and Demographics Summary */}
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Section Demographic Distribution</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Total Enrollment Capacity</span>
-                        <span style={{ fontWeight: 700 }}>{section.capacity || 40} seats</span>
+                  <div className="card section-workspace-card">
+                    <h4 className="section-workspace-title-273">Section Demographic Distribution</h4>
+                    <div className="section-workspace-col-274">
+                      <div className="section-workspace-row-275">
+                        <span className="section-workspace-span-276">Total Enrollment Capacity</span>
+                        <span className="section-workspace-span-277">{section.capacity || 40} seats</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Seats Occupied</span>
-                        <span style={{ fontWeight: 700 }}>{activeStudentsCount} seats ({Math.round(activeStudentsCount / (section.capacity || 40) * 100)}% fill)</span>
+                      <div className="section-workspace-row-278">
+                        <span className="section-workspace-span-279">Seats Occupied</span>
+                        <span className="section-workspace-span-280">{activeStudentsCount} seats ({Math.round(activeStudentsCount / (section.capacity || 40) * 100)}% fill)</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Available Seats</span>
-                        <span style={{ fontWeight: 700, color: '#10b981' }}>{Math.max(0, (section.capacity || 40) - activeStudentsCount)} seats free</span>
+                      <div className="section-workspace-row-281">
+                        <span className="section-workspace-span-282">Available Seats</span>
+                        <span className="section-workspace-span-283">{Math.max(0, (section.capacity || 40) - activeStudentsCount)} seats free</span>
                       </div>
                     </div>
                   </div>
@@ -1331,47 +1283,42 @@ export default function SectionWorkspace() {
 
             {/* DOCUMENTS TAB */}
             {activeTab === 'documents' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>Workspace documents folders</h4>
-                  <button className="btn btn-primary" onClick={() => setShowDocumentModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="section-workspace-col-284">
+                <div className="section-workspace-row-285">
+                  <h4 className="section-workspace-title-286">Workspace documents folders</h4>
+                  <button className="btn btn-primary section-workspace-btn" onClick={() => setShowDocumentModal(true)}>
                     <Upload size={16} /> Upload file
                   </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
+                <div className="section-workspace-grid-288">
                   {['Timetable', 'Exam Schedule', 'Projects', 'Circulars', 'Photos', 'Assignments'].map(folderName => {
                     const folderDocs = documents.filter(d => d.folder === folderName);
                     return (
-                      <div key={folderName} className="card" style={{ padding: '1.25rem', border: '1px solid var(--border)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5rem' }}>
-                          <FolderOpen size={24} style={{ color: 'var(--primary)' }} />
+                      <div key={folderName} className="card section-workspace-card">
+                        <div className="section-workspace-row-290">
+                          <FolderOpen size={24} className="section-workspace-FolderOpen-291"  />
                           <div>
-                            <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', display: 'block' }}>{folderName}</span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{folderDocs.length} files</span>
+                            <span className="section-workspace-span-292">{folderName}</span>
+                            <span className="section-workspace-span-293">{folderDocs.length} files</span>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minHeight: '80px', maxHeight: '240px', overflowY: 'auto' }}>
+                        <div className="section-workspace-col-294">
                           {folderDocs.map(doc => (
-                            <div key={doc.id} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', padding: '0.4rem', backgroundColor: '#f8fafc', borderRadius: '4px', fontSize: '0.8rem' }}>
-                              <span 
-                                onClick={() => handleDownloadDocument(doc.id)} 
-                                style={{ fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}
-                                className="hover-underline"
-                                title="Download Document"
-                              >
+                            <div key={doc.id} className="section-workspace-row-295">
+                              <span onClick={() => handleDownloadDocument(doc.id)} className="hover-underline section-workspace-hover-underline" title="Download Document">
                                 {doc.name}
                               </span>
-                              <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                <button onClick={() => handleDeleteDocument(doc.id)} style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.1rem' }}>
+                              <div className="section-workspace-row-297">
+                                <button onClick={() => handleDeleteDocument(doc.id)} className="section-workspace-btn-298">
                                   <Trash2 size={12} />
                                 </button>
                               </div>
                             </div>
                           ))}
                           {folderDocs.length === 0 && (
-                            <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic', padding: '1.5rem 0' }}>Empty Folder</div>
+                            <div className="section-workspace-row-299">Empty Folder</div>
                           )}
                         </div>
                       </div>
@@ -1383,9 +1330,9 @@ export default function SectionWorkspace() {
 
             {/* TIMELINE TAB */}
             {activeTab === 'timeline' && (
-              <div className="card" style={{ padding: '1.5rem' }}>
-                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Audit Timeline Logs</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative' }}>
+              <div className="card section-workspace-card">
+                <h4 className="section-workspace-title-301">Audit Timeline Logs</h4>
+                <div className="section-workspace-col-302">
                   {timeline.map((log, index) => (
                     <div 
                       key={log.id} 
@@ -1398,24 +1345,24 @@ export default function SectionWorkspace() {
                     >
                       {/* Vertical line connector */}
                       {index !== timeline.length - 1 && (
-                        <div style={{ position: 'absolute', left: '16px', top: '32px', bottom: 0, width: '2px', backgroundColor: '#e2e8f0' }} />
+                        <div className="section-workspace-div-303"  />
                       )}
                       
                       {/* Timeline dot */}
-                      <div style={{ width: '32px', height: '32px', borderRadius: '9999px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div className="section-workspace-row-304">
                         <Activity size={16} />
                       </div>
 
                       <div>
-                        <span style={{ display: 'block', fontWeight: 750, color: 'var(--text-main)', fontSize: '0.95rem' }}>{log.description}</span>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        <span className="section-workspace-span-305">{log.description}</span>
+                        <span className="section-workspace-span-306">
                           by {log.user_name} ({log.user_email}) • {new Date(log.timestamp).toLocaleString()}
                         </span>
                       </div>
                     </div>
                   ))}
                   {timeline.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No timeline entries found.</div>
+                    <div className="section-workspace-div-307">No timeline entries found.</div>
                   )}
                 </div>
               </div>
@@ -1426,12 +1373,12 @@ export default function SectionWorkspace() {
 
       {/* --- BROADCAST ANNOUNCEMENT MODAL --- */}
       {showAnnouncementModal && (
-        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000 }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Broadcast notice to Section</h3>
-            <form onSubmit={handleCreateAnnouncement} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="modal-overlay section-workspace-modal-overlay">
+          <div className="modal-content section-workspace-modal-content">
+            <h3 className="section-workspace-title-310">Broadcast notice to Section</h3>
+            <form onSubmit={handleCreateAnnouncement} className="section-workspace-col-311">
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Title *</label>
+                <label className="section-workspace-label-312">Title *</label>
                 <input 
                   type="text" 
                   value={announcementForm.title} 
@@ -1442,7 +1389,7 @@ export default function SectionWorkspace() {
               </div>
 
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Content *</label>
+                <label className="section-workspace-label-313">Content *</label>
                 <textarea 
                   value={announcementForm.content} 
                   onChange={e => setAnnouncementForm({ ...announcementForm, content: e.target.value })} 
@@ -1453,23 +1400,23 @@ export default function SectionWorkspace() {
               </div>
 
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.5rem', display: 'block' }}>Target Audience</label>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <label style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <label className="section-workspace-label-314">Target Audience</label>
+                <div className="section-workspace-row-315">
+                  <label className="section-workspace-row-316">
                     <input 
                       type="checkbox" 
                       checked={announcementForm.visible_to_students === 1} 
                       onChange={e => setAnnouncementForm({ ...announcementForm, visible_to_students: e.target.checked ? 1 : 0 })} 
                     /> Students
                   </label>
-                  <label style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <label className="section-workspace-row-317">
                     <input 
                       type="checkbox" 
                       checked={announcementForm.visible_to_teachers === 1} 
                       onChange={e => setAnnouncementForm({ ...announcementForm, visible_to_teachers: e.target.checked ? 1 : 0 })} 
                     /> Teachers
                   </label>
-                  <label style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <label className="section-workspace-row-318">
                     <input 
                       type="checkbox" 
                       checked={announcementForm.visible_to_parents === 1} 
@@ -1479,7 +1426,7 @@ export default function SectionWorkspace() {
                 </div>
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <div className="modal-actions section-workspace-modal-actions">
                 <button type="button" onClick={() => setShowAnnouncementModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Publish</button>
               </div>
@@ -1490,13 +1437,13 @@ export default function SectionWorkspace() {
 
       {/* --- DOCUMENT UPLOAD MODAL --- */}
       {showDocumentModal && (
-        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000 }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Upload Document to Section</h3>
-            <form onSubmit={handleUploadDocument} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="modal-overlay section-workspace-modal-overlay">
+          <div className="modal-content section-workspace-modal-content">
+            <h3 className="section-workspace-title-322">Upload Document to Section</h3>
+            <form onSubmit={handleUploadDocument} className="section-workspace-col-323">
               
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Destination Folder</label>
+                <label className="section-workspace-label-324">Destination Folder</label>
                 <select 
                   value={documentForm.folder} 
                   onChange={e => setDocumentForm({ ...documentForm, folder: e.target.value })}
@@ -1511,7 +1458,7 @@ export default function SectionWorkspace() {
               </div>
 
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Select File</label>
+                <label className="section-workspace-label-325">Select File</label>
                 <input 
                   type="file" 
                   onChange={e => setDocumentForm({ ...documentForm, file: (e.target.files && e.target.files[0]) || null })}
@@ -1519,7 +1466,7 @@ export default function SectionWorkspace() {
                 />
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <div className="modal-actions section-workspace-modal-actions">
                 <button type="button" onClick={() => setShowDocumentModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={uploadingDoc}>
                   {uploadingDoc ? 'Uploading...' : 'Upload'}
@@ -1532,12 +1479,12 @@ export default function SectionWorkspace() {
 
       {/* --- SETTINGS MODAL --- */}
       {showSettingsModal && (
-        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000 }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>Edit Section configurations</h3>
-            <form onSubmit={handleUpdateSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="modal-overlay section-workspace-modal-overlay">
+          <div className="modal-content section-workspace-modal-content">
+            <h3 className="section-workspace-title-329">Edit Section configurations</h3>
+            <form onSubmit={handleUpdateSettings} className="section-workspace-col-330">
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Section Name *</label>
+                <label className="section-workspace-label-331">Section Name *</label>
                 <input 
                   type="text" 
                   value={settingsForm.name} 
@@ -1546,9 +1493,9 @@ export default function SectionWorkspace() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="section-workspace-grid-332">
                 <div className="form-group">
-                  <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Classroom Location</label>
+                  <label className="section-workspace-label-333">Classroom Location</label>
                   <input 
                     type="text" 
                     value={settingsForm.room} 
@@ -1558,7 +1505,7 @@ export default function SectionWorkspace() {
                 </div>
 
                 <div className="form-group">
-                  <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Max Capacity *</label>
+                  <label className="section-workspace-label-334">Max Capacity *</label>
                   <input 
                     type="number" 
                     value={settingsForm.capacity} 
@@ -1570,7 +1517,7 @@ export default function SectionWorkspace() {
               </div>
 
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Class Teacher / Advisor</label>
+                <label className="section-workspace-label-335">Class Teacher / Advisor</label>
                 <select 
                   value={settingsForm.class_teacher_id} 
                   onChange={e => setSettingsForm({ ...settingsForm, class_teacher_id: e.target.value })}
@@ -1582,7 +1529,7 @@ export default function SectionWorkspace() {
                 </select>
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <div className="modal-actions section-workspace-modal-actions">
                 <button type="button" onClick={() => setShowSettingsModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Settings</button>
               </div>

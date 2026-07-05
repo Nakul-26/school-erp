@@ -1,3 +1,4 @@
+import './Students.css';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -498,19 +499,19 @@ export default function Students() {
     <Layout>
       {showAddModal ? (
         <>
-          <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-            <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => { setShowAddModal(false); resetAddForm(); }}>
+          <div className="page-header students-page-header">
+            <button className="btn btn-secondary students-btn" onClick={() => { setShowAddModal(false); resetAddForm(); }}>
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)' }}>Student Admission Walkthrough</h2>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Follow the steps to register and enroll a new student profile.</p>
+              <h2 className="students-title-3">Student Admission Walkthrough</h2>
+              <p className="students-text-4">Follow the steps to register and enroll a new student profile.</p>
             </div>
           </div>
 
-          <div className="card" style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem' }}>
+          <div className="card students-card">
             {/* Stepper Progress bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
+            <div className="students-row-6">
               {[
                 { s: 1, label: 'Personal' },
                 { s: 2, label: 'Academic' },
@@ -521,7 +522,7 @@ export default function Students() {
                   <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: step === st.s ? '#e0e7ff' : step > st.s ? '#d1fae5' : '#f1f5f9', color: step === st.s ? 'var(--primary)' : step > st.s ? '#065f46' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>
                     {step > st.s ? <Check size={14} /> : st.s}
                   </div>
-                  <span style={{ fontSize: '0.8rem' }} className="stepper-label">{st.label}</span>
+                  <span className="stepper-label students-stepper-label">{st.label}</span>
                 </div>
               ))}
             </div>
@@ -530,8 +531,8 @@ export default function Students() {
               {/* STEP 1: Personal Info */}
               {step === 1 && (
                 <div>
-                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 1: Personal Information</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                  <h4 className="students-title-8">Step 1: Personal Information</h4>
+                  <div className="students-grid-9">
                     <div className="form-group">
                       <label>First Name *</label>
                       <input required type="text" value={addForm.first_name} onChange={e => setAddForm({...addForm, first_name: e.target.value})} placeholder="e.g. Alice" />
@@ -545,7 +546,7 @@ export default function Students() {
                       <input required type="text" value={addForm.last_name} onChange={e => setAddForm({...addForm, last_name: e.target.value})} placeholder="e.g. Wonder" />
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="students-grid-10">
                     <div className="form-group">
                       <label>Admission Number *</label>
                       <input required type="text" value={addForm.admission_number} onChange={e => setAddForm({...addForm, admission_number: e.target.value})} placeholder="e.g. ADM-2001" />
@@ -563,7 +564,7 @@ export default function Students() {
                     <label>Phone Number</label>
                     <input type="text" value={addForm.phone} onChange={e => setAddForm({...addForm, phone: e.target.value})} placeholder="e.g. +91 99999 88888" />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="students-grid-11">
                     <div className="form-group">
                       <label>Gender</label>
                       <select value={addForm.gender} onChange={e => setAddForm({...addForm, gender: e.target.value})}>
@@ -583,7 +584,7 @@ export default function Students() {
               {/* STEP 2: Academic Info */}
               {step === 2 && (
                 <div>
-                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 2: Academic Assignment</h4>
+                  <h4 className="students-title-12">Step 2: Academic Assignment</h4>
                   
                   <div className="form-group">
                     <label>Academic Year *</label>
@@ -622,7 +623,7 @@ export default function Students() {
               {/* STEP 3: Guardian Info */}
               {step === 3 && (
                 <div>
-                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 3: Guardian Details</h4>
+                  <h4 className="students-title-13">Step 3: Guardian Details</h4>
                   
                   <div className="form-group">
                     <label>Guardian Name</label>
@@ -654,39 +655,39 @@ export default function Students() {
               {/* STEP 4: Review Details */}
               {step === 4 && (
                 <div>
-                  <h4 style={{ marginBottom: '1rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Step 4: Review and Verify</h4>
+                  <h4 className="students-title-14">Step 4: Review and Verify</h4>
                   
-                  <div style={{ backgroundColor: '#f8fafc', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.875rem' }}>
+                  <div className="students-col-15">
                     <div>
-                      <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Personal</strong>
+                      <strong className="students-strong-16">Personal</strong>
                       <div>Name: <strong>{addForm.first_name} {addForm.middle_name ? addForm.middle_name + ' ' : ''}{addForm.last_name}</strong></div>
                       <div>Admission No: <strong>{addForm.admission_number}</strong> | Roll No: <strong>{addForm.roll_number || '-'}</strong></div>
                       <div>Gender: {addForm.gender} | DOB: {addForm.date_of_birth || '-'}</div>
                       <div>Phone: {addForm.phone || '-'} | Email: {addForm.email || '-'}</div>
                     </div>
 
-                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.75rem' }}>
-                      <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Academic Enrollment</strong>
+                    <div className="students-div-17">
+                      <strong className="students-strong-18">Academic Enrollment</strong>
                       <div>Year: {academicYears.find(y => y.id === addForm.academic_year_id)?.name || '-'}</div>
                       <div>{getProgramLabel()}: {programs.find(p => p.id === addForm.course_id)?.name || '-'}</div>
                       <div>Section: {sections.find(s => s.id === addForm.section_id)?.name || '-'}</div>
                     </div>
 
-                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.75rem' }}>
-                      <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Guardian Contacts</strong>
+                    <div className="students-div-19">
+                      <strong className="students-strong-20">Guardian Contacts</strong>
                       <div>Name: {addForm.guardian_name || '-'} ({addForm.guardian_relationship})</div>
                       <div>Phone: {addForm.guardian_phone || '-'} | Email: {addForm.guardian_email || '-'}</div>
                     </div>
                   </div>
 
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '1rem', textAlign: 'center' }}>
+                  <p className="students-text-21">
                     Confirming will automatically register the student profile, establish the class enrollment record, and instantiate ledger entries matching active fee structures.
                   </p>
                 </div>
               )}
 
               {/* Stepper Buttons */}
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+              <div className="modal-actions students-modal-actions">
                 <button type="button" onClick={() => { setShowAddModal(false); resetAddForm(); }} className="btn btn-secondary">Cancel</button>
                 {step > 1 && (
                   <button type="button" onClick={handlePrevStep} className="btn btn-outline">Back</button>
@@ -702,14 +703,14 @@ export default function Students() {
         </>
       ) : (
         <>
-          <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <div className="page-header students-page-header">
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)' }}>Student Hub</h2>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Manage student admissions, enrollments, profiles, and fee ledgers.</p>
+          <h2 className="students-title-24">Student Hub</h2>
+          <p className="students-text-25">Manage student admissions, enrollments, profiles, and fee ledgers.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div className="students-row-26">
           {/* View Toggles */}
-          <div style={{ display: 'flex', backgroundColor: '#e2e8f0', borderRadius: 'var(--radius-sm)', padding: '0.2rem' }}>
+          <div className="students-row-27">
             <button 
               onClick={() => setViewMode('grid')}
               style={{ border: 'none', background: viewMode === 'grid' ? '#ffffff' : 'transparent', color: viewMode === 'grid' ? 'var(--primary)' : '#64748b', cursor: 'pointer', padding: '0.4rem 0.6rem', borderRadius: '4px', display: 'flex', alignItems: 'center' }}
@@ -730,21 +731,15 @@ export default function Students() {
       </div>
 
       {/* Advanced Filters Section */}
-      <div className="card filters" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', padding: '1.5rem', marginBottom: '1.5rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+      <div className="card filters students-card">
         {/* Search */}
-        <div className="search-container" style={{ flex: '1 1 250px', position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <Search size={18} style={{ position: 'absolute', left: '1rem', color: '#94a3b8' }} />
-          <input 
-            type="text" 
-            placeholder="Search by name, adm no, or roll no..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ paddingLeft: '2.5rem', width: '100%' }}
-          />
+        <div className="search-container students-search-container">
+          <Search size={18} className="students-Search-30"  />
+          <input type="text" placeholder="Search by name, adm no, or roll no..." value={search} onChange={(e) => setSearch(e.target.value)} className="students-input-31"  />
         </div>
 
         {/* Program Filter */}
-        <div style={{ flex: '1 1 150px' }}>
+        <div className="students-div-32">
           <select value={selectedProgram} onChange={e => { setSelectedProgram(e.target.value); setPage(1); }}>
             <option value="">All {getProgramsLabel()}</option>
             {programs.map(p => (
@@ -754,7 +749,7 @@ export default function Students() {
         </div>
 
         {/* Section Filter */}
-        <div style={{ flex: '1 1 120px' }}>
+        <div className="students-div-33">
           <select value={selectedSection} onChange={e => { setSelectedSection(e.target.value); setPage(1); }}>
             <option value="">All Sections</option>
             {sections.map(s => (
@@ -764,7 +759,7 @@ export default function Students() {
         </div>
 
         {/* Academic Year Filter */}
-        <div style={{ flex: '1 1 150px' }}>
+        <div className="students-div-34">
           <select value={selectedAcademicYear} onChange={e => { setSelectedAcademicYear(e.target.value); setPage(1); }}>
             <option value="">All Academic Years</option>
             {academicYears.map(y => (
@@ -774,7 +769,7 @@ export default function Students() {
         </div>
 
         {/* Status Filter */}
-        <div style={{ flex: '1 1 120px' }}>
+        <div className="students-div-35">
           <select value={selectedStatus} onChange={e => { setSelectedStatus(e.target.value); setPage(1); }}>
             <option value="">All Statuses</option>
             <option value="ACTIVE">ACTIVE</option>
@@ -789,14 +784,14 @@ export default function Students() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Loading students list...</p>
+        <div className="students-div-36">
+          <p className="students-text-37">Loading students list...</p>
         </div>
       ) : (
         <>
           {viewMode === 'grid' ? (
             /* Card Grid View (Premium Dashboard Layout with Checkboxes) */
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div className="students-grid-38">
               {students.map(s => (
                 <div 
                   className="card" 
@@ -829,54 +824,49 @@ export default function Students() {
                   }}
                 >
                   {/* Select Checkbox */}
-                  <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 10 }}>
-                    <input 
-                      type="checkbox" 
-                      checked={selectedStudentIds.includes(s.id)}
-                      onChange={e => handleSelectOne(s.id, e.target.checked)}
-                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                    />
+                  <div className="students-div-39">
+                    <input type="checkbox" checked={selectedStudentIds.includes(s.id)} onChange={e => handleSelectOne(s.id, e.target.checked)} className="students-input-40"  />
                   </div>
 
                   {/* Top block */}
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', paddingLeft: '1.75rem' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#e0e7ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.15rem' }}>
+                  <div className="students-row-41">
+                    <div className="students-row-42">
                       👤
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h4 style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+                    <div className="students-div-43">
+                      <h4 className="students-title-44">
                         {s.first_name} {s.middle_name ? s.middle_name + ' ' : ''}{s.last_name}
                       </h4>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.15rem 0 0' }}>
-                        Adm No: <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{s.admission_number}</span>
-                        {s.roll_number && <> • Roll: <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{s.roll_number}</span></>}
+                      <p className="students-text-45">
+                        Adm No: <span className="students-span-46">{s.admission_number}</span>
+                        {s.roll_number && <> • Roll: <span className="students-span-47">{s.roll_number}</span></>}
                       </p>
                     </div>
-                    <span className={`badge badge-${s.status === 'ACTIVE' ? 'success' : s.status === 'GRADUATED' ? 'success' : 'secondary'}`} style={{ alignSelf: 'flex-start' }}>
+                    <span className={`badge badge-${s.status === 'ACTIVE' ? 'success' : s.status === 'GRADUATED' ? 'success' : 'secondary'} students-span-48`}>
                       {s.status}
                     </span>
                   </div>
 
                   {/* Program and Section label */}
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.825rem', color: '#475569', backgroundColor: '#f8fafc', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid #f1f5f9' }}>
-                    <GraduationCap size={16} style={{ color: 'var(--primary)' }} />
-                    <span style={{ fontWeight: 700 }}>{s.program_name || 'Unassigned'}</span>
+                  <div className="students-row-49">
+                    <GraduationCap size={16} className="students-GraduationCap-50"  />
+                    <span className="students-span-51">{s.program_name || 'Unassigned'}</span>
                     {s.section_name && <>
-                      <span style={{ color: '#cbd5e1' }}>•</span>
+                      <span className="students-span-52">•</span>
                       <span>{s.section_name}</span>
                     </>}
                   </div>
 
                   {/* Quick summary stats */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid #f1f5f9', backgroundColor: '#fafbfb' }}>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.025em', fontWeight: 600 }}>Attendance</span>
+                  <div className="students-grid-53">
+                    <div className="students-col-54">
+                      <span className="students-span-55">Attendance</span>
                       <span style={{ fontWeight: 800, fontSize: '0.92rem', color: s.attendance_percentage >= 75 ? '#10b981' : s.attendance_percentage === 100 && s.total_sessions === 0 ? 'var(--text-muted)' : '#f59e0b' }}>
                         {s.attendance_percentage}%
                       </span>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid #f1f5f9', backgroundColor: '#fafbfb' }}>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.025em', fontWeight: 600 }}>Fee Due</span>
+                    <div className="students-col-56">
+                      <span className="students-span-57">Fee Due</span>
                       <span style={{ fontWeight: 800, fontSize: '0.92rem', color: s.fee_due > 0 ? '#ef4444' : '#10b981' }}>
                         ₹{(s.fee_due || 0).toLocaleString('en-IN')}
                       </span>
@@ -884,23 +874,23 @@ export default function Students() {
                   </div>
 
                   {/* Dynamic Action Buttons */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.25rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem', marginTop: 'auto' }}>
-                    <Link to={`/students/${s.id}?tab=overview`} className="btn btn-sm btn-outline" style={{ padding: '0.4rem 0.2rem', fontSize: '0.7rem' }} title="View Profile">View</Link>
-                    <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline" style={{ padding: '0.4rem 0.2rem', fontSize: '0.7rem' }} title="Edit Record">Edit</button>
-                    <Link to={`/students/${s.id}?tab=attendance`} className="btn btn-sm btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.68rem', backgroundColor: '#f0fdf4', color: '#166534' }} title="Attendance Details">Att.</Link>
-                    <Link to={`/students/${s.id}?tab=results`} className="btn btn-sm btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.68rem', backgroundColor: '#eff6ff', color: '#1e40af' }} title="Exam Results">Results</Link>
-                    <Link to={`/students/${s.id}?tab=fees`} className="btn btn-sm btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.68rem', backgroundColor: '#fffbeb', color: '#854d0e' }} title="Fee Ledger">Fees</Link>
+                  <div className="students-grid-58">
+                    <Link to={`/students/${s.id}?tab=overview`} className="btn btn-sm btn-outline students-btn" title="View Profile">View</Link>
+                    <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline students-btn" title="Edit Record">Edit</button>
+                    <Link to={`/students/${s.id}?tab=attendance`} className="btn btn-sm btn-secondary students-btn" title="Attendance Details">Att.</Link>
+                    <Link to={`/students/${s.id}?tab=results`} className="btn btn-sm btn-secondary students-btn" title="Exam Results">Results</Link>
+                    <Link to={`/students/${s.id}?tab=fees`} className="btn btn-sm btn-secondary students-btn" title="Fee Ledger">Fees</Link>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             /* Traditional Table View with Checkbox selection */
-            <div className="card" style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '2rem' }}>
+            <div className="card students-card">
               <table className="table">
                 <thead>
                   <tr>
-                    <th style={{ width: '40px' }}>
+                    <th className="students-th-65">
                       <input 
                         type="checkbox" 
                         checked={selectedStudentIds.length === students.length && students.length > 0} 
@@ -930,7 +920,7 @@ export default function Students() {
                       <td><strong>{s.admission_number}</strong></td>
                       <td>{s.roll_number || '-'}</td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                        <div className="students-row-66">
                           <span>👤</span>
                           <span>{s.first_name} {s.middle_name ? s.middle_name + ' ' : ''}{s.last_name}</span>
                         </div>
@@ -952,9 +942,9 @@ export default function Students() {
                         </span>
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '0.3rem' }}>
-                          <Link to={`/students/${s.id}`} className="btn btn-sm btn-outline" style={{ padding: '0.3rem 0.5rem' }}>View</Link>
-                          <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline" style={{ padding: '0.3rem 0.5rem' }}><Edit2 size={12} /></button>
+                        <div className="students-row-67">
+                          <Link to={`/students/${s.id}`} className="btn btn-sm btn-outline students-btn">View</Link>
+                          <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline students-btn"><Edit2 size={12} /></button>
                         </div>
                       </td>
                     </tr>
@@ -966,19 +956,19 @@ export default function Students() {
 
           {/* Empty state */}
           {students.length === 0 && (
-            <div className="card" style={{ textAlign: 'center', padding: '4rem 2rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '2rem' }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '0.5rem' }}>No student records found.</p>
-              <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Try clearing filters or refining your search parameters.</p>
+            <div className="card students-card">
+              <p className="students-text-71">No student records found.</p>
+              <p className="students-text-72">Try clearing filters or refining your search parameters.</p>
             </div>
           )}
 
           {/* Dynamic Pagination Controls */}
           {totalStudents > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                Showing <strong style={{ color: 'var(--text-main)' }}>{((page - 1) * limit) + 1}</strong> to <strong style={{ color: 'var(--text-main)' }}>{Math.min(page * limit, totalStudents)}</strong> of <strong style={{ color: 'var(--text-main)' }}>{totalStudents}</strong> students
+            <div className="students-row-73">
+              <span className="students-span-74">
+                Showing <strong className="students-strong-75">{((page - 1) * limit) + 1}</strong> to <strong className="students-strong-76">{Math.min(page * limit, totalStudents)}</strong> of <strong className="students-strong-77">{totalStudents}</strong> students
               </span>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div className="students-row-78">
                 <button 
                   className="btn btn-outline btn-sm" 
                   disabled={page === 1}
@@ -987,7 +977,7 @@ export default function Students() {
                 >
                   <ChevronLeft size={16} /> Prev
                 </button>
-                <div style={{ display: 'flex', alignItems: 'center', padding: '0 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                <div className="students-row-79">
                   Page {page} of {totalPages}
                 </div>
                 <button 
@@ -1006,37 +996,22 @@ export default function Students() {
 
       {/* Floating Bulk Actions Bar */}
       {selectedStudentIds.length > 0 && (
-        <div style={{
-          position: 'fixed',
-          bottom: '2rem',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: '#0f172a',
-          color: '#ffffff',
-          padding: '0.75rem 1.5rem',
-          borderRadius: 'var(--radius-md)',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1.5rem',
-          zIndex: 999,
-          animation: 'slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
-        }}>
-          <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+        <div className="students-row-80">
+          <span className="students-span-81">
             {selectedStudentIds.length} Selected
           </span>
-          <div style={{ width: '1px', height: '1.25rem', backgroundColor: '#334155' }} />
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn btn-sm btn-secondary" style={{ backgroundColor: '#1e293b', color: '#f8fafc', border: '1px solid #334155' }} onClick={() => setShowBulkSectionModal(true)}>
+          <div className="students-div-82"  />
+          <div className="students-row-83">
+            <button className="btn btn-sm btn-secondary students-btn" onClick={() => setShowBulkSectionModal(true)}>
               Assign Section
             </button>
-            <button className="btn btn-sm btn-secondary" style={{ backgroundColor: '#1e293b', color: '#f8fafc', border: '1px solid #334155' }} onClick={() => handleBulkAction('promote_semester')}>
+            <button className="btn btn-sm btn-secondary students-btn" onClick={() => handleBulkAction('promote_semester')}>
               {institutionType === 'school' ? 'Promote Class' : 'Promote Semester'}
             </button>
-            <button className="btn btn-sm btn-secondary" style={{ backgroundColor: '#1e293b', color: '#f8fafc', border: '1px solid #334155' }} onClick={handleBulkExport}>
+            <button className="btn btn-sm btn-secondary students-btn" onClick={handleBulkExport}>
               Export CSV
             </button>
-            <button className="btn btn-sm btn-danger" style={{ padding: '0.45rem 0.875rem' }} onClick={() => handleBulkAction('deactivate')}>
+            <button className="btn btn-sm btn-danger students-btn" onClick={() => handleBulkAction('deactivate')}>
               Deactivate
             </button>
           </div>
@@ -1045,9 +1020,9 @@ export default function Students() {
 
       {/* Bulk Section Modal Overlay */}
       {showBulkSectionModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '400px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-main)' }}>Bulk Section Assignment</h3>
+        <div className="modal students-modal">
+          <div className="modal-content students-modal-content">
+            <h3 className="students-title-90">Bulk Section Assignment</h3>
             <div className="form-group">
               <label>Select Target Section</label>
               <select value={bulkSectionId} onChange={e => setBulkSectionId(e.target.value)}>
@@ -1057,7 +1032,7 @@ export default function Students() {
                 ))}
               </select>
             </div>
-            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
+            <div className="modal-actions students-modal-actions">
               <button type="button" onClick={() => setShowBulkSectionModal(false)} className="btn btn-secondary">Cancel</button>
               <button type="button" className="btn btn-primary" onClick={() => handleBulkAction('assign_section', { section_id: bulkSectionId })} disabled={!bulkSectionId}>
                 Assign Section
@@ -1072,12 +1047,12 @@ export default function Students() {
 
       {/* Edit Student Modal */}
       {showEditModal && editForm && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '640px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)', animation: 'slideUp 0.3s ease-out' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Edit Student Record</h3>
+        <div className="modal students-modal">
+          <div className="modal-content students-modal-content">
+            <h3 className="students-title-94">Edit Student Record</h3>
             
             {/* Edit Modal Tabs */}
-            <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem', gap: '1rem', overflowX: 'auto', scrollbarWidth: 'none' }}>
+            <div className="students-row-95">
               {(['personal', 'academic', 'guardian', 'health'] as const).map(t => (
                 <button
                   key={t}
@@ -1104,7 +1079,7 @@ export default function Students() {
               {/* TAB 1: Personal Info */}
               {editTab === 'personal' && (
                 <div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                  <div className="students-grid-96">
                     <div className="form-group">
                       <label>First Name *</label>
                       <input required type="text" value={editForm.first_name} onChange={e => setEditForm({...editForm, first_name: e.target.value})} />
@@ -1118,7 +1093,7 @@ export default function Students() {
                       <input required type="text" value={editForm.last_name} onChange={e => setEditForm({...editForm, last_name: e.target.value})} />
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="students-grid-97">
                     <div className="form-group">
                       <label>Admission No *</label>
                       <input required type="text" value={editForm.admission_number} onChange={e => setEditForm({...editForm, admission_number: e.target.value})} />
@@ -1136,7 +1111,7 @@ export default function Students() {
                     <label>Phone</label>
                     <input type="text" value={editForm.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="students-grid-98">
                     <div className="form-group">
                       <label>Gender</label>
                       <select value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value})}>
@@ -1256,16 +1231,16 @@ export default function Students() {
                   </div>
                   <div className="form-group">
                     <label>Medical Conditions</label>
-                    <textarea value={editForm.medical_conditions} onChange={e => setEditForm({...editForm, medical_conditions: e.target.value})} placeholder="e.g. Asthma, none" rows={3} style={{ width: '100%', minHeight: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                    <textarea value={editForm.medical_conditions} onChange={e => setEditForm({...editForm, medical_conditions: e.target.value})} placeholder="e.g. Asthma, none" rows={3} className="students-textarea-99"  />
                   </div>
                   <div className="form-group">
                     <label>Allergies</label>
-                    <textarea value={editForm.allergies} onChange={e => setEditForm({...editForm, allergies: e.target.value})} placeholder="e.g. Peanuts, Penicillin, none" rows={3} style={{ width: '100%', minHeight: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                    <textarea value={editForm.allergies} onChange={e => setEditForm({...editForm, allergies: e.target.value})} placeholder="e.g. Peanuts, Penicillin, none" rows={3} className="students-textarea-100"  />
                   </div>
                 </div>
               )}
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+              <div className="modal-actions students-modal-actions">
                 <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
               </div>

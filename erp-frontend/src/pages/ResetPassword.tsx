@@ -1,3 +1,4 @@
+import './ResetPassword.css';
 import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { api } from '../services/api'
@@ -38,7 +39,7 @@ export default function ResetPassword() {
         <div className="auth-card">
           <h2>Invalid Link</h2>
           <p>No reset token found in the URL.</p>
-          <Link to="/login" className="btn btn-primary" style={{ display: 'block', textAlign: 'center', marginTop: '1rem' }}>Back to Login</Link>
+          <Link to="/login" className="btn btn-primary reset-password-btn">Back to Login</Link>
         </div>
       </div>
     )
@@ -67,8 +68,8 @@ export default function ResetPassword() {
               required 
             />
           </div>
-          {error && <p style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{error}</p>}
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
+          {error && <p className="reset-password-text-2">{error}</p>}
+          <button type="submit" className="btn btn-primary reset-password-btn" disabled={loading}>
             {loading ? 'Resetting...' : 'Reset Password'}
           </button>
         </form>

@@ -1,3 +1,4 @@
+import './Dashboard.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -284,32 +285,42 @@ export default function Dashboard() {
   return (
     <Layout>
       <PageGuidance
-        title="Dashboard Overview"
+        title="Dashboard &&&&&&&&&&&& Overview"
         description="Use this page to get a quick summary of the school's daily activities, student counts, and important alerts."
         steps={["Check the total number of students and staff members in the school.","Look at today's attendance rate and pending tasks.","Read the latest announcements posted on the board."]}
       />
       <div className="page-header">
         <h1>Dashboard Overview</h1>
+        hehe
         <button className="btn btn-outline" onClick={logout}>
-          <LogOut size={18} /> Logout
+          <LogOut size={18} /> Logoutuuuu
         </button>
       </div>
 
+      hi
+
       {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className="dashboard-col-1">
           <SkeletonLoader type="card" count={3} />
           <SkeletonLoader type="table" rows={3} cols={4} />
         </div>
       ) : error ? (
-        <div className="alert alert-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="alert alert-danger dashboard-alert">
           <AlertCircle size={18} />
           <span>{error}</span>
         </div>
       ) : (
         <>
-          <div className="welcome-section card" style={{ background: 'var(--primary-gradient)', color: 'white', marginBottom: '2rem' }}>
+          <div className="welcome-section card dashboard-welcome-section">
             <h2>Welcome back, {user?.name || user?.email}!</h2>
             <p>You are viewing the <strong>{getPortalRoleLabel()}</strong> panel. Here is your summary checklist for today.</p>
+          </div>
+
+          <div className="welcome-section card dashboard-welcome-section">
+            hi
+            hello
+            hey
+
           </div>
 
           {/* Render Portal Dashboard View */}
@@ -344,11 +355,11 @@ export default function Dashboard() {
           {stats?.role === 'accountant' && <AccountantDashboard stats={stats} />}
 
           {/* General Bottom Section: Announcements & Notifications */}
-          <div className="dashboard-grid" style={{ marginTop: '2.5rem' }}>
+          <div className="dashboard-grid dashboard-grid">
             {/* Announcements Card */}
             <div className="card dashboard-card-full">
               <div className="card-header-icon">
-                <Megaphone className="header-icon" style={{ color: 'var(--primary)' }} />
+                <Megaphone className="header-icon dashboard-header-icon"  />
                 <h3>Latest Announcements</h3>
               </div>
               {announcements.length === 0 ? (
@@ -376,7 +387,7 @@ export default function Dashboard() {
             {/* Notifications Card */}
             <div className="card dashboard-card-full">
               <div className="card-header-icon">
-                <Bell className="header-icon" style={{ color: 'var(--warning)' }} />
+                <Bell className="header-icon dashboard-header-icon"  />
                 <h3>Notifications</h3>
               </div>
               {notifications.length === 0 ? (
@@ -404,174 +415,77 @@ export default function Dashboard() {
         </>
       )}
 
-      <style>{`
-        .announcements-list, .notifications-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-        .announcement-item, .notification-item {
-          padding: 1rem;
-          border-radius: var(--radius-sm);
-          background: #f8fafc;
-          border-left: 3px solid var(--primary);
-        }
-        .notification-item.read {
-          opacity: 0.7;
-          border-left-color: var(--secondary);
-        }
-        .ann-title {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 0.5rem;
-        }
-        .ann-title h4 {
-          font-size: 0.9rem;
-          font-weight: 700;
-          margin: 0;
-        }
-        .ann-date, .notif-date {
-          font-size: 0.75rem;
-          color: var(--text-muted);
-        }
-        .announcement-item p, .notif-content p {
-          font-size: 0.825rem;
-          color: var(--text-muted);
-          margin-top: 0.25rem;
-          line-height: 1.4;
-        }
-        .view-all-link {
-          text-align: center;
-          font-size: 0.825rem;
-          color: var(--primary);
-          text-decoration: none;
-          font-weight: 600;
-          margin-top: 0.5rem;
-        }
-        .no-data {
-          color: var(--text-muted);
-          font-size: 0.875rem;
-          text-align: center;
-          padding: 2rem 0;
-        }
-        .quick-actions-grid {
-          display: flex;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
-        .action-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.25rem;
-          border-radius: var(--radius-sm);
-          background: #f1f5f9;
-          color: var(--text-main);
-          text-decoration: none;
-          font-weight: 600;
-          font-size: 0.875rem;
-          transition: all 0.2s;
-          border: 1px solid var(--border);
-        }
-        .action-btn:hover {
-          background: var(--primary);
-          color: white;
-          border-color: var(--primary);
-        }
-        .child-selector {
-          display: flex;
-          gap: 0.5rem;
-          margin-bottom: 1.5rem;
-          border-bottom: 1px solid var(--border);
-          padding-bottom: 0.75rem;
-        }
-        .child-tab {
-          padding: 0.5rem 1rem;
-          border-radius: 20px;
-          border: 1px solid var(--border);
-          background: white;
-          cursor: pointer;
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: var(--text-muted);
-          transition: all 0.2s;
-        }
-        .child-tab.active {
-          background: var(--primary);
-          color: white;
-          border-color: var(--primary);
-        }
-      `}</style>
+      
 
       {/* Report Card Modal */}
       {showReportCardModal && (
-        <div className="modal-overlay no-print" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Student Academic Report Card</h3>
-              <button onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+        <div className="modal-overlay no-print dashboard-modal-overlay" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>
+          <div className="modal-content dashboard-modal-content" onClick={e => e.stopPropagation()}>
+            <div className="dashboard-row-9">
+              <h3 className="dashboard-title-10">Student Academic Report Card</h3>
+              <button onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }} className="dashboard-btn-11">✕</button>
             </div>
             
             {loadingReportCard ? (
-              <p style={{ textAlign: 'center', padding: '2rem' }}>Building report card layout...</p>
+              <p className="dashboard-text-12">Building report card layout...</p>
             ) : selectedReportCard ? (
-              <div id="printable-report-card" style={{ padding: '1rem', backgroundColor: '#fff', color: '#000', fontFamily: 'Inter, sans-serif' }}>
-                <div style={{ textAlign: 'center', marginBottom: '1.5rem', borderBottom: '2px solid #000', paddingBottom: '1rem' }}>
-                  <h2 style={{ margin: 0, textTransform: 'uppercase', fontSize: '1.4rem', fontWeight: 800 }}>Academic Report Card</h2>
-                  <h3 style={{ margin: '0.25rem 0 0 0', fontWeight: 'bold', fontSize: '1.1rem', color: '#1e293b' }}>{selectedReportCard.exam.institution_name || 'Greenwood High School'}</h3>
+              <div id="printable-report-card" className="dashboard-div-13">
+                <div className="dashboard-div-14">
+                  <h2 className="dashboard-title-15">Academic Report Card</h2>
+                  <h3 className="dashboard-title-16">{selectedReportCard.exam.institution_name || 'Greenwood High School'}</h3>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+                <div className="dashboard-grid-17">
                   <div>
-                    <p style={{ margin: '0.25rem 0' }}><strong>Student Name:</strong> {selectedReportCard.student.first_name} {selectedReportCard.student.last_name}</p>
-                    <p style={{ margin: '0.25rem 0' }}><strong>Roll Number:</strong> {selectedReportCard.student.roll_number || '-'}</p>
-                    <p style={{ margin: '0.25rem 0' }}><strong>Admission No:</strong> {selectedReportCard.student.admission_number}</p>
+                    <p className="dashboard-text-18"><strong>Student Name:</strong> {selectedReportCard.student.first_name} {selectedReportCard.student.last_name}</p>
+                    <p className="dashboard-text-19"><strong>Roll Number:</strong> {selectedReportCard.student.roll_number || '-'}</p>
+                    <p className="dashboard-text-20"><strong>Admission No:</strong> {selectedReportCard.student.admission_number}</p>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ margin: '0.25rem 0' }}><strong>Exam:</strong> {selectedReportCard.exam.name}</p>
-                    <p style={{ margin: '0.25rem 0' }}><strong>Academic Year:</strong> {selectedReportCard.exam.academic_year}</p>
-                    <p style={{ margin: '0.25rem 0' }}><strong>Program:</strong> {selectedReportCard.exam.course}</p>
+                  <div className="dashboard-div-21">
+                    <p className="dashboard-text-22"><strong>Exam:</strong> {selectedReportCard.exam.name}</p>
+                    <p className="dashboard-text-23"><strong>Academic Year:</strong> {selectedReportCard.exam.academic_year}</p>
+                    <p className="dashboard-text-24"><strong>Program:</strong> {selectedReportCard.exam.course}</p>
                   </div>
                 </div>
 
-                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
+                <table className="table dashboard-table">
                   <thead>
-                    <tr style={{ borderBottom: '2px solid #000', backgroundColor: '#f8fafc' }}>
-                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Code</th>
-                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Name</th>
-                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Max Marks</th>
-                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Obtained</th>
-                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Percentage</th>
-                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Grade</th>
-                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>GP</th>
-                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Result</th>
+                    <tr className="dashboard-tr-26">
+                      <th className="dashboard-th-27">Subject Code</th>
+                      <th className="dashboard-th-28">Subject Name</th>
+                      <th className="dashboard-th-29">Max Marks</th>
+                      <th className="dashboard-th-30">Obtained</th>
+                      <th className="dashboard-th-31">Percentage</th>
+                      <th className="dashboard-th-32">Grade</th>
+                      <th className="dashboard-th-33">GP</th>
+                      <th className="dashboard-th-34">Result</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedReportCard.subjects.map((sub: any, idx: number) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '0.5rem' }}>{sub.subject_code}</td>
-                        <td style={{ padding: '0.5rem' }}>{sub.subject_name}</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.max_marks}</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.marks_obtained}</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.percent}%</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem', fontWeight: 'bold' }}>{sub.grade}</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.grade_point}</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                      <tr key={idx} className="dashboard-tr-35">
+                        <td className="dashboard-td-36">{sub.subject_code}</td>
+                        <td className="dashboard-td-37">{sub.subject_name}</td>
+                        <td className="dashboard-td-38">{sub.max_marks}</td>
+                        <td className="dashboard-td-39">{sub.marks_obtained}</td>
+                        <td className="dashboard-td-40">{sub.percent}%</td>
+                        <td className="dashboard-td-41">{sub.grade}</td>
+                        <td className="dashboard-td-42">{sub.grade_point}</td>
+                        <td className="dashboard-td-43">
                           <span style={{ color: sub.is_passing ? 'var(--success)' : 'var(--danger)', fontWeight: 'bold' }}>
                             {sub.is_passing ? 'PASS' : 'FAIL'}
                           </span>
                         </td>
                       </tr>
                     ))}
-                    <tr style={{ fontWeight: 'bold', borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
-                      <td colSpan={2} style={{ padding: '0.5rem' }}>GRAND TOTAL</td>
-                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.max_marks}</td>
-                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.marks_obtained}</td>
-                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.percent}%</td>
-                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.grade}</td>
-                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.grade_point}</td>
-                      <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                    <tr className="dashboard-tr-44">
+                      <td colSpan={2} className="dashboard-td-45">GRAND TOTAL</td>
+                      <td className="dashboard-td-46">{selectedReportCard.total.max_marks}</td>
+                      <td className="dashboard-td-47">{selectedReportCard.total.marks_obtained}</td>
+                      <td className="dashboard-td-48">{selectedReportCard.total.percent}%</td>
+                      <td className="dashboard-td-49">{selectedReportCard.total.grade}</td>
+                      <td className="dashboard-td-50">{selectedReportCard.total.grade_point}</td>
+                      <td className="dashboard-td-51">
                         <span style={{ color: selectedReportCard.result === 'PASS' ? 'var(--success)' : 'var(--danger)' }}>
                           {selectedReportCard.result}
                         </span>
@@ -580,27 +494,27 @@ export default function Dashboard() {
                   </tbody>
                 </table>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1.5rem', fontSize: '0.85rem', borderTop: '1px dashed #ccc', paddingTop: '1rem' }}>
+                <div className="dashboard-grid-52">
                   <div>
                     <p><strong>Rank in Class:</strong> {selectedReportCard.total.rank || 'N/A'}</p>
                   </div>
                   <div>
                     <p><strong>Attendance:</strong> {selectedReportCard.attendance_percent !== null ? `${selectedReportCard.attendance_percent}%` : 'N/A'}</p>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div className="dashboard-div-53">
                     <p><strong>Overall Result:</strong> <span style={{ fontWeight: 'bold', color: selectedReportCard.result === 'PASS' ? 'var(--success)' : 'var(--danger)' }}>{selectedReportCard.result}</span></p>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem', fontSize: '0.75rem', color: '#555' }}>
-                  <div style={{ borderTop: '1px solid #000', width: '140px', textAlign: 'center', paddingTop: '0.25rem' }}>Class Teacher</div>
-                  <div style={{ borderTop: '1px solid #000', width: '140px', textAlign: 'center', paddingTop: '0.25rem' }}>Controller of Exams</div>
-                  <div style={{ borderTop: '1px solid #000', width: '140px', textAlign: 'center', paddingTop: '0.25rem' }}>Principal</div>
+                <div className="dashboard-row-54">
+                  <div className="dashboard-div-55">Class Teacher</div>
+                  <div className="dashboard-div-56">Controller of Exams</div>
+                  <div className="dashboard-div-57">Principal</div>
                 </div>
               </div>
-            ) : <p style={{ textAlign: 'center', padding: '2rem' }}>No report card data loaded</p>}
+            ) : <p className="dashboard-text-58">No report card data loaded</p>}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }} className="no-print">
+            <div className="no-print dashboard-no-print">
               <button className="btn btn-outline" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>Close</button>
               <button className="btn btn-primary" onClick={() => window.print()} disabled={!selectedReportCard}>
                 <Printer size={16} /> Print Report Card
@@ -612,24 +526,24 @@ export default function Dashboard() {
 
       {/* Fee Receipt Modal */}
       {showReceiptModal && (
-        <div className="modal-overlay no-print" onClick={() => { setShowReceiptModal(false); setSelectedReceipt(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '750px', width: '90%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Fee Payment Receipt</h3>
-              <button onClick={() => { setShowReceiptModal(false); setSelectedReceipt(null); }} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+        <div className="modal-overlay no-print dashboard-modal-overlay" onClick={() => { setShowReceiptModal(false); setSelectedReceipt(null); }}>
+          <div className="modal-content dashboard-modal-content" onClick={e => e.stopPropagation()}>
+            <div className="dashboard-row-62">
+              <h3 className="dashboard-title-63">Fee Payment Receipt</h3>
+              <button onClick={() => { setShowReceiptModal(false); setSelectedReceipt(null); }} className="dashboard-btn-64">✕</button>
             </div>
 
             {loadingReceipt ? (
-              <p style={{ textAlign: 'center', padding: '2rem' }}>Loading receipt information...</p>
+              <p className="dashboard-text-65">Loading receipt information...</p>
             ) : selectedReceipt ? (
-              <div className="receipt-print-container" style={{ padding: '1.5rem', fontFamily: 'Courier New, monospace', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: '#fff', color: '#000' }}>
-                <div style={{ textAlign: 'center', borderBottom: '2px dashed #cbd5e1', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                  <h2 style={{ fontSize: '1.4rem', fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>{selectedReceipt.institution_name}</h2>
-                  <p style={{ margin: '0.25rem 0 0 0', color: '#475569', fontSize: '0.8rem' }}>{selectedReceipt.institution_address || 'Education Campus Road, IN'}</p>
-                  <h3 style={{ fontSize: '1.1rem', letterSpacing: '0.05em', marginTop: '0.75rem', textDecoration: 'underline' }}>FEES PAYMENT RECEIPT</h3>
+              <div className="receipt-print-container dashboard-receipt-print-container">
+                <div className="dashboard-div-67">
+                  <h2 className="dashboard-title-68">{selectedReceipt.institution_name}</h2>
+                  <p className="dashboard-text-69">{selectedReceipt.institution_address || 'Education Campus Road, IN'}</p>
+                  <h3 className="dashboard-title-70">FEES PAYMENT RECEIPT</h3>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                <div className="dashboard-grid-71">
                   <div>
                     <div><strong>Receipt No:</strong> {selectedReceipt.receipt_number}</div>
                     <div><strong>Date:</strong> {new Date(selectedReceipt.receipt_date).toLocaleDateString(undefined, { dateStyle: 'long' })}</div>
@@ -643,31 +557,31 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2rem', fontSize: '0.85rem' }}>
+                <table className="dashboard-table-72">
                   <thead>
-                    <tr style={{ borderBottom: '2px dashed #cbd5e1', borderTop: '2px dashed #cbd5e1' }}>
-                      <th style={{ textAlign: 'left', padding: '0.5rem 0' }}>FEE DESCRIPTION</th>
-                      <th style={{ textAlign: 'right', padding: '0.5rem 0' }}>TOTAL DUE</th>
-                      <th style={{ textAlign: 'right', padding: '0.5rem 0' }}>PAID AMOUNT</th>
+                    <tr className="dashboard-tr-73">
+                      <th className="dashboard-th-74">FEE DESCRIPTION</th>
+                      <th className="dashboard-th-75">TOTAL DUE</th>
+                      <th className="dashboard-th-76">PAID AMOUNT</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr style={{ borderBottom: '2px dashed #e2e8f0' }}>
-                      <td style={{ padding: '0.75rem 0' }}>{selectedReceipt.fee_type} Payment ({selectedReceipt.payment_method})</td>
-                      <td style={{ textAlign: 'right', padding: '0.75rem 0' }}>₹{selectedReceipt.total_amount.toLocaleString('en-IN')}</td>
-                      <td style={{ textAlign: 'right', padding: '0.75rem 0', fontWeight: 'bold' }}>₹{selectedReceipt.paid_amount.toLocaleString('en-IN')}</td>
+                    <tr className="dashboard-tr-77">
+                      <td className="dashboard-td-78">{selectedReceipt.fee_type} Payment ({selectedReceipt.payment_method})</td>
+                      <td className="dashboard-td-79">₹{selectedReceipt.total_amount.toLocaleString('en-IN')}</td>
+                      <td className="dashboard-td-80">₹{selectedReceipt.paid_amount.toLocaleString('en-IN')}</td>
                     </tr>
                   </tbody>
                 </table>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontSize: '0.85rem' }}>
+                <div className="dashboard-row-81">
                   <div>
                     <div><strong>Payment Method:</strong> {selectedReceipt.payment_method}</div>
                     {selectedReceipt.transaction_reference && <div><strong>Txn Reference:</strong> {selectedReceipt.transaction_reference}</div>}
                     {selectedReceipt.remarks && <div><strong>Remarks:</strong> {selectedReceipt.remarks}</div>}
                   </div>
-                  <div style={{ textAlign: 'right', width: '220px' }}>
-                    <div style={{ borderBottom: '1px solid #cbd5e1', paddingBottom: '0.25rem', marginBottom: '0.25rem' }}>
+                  <div className="dashboard-div-82">
+                    <div className="dashboard-div-83">
                       <strong>Ledger Paid:</strong> ₹{selectedReceipt.total_paid.toLocaleString('en-IN')}
                     </div>
                     <div>
@@ -676,14 +590,14 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div style={{ borderTop: '2px dashed #cbd5e1', marginTop: '2rem', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#475569' }}>
+                <div className="dashboard-row-84">
                   <div>* Computer generated receipt. No physical signature required.</div>
                   <div>Authorized Signatory</div>
                 </div>
               </div>
-            ) : <p style={{ textAlign: 'center', padding: '2rem' }}>No receipt details loaded</p>}
+            ) : <p className="dashboard-text-85">No receipt details loaded</p>}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }} className="no-print">
+            <div className="no-print dashboard-no-print">
               <button className="btn btn-outline" onClick={() => { setShowReceiptModal(false); setSelectedReceipt(null); }}>Close</button>
               <button className="btn btn-primary" onClick={() => window.print()} disabled={!selectedReceipt}>
                 <Printer size={16} /> Print Receipt
@@ -695,83 +609,70 @@ export default function Dashboard() {
 
       {/* Online Payments Checkout Modal (Phase C) */}
       {showPaymentModal && selectedFeeRecord && (
-        <div className="modal-overlay no-print" onClick={() => setShowPaymentModal(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '550px', width: '90%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Online Fee Checkout</h3>
-              <button onClick={() => { setShowPaymentModal(false); setPaymentSuccess(null); }} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+        <div className="modal-overlay no-print dashboard-modal-overlay" onClick={() => setShowPaymentModal(false)}>
+          <div className="modal-content dashboard-modal-content" onClick={e => e.stopPropagation()}>
+            <div className="dashboard-row-89">
+              <h3 className="dashboard-title-90">Online Fee Checkout</h3>
+              <button onClick={() => { setShowPaymentModal(false); setPaymentSuccess(null); }} className="dashboard-btn-91">✕</button>
             </div>
 
             {paymentSuccess ? (
-              <div style={{ textAlign: 'center', padding: '1.5rem 0.5rem' }}>
-                <div style={{
-                  width: '72px', height: '72px', borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '0 auto 1.5rem', fontSize: '2rem', color: 'white',
-                  boxShadow: '0 8px 24px rgba(16,185,129,0.3)'
-                }}>✓</div>
-                <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.35rem', fontWeight: 800 }}>Payment Successful!</h3>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+              <div className="dashboard-div-92">
+                <div className="dashboard-row-93">✓</div>
+                <h3 className="dashboard-title-94">Payment Successful!</h3>
+                <p className="dashboard-text-95">
                   Your payment has been processed and recorded.
                 </p>
-                <div style={{ background: 'var(--bg-main)', borderRadius: 'var(--radius-sm)', padding: '1rem', marginBottom: '2rem' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Receipt Number</div>
-                  <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary)', letterSpacing: '0.05em' }}>
+                <div className="dashboard-div-96">
+                  <div className="dashboard-div-97">Receipt Number</div>
+                  <div className="dashboard-div-98">
                     {paymentSuccess.receiptNumber}
                   </div>
                 </div>
-                <button className="btn btn-primary" style={{ width: '100%' }}
-                  onClick={() => { setShowPaymentModal(false); setPaymentSuccess(null); setSelectedFeeRecord(null); }}>
+                <button className="btn btn-primary dashboard-btn" onClick={() => { setShowPaymentModal(false); setPaymentSuccess(null); setSelectedFeeRecord(null); }}>
                   Done
                 </button>
               </div>
             ) : (
               <>
-                <div style={{ backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+                <div className="dashboard-div-100">
                   <div><strong>Fee Component:</strong> {selectedFeeRecord.fee_type}</div>
                   <div><strong>Dues Outstanding:</strong> ₹{(selectedFeeRecord.total_amount - selectedFeeRecord.paid_amount).toLocaleString('en-IN')}</div>
                 </div>
 
-                <div className="page-tabs" style={{ display: 'flex', gap: '0.25rem', marginBottom: '1.5rem', background: '#f1f5f9', padding: '0.25rem', borderRadius: 'var(--radius-full)', width: '100%' }}>
-                  <button type="button" className={`page-tab ${paymentMethod === 'UPI' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setPaymentMethod('UPI')}>
+                <div className="page-tabs dashboard-page-tabs">
+                  <button type="button" className={`page-tab ${paymentMethod === 'UPI' ? 'active' : ''} dashboard-btn-102`} onClick={() => setPaymentMethod('UPI')}>
                     UPI QR Code
                   </button>
-                  <button type="button" className={`page-tab ${paymentMethod === 'Card' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setPaymentMethod('Card')}>
+                  <button type="button" className={`page-tab ${paymentMethod === 'Card' ? 'active' : ''} dashboard-btn-103`} onClick={() => setPaymentMethod('Card')}>
                     Debit / Credit Card
                   </button>
                 </div>
 
                 {paymentMethod === 'UPI' ? (
-                  <div style={{ textAlign: 'center', padding: '1rem' }}>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                  <div className="dashboard-div-104">
+                    <p className="dashboard-text-105">
                       Scan the secure UPI QR Code using your banking app (GPay, PhonePe, BHIM, etc.) to pay.
                     </p>
                     
-                    <div style={{ margin: '1.5rem auto', padding: '1rem', width: '200px', height: '200px', border: '2px solid var(--border)', borderRadius: '12px', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    <div className="dashboard-col-106">
                       {/* Simulated QR Code Graphic */}
                       <div style={{ width: '160px', height: '160px', backgroundImage: 'radial-gradient(var(--text-main) 60%, transparent 60%)', backgroundSize: '12px 12px', opacity: simulatingUpiSuccess ? 0.15 : 0.85 }} />
-                      <Smartphone size={32} style={{ position: 'absolute', color: 'var(--primary)' }} />
+                      <Smartphone size={32} className="dashboard-Smartphone-107"  />
                       {simulatingUpiSuccess && (
-                        <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                          <div className="spinner" style={{ border: '4px solid rgba(99, 102, 241, 0.1)', borderTop: '4px solid var(--primary)', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }} />
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)' }}>Verifying Payment...</span>
+                        <div className="dashboard-col-108">
+                          <div className="spinner dashboard-spinner"  />
+                          <span className="dashboard-span-110">Verifying Payment...</span>
                         </div>
                       )}
                     </div>
 
-                    <div style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                      QR Code expires in: <span style={{ color: 'var(--danger)', fontWeight: 800 }}>{upiTimer}s</span>
+                    <div className="dashboard-div-111">
+                      QR Code expires in: <span className="dashboard-span-112">{upiTimer}s</span>
                     </div>
 
-                    <div style={{ marginTop: '2rem' }}>
-                      <button 
-                        type="button" 
-                        className="btn btn-primary" 
-                        style={{ width: '100%' }}
-                        onClick={triggerSimulateScan}
-                        disabled={submittingPayment}
-                      >
+                    <div className="dashboard-div-113">
+                      <button type="button" className="btn btn-primary dashboard-btn" onClick={triggerSimulateScan} disabled={submittingPayment}>
                         {submittingPayment ? 'Processing Approval...' : 'Simulate UPI Scanner App Approval'}
                       </button>
                     </div>
@@ -789,9 +690,9 @@ export default function Dashboard() {
                       />
                     </div>
 
-                    <div className="form-group" style={{ marginTop: '1rem' }}>
+                    <div className="form-group dashboard-form-group">
                       <label>Card Number</label>
-                      <div style={{ position: 'relative' }}>
+                      <div className="dashboard-div-116">
                         <input
                           type="text"
                           maxLength={19}
@@ -800,11 +701,11 @@ export default function Dashboard() {
                           onChange={e => setCardNumber(e.target.value.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim())}
                           required
                         />
-                        <CreditCard size={18} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                        <CreditCard size={18} className="dashboard-CreditCard-117"  />
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                    <div className="dashboard-grid-118">
                       <div className="form-group">
                         <label>Expiration Date</label>
                         <input
@@ -829,13 +730,8 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <div style={{ marginTop: '2rem' }}>
-                      <button 
-                        type="submit" 
-                        className="btn btn-primary" 
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                        disabled={submittingPayment}
-                      >
+                    <div className="dashboard-div-119">
+                      <button type="submit" className="btn btn-primary dashboard-btn" disabled={submittingPayment}>
                         {submittingPayment ? 'Authorizing Card Transaction...' : `Authorize Payment of ₹${Number(paymentAmount).toLocaleString('en-IN')}`}
                       </button>
                     </div>

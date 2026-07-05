@@ -1,3 +1,4 @@
+import './Exams.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -318,7 +319,7 @@ export default function Exams() {
           <div className="page-header">
             <div>
               <h2>Exams Configuration</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+              <p className="exams-text-1">
                 Track exam events, configure schedules, and aggregate grade metrics
               </p>
             </div>
@@ -338,7 +339,7 @@ export default function Exams() {
                     <th>Sem</th>
                     <th>Schedule</th>
                     <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th className="exams-th-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -354,8 +355,8 @@ export default function Exams() {
                           {ex.status}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <td className="exams-td-3">
+                        <div className="exams-row-4">
                           <button className="btn btn-sm btn-primary" onClick={() => handleOpenSubjects(ex)}>
                             <Layers size={12} /> Subjects
                           </button>
@@ -363,11 +364,7 @@ export default function Exams() {
                             <Award size={12} /> Results
                           </button>
                           
-                          <select 
-                            value={ex.status} 
-                            onChange={(e) => handleStatusChange(ex, e.target.value as any)}
-                            style={{ padding: '0.2rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border)' }}
-                          >
+                          <select value={ex.status} onChange={(e) => handleStatusChange(ex, e.target.value as any)} className="exams-select-5">
                             <option value="DRAFT">DRAFT</option>
                             <option value="PUBLISHED">PUBLISHED</option>
                             <option value="COMPLETED">COMPLETED</option>
@@ -382,9 +379,9 @@ export default function Exams() {
                   ))}
                   {exams.length === 0 && (
                     <tr>
-                      <td colSpan={7} style={{ textAlign: 'center', padding: '3rem' }}>
-                        <ClipboardCheck size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
-                        <p style={{ color: 'var(--text-muted)' }}>No exam events scheduled yet.</p>
+                      <td colSpan={7} className="exams-td-6">
+                        <ClipboardCheck size={32} className="exams-ClipboardCheck-7"  />
+                        <p className="exams-text-8">No exam events scheduled yet.</p>
                       </td>
                     </tr>
                   )}
@@ -442,7 +439,7 @@ export default function Exams() {
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="exams-grid-9">
                     <div className="form-group">
                       <label>Start Date</label>
                       <input
@@ -481,13 +478,13 @@ export default function Exams() {
       {view === 'subjects' && selectedExam && (
         <>
           <div className="page-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => setView('list')}>
+            <div className="exams-row-10">
+              <button className="btn btn-secondary exams-btn" onClick={() => setView('list')}>
                 <ArrowLeft size={18} />
               </button>
               <div>
                 <h2>Exam Subjects Configuration</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                <p className="exams-text-12">
                   {selectedExam.name} | Sem {selectedExam.semester} | {selectedExam.course_name}
                 </p>
               </div>
@@ -508,7 +505,7 @@ export default function Exams() {
                     <th>Timings</th>
                     <th>Max Marks</th>
                     <th>Passing Marks</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th className="exams-th-13">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -520,8 +517,8 @@ export default function Exams() {
                       <td>{es.start_time && es.end_time ? `${es.start_time} - ${es.end_time}` : '-'}</td>
                       <td><strong>{es.max_marks}</strong></td>
                       <td>{es.min_marks}</td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <td className="exams-td-14">
+                        <div className="exams-row-15">
                           <button className="btn btn-sm btn-primary" onClick={() => handleOpenMarksheet(es)}>
                             <FileSpreadsheet size={12} /> Enter Marks
                           </button>
@@ -534,8 +531,8 @@ export default function Exams() {
                   ))}
                   {examSubjects.length === 0 && (
                     <tr>
-                      <td colSpan={7} style={{ textAlign: 'center', padding: '3rem' }}>
-                        <p style={{ color: 'var(--text-muted)' }}>No subjects mapped to this exam event yet.</p>
+                      <td colSpan={7} className="exams-td-16">
+                        <p className="exams-text-17">No subjects mapped to this exam event yet.</p>
                       </td>
                     </tr>
                   )}
@@ -576,7 +573,7 @@ export default function Exams() {
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="exams-grid-18">
                     <div className="form-group">
                       <label>Start Time (HH:MM)</label>
                       <input
@@ -597,7 +594,7 @@ export default function Exams() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="exams-grid-19">
                     <div className="form-group">
                       <label>Max Marks</label>
                       <input
@@ -638,13 +635,13 @@ export default function Exams() {
       {view === 'marks' && selectedExam && selectedExamSubject && (
         <>
           <div className="page-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => handleOpenSubjects(selectedExam)}>
+            <div className="exams-row-20">
+              <button className="btn btn-secondary exams-btn" onClick={() => handleOpenSubjects(selectedExam)}>
                 <ArrowLeft size={18} />
               </button>
               <div>
                 <h2>Marks Entry Sheet</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                <p className="exams-text-22">
                   {selectedExam.name} | {selectedExamSubject.subject_code} - {selectedExamSubject.subject_name} (Max Marks: {selectedExamSubject.max_marks})
                 </p>
               </div>
@@ -661,7 +658,7 @@ export default function Exams() {
                   <tr>
                     <th>Roll Number</th>
                     <th>Student Name</th>
-                    <th style={{ width: '200px' }}>Marks Obtained</th>
+                    <th className="exams-th-23">Marks Obtained</th>
                     <th>Max Marks</th>
                     <th>Remarks</th>
                   </tr>
@@ -672,44 +669,19 @@ export default function Exams() {
                       <td><strong>{rec.roll_number || '-'}</strong></td>
                       <td>{rec.student_name}</td>
                       <td>
-                        <input
-                          type="number"
-                          value={rec.marks_obtained ?? ''}
-                          onChange={(e) => handleMarkChange(rec.student_id, e.target.value)}
-                          placeholder="Marks obtained"
-                          max={selectedExamSubject.max_marks}
-                          min={0}
-                          style={{
-                            width: '100%',
-                            padding: '0.5rem',
-                            borderRadius: '4px',
-                            border: '1px solid var(--border)',
-                            fontWeight: 700
-                          }}
-                        />
+                        <input type="number" value={rec.marks_obtained ?? ''} onChange={(e) => handleMarkChange(rec.student_id, e.target.value)} placeholder="Marks obtained" max={selectedExamSubject.max_marks} min={0} className="exams-input-24"  />
                       </td>
                       <td>
-                        <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>{selectedExamSubject.max_marks}</span>
+                        <span className="exams-span-25">{selectedExamSubject.max_marks}</span>
                       </td>
                       <td>
-                        <input
-                          type="text"
-                          value={rec.remarks || ''}
-                          onChange={(e) => handleRemarksChange(rec.student_id, e.target.value)}
-                          placeholder="e.g. Medical leave, Absent"
-                          style={{
-                            width: '100%',
-                            padding: '0.5rem',
-                            borderRadius: '4px',
-                            border: '1px solid var(--border)'
-                          }}
-                        />
+                        <input type="text" value={rec.remarks || ''} onChange={(e) => handleRemarksChange(rec.student_id, e.target.value)} placeholder="e.g. Medical leave, Absent" className="exams-input-26"  />
                       </td>
                     </tr>
                   ))}
                   {studentMarks.length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                      <td colSpan={5} className="exams-td-27">
                         No eligible students found enrolled in this program/semester.
                       </td>
                     </tr>
@@ -724,13 +696,13 @@ export default function Exams() {
       {view === 'results' && selectedExam && (
         <>
           <div className="page-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => setView('list')}>
+            <div className="exams-row-28">
+              <button className="btn btn-secondary exams-btn" onClick={() => setView('list')}>
                 <ArrowLeft size={18} />
               </button>
               <div>
                 <h2>Exam Results Grid</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                <p className="exams-text-30">
                   {selectedExam.name} | Sem {selectedExam.semester} | {selectedExam.course_name}
                 </p>
               </div>
@@ -748,7 +720,7 @@ export default function Exams() {
                     <th>Percentage</th>
                     <th>Calculated Grade</th>
                     <th>Result Card</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th className="exams-th-31">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -764,11 +736,11 @@ export default function Exams() {
                         </span>
                       </td>
                       <td>
-                        <span className={`badge ${res.result === 'PASS' ? 'badge-success' : 'badge-danger'}`} style={{ padding: '0.25rem 0.5rem' }}>
+                        <span className={`badge ${res.result === 'PASS' ? 'badge-success' : 'badge-danger'} exams-span-32`}>
                           {res.result}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td className="exams-td-33">
                         <button
                           className="btn btn-sm btn-outline"
                           onClick={() => handleOpenReportCard(selectedExam.id, res.student_id)}
@@ -780,8 +752,8 @@ export default function Exams() {
                   ))}
                   {examResults.length === 0 && (
                     <tr>
-                      <td colSpan={7} style={{ textAlign: 'center', padding: '3rem' }}>
-                        <p style={{ color: 'var(--text-muted)' }}>No marks have been graded for this exam event yet.</p>
+                      <td colSpan={7} className="exams-td-34">
+                        <p className="exams-text-35">No marks have been graded for this exam event yet.</p>
                       </td>
                     </tr>
                   )}
@@ -793,70 +765,70 @@ export default function Exams() {
       )}
       {showReportCardModal && (
         <div className="modal-overlay no-print" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px', width: '90%' }}>
+          <div className="modal exams-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Student Report Card</h3>
               <button onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>✕</button>
             </div>
             <div className="modal-body">
               {loadingReportCard ? <p>Building report card...</p> : selectedReportCard ? (
-                <div id="printable-report-card" style={{ padding: '1rem', backgroundColor: '#fff', color: '#000' }}>
-                  <div style={{ textAlign: 'center', marginBottom: '1.5rem', borderBottom: '2px solid #000', paddingBottom: '1rem' }}>
-                    <h2 style={{ margin: 0, textTransform: 'uppercase' }}>Academic Report Card</h2>
-                    <h3 style={{ margin: '0.25rem 0 0 0', fontWeight: 'normal', color: '#555' }}>Institution Name</h3>
+                <div id="printable-report-card" className="exams-div-37">
+                  <div className="exams-div-38">
+                    <h2 className="exams-title-39">Academic Report Card</h2>
+                    <h3 className="exams-title-40">Institution Name</h3>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                  <div className="exams-grid-41">
                     <div>
-                      <p style={{ margin: '0.25rem 0' }}><strong>Student Name:</strong> {selectedReportCard.student.first_name} {selectedReportCard.student.last_name}</p>
-                      <p style={{ margin: '0.25rem 0' }}><strong>Roll Number:</strong> {selectedReportCard.student.roll_number || '-'}</p>
-                      <p style={{ margin: '0.25rem 0' }}><strong>Admission No:</strong> {selectedReportCard.student.admission_number}</p>
+                      <p className="exams-text-42"><strong>Student Name:</strong> {selectedReportCard.student.first_name} {selectedReportCard.student.last_name}</p>
+                      <p className="exams-text-43"><strong>Roll Number:</strong> {selectedReportCard.student.roll_number || '-'}</p>
+                      <p className="exams-text-44"><strong>Admission No:</strong> {selectedReportCard.student.admission_number}</p>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ margin: '0.25rem 0' }}><strong>Exam:</strong> {selectedReportCard.exam.name}</p>
-                      <p style={{ margin: '0.25rem 0' }}><strong>Academic Year:</strong> {selectedReportCard.exam.academic_year}</p>
-                      <p style={{ margin: '0.25rem 0' }}><strong>Program:</strong> {selectedReportCard.exam.course}</p>
+                    <div className="exams-div-45">
+                      <p className="exams-text-46"><strong>Exam:</strong> {selectedReportCard.exam.name}</p>
+                      <p className="exams-text-47"><strong>Academic Year:</strong> {selectedReportCard.exam.academic_year}</p>
+                      <p className="exams-text-48"><strong>Program:</strong> {selectedReportCard.exam.course}</p>
                     </div>
                   </div>
 
-                  <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem' }}>
+                  <table className="table exams-table">
                     <thead>
-                      <tr style={{ borderBottom: '2px solid #000' }}>
-                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Code</th>
-                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Name</th>
-                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Max Marks</th>
-                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Obtained</th>
-                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Percentage</th>
-                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Grade</th>
-                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>GP</th>
-                        <th style={{ textAlign: 'center', padding: '0.5rem' }}>Result</th>
+                      <tr className="exams-tr-50">
+                        <th className="exams-th-51">Subject Code</th>
+                        <th className="exams-th-52">Subject Name</th>
+                        <th className="exams-th-53">Max Marks</th>
+                        <th className="exams-th-54">Obtained</th>
+                        <th className="exams-th-55">Percentage</th>
+                        <th className="exams-th-56">Grade</th>
+                        <th className="exams-th-57">GP</th>
+                        <th className="exams-th-58">Result</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedReportCard.subjects.map((sub: any, idx: number) => (
-                        <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td style={{ padding: '0.5rem' }}>{sub.subject_code}</td>
-                          <td style={{ padding: '0.5rem' }}>{sub.subject_name}</td>
-                          <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.max_marks}</td>
-                          <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.marks_obtained}</td>
-                          <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.percent}%</td>
-                          <td style={{ textAlign: 'center', padding: '0.5rem', fontWeight: 'bold' }}>{sub.grade}</td>
-                          <td style={{ textAlign: 'center', padding: '0.5rem' }}>{sub.grade_point}</td>
-                          <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                        <tr key={idx} className="exams-tr-59">
+                          <td className="exams-td-60">{sub.subject_code}</td>
+                          <td className="exams-td-61">{sub.subject_name}</td>
+                          <td className="exams-td-62">{sub.max_marks}</td>
+                          <td className="exams-td-63">{sub.marks_obtained}</td>
+                          <td className="exams-td-64">{sub.percent}%</td>
+                          <td className="exams-td-65">{sub.grade}</td>
+                          <td className="exams-td-66">{sub.grade_point}</td>
+                          <td className="exams-td-67">
                             <span style={{ color: sub.is_passing ? 'var(--success)' : 'var(--danger)', fontWeight: 'bold' }}>
                               {sub.is_passing ? 'PASS' : 'FAIL'}
                             </span>
                           </td>
                         </tr>
                       ))}
-                      <tr style={{ fontWeight: 'bold', borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
-                        <td colSpan={2} style={{ padding: '0.5rem' }}>GRAND TOTAL</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.max_marks}</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.marks_obtained}</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.percent}%</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.grade}</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>{selectedReportCard.total.grade_point}</td>
-                        <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                      <tr className="exams-tr-68">
+                        <td colSpan={2} className="exams-td-69">GRAND TOTAL</td>
+                        <td className="exams-td-70">{selectedReportCard.total.max_marks}</td>
+                        <td className="exams-td-71">{selectedReportCard.total.marks_obtained}</td>
+                        <td className="exams-td-72">{selectedReportCard.total.percent}%</td>
+                        <td className="exams-td-73">{selectedReportCard.total.grade}</td>
+                        <td className="exams-td-74">{selectedReportCard.total.grade_point}</td>
+                        <td className="exams-td-75">
                           <span style={{ color: selectedReportCard.result === 'PASS' ? 'var(--success)' : 'var(--danger)' }}>
                             {selectedReportCard.result}
                           </span>
@@ -865,22 +837,22 @@ export default function Exams() {
                     </tbody>
                   </table>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1.5rem', fontSize: '0.9rem', borderTop: '1px dashed #ccc', paddingTop: '1rem' }}>
+                  <div className="exams-grid-76">
                     <div>
                       <p><strong>Rank in Class:</strong> {selectedReportCard.total.rank || 'N/A'}</p>
                     </div>
                     <div>
                       <p><strong>Attendance:</strong> {selectedReportCard.attendance_percent !== null ? `${selectedReportCard.attendance_percent}%` : 'N/A'}</p>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div className="exams-div-77">
                       <p><strong>Overall Result:</strong> <span style={{ fontWeight: 'bold', color: selectedReportCard.result === 'PASS' ? 'var(--success)' : 'var(--danger)' }}>{selectedReportCard.result}</span></p>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem', fontSize: '0.8rem', color: '#555' }}>
-                    <div style={{ borderTop: '1px solid #000', width: '150px', textAlign: 'center', paddingTop: '0.25rem' }}>Class Teacher</div>
-                    <div style={{ borderTop: '1px solid #000', width: '150px', textAlign: 'center', paddingTop: '0.25rem' }}>Controller of Exams</div>
-                    <div style={{ borderTop: '1px solid #000', width: '150px', textAlign: 'center', paddingTop: '0.25rem' }}>Principal</div>
+                  <div className="exams-row-78">
+                    <div className="exams-div-79">Class Teacher</div>
+                    <div className="exams-div-80">Controller of Exams</div>
+                    <div className="exams-div-81">Principal</div>
                   </div>
                 </div>
               ) : <p>No report card data loaded</p>}
@@ -892,25 +864,7 @@ export default function Exams() {
           </div>
         </div>
       )}
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #printable-report-card, #printable-report-card * {
-            visibility: visible;
-          }
-          #printable-report-card {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
-      `}</style>
+      
     </Layout>
   );
 }

@@ -1,3 +1,4 @@
+import './ParentDashboard.css';
 import React from 'react';
 import { AlertCircle, Clock, IndianRupee, Printer, BookOpen, Calendar, HelpCircle } from 'lucide-react';
 
@@ -33,8 +34,8 @@ export default function ParentDashboard({
   const children = stats?.children || [];
   if (children.length === 0) {
     return (
-      <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-        <AlertCircle size={48} style={{ color: 'var(--secondary)', marginBottom: '1rem' }} />
+      <div className="card parent-dashboard-card">
+        <AlertCircle size={48} className="parent-dashboard-AlertCircle-2"  />
         <h3>No Children Linked</h3>
         <p>Please contact your institution administration to link your parent account with your children.</p>
       </div>
@@ -50,10 +51,10 @@ export default function ParentDashboard({
   );
 
   return (
-    <div className="portal-dashboard parent-portal" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="portal-dashboard parent-portal parent-dashboard-portal-dashboard">
       {/* Child Selector Tabs */}
       {children.length > 1 && (
-        <div className="child-selector" style={{ marginBottom: '0.5rem' }}>
+        <div className="child-selector parent-dashboard-child-selector">
           {children.map((child: any, idx: number) => (
             <button
               key={child.student_id}
@@ -77,10 +78,10 @@ export default function ParentDashboard({
       )}
 
       {activeChild && (
-        <div className="selected-child-overview" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <div className="welcome-section card" style={{ background: '#f1f5f9', color: 'var(--text-main)', margin: 0, padding: '1.25rem 1.5rem' }}>
-            <h4 style={{ margin: 0, fontSize: '1rem' }}>Academic overview for: <strong>{activeChild.name}</strong></h4>
-            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+        <div className="selected-child-overview parent-dashboard-selected-child-overview">
+          <div className="welcome-section card parent-dashboard-welcome-section">
+            <h4 className="parent-dashboard-title-7">Academic overview for: <strong>{activeChild.name}</strong></h4>
+            <p className="parent-dashboard-text-8">
               Roll Number: {activeChild.roll_number || 'N/A'} | Relationship: {activeChild.relationship}
             </p>
           </div>
@@ -88,7 +89,7 @@ export default function ParentDashboard({
           <div className="stats-grid">
             {/* Child Attendance */}
             <div className="stat-card card">
-              <div className="icon" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)' }}>
+              <div className="icon parent-dashboard-icon">
                 <Clock size={24} />
               </div>
               <div className="info">
@@ -119,43 +120,35 @@ export default function ParentDashboard({
           </div>
 
           {/* Child Active Homework */}
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-              <div style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
+          <div className="card parent-dashboard-card">
+            <div className="parent-dashboard-row-11">
+              <div className="parent-dashboard-div-12">
                 <BookOpen size={20} />
               </div>
               <div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>Active Homework &amp; Assignments</h3>
-                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Homework and projects assigned to {activeChild.name}</p>
+                <h3 className="parent-dashboard-title-13">Active Homework &amp; Assignments</h3>
+                <p className="parent-dashboard-text-14">Homework and projects assigned to {activeChild.name}</p>
               </div>
             </div>
 
             {homework.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2rem 1rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)' }}>
-                <HelpCircle size={32} style={{ color: 'var(--text-subtle)', marginBottom: '0.5rem' }} />
-                <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>No active homework</h4>
-                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>No assignments are currently pending for your child.</p>
+              <div className="parent-dashboard-div-15">
+                <HelpCircle size={32} className="parent-dashboard-HelpCircle-16"  />
+                <h4 className="parent-dashboard-title-17">No active homework</h4>
+                <p className="parent-dashboard-text-18">No assignments are currently pending for your child.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="parent-dashboard-col-19">
                 {homework.slice(0, 5).map((hw: any) => {
                   const isOverdue = new Date(hw.due_date) < new Date() && hw.due_date;
                   return (
-                    <div key={hw.id} style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.5rem',
-                      padding: '1rem',
-                      border: '1px solid var(--border)',
-                      borderRadius: 'var(--radius-md)',
-                      background: 'var(--bg-main)'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div key={hw.id} className="parent-dashboard-col-20">
+                      <div className="parent-dashboard-row-21">
                         <div>
-                          <span className="badge" style={{ background: 'var(--primary-soft)', color: 'var(--primary)', fontWeight: 700, fontSize: '0.7rem', padding: '0.15rem 0.40rem', marginRight: '0.5rem' }}>
+                          <span className="badge parent-dashboard-badge">
                             {hw.subject_name}
                           </span>
-                          <strong style={{ fontSize: '0.875rem', color: 'var(--text-main)' }}>{hw.title}</strong>
+                          <strong className="parent-dashboard-strong-23">{hw.title}</strong>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: isOverdue ? 'var(--danger)' : 'var(--text-muted)', fontWeight: 500 }}>
                           <Calendar size={12} />
@@ -163,11 +156,11 @@ export default function ParentDashboard({
                         </div>
                       </div>
                       {hw.description && (
-                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                        <p className="parent-dashboard-text-24">
                           {hw.description}
                         </p>
                       )}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                      <div className="parent-dashboard-row-25">
                         <span>Teacher: {hw.teacher_first} {hw.teacher_last}</span>
                       </div>
                     </div>
@@ -177,17 +170,17 @@ export default function ParentDashboard({
             )}
           </div>
 
-          <div className="dashboard-content-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))', gap: '2rem' }}>
+          <div className="dashboard-content-grid parent-dashboard-dashboard-content-grid">
             {/* Left Column: Academics */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="parent-dashboard-col-27">
               {/* Child Results Table */}
               <div className="card dashboard-section">
-                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Latest Subject Marks</h3>
+                <h3 className="parent-dashboard-title-28">Latest Subject Marks</h3>
                 {results.length === 0 ? (
-                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No results published yet for this student.</p>
+                  <p className="no-data parent-dashboard-no-data">No results published yet for this student.</p>
                 ) : (
                   <div className="table-responsive">
-                    <table className="table" style={{ fontSize: '0.85rem' }}>
+                    <table className="table parent-dashboard-table">
                       <thead>
                         <tr>
                           <th>Exam</th>
@@ -220,17 +213,17 @@ export default function ParentDashboard({
 
               {/* Child Official Report Cards */}
               <div className="card dashboard-section">
-                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Official Report Cards</h3>
+                <h3 className="parent-dashboard-title-31">Official Report Cards</h3>
                 {childExams.length === 0 ? (
-                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No official report cards available for download yet.</p>
+                  <p className="no-data parent-dashboard-no-data">No official report cards available for download yet.</p>
                 ) : (
                   <div className="table-responsive">
-                    <table className="table" style={{ fontSize: '0.85rem' }}>
+                    <table className="table parent-dashboard-table">
                       <thead>
                         <tr>
                           <th>Exam Title</th>
                           <th>Timeline</th>
-                          <th style={{ textAlign: 'right' }}>Action</th>
+                          <th className="parent-dashboard-th-34">Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -238,12 +231,8 @@ export default function ParentDashboard({
                           <tr key={e.id}>
                             <td><strong>{e.name}</strong></td>
                             <td>{new Date(e.start_date).toLocaleDateString()} - {new Date(e.end_date).toLocaleDateString()}</td>
-                            <td style={{ textAlign: 'right' }}>
-                              <button 
-                                className="btn btn-sm btn-primary" 
-                                onClick={() => handleOpenReportCard(e.id, activeChild.id)}
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                              >
+                            <td className="parent-dashboard-td-35">
+                              <button className="btn btn-sm btn-primary parent-dashboard-btn" onClick={() => handleOpenReportCard(e.id, activeChild.id)}>
                                 <Printer size={12} /> View &amp; Print
                               </button>
                             </td>
@@ -257,22 +246,22 @@ export default function ParentDashboard({
             </div>
 
             {/* Right Column: Fees Ledger */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="parent-dashboard-col-37">
               {/* Child Fee Ledger */}
               <div className="card dashboard-section">
-                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Fee Ledger details</h3>
+                <h3 className="parent-dashboard-title-38">Fee Ledger details</h3>
                 {ledgerRecords.length === 0 ? (
-                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No fee allocations found for this child.</p>
+                  <p className="no-data parent-dashboard-no-data">No fee allocations found for this child.</p>
                 ) : (
                   <div className="table-responsive">
-                    <table className="table" style={{ fontSize: '0.85rem' }}>
+                    <table className="table parent-dashboard-table">
                       <thead>
                         <tr>
                           <th>Fee Component</th>
                           <th>Due Date</th>
-                          <th style={{ textAlign: 'right' }}>Amount Due</th>
-                          <th style={{ textAlign: 'center' }}>Status</th>
-                          <th style={{ textAlign: 'center' }}>Action</th>
+                          <th className="parent-dashboard-th-41">Amount Due</th>
+                          <th className="parent-dashboard-th-42">Status</th>
+                          <th className="parent-dashboard-th-43">Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -280,25 +269,21 @@ export default function ParentDashboard({
                           <tr key={rec.id}>
                             <td><strong>{rec.fee_type}</strong></td>
                             <td>{new Date(rec.due_date).toLocaleDateString()}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 'bold' }}>₹{(rec.total_amount - rec.paid_amount).toLocaleString('en-IN')}</td>
-                            <td style={{ textAlign: 'center' }}>
+                            <td className="parent-dashboard-td-44">₹{(rec.total_amount - rec.paid_amount).toLocaleString('en-IN')}</td>
+                            <td className="parent-dashboard-td-45">
                               <span className={`badge ${
                                 rec.status === 'PAID' ? 'badge-success' : rec.status === 'PARTIAL' ? 'badge-warning' : 'badge-danger'
                               }`}>
                                 {rec.status}
                               </span>
                             </td>
-                            <td style={{ textAlign: 'center' }}>
+                            <td className="parent-dashboard-td-46">
                               {rec.status !== 'PAID' ? (
-                                <button
-                                  className="btn btn-outline"
-                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', borderColor: 'var(--primary)', color: 'var(--primary)', cursor: 'pointer' }}
-                                  onClick={() => handlePayOnlineInit(rec)}
-                                >
+                                <button className="btn btn-outline parent-dashboard-btn" onClick={() => handlePayOnlineInit(rec)}>
                                   Pay Online
                                 </button>
                               ) : (
-                                <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Paid</span>
+                                <span className="parent-dashboard-span-48">Paid</span>
                               )}
                             </td>
                           </tr>
@@ -311,19 +296,19 @@ export default function ParentDashboard({
 
               {/* Child Payment Receipts */}
               <div className="card dashboard-section">
-                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Payment History &amp; Receipts</h3>
+                <h3 className="parent-dashboard-title-49">Payment History &amp; Receipts</h3>
                 {payments.length === 0 ? (
-                  <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No payment transactions logged in the system.</p>
+                  <p className="no-data parent-dashboard-no-data">No payment transactions logged in the system.</p>
                 ) : (
                   <div className="table-responsive">
-                    <table className="table" style={{ fontSize: '0.85rem' }}>
+                    <table className="table parent-dashboard-table">
                       <thead>
                         <tr>
                           <th>Date Paid</th>
                           <th>Fee Type</th>
                           <th>Method</th>
-                          <th style={{ textAlign: 'right' }}>Amount</th>
-                          <th style={{ textAlign: 'right' }}>Receipt</th>
+                          <th className="parent-dashboard-th-52">Amount</th>
+                          <th className="parent-dashboard-th-53">Receipt</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -332,13 +317,9 @@ export default function ParentDashboard({
                             <td>{new Date(p.payment_date).toLocaleDateString()}</td>
                             <td>{p.fee_type}</td>
                             <td>{p.payment_method}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--success)' }}>₹{p.amount.toLocaleString('en-IN')}</td>
-                            <td style={{ textAlign: 'right' }}>
-                              <button 
-                                className="btn btn-sm btn-outline" 
-                                onClick={() => handleOpenReceipt(p)}
-                                style={{ padding: '0.25rem 0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                              >
+                            <td className="parent-dashboard-td-54">₹{p.amount.toLocaleString('en-IN')}</td>
+                            <td className="parent-dashboard-td-55">
+                              <button className="btn btn-sm btn-outline parent-dashboard-btn" onClick={() => handleOpenReceipt(p)}>
                                 <Printer size={12} /> Receipt
                               </button>
                             </td>

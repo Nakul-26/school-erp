@@ -1,3 +1,4 @@
+import './BottomNav.css';
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
@@ -78,40 +79,9 @@ export default function BottomNav({ roles }: BottomNavProps) {
   const navItems = bottomNavMap[roleKey] || bottomNavMap['teacher'] || [];
 
   return (
-    <div className="bottom-nav" style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      width: '100%',
-      height: '60px',
-      backgroundColor: '#0d1117',
-      borderTop: '1px solid #161b22',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-      zIndex: 1000,
-      padding: '0 0.5rem',
-      boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.15)'
-    }}>
+    <div className="bottom-nav bottom-nav">
       {navItems.map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          className={({ isActive }) => isActive ? 'bottom-nav-link active' : 'bottom-nav-link'}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#94a3b8',
-            textDecoration: 'none',
-            fontSize: '0.65rem',
-            fontWeight: 600,
-            gap: '0.25rem',
-            flex: 1,
-            height: '100%',
-            transition: 'all 0.15s'
-          }}
-        >
+        <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'bottom-nav-link active' : 'bottom-nav-link') + " bottom-nav-col-2"}>
           <item.icon size={18} />
           <span>{item.label}</span>
         </NavLink>

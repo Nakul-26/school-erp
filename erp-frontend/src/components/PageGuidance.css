@@ -1,0 +1,67 @@
+/* Component stylesheet for PageGuidance.tsx */
+
+.page-guidance-div-1 {
+  background-color: #f0f7ff;
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  font-family: inherit;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+}
+
+.page-guidance-row-2 {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.page-guidance-row-3 {
+  align-items: center;
+  color: #1e40af;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.page-guidance-HelpCircle-4 {
+  color: #2563eb;
+}
+
+.page-guidance-span-5 {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.page-guidance-row-6 {
+  align-items: center;
+  background: none;
+  border: none;
+  color: #1e40af;
+  cursor: pointer;
+  display: flex;
+  padding: 0.25rem;
+}
+
+.page-guidance-div-7 {
+  color: #1e3a8a;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin-top: 0.5rem;
+}
+
+.page-guidance-text-8 {
+  font-weight: 500;
+  margin: 0px;
+}
+
+.page-guidance-ul-9 {
+  list-style-type: disc;
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.25rem;
+}
+
+.page-guidance-li-10 {
+  margin-bottom: 0.25rem;
+}

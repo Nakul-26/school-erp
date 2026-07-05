@@ -1,0 +1,246 @@
+/* Component stylesheet for PayrollRunDetail.tsx */
+
+@media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-payslip, #printable-payslip * {
+            visibility: visible;
+          }
+          #printable-payslip {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+
+.payroll-run-detail-row-1 {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.payroll-run-detail-btn {
+  padding: 0.5rem;
+}
+
+.payroll-run-detail-text-3 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.payroll-run-detail-Check-4 {
+  margin-right: 0.25rem;
+}
+
+.payroll-run-detail-card {
+  padding: 1.5rem;
+}
+
+.payroll-run-detail-th-6 {
+  text-align: right;
+}
+
+.payroll-run-detail-td-7 {
+  text-align: right;
+}
+
+.payroll-run-detail-modal {
+  max-width: 750px;
+  width: 90%;
+}
+
+.payroll-run-detail-div-9 {
+  background-color: #fff;
+  border: 1px solid #000;
+  color: #000;
+  font-family: monospace;
+  padding: 2rem;
+}
+
+.payroll-run-detail-div-10 {
+  border-bottom: 2px solid #000;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  text-align: center;
+}
+
+.payroll-run-detail-title-11 {
+  margin: 0px;
+  text-transform: uppercase;
+}
+
+.payroll-run-detail-title-12 {
+  font-weight: normal;
+  margin: 0.25rem 0 0 0;
+}
+
+.payroll-run-detail-text-13 {
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0 0;
+}
+
+.payroll-run-detail-grid-14 {
+  display: grid;
+  font-size: 0.9rem;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 1.5rem;
+}
+
+.payroll-run-detail-text-15 {
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-text-16 {
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-text-17 {
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-div-18 {
+  text-align: right;
+}
+
+.payroll-run-detail-text-19 {
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-text-20 {
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-text-21 {
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-grid-22 {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 1.5rem;
+}
+
+.payroll-run-detail-div-23 {
+  border: 1px solid #000;
+  padding: 0.75rem;
+}
+
+.payroll-run-detail-title-24 {
+  border-bottom: 1px solid #000;
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.25rem;
+}
+
+.payroll-run-detail-row-25 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-row-26 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-row-27 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-row-28 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-row-29 {
+  border-top: 1px solid #000;
+  display: flex;
+  font-weight: bold;
+  justify-content: space-between;
+  margin: 0.5rem 0 0 0;
+  padding-top: 0.25rem;
+}
+
+.payroll-run-detail-div-30 {
+  border: 1px solid #000;
+  padding: 0.75rem;
+}
+
+.payroll-run-detail-title-31 {
+  border-bottom: 1px solid #000;
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.25rem;
+}
+
+.payroll-run-detail-row-32 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-row-33 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-row-34 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-row-35 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0;
+}
+
+.payroll-run-detail-row-36 {
+  border-top: 1px solid #000;
+  display: flex;
+  font-weight: bold;
+  justify-content: space-between;
+  margin: 0.5rem 0 0 0;
+  padding-top: 0.25rem;
+}
+
+.payroll-run-detail-row-37 {
+  border: 1.5px solid #000;
+  display: flex;
+  font-size: 1.1rem;
+  font-weight: bold;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.payroll-run-detail-row-38 {
+  display: flex;
+  font-size: 0.85rem;
+  justify-content: space-between;
+  margin-top: 3rem;
+}
+
+.payroll-run-detail-div-39 {
+  border-top: 1px solid #000;
+  padding-top: 0.25rem;
+  text-align: center;
+  width: 150px;
+}
+
+.payroll-run-detail-div-40 {
+  border-top: 1px solid #000;
+  padding-top: 0.25rem;
+  text-align: center;
+  width: 150px;
+}

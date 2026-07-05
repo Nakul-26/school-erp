@@ -1,3 +1,4 @@
+import './Notifications.css';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -115,7 +116,7 @@ export default function Notifications() {
       case 'attendance':
         return <Clock size={20} />;
       case 'result':
-        return <Award size={20} style={{ color: 'var(--success)' }} />;
+        return <Award size={20} className="notifications-Award-1"  />;
       case 'announcement':
         return <Megaphone size={20} />;
       default:
@@ -160,30 +161,30 @@ export default function Notifications() {
       <div className="page-header">
         <div>
           <h2>Notifications</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="notifications-text-2">
             In-app alerts and live updates for academic and administrative schedules
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div className="notifications-row-3">
           {isAdmin && (
-            <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => setShowCreateModal(true)}>
+            <button className="btn btn-primary notifications-btn" onClick={() => setShowCreateModal(true)}>
               <Plus size={16} /> Send Alert
             </button>
           )}
           {unreadCount > 0 && (
-            <button className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={handleMarkAllRead}>
+            <button className="btn btn-outline notifications-btn" onClick={handleMarkAllRead}>
               <CheckSquare size={16} /> Mark all as read
             </button>
           )}
         </div>
       </div>
 
-      <div className="notifications-container" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className="notifications-container notifications-container">
         {loading ? <p>Loading notifications...</p> : notifications.length === 0 ? (
-          <div className="card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-            <Bell size={40} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
-            <h3 style={{ color: 'var(--text-main)', marginBottom: '0.5rem' }}>All Caught Up!</h3>
-            <p style={{ color: 'var(--text-muted)' }}>You have no notifications right now.</p>
+          <div className="card notifications-card">
+            <Bell size={40} className="notifications-Bell-8"  />
+            <h3 className="notifications-title-9">All Caught Up!</h3>
+            <p className="notifications-text-10">You have no notifications right now.</p>
           </div>
         ) : (
           notifications.map((n) => (
@@ -218,8 +219,8 @@ export default function Notifications() {
                 {getIcon(n.type)}
               </div>
               
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="notifications-div-11">
+                <div className="notifications-row-12">
                   <h4 style={{ 
                     margin: 0, 
                     fontSize: '1rem', 
@@ -228,7 +229,7 @@ export default function Notifications() {
                   }}>
                     {n.title}
                   </h4>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                  <span className="notifications-span-13">
                     {new Date(n.created_at).toLocaleDateString(undefined, { dateStyle: 'short' })} {new Date(n.created_at).toLocaleTimeString(undefined, { timeStyle: 'short' })}
                   </span>
                 </div>
@@ -242,15 +243,7 @@ export default function Notifications() {
               </div>
 
               {n.is_read === 0 && (
-                <div 
-                  style={{ 
-                    width: '8px', 
-                    height: '8px', 
-                    borderRadius: '50%', 
-                    background: 'var(--primary)',
-                    flexShrink: 0 
-                  }} 
-                />
+                <div className="notifications-div-14"  />
               )}
             </div>
           ))
@@ -258,11 +251,11 @@ export default function Notifications() {
       </div>
 
       {showCreateModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Broadcast System Alert</h3>
+        <div className="modal notifications-modal">
+          <div className="modal-content notifications-modal-content">
+            <h3 className="notifications-title-17">Broadcast System Alert</h3>
             
-            <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleCreateSubmit} className="notifications-col-18">
               <div className="form-group">
                 <label>Target Audience *</label>
                 <select 
@@ -310,7 +303,7 @@ export default function Notifications() {
                 />
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+              <div className="modal-actions notifications-modal-actions">
                 <button type="button" onClick={() => setShowCreateModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" disabled={creating} className="btn btn-primary">
                   {creating ? 'Sending...' : 'Broadcast Alert'}

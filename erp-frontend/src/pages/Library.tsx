@@ -1,3 +1,4 @@
+import './Library.css';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { PageGuidance } from '../components/PageGuidance';
@@ -208,17 +209,17 @@ export default function Library() {
 
   const getStatusBadge = (status: string) => {
     return status === 'ISSUED' 
-      ? <span className="badge badge-warning" style={{ fontWeight: 700 }}>Issued</span>
-      : <span className="badge badge-success" style={{ fontWeight: 700 }}>Returned</span>;
+      ? <span className="badge badge-warning library-badge">Issued</span>
+      : <span className="badge badge-success library-badge">Returned</span>;
   };
 
   const getFineBadge = (txn: TransactionType) => {
-    if (txn.fine_amount === 0) return <span style={{ color: 'var(--text-muted)' }}>-</span>;
+    if (txn.fine_amount === 0) return <span className="library-span-3">-</span>;
     if (txn.fine_status === 'PAID') {
-      return <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>Paid ₹{txn.fine_amount}</span>;
+      return <span className="badge badge-success library-badge">Paid ₹{txn.fine_amount}</span>;
     }
     return (
-      <span className="badge badge-danger" style={{ fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+      <span className="badge badge-danger library-badge">
         Unpaid ₹{txn.fine_amount}
       </span>
     );
@@ -235,12 +236,12 @@ export default function Library() {
       <div className="page-header">
         <div>
           <h2>Library & Digital Catalog</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="library-text-6">
             Manage physical copies, search categories, track checkouts, and charge overdue liabilities
           </p>
         </div>
         {canManage && (
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div className="library-row-7">
             <button className="btn btn-outline" onClick={() => setShowIssueModal(true)}>
               <BookOpen size={16} /> Issue Book
             </button>
@@ -252,7 +253,7 @@ export default function Library() {
       </div>
 
       {/* Tabs */}
-      <div className="page-tabs" style={{ marginBottom: '1.5rem' }}>
+      <div className="page-tabs library-page-tabs">
         <button className={`page-tab ${activeTab === 'catalog' ? 'active' : ''}`} onClick={() => { setActiveTab('catalog'); setSearchQuery(''); }}>
           Book Catalog
         </button>
@@ -262,37 +263,23 @@ export default function Library() {
       </div>
 
       {/* Toolbar / Search */}
-      <div className="card" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
-          <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-          <input
-            type="text"
-            placeholder={activeTab === 'catalog' ? "Search by title, author, isbn or rack location..." : "Search by student name, roll or book title..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ paddingLeft: '2.25rem', width: '100%', marginBottom: 0 }}
-          />
+      <div className="card library-card">
+        <div className="library-div-10">
+          <Search size={16} className="library-Search-11"  />
+          <input type="text" placeholder={activeTab === 'catalog' ? "Search by title, author, isbn or rack location..." : "Search by student name, roll or book title..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="library-input-12"  />
         </div>
 
         {activeTab === 'catalog' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Category:</span>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              style={{ padding: '0.4rem', fontSize: '0.85rem', minWidth: '150px' }}
-            >
+          <div className="library-row-13">
+            <span className="library-span-14">Category:</span>
+            <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="library-select-15">
               {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Status:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              style={{ padding: '0.4rem', fontSize: '0.85rem', minWidth: '150px' }}
-            >
+          <div className="library-row-16">
+            <span className="library-span-17">Status:</span>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="library-select-18">
               <option value="All">All Transactions</option>
               <option value="ISSUED">Currently Issued</option>
               <option value="RETURNED">Returned Copies</option>
@@ -304,75 +291,54 @@ export default function Library() {
 
       {loading ? <p>Loading library records...</p> : activeTab === 'catalog' ? (
         // Catalog View
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+        <div className="library-grid-19">
           {filteredBooks.length === 0 ? (
-            <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem' }}>
-              <Book size={48} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
-              <h3 style={{ color: 'var(--text-main)', marginBottom: '0.25rem' }}>No Books Found</h3>
-              <p style={{ color: 'var(--text-muted)' }}>We couldn't find any books matching your query.</p>
+            <div className="card library-card">
+              <Book size={48} className="library-Book-21"  />
+              <h3 className="library-title-22">No Books Found</h3>
+              <p className="library-text-23">We couldn't find any books matching your query.</p>
             </div>
           ) : (
             filteredBooks.map(book => (
-              <div key={book.id} className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '1.25rem', gap: '1rem' }}>
+              <div key={book.id} className="card library-card">
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <span className="badge" style={{ backgroundColor: 'var(--primary-soft)', color: 'var(--primary)', fontWeight: 700, fontSize: '0.7rem' }}>
+                  <div className="library-row-25">
+                    <span className="badge library-badge">
                       {book.category}
                     </span>
                     {book.rack_location && (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                      <span className="library-span-27">
                         📍 Rack {book.rack_location}
                       </span>
                     )}
                   </div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginTop: '0.5rem', color: 'var(--text-main)', lineHeight: 1.3 }}>
+                  <h3 className="library-title-28">
                     {book.title}
                   </h3>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                  <p className="library-text-29">
                     by <strong>{book.author}</strong>
                   </p>
                   {book.isbn && (
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    <p className="library-text-30">
                       ISBN: {book.isbn}
                     </p>
                   )}
                 </div>
 
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="library-row-31">
                   <div>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 700 }}>Availability</span>
+                    <span className="library-span-32">Availability</span>
                     <span style={{ fontSize: '1.1rem', fontWeight: 800, color: book.available_copies > 0 ? 'var(--success)' : 'var(--danger)' }}>
                       {book.available_copies} / {book.total_copies} available
                     </span>
                   </div>
 
                   {canManage && (
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <button 
-                        className="btn btn-outline" 
-                        style={{ padding: '0.4rem' }} 
-                        onClick={() => {
-                          setEditingBook(book);
-                          setBookForm({
-                            title: book.title,
-                            author: book.author,
-                            isbn: book.isbn,
-                            category: book.category,
-                            total_copies: book.total_copies,
-                            rack_location: book.rack_location
-                          });
-                          setShowBookModal(true);
-                        }}
-                        title="Edit Book Details"
-                      >
+                    <div className="library-row-33">
+                      <button className="btn btn-outline library-btn" onClick={() => { setEditingBook(book); setBookForm({ title: book.title, author: book.author, isbn: book.isbn, category: book.category, total_copies: book.total_copies, rack_location: book.rack_location }); setShowBookModal(true); }} title="Edit Book Details">
                         <Edit size={14} />
                       </button>
-                      <button 
-                        className="btn btn-outline" 
-                        style={{ padding: '0.4rem', color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.2)' }}
-                        onClick={() => handleDeleteBook(book.id)}
-                        title="Delete Book"
-                      >
+                      <button className="btn btn-outline library-btn" onClick={() => handleDeleteBook(book.id)} title="Delete Book">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -384,15 +350,15 @@ export default function Library() {
         </div>
       ) : (
         // Transactions Table View
-        <div className="card" style={{ padding: '1rem' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '1rem' }}>Borrowing Records</h3>
+        <div className="card library-card">
+          <h3 className="library-title-37">Borrowing Records</h3>
           {filteredTransactions.length === 0 ? (
-            <p className="no-data" style={{ padding: '3rem 0', color: 'var(--text-muted)', textAlign: 'center' }}>
+            <p className="no-data library-no-data">
               No borrowing transaction logs found.
             </p>
           ) : (
             <div className="table-responsive">
-              <table className="table" style={{ fontSize: '0.85rem' }}>
+              <table className="table library-table">
                 <thead>
                   <tr>
                     <th>Book Details</th>
@@ -400,9 +366,9 @@ export default function Library() {
                     <th>Issue Date</th>
                     <th>Due Date</th>
                     <th>Return Date</th>
-                    <th style={{ textAlign: 'center' }}>Status</th>
-                    <th style={{ textAlign: 'center' }}>Overdue Fine</th>
-                    {canManage && <th style={{ textAlign: 'center' }}>Actions</th>}
+                    <th className="library-th-40">Status</th>
+                    <th className="library-th-41">Overdue Fine</th>
+                    {canManage && <th className="library-th-42">Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -410,37 +376,29 @@ export default function Library() {
                     <tr key={txn.id}>
                       <td>
                         <strong>{txn.book_title}</strong>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>by {txn.book_author}</div>
+                        <div className="library-div-43">by {txn.book_author}</div>
                       </td>
                       <td>
                         <strong>{txn.student_name}</strong>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>ID: {txn.admission_number}</div>
+                        <div className="library-div-44">ID: {txn.admission_number}</div>
                       </td>
                       <td>{new Date(txn.issue_date).toLocaleDateString()}</td>
                       <td>{new Date(txn.due_date).toLocaleDateString()}</td>
                       <td>
-                        {txn.return_date ? new Date(txn.return_date).toLocaleDateString() : <span style={{ color: 'var(--text-muted)' }}>-</span>}
+                        {txn.return_date ? new Date(txn.return_date).toLocaleDateString() : <span className="library-span-45">-</span>}
                       </td>
-                      <td style={{ textAlign: 'center' }}>{getStatusBadge(txn.status)}</td>
-                      <td style={{ textAlign: 'center' }}>{getFineBadge(txn)}</td>
+                      <td className="library-td-46">{getStatusBadge(txn.status)}</td>
+                      <td className="library-td-47">{getFineBadge(txn)}</td>
                       {canManage && (
-                        <td style={{ textAlign: 'center' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                        <td className="library-td-48">
+                          <div className="library-row-49">
                             {txn.status === 'ISSUED' && (
-                              <button 
-                                className="btn btn-outline" 
-                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderColor: 'var(--primary)', color: 'var(--primary)' }}
-                                onClick={() => handleReturnBook(txn.id)}
-                              >
+                              <button className="btn btn-outline library-btn" onClick={() => handleReturnBook(txn.id)}>
                                 Mark Return
                               </button>
                             )}
                             {txn.fine_amount > 0 && txn.fine_status === 'PENDING' && (
-                              <button 
-                                className="btn btn-outline" 
-                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderColor: 'var(--success)', color: 'var(--success)' }}
-                                onClick={() => handlePayFine(txn.id)}
-                              >
+                              <button className="btn btn-outline library-btn" onClick={() => handlePayFine(txn.id)}>
                                 <CreditCard size={12} /> Clear Fine
                               </button>
                             )}
@@ -459,7 +417,7 @@ export default function Library() {
       {/* Book Modal */}
       {showBookModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '550px' }}>
+          <div className="modal-content library-modal-content">
             <h3>{editingBook ? 'Edit Book Details' : 'Add Book to Catalog'}</h3>
             <form onSubmit={handleBookSubmit}>
               <div className="form-group">
@@ -484,7 +442,7 @@ export default function Library() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="library-grid-53">
                 <div className="form-group">
                   <label>ISBN Number (Optional)</label>
                   <input
@@ -510,7 +468,7 @@ export default function Library() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="library-grid-54">
                 <div className="form-group">
                   <label>Total Copies</label>
                   <input
@@ -532,7 +490,7 @@ export default function Library() {
                 </div>
               </div>
 
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <div className="modal-actions library-modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => { setShowBookModal(false); setEditingBook(null); }}>
                   Cancel
                 </button>
@@ -548,7 +506,7 @@ export default function Library() {
       {/* Issue Modal */}
       {showIssueModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
+          <div className="modal-content library-modal-content">
             <h3>Issue Library Book</h3>
             <form onSubmit={handleIssueSubmit}>
               <div className="form-group">
@@ -567,20 +525,9 @@ export default function Library() {
 
               <div className="form-group">
                 <label>Find Student</label>
-                <input
-                  type="text"
-                  placeholder="Type student name or admission number..."
-                  value={studentSearch}
-                  onChange={(e) => { setStudentSearch(e.target.value); setIssueForm({...issueForm, student_id: ''}); }}
-                  style={{ marginBottom: '0.5rem' }}
-                />
+                <input type="text" placeholder="Type student name or admission number..." value={studentSearch} onChange={(e) => { setStudentSearch(e.target.value); setIssueForm({...issueForm, student_id: ''}); }} className="library-input-57"  />
                 {studentSearch.length >= 2 && (
-                  <select
-                    value={issueForm.student_id}
-                    onChange={(e) => setIssueForm({ ...issueForm, student_id: e.target.value })}
-                    required
-                    style={{ width: '100%' }}
-                  >
+                  <select value={issueForm.student_id} onChange={(e) => setIssueForm({ ...issueForm, student_id: e.target.value })} required className="library-select-58">
                     <option value="">-- Select student --</option>
                     {students
                       .filter(s =>
@@ -595,7 +542,7 @@ export default function Library() {
                   </select>
                 )}
                 {studentSearch.length < 2 && (
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.25rem 0 0' }}>
+                  <p className="library-text-59">
                     Type at least 2 characters to search
                   </p>
                 )}
@@ -611,7 +558,7 @@ export default function Library() {
                 />
               </div>
 
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <div className="modal-actions library-modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => { setShowIssueModal(false); setStudentSearch(''); }}>
                   Cancel
                 </button>

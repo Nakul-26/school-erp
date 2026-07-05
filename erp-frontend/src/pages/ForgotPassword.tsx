@@ -1,3 +1,4 @@
+import './ForgotPassword.css';
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../services/api'
@@ -28,7 +29,7 @@ export default function ForgotPassword() {
     <div className="auth-container">
       <div className="auth-card">
         <h2>Forgot Password</h2>
-        <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>Enter your email and we'll send you a reset link.</p>
+        <p className="forgot-password-text-1">Enter your email and we'll send you a reset link.</p>
         <form onSubmit={handleSubmit}>
           <div className="input-group">
             <label>Email</label>
@@ -40,14 +41,14 @@ export default function ForgotPassword() {
               placeholder="you@college.edu"
             />
           </div>
-          {error && <p style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{error}</p>}
-          {message && <p style={{ color: 'var(--success)', fontSize: '0.875rem' }}>{message}</p>}
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
+          {error && <p className="forgot-password-text-2">{error}</p>}
+          {message && <p className="forgot-password-text-3">{message}</p>}
+          <button type="submit" className="btn btn-primary forgot-password-btn" disabled={loading}>
             {loading ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
-        <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-          <Link to="/login" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Back to Login</Link>
+        <div className="forgot-password-div-5">
+          <Link to="/login" className="forgot-password-Link-6">Back to Login</Link>
         </div>
       </div>
     </div>

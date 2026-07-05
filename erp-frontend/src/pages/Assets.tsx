@@ -1,3 +1,4 @@
+import './Assets.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -160,15 +161,11 @@ export default function Assets() {
       <div className="page-header">
         <div>
           <h2>School Asset Directory</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+          <p className="assets-text-1">
             Track room locations, conditions, and acquisition values
           </p>
         </div>
-        <button 
-          className="btn btn-primary" 
-          onClick={() => { resetForm(); setShowAddModal(true); }} 
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
+        <button className="btn btn-primary assets-btn" onClick={() => { resetForm(); setShowAddModal(true); }}>
           <Plus size={18} /> Add New Asset
         </button>
       </div>
@@ -198,7 +195,7 @@ export default function Assets() {
                   <th>Custody (Assigned To)</th>
                   <th>Condition</th>
                   <th>Value</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th className="assets-th-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -212,8 +209,8 @@ export default function Assets() {
                       </td>
                       <td><strong>{a.quantity}</strong></td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem' }}>
-                          <MapPin size={12} style={{ color: 'var(--text-muted)' }} />
+                        <div className="assets-row-4">
+                          <MapPin size={12} className="assets-MapPin-5"  />
                           <span>{a.room || '—'}</span>
                         </div>
                       </td>
@@ -231,23 +228,15 @@ export default function Assets() {
                           {a.condition}
                         </span>
                       </td>
-                      <td style={{ fontWeight: 600 }}>
+                      <td className="assets-td-6">
                         {a.value ? `₹${a.value.toLocaleString()}` : '—'}
                       </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
-                          <button
-                            className="btn btn-sm btn-outline"
-                            onClick={() => handleEditClick(a)}
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                          >
+                      <td className="assets-td-7">
+                        <div className="assets-row-8">
+                          <button className="btn btn-sm btn-outline assets-btn" onClick={() => handleEditClick(a)}>
                             <Edit2 size={12} /> Edit
                           </button>
-                          <button
-                            className="btn btn-sm btn-outline btn-danger"
-                            onClick={() => handleDelete(a.id)}
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                          >
+                          <button className="btn btn-sm btn-outline btn-danger assets-btn" onClick={() => handleDelete(a.id)}>
                             <Trash2 size={12} /> Dispose
                           </button>
                         </div>
@@ -264,14 +253,14 @@ export default function Assets() {
       {/* Add Asset Modal */}
       {showAddModal && (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+          <div className="modal assets-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Log New Property Asset</h3>
               <button className="modal-close" onClick={() => setShowAddModal(false)}>×</button>
             </div>
             <form onSubmit={handleCreate}>
-              <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <div className="modal-body assets-modal-body">
+                <div className="form-group assets-form-group">
                   <label>Asset Name *</label>
                   <input
                     required
@@ -342,7 +331,7 @@ export default function Assets() {
                     placeholder="e.g. 15000"
                   />
                 </div>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <div className="form-group assets-form-group">
                   <label>Purchase Date</label>
                   <input
                     type="date"
@@ -365,14 +354,14 @@ export default function Assets() {
       {/* Edit Asset Modal */}
       {editingAsset && (
         <div className="modal-overlay" onClick={() => setEditingAsset(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+          <div className="modal assets-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Edit Asset Details</h3>
               <button className="modal-close" onClick={() => setEditingAsset(null)}>×</button>
             </div>
             <form onSubmit={handleUpdate}>
-              <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <div className="modal-body assets-modal-body">
+                <div className="form-group assets-form-group">
                   <label>Asset Name *</label>
                   <input
                     required
@@ -439,7 +428,7 @@ export default function Assets() {
                     onChange={e => setForm(f => ({ ...f, value: e.target.value }))}
                   />
                 </div>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <div className="form-group assets-form-group">
                   <label>Purchase Date</label>
                   <input
                     type="date"

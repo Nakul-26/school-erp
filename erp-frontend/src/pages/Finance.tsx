@@ -1,3 +1,4 @@
+import './Finance.css';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -610,9 +611,9 @@ export default function Finance() {
     if (feeView === 'list') {
       return (
         <>
-          <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
-              <div className="search-container" style={{ flex: 1 }}>
+          <div className="card finance-card">
+            <form onSubmit={handleSearchSubmit} className="finance-row-2">
+              <div className="search-container finance-search-container">
                 <Search size={18} />
                 <input
                   type="text"
@@ -627,7 +628,7 @@ export default function Finance() {
 
           <div className="card">
             {studentsLoading ? <p>Loading student fee summaries...</p> : students.length === 0 ? (
-              <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+              <p className="finance-text-4">
                 No student accounts found. Try modifying your search query.
               </p>
             ) : (
@@ -643,14 +644,14 @@ export default function Finance() {
                       <th>Paid</th>
                       <th>Outstanding</th>
                       <th>Status</th>
-                      <th style={{ textAlign: 'right' }}>Actions</th>
+                      <th className="finance-th-5">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {students.map((student) => {
                       const outstanding = student.total_amount - student.paid_amount;
                       return (
-                        <tr key={student.student_id} style={{ cursor: 'pointer' }} onClick={() => handleOpenLedger(student)}>
+                        <tr key={student.student_id} className="finance-tr-6" onClick={() => handleOpenLedger(student)}>
                           <td><strong>{student.admission_number}</strong></td>
                           <td>{student.roll_number || '-'}</td>
                           <td><strong>{student.first_name} {student.last_name}</strong></td>
@@ -663,7 +664,7 @@ export default function Finance() {
                             </span>
                           </td>
                           <td>{getStatusBadge(student.status)}</td>
-                          <td style={{ textAlign: 'right' }} onClick={e => e.stopPropagation()}>
+                          <td className="finance-td-7" onClick={e => e.stopPropagation()}>
                             <button className="btn btn-sm btn-primary" onClick={() => handleOpenLedger(student)}>
                               Open Ledger
                             </button>
@@ -683,19 +684,19 @@ export default function Finance() {
     if (feeView === 'ledger' && selectedStudent) {
       return (
         <>
-          <div className="page-header" style={{ marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => { setFeeView('list'); fetchStudentRecords(); }}>
+          <div className="page-header finance-page-header">
+            <div className="finance-row-9">
+              <button className="btn btn-secondary finance-btn" onClick={() => { setFeeView('list'); fetchStudentRecords(); }}>
                 <ArrowLeft size={18} />
               </button>
               <div>
                 <h2>Ledger: {selectedStudent.first_name} {selectedStudent.last_name}</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                <p className="finance-text-11">
                   Admission: {selectedStudent.admission_number} | Course: {selectedStudent.course_name}
                 </p>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="finance-row-12">
               {isFinanceAdmin && (
                 <>
                   <button className="btn btn-outline" onClick={handleGenerateLedger} disabled={ledgerLoading}>
@@ -709,17 +710,17 @@ export default function Finance() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+          <div className="finance-grid-13">
             {/* Outstanding Items Card */}
             <div className="card">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem', fontWeight: '800' }}>Outstanding Liabilities</h3>
+              <h3 className="finance-title-14">Outstanding Liabilities</h3>
               {ledgerLoading ? <p>Loading ledger...</p> : ledger.length === 0 ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  <IndianRupee size={24} style={{ marginBottom: '0.5rem' }} />
+                <div className="finance-div-15">
+                  <IndianRupee size={24} className="finance-IndianRupee-16"  />
                   <p>No billing records found. Click "Re-Sync Ledger" to apply current fee configs.</p>
                 </div>
               ) : (
-                <table className="table" style={{ minWidth: 'auto' }}>
+                <table className="table finance-table">
                   <thead>
                     <tr>
                       <th>Fee Category</th>
@@ -727,7 +728,7 @@ export default function Finance() {
                       <th>Paid</th>
                       <th>Due</th>
                       <th>Status</th>
-                      {isFinanceAdmin && <th style={{ textAlign: 'right' }}>Manage</th>}
+                      {isFinanceAdmin && <th className="finance-th-18">Manage</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -741,20 +742,12 @@ export default function Finance() {
                           <td><span style={{ fontWeight: 'bold', color: outstanding > 0 ? 'var(--danger)' : '' }}>₹{outstanding.toLocaleString('en-IN')}</span></td>
                           <td>{getStatusBadge(item.status)}</td>
                           {isFinanceAdmin && (
-                            <td style={{ textAlign: 'right' }}>
-                              <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
-                                <button
-                                  className="btn btn-sm btn-outline"
-                                  style={{ padding: '0.2rem 0.4rem', fontSize: '0.72rem' }}
-                                  onClick={() => handleOpenConcessions(item)}
-                                >
+                            <td className="finance-td-19">
+                              <div className="finance-row-20">
+                                <button className="btn btn-sm btn-outline finance-btn" onClick={() => handleOpenConcessions(item)}>
                                   Concession
                                 </button>
-                                <button
-                                  className="btn btn-sm btn-outline"
-                                  style={{ padding: '0.2rem 0.4rem', fontSize: '0.72rem' }}
-                                  onClick={() => handleOpenInstallments(item)}
-                                >
+                                <button className="btn btn-sm btn-outline finance-btn" onClick={() => handleOpenInstallments(item)}>
                                   Split
                                 </button>
                               </div>
@@ -770,21 +763,21 @@ export default function Finance() {
 
             {/* Payment History Card */}
             <div className="card">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem', fontWeight: '800' }}>Transaction History</h3>
+              <h3 className="finance-title-23">Transaction History</h3>
               {ledgerLoading ? <p>Loading transaction logs...</p> : payments.length === 0 ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  <Receipt size={24} style={{ marginBottom: '0.5rem' }} />
+                <div className="finance-div-24">
+                  <Receipt size={24} className="finance-Receipt-25"  />
                   <p>No payments recorded for this student account yet.</p>
                 </div>
               ) : (
-                <table className="table" style={{ minWidth: 'auto' }}>
+                <table className="table finance-table">
                   <thead>
                     <tr>
                       <th>Date</th>
                       <th>Category</th>
                       <th>Method</th>
                       <th>Amount</th>
-                      <th style={{ textAlign: 'right' }}>Receipt</th>
+                      <th className="finance-th-27">Receipt</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -794,11 +787,11 @@ export default function Finance() {
                         <td>{p.fee_type}</td>
                         <td>
                           <strong>{p.payment_method}</strong>
-                          {p.transaction_reference && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Ref: {p.transaction_reference}</div>}
+                          {p.transaction_reference && <div className="finance-div-28">Ref: {p.transaction_reference}</div>}
                         </td>
                         <td><strong>₹{p.amount.toLocaleString('en-IN')}</strong></td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button className="btn btn-sm btn-outline" style={{ padding: '0.25rem 0.5rem' }} onClick={() => handleOpenReceipt(p)}>
+                        <td className="finance-td-29">
+                          <button className="btn btn-sm btn-outline finance-btn" onClick={() => handleOpenReceipt(p)}>
                             <Printer size={12} /> Print
                           </button>
                         </td>
@@ -816,9 +809,9 @@ export default function Finance() {
     if (feeView === 'receipt' && selectedReceipt) {
       return (
         <>
-          <div className="page-header no-print" style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => setFeeView('ledger')}>
+          <div className="page-header no-print finance-page-header">
+            <div className="finance-row-32">
+              <button className="btn btn-secondary finance-btn" onClick={() => setFeeView('ledger')}>
                 <ArrowLeft size={18} /> Back
               </button>
               <h2>Receipt Preview</h2>
@@ -828,23 +821,14 @@ export default function Finance() {
             </button>
           </div>
 
-          <div className="receipt-print-container" style={{
-            background: 'white',
-            border: '2px dashed #cbd5e1',
-            borderRadius: '12px',
-            padding: '2.5rem',
-            maxWidth: '650px',
-            margin: '0 auto',
-            fontFamily: 'Courier New, monospace',
-            boxShadow: 'var(--shadow-md)'
-          }}>
-            <div style={{ textAlign: 'center', borderBottom: '2px dashed #cbd5e1', paddingBottom: '1.25rem', marginBottom: '1.25rem' }}>
-              <h1 style={{ fontSize: '1.4rem', fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>{selectedReceipt.institution_name}</h1>
-              <p style={{ margin: '0.25rem 0 0 0', color: '#475569', fontSize: '0.8rem' }}>{selectedReceipt.institution_address || 'Education Campus Road, India'}</p>
-              <h2 style={{ fontSize: '1.1rem', letterSpacing: '0.05em', marginTop: '0.75rem', textDecoration: 'underline' }}>FEES PAYMENT RECEIPT</h2>
+          <div className="receipt-print-container finance-receipt-print-container">
+            <div className="finance-div-35">
+              <h1 className="finance-title-36">{selectedReceipt.institution_name}</h1>
+              <p className="finance-text-37">{selectedReceipt.institution_address || 'Education Campus Road, India'}</p>
+              <h2 className="finance-title-38">FEES PAYMENT RECEIPT</h2>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', fontSize: '0.85rem', lineHeight: '1.5' }}>
+            <div className="finance-grid-39">
               <div>
                 <div><strong>Receipt No:</strong> {selectedReceipt.receipt_number}</div>
                 <div><strong>Date:</strong> {new Date(selectedReceipt.receipt_date).toLocaleDateString(undefined, { dateStyle: 'long' })}</div>
@@ -858,31 +842,31 @@ export default function Finance() {
               </div>
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
+            <table className="finance-table-40">
               <thead>
-                <tr style={{ borderBottom: '2px dashed #cbd5e1', borderTop: '2px dashed #cbd5e1' }}>
-                  <th style={{ textAlign: 'left', padding: '0.5rem 0' }}>FEE DESCRIPTION</th>
-                  <th style={{ textAlign: 'right', padding: '0.5rem 0' }}>TOTAL DUE</th>
-                  <th style={{ textAlign: 'right', padding: '0.5rem 0' }}>PAID AMOUNT</th>
+                <tr className="finance-tr-41">
+                  <th className="finance-th-42">FEE DESCRIPTION</th>
+                  <th className="finance-th-43">TOTAL DUE</th>
+                  <th className="finance-th-44">PAID AMOUNT</th>
                 </tr>
               </thead>
               <tbody>
-                <tr style={{ borderBottom: '2px dashed #e2e8f0' }}>
-                  <td style={{ padding: '0.75rem 0' }}>{selectedReceipt.fee_type} Payment ({selectedReceipt.payment_method})</td>
-                  <td style={{ textAlign: 'right', padding: '0.75rem 0' }}>₹{selectedReceipt.total_amount.toLocaleString('en-IN')}</td>
-                  <td style={{ textAlign: 'right', padding: '0.75rem 0', fontWeight: 'bold' }}>₹{selectedReceipt.paid_amount.toLocaleString('en-IN')}</td>
+                <tr className="finance-tr-45">
+                  <td className="finance-td-46">{selectedReceipt.fee_type} Payment ({selectedReceipt.payment_method})</td>
+                  <td className="finance-td-47">₹{selectedReceipt.total_amount.toLocaleString('en-IN')}</td>
+                  <td className="finance-td-48">₹{selectedReceipt.paid_amount.toLocaleString('en-IN')}</td>
                 </tr>
               </tbody>
             </table>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontSize: '0.85rem' }}>
+            <div className="finance-row-49">
               <div>
                 <div><strong>Payment Method:</strong> {selectedReceipt.payment_method}</div>
                 {selectedReceipt.transaction_reference && <div><strong>Txn Reference:</strong> {selectedReceipt.transaction_reference}</div>}
                 {selectedReceipt.remarks && <div><strong>Remarks:</strong> {selectedReceipt.remarks}</div>}
               </div>
-              <div style={{ textAlign: 'right', width: '220px' }}>
-                <div style={{ borderBottom: '1px solid #cbd5e1', paddingBottom: '0.25rem', marginBottom: '0.25rem' }}>
+              <div className="finance-div-50">
+                <div className="finance-div-51">
                   <strong>Ledger Paid:</strong> ₹{selectedReceipt.total_paid.toLocaleString('en-IN')}
                 </div>
                 <div>
@@ -891,7 +875,7 @@ export default function Finance() {
               </div>
             </div>
 
-            <div style={{ borderTop: '2px dashed #cbd5e1', marginTop: '2rem', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#475569' }}>
+            <div className="finance-row-52">
               <div>* Computer generated receipt. Requires no physical signature.</div>
               <div>Authorized Signatory</div>
             </div>
@@ -905,8 +889,8 @@ export default function Finance() {
     return (
       <div className="card">
         {plansLoading ? <p>Loading fee plans...</p> : plans.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-            <IndianRupee size={32} style={{ marginBottom: '0.5rem' }} />
+          <div className="finance-div-53">
+            <IndianRupee size={32} className="finance-IndianRupee-54"  />
             <p>No fee structures configured yet. Click "Add Fee Config" to configure one.</p>
           </div>
         ) : (
@@ -919,7 +903,7 @@ export default function Finance() {
                   <th>Year Level</th>
                   <th>Fee Type / Head</th>
                   <th>Amount</th>
-                  {isFinanceAdmin && <th style={{ textAlign: 'right' }}>Actions</th>}
+                  {isFinanceAdmin && <th className="finance-th-55">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -928,10 +912,10 @@ export default function Finance() {
                     <td><strong>{p.academic_year_name}</strong></td>
                     <td><strong>{p.course_code}</strong> - {p.course_name}</td>
                     <td>Year {p.year_number}</td>
-                    <td><span className="badge badge-secondary" style={{ textTransform: 'none' }}>{p.fee_type}</span></td>
+                    <td><span className="badge badge-secondary finance-badge">{p.fee_type}</span></td>
                     <td><strong>₹{p.amount.toLocaleString('en-IN')}</strong></td>
                     {isFinanceAdmin && (
-                      <td style={{ textAlign: 'right' }}>
+                      <td className="finance-td-57">
                         <button className="btn btn-sm btn-outline btn-danger" onClick={() => handleDeletePlan(p.id)}>
                           <Trash2 size={14} /> Delete
                         </button>
@@ -952,66 +936,66 @@ export default function Finance() {
       <>
         {reportsLoading ? <p>Loading financial dashboards...</p> : (
           <>
-            <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+            <div className="stats-grid finance-stats-grid">
               <div className="stat-card">
-                <div className="icon" style={{ background: '#f0fdf4', color: 'var(--success)' }}>
+                <div className="icon finance-icon">
                   <IndianRupee size={24} />
                 </div>
                 <div className="info">
                   <h3>Total Collected</h3>
-                  <div className="value" style={{ color: 'var(--success)' }}>
+                  <div className="value finance-value">
                     ₹{reportStats.totalCollected.toLocaleString('en-IN')}
                   </div>
                 </div>
               </div>
 
               <div className="stat-card">
-                <div className="icon" style={{ background: '#fffbeb', color: 'var(--warning)' }}>
+                <div className="icon finance-icon">
                   <Clock size={24} />
                 </div>
                 <div className="info">
                   <h3>Outstanding Fees</h3>
-                  <div className="value" style={{ color: 'var(--warning)' }}>
+                  <div className="value finance-value">
                     ₹{reportStats.totalPending.toLocaleString('en-IN')}
                   </div>
                 </div>
               </div>
 
               <div className="stat-card">
-                <div className="icon" style={{ background: '#fef2f2', color: 'var(--danger)' }}>
+                <div className="icon finance-icon">
                   <AlertTriangle size={24} />
                 </div>
                 <div className="info">
                   <h3>Overdue Amount</h3>
-                  <div className="value" style={{ color: 'var(--danger)' }}>
+                  <div className="value finance-value">
                     ₹{reportStats.totalOverdue.toLocaleString('en-IN')}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div className="finance-grid-65">
               {/* MONTHLY REVENUE */}
               <div className="card">
-                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h3 className="finance-row-66">
                   <TrendingUp size={18} /> Monthly Collection Trends
                 </h3>
                 {reportMonthly.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No payments logged yet.</p>
+                  <p className="finance-text-67">No payments logged yet.</p>
                 ) : (
                   <div className="table-responsive">
-                    <table className="table" style={{ minWidth: 'auto' }}>
+                    <table className="table finance-table">
                       <thead>
                         <tr>
                           <th>Month</th>
-                          <th style={{ textAlign: 'right' }}>Total Collected</th>
+                          <th className="finance-th-69">Total Collected</th>
                         </tr>
                       </thead>
                       <tbody>
                         {reportMonthly.map((row) => (
                           <tr key={row.month}>
                             <td><strong>{row.month}</strong></td>
-                            <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--success)' }}>
+                            <td className="finance-td-70">
                               ₹{row.amount.toLocaleString('en-IN')}
                             </td>
                           </tr>
@@ -1024,20 +1008,20 @@ export default function Finance() {
 
               {/* TOP DEFAULTERS */}
               <div className="card">
-                <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Users size={18} style={{ color: 'var(--danger)' }} /> Top Dues Outstanding
+                <h3 className="finance-row-71">
+                  <Users size={18} className="finance-Users-72"  /> Top Dues Outstanding
                 </h3>
                 {reportDefaulters.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No pending dues found.</p>
+                  <p className="finance-text-73">No pending dues found.</p>
                 ) : (
                   <div className="table-responsive">
-                    <table className="table" style={{ minWidth: 'auto' }}>
+                    <table className="table finance-table">
                       <thead>
                         <tr>
                           <th>Admission No</th>
                           <th>Student</th>
                           <th>Course</th>
-                          <th style={{ textAlign: 'right' }}>Dues</th>
+                          <th className="finance-th-75">Dues</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1046,7 +1030,7 @@ export default function Finance() {
                             <td><strong>{row.admission_number}</strong></td>
                             <td>{row.first_name} {row.last_name}</td>
                             <td>{row.course_name}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--danger)' }}>
+                            <td className="finance-td-76">
                               ₹{row.pending_amount.toLocaleString('en-IN')}
                             </td>
                           </tr>
@@ -1075,10 +1059,10 @@ export default function Finance() {
         ]}
       />
 
-      <div className="page-header" style={{ marginBottom: '1.5rem' }}>
+      <div className="page-header finance-page-header">
         <div>
           <h2>Fees & Finance</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="finance-text-78">
             Configure fee plans, view billing accounts, collect payments, and track outstanding balances
           </p>
         </div>
@@ -1120,7 +1104,7 @@ export default function Finance() {
       {/* --- ADD FEE PLAN CONFIG MODAL --- */}
       {showPlanModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '480px' }}>
+          <div className="modal-content finance-modal-content">
             <h3>Add Fee Config</h3>
             <form onSubmit={handleCreatePlan}>
               <div className="form-group">
@@ -1175,20 +1159,13 @@ export default function Finance() {
 
               <div className="form-group">
                 <label>Amount (INR)</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>₹</span>
-                  <input
-                    type="number"
-                    value={planForm.amount}
-                    onChange={(e) => setPlanForm({ ...planForm, amount: e.target.value })}
-                    placeholder="50000"
-                    required
-                    style={{ paddingLeft: '2rem' }}
-                  />
+                <div className="finance-div-80">
+                  <span className="finance-span-81">₹</span>
+                  <input type="number" value={planForm.amount} onChange={(e) => setPlanForm({ ...planForm, amount: e.target.value })} placeholder="50000" required className="finance-input-82"  />
                 </div>
               </div>
 
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <div className="modal-actions finance-modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowPlanModal(false)}>
                   Cancel
                 </button>
@@ -1204,7 +1181,7 @@ export default function Finance() {
       {/* --- RECORD PAYMENT MODAL --- */}
       {showPayModal && selectedStudent && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '480px' }}>
+          <div className="modal-content finance-modal-content">
             <h3>Record Fee Payment</h3>
             <form onSubmit={handleCollectPayment}>
               <div className="form-group">
@@ -1245,15 +1222,9 @@ export default function Finance() {
 
               <div className="form-group">
                 <label>Amount to Collect (INR)</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>₹</span>
-                  <input
-                    type="number"
-                    value={payForm.amount}
-                    onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })}
-                    required
-                    style={{ paddingLeft: '2rem' }}
-                  />
+                <div className="finance-div-85">
+                  <span className="finance-span-86">₹</span>
+                  <input type="number" value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} required className="finance-input-87"  />
                 </div>
               </div>
 
@@ -1290,7 +1261,7 @@ export default function Finance() {
                 />
               </div>
 
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <div className="modal-actions finance-modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowPayModal(false)}>
                   Cancel
                 </button>
@@ -1306,11 +1277,11 @@ export default function Finance() {
       {/* --- CONCESSIONS MODAL --- */}
       {showConcessionModal && selectedFeeRecord && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '600px', width: '90%' }}>
-            <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>Concessions: {selectedFeeRecord.fee_type}</h3>
+          <div className="modal-content finance-modal-content">
+            <h3 className="finance-title-90">Concessions: {selectedFeeRecord.fee_type}</h3>
             
-            <form onSubmit={handleApplyConcession} style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px dashed var(--border)' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <form onSubmit={handleApplyConcession} className="finance-form-91">
+              <div className="finance-grid-92">
                 <div className="form-group">
                   <label>Concession Type</label>
                   <select
@@ -1338,7 +1309,7 @@ export default function Finance() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+              <div className="finance-grid-93">
                 <div className="form-group">
                   <label>Value</label>
                   <input
@@ -1360,20 +1331,20 @@ export default function Finance() {
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+              <button type="submit" className="btn btn-primary finance-btn">
                 Apply Concession
               </button>
             </form>
 
             <h4>Applied Concessions</h4>
-            <div className="table-responsive" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+            <div className="table-responsive finance-table-responsive">
               <table className="table">
                 <thead>
                   <tr>
                     <th>Type</th>
                     <th>Discount</th>
                     <th>Reason</th>
-                    <th style={{ textAlign: 'right' }}>Action</th>
+                    <th className="finance-th-96">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1382,7 +1353,7 @@ export default function Finance() {
                       <td><strong>{c.concession_type}</strong></td>
                       <td>{c.discount_type === 'percent' ? `${c.discount_value}%` : `₹${c.discount_value}`} (₹{c.discount_amount})</td>
                       <td>{c.reason || '—'}</td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td className="finance-td-97">
                         <button className="btn btn-sm btn-outline btn-danger" onClick={() => handleRemoveConcession(c.id)}>
                           Remove
                         </button>
@@ -1391,7 +1362,7 @@ export default function Finance() {
                   ))}
                   {concessions.length === 0 && (
                     <tr>
-                      <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>
+                      <td colSpan={4} className="finance-td-98">
                         No concessions applied yet.
                       </td>
                     </tr>
@@ -1412,13 +1383,13 @@ export default function Finance() {
       {/* --- INSTALLMENTS MODAL --- */}
       {showInstallmentModal && selectedFeeRecord && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '650px', width: '90%' }}>
-            <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>Installments: {selectedFeeRecord.fee_type}</h3>
+          <div className="modal-content finance-modal-content">
+            <h3 className="finance-title-100">Installments: {selectedFeeRecord.fee_type}</h3>
             
             {installments.length > 0 ? (
               <div>
                 <h4>Installment Schedule</h4>
-                <div className="table-responsive" style={{ maxHeight: '240px', overflowY: 'auto', marginBottom: '1.5rem' }}>
+                <div className="table-responsive finance-table-responsive">
                   <table className="table">
                     <thead>
                       <tr>
@@ -1427,7 +1398,7 @@ export default function Finance() {
                         <th>Amount</th>
                         <th>Paid</th>
                         <th>Status</th>
-                        <th style={{ textAlign: 'right' }}>Action</th>
+                        <th className="finance-th-102">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1442,7 +1413,7 @@ export default function Finance() {
                               {inst.status}
                             </span>
                           </td>
-                          <td style={{ textAlign: 'right' }}>
+                          <td className="finance-td-103">
                             {inst.status !== 'Paid' && (
                               <button className="btn btn-sm btn-primary" onClick={() => handlePayInstallment(inst)}>
                                 Pay Dues
@@ -1457,11 +1428,11 @@ export default function Finance() {
               </div>
             ) : (
               <div>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                <p className="finance-text-104">
                   This fee item has no active installment schedule. Split the overall total into structured installments below:
                 </p>
                 
-                <div className="form-group" style={{ maxWidth: '200px' }}>
+                <div className="form-group finance-form-group">
                   <label>Installment Splits</label>
                   <select 
                     value={installmentCount} 
@@ -1474,28 +1445,17 @@ export default function Finance() {
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: '1rem 0 1.5rem' }}>
+                <div className="finance-col-106">
                   {dynamicInstallments.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 600, width: '100px' }}>Split #{idx + 1}:</span>
-                      <input
-                        type="date"
-                        value={item.due_date}
-                        onChange={(e) => handleDynamicInstallmentChange(idx, 'due_date', e.target.value)}
-                        style={{ maxWidth: '160px' }}
-                      />
-                      <input
-                        type="number"
-                        value={item.amount}
-                        onChange={(e) => handleDynamicInstallmentChange(idx, 'amount', e.target.value)}
-                        placeholder="Amount"
-                        style={{ maxWidth: '140px' }}
-                      />
+                    <div key={idx} className="finance-row-107">
+                      <span className="finance-span-108">Split #{idx + 1}:</span>
+                      <input type="date" value={item.due_date} onChange={(e) => handleDynamicInstallmentChange(idx, 'due_date', e.target.value)} className="finance-input-109"  />
+                      <input type="number" value={item.amount} onChange={(e) => handleDynamicInstallmentChange(idx, 'amount', e.target.value)} placeholder="Amount" className="finance-input-110"  />
                     </div>
                   ))}
                 </div>
 
-                <button className="btn btn-primary" onClick={handleSaveInstallmentPlan} style={{ width: '100%', marginBottom: '1rem' }}>
+                <button className="btn btn-primary finance-btn" onClick={handleSaveInstallmentPlan}>
                   Save Split Schedule
                 </button>
               </div>

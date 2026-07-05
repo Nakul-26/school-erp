@@ -1,3 +1,4 @@
+import './Subjects.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -679,7 +680,7 @@ export default function Subjects() {
       <div className="page-header">
         <div>
           <h2>Subjects & Assignments</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="subjects-text-1">
             Manage subject curriculum and teacher classroom assignments.
           </p>
         </div>
@@ -691,7 +692,7 @@ export default function Subjects() {
         )}
       </div>
 
-      <div className="page-tabs" style={{ marginBottom: '1.5rem' }}>
+      <div className="page-tabs subjects-page-tabs">
         <button
           className={`page-tab${mainTab === 'subjects-list' ? ' active' : ''}`}
           onClick={() => handleMainTabChange('subjects-list')}
@@ -707,7 +708,7 @@ export default function Subjects() {
       </div>
 
       {mainTab === 'subjects-list' ? (
-        <div className="card" style={{ overflowX: 'auto' }}>
+        <div className="card subjects-card">
           {loading ? <p>Loading...</p> : (
             <table className="table">
               <thead>
@@ -723,12 +724,9 @@ export default function Subjects() {
               <tbody>
                 {subjects.map(subject => (
                   <tr key={subject.id}>
-                    {institutionType !== 'school' && <td style={{ fontFamily: 'monospace' }}>{subject.subject_code}</td>}
+                    {institutionType !== 'school' && <td className="subjects-td-4">{subject.subject_code}</td>}
                     <td>
-                      <span 
-                        onClick={() => navigate(`/subjects/${subject.id}`)}
-                        style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
-                      >
+                      <span onClick={() => navigate(`/subjects/${subject.id}`)} className="subjects-span-5">
                         {subject.subject_name}
                       </span>
                     </td>
@@ -736,11 +734,11 @@ export default function Subjects() {
                     {institutionType !== 'school' && <td>{subject.credits}</td>}
                     <td>{programs.find(p => p.id === subject.course_id)?.name || 'Unknown'}</td>
                     <td>
-                      <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
-                        <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/subjects/${subject.id}`)} title="Open Subject Workspace" style={{ padding: '0.35rem' }}>
+                      <div className="subjects-row-6">
+                        <button className="btn btn-sm btn-secondary subjects-btn" onClick={() => navigate(`/subjects/${subject.id}`)} title="Open Subject Workspace">
                           <Eye size={14} />
                         </button>
-                        <button className="btn btn-sm btn-danger" onClick={() => handleSubjectDelete(subject.id)} title="Delete Subject" style={{ padding: '0.35rem' }}>
+                        <button className="btn btn-sm btn-danger subjects-btn" onClick={() => handleSubjectDelete(subject.id)} title="Delete Subject">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -749,7 +747,7 @@ export default function Subjects() {
                 ))}
                 {subjects.length === 0 && (
                   <tr>
-                    <td colSpan={institutionType === 'school' ? 3 : 6} style={{ textAlign: 'center' }}>No subjects found.</td>
+                    <td colSpan={institutionType === 'school' ? 3 : 6} className="subjects-td-9">No subjects found.</td>
                   </tr>
                 )}
               </tbody>
@@ -785,8 +783,8 @@ export default function Subjects() {
           }
         >
           {activeAssignmentTab === 'overview' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div className="card filters" style={{ padding: '1rem', minHeight: 'fit-content' }}>
+            <div className="subjects-col-10">
+              <div className="card filters subjects-card">
                 <div className="search-container">
                   <Search size={18} />
                   <input 
@@ -797,27 +795,19 @@ export default function Subjects() {
                   />
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Academic Year</label>
-                    <select 
-                      style={{ padding: '0.45rem 1.5rem 0.45rem 0.75rem', width: 'auto' }} 
-                      value={selectedYearId} 
-                      onChange={e => setSelectedYearId(e.target.value)}
-                    >
+                <div className="subjects-row-12">
+                  <div className="subjects-row-13">
+                    <label className="subjects-label-14">Academic Year</label>
+                    <select className="subjects-select-15" value={selectedYearId} onChange={e => setSelectedYearId(e.target.value)}>
                       {academicYears.map(y => (
                         <option key={y.id} value={y.id}>{y.name} {y.is_active === 1 ? '(Active)' : ''}</option>
                       ))}
                     </select>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Department</label>
-                    <select 
-                      style={{ padding: '0.45rem 1.5rem 0.45rem 0.75rem', width: 'auto' }}
-                      value={selectedDeptId}
-                      onChange={e => setSelectedDeptId(e.target.value)}
-                    >
+                  <div className="subjects-row-16">
+                    <label className="subjects-label-17">Department</label>
+                    <select className="subjects-select-18" value={selectedDeptId} onChange={e => setSelectedDeptId(e.target.value)}>
                       <option value="">All Departments</option>
                       {departments.map(d => (
                         <option key={d.id} value={d.id}>{d.name}</option>
@@ -825,13 +815,9 @@ export default function Subjects() {
                     </select>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Course/Program</label>
-                    <select 
-                      style={{ padding: '0.45rem 1.5rem 0.45rem 0.75rem', width: 'auto' }}
-                      value={selectedProgId}
-                      onChange={e => setSelectedProgId(e.target.value)}
-                    >
+                  <div className="subjects-row-19">
+                    <label className="subjects-label-20">Course/Program</label>
+                    <select className="subjects-select-21" value={selectedProgId} onChange={e => setSelectedProgId(e.target.value)}>
                       <option value="">All Programs</option>
                       {programs.map(p => (
                         <option key={p.id} value={p.id}>{p.name}</option>
@@ -839,13 +825,9 @@ export default function Subjects() {
                     </select>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Status</label>
-                    <select 
-                      style={{ padding: '0.45rem 1.5rem 0.45rem 0.75rem', width: 'auto' }}
-                      value={selectedStatus}
-                      onChange={e => setSelectedStatus(e.target.value)}
-                    >
+                  <div className="subjects-row-22">
+                    <label className="subjects-label-23">Status</label>
+                    <select className="subjects-select-24" value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)}>
                       <option value="All">All Statuses</option>
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>
@@ -854,14 +836,14 @@ export default function Subjects() {
                 </div>
               </div>
 
-              <div className="card" style={{ padding: 0 }}>
+              <div className="card subjects-card">
                 {loadingData ? (
-                  <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <div className="subjects-div-26">
                     Loading allocations list...
                   </div>
                 ) : (
                   <div className="table-responsive">
-                    <table className="table" style={{ margin: 0 }}>
+                    <table className="table subjects-table">
                       <thead>
                         <tr>
                           <th>Teacher</th>
@@ -871,46 +853,37 @@ export default function Subjects() {
                           <th>Classes/Hr</th>
                           <th>Primary</th>
                           <th>Status</th>
-                          {isAdminOrHOD && <th style={{ textAlign: 'right' }}>Actions</th>}
+                          {isAdminOrHOD && <th className="subjects-th-28">Actions</th>}
                         </tr>
                       </thead>
                       <tbody>
                         {filteredAllocations.map(alloc => (
                           <tr key={alloc.id}>
                             <td>
-                              <span 
-                                onClick={() => navigate(`/teachers/${alloc.teacher_id}`)}
-                                style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
-                              >
+                              <span onClick={() => navigate(`/teachers/${alloc.teacher_id}`)} className="subjects-span-29">
                                 {alloc.teacher_name}
                               </span>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Emp ID: {alloc.teacher_employee_id}</div>
+                              <div className="subjects-div-30">Emp ID: {alloc.teacher_employee_id}</div>
                             </td>
                             <td>
-                              <span 
-                                onClick={() => navigate(`/subjects/${alloc.subject_id}`)}
-                                style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
-                              >
+                              <span onClick={() => navigate(`/subjects/${alloc.subject_id}`)} className="subjects-span-31">
                                 {alloc.subject_name}
                               </span>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Code: {alloc.subject_code}</div>
+                              <div className="subjects-div-32">Code: {alloc.subject_code}</div>
                             </td>
                             <td>
-                              <span 
-                                onClick={() => navigate(`/classes/${alloc.section_id}`)}
-                                style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
-                              >
+                              <span onClick={() => navigate(`/classes/${alloc.section_id}`)} className="subjects-span-33">
                                 {alloc.section_name}
                               </span>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Semester: {alloc.semester}</div>
+                              <div className="subjects-div-34">Semester: {alloc.semester}</div>
                             </td>
                             <td>
-                              <div style={{ fontWeight: 500 }}>{alloc.program_name}</div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{alloc.department_name}</div>
+                              <div className="subjects-div-35">{alloc.program_name}</div>
+                              <div className="subjects-div-36">{alloc.department_name}</div>
                             </td>
                             <td>
-                              <div style={{ fontWeight: 600 }}>{alloc.classes_per_week} classes/wk</div>
-                              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                              <div className="subjects-div-37">{alloc.classes_per_week} classes/wk</div>
+                              <div className="subjects-div-38">
                                 Th:{alloc.theory_hours} | Pr:{alloc.practical_hours} | Tu:{alloc.tutorial_hours}
                               </div>
                             </td>
@@ -925,22 +898,12 @@ export default function Subjects() {
                               </span>
                             </td>
                             {isAdminOrHOD && (
-                              <td style={{ textAlign: 'right' }}>
-                                <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
-                                  <button 
-                                    className="btn btn-sm btn-secondary" 
-                                    onClick={() => handleOpenEditModal(alloc)}
-                                    title="Edit assignment"
-                                    style={{ padding: '0.35rem' }}
-                                  >
+                              <td className="subjects-td-39">
+                                <div className="subjects-row-40">
+                                  <button className="btn btn-sm btn-secondary subjects-btn" onClick={() => handleOpenEditModal(alloc)} title="Edit assignment">
                                     <Edit2 size={13} />
                                   </button>
-                                  <button 
-                                    className="btn btn-sm btn-danger" 
-                                    onClick={() => handleDeleteAllocation(alloc.id)}
-                                    title="Remove assignment"
-                                    style={{ padding: '0.35rem' }}
-                                  >
+                                  <button className="btn btn-sm btn-danger subjects-btn" onClick={() => handleDeleteAllocation(alloc.id)} title="Remove assignment">
                                     <Trash2 size={13} />
                                   </button>
                                 </div>
@@ -950,7 +913,7 @@ export default function Subjects() {
                         ))}
                         {filteredAllocations.length === 0 && (
                           <tr>
-                            <td colSpan={isAdminOrHOD ? 8 : 7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                            <td colSpan={isAdminOrHOD ? 8 : 7} className="subjects-td-43">
                               No allocations found matching the filters.
                             </td>
                           </tr>
@@ -964,15 +927,15 @@ export default function Subjects() {
           )}
 
           {activeAssignmentTab === 'load' && (
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 800, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="card subjects-card">
+              <h3 className="subjects-row-45">
                 <TrendingUp size={20} className="text-primary" /> Teacher Hours Load Distribution
               </h3>
 
               {loadingData ? (
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Calculating teacher workloads...</p>
+                <p className="subjects-text-46">Calculating teacher workloads...</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="subjects-col-47">
                   {teacherLoads.map(({ teacher, load }) => {
                     const total = load.total_hours;
                     const isOverloaded = total > 24;
@@ -1000,24 +963,19 @@ export default function Subjects() {
                     const progressPercent = Math.min((total / 24) * 100, 100);
 
                     return (
-                      <div 
-                        key={teacher.id} 
-                        className="card kpi-clickable" 
-                        style={{ padding: '1.25rem', border: '1px solid var(--border)', background: 'var(--bg-card)' }}
-                        onClick={() => navigate(`/teachers/${teacher.id}`)}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.75rem' }}>
+                      <div key={teacher.id} className="card kpi-clickable subjects-card" onClick={() => navigate(`/teachers/${teacher.id}`)}>
+                        <div className="subjects-row-49">
                           <div>
-                            <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)' }}>{teacher.name}</h4>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{teacher.designation} • Dept: {teacher.department}</span>
+                            <h4 className="subjects-title-50">{teacher.name}</h4>
+                            <span className="subjects-span-51">{teacher.designation} • Dept: {teacher.department}</span>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div className="subjects-row-52">
                             <span className={`badge ${statusBadgeClass}`}>{statusText}</span>
-                            <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>{total} / 24 Hours</span>
+                            <span className="subjects-span-53">{total} / 24 Hours</span>
                           </div>
                         </div>
 
-                        <div style={{ width: '100%', height: '10px', backgroundColor: '#f1f5f9', borderRadius: '9999px', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                        <div className="subjects-div-54">
                           <div 
                             style={{ 
                               width: `${progressPercent}%`, 
@@ -1030,9 +988,9 @@ export default function Subjects() {
                         </div>
 
                         {total > 0 && (
-                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          <div className="subjects-row-55">
                             {load.detail?.map((det: any, dIdx: number) => (
-                              <span key={dIdx} style={{ background: '#f8fafc', padding: '0.2rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                              <span key={dIdx} className="subjects-span-56">
                                 <strong>{det.subject_name}</strong> ({det.section_name}): {det.hours} hrs
                               </span>
                             ))}
@@ -1047,18 +1005,18 @@ export default function Subjects() {
           )}
 
           {activeAssignmentTab === 'conflicts' && (
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 800, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="card subjects-card">
+              <h3 className="subjects-row-58">
                 <AlertTriangle size={20} className="text-warning" /> Conflict Center & Validation Rules
               </h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+              <p className="subjects-text-59">
                 We automatically audit all allocations inside the active semester. Below are active system issues, warnings, and unallocated gaps that require immediate resolution.
               </p>
 
               {loadingData ? (
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Checking validation logs...</p>
+                <p className="subjects-text-60">Checking validation logs...</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="subjects-col-61">
                   {conflictsList.map((conflict, idx) => {
                     const isError = conflict.type === 'error';
                     return (
@@ -1076,15 +1034,15 @@ export default function Subjects() {
                           gap: '1rem'
                         }}
                       >
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', flex: 1 }}>
-                          <span style={{ marginTop: '0.15rem' }}>
+                        <div className="subjects-row-62">
+                          <span className="subjects-span-63">
                             {isError ? <AlertCircle className="text-danger" size={18} /> : <AlertTriangle className="text-warning" size={18} />}
                           </span>
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-main)' }}>
+                            <div className="subjects-div-64">
                               {isError ? 'System Error Clashing' : 'System Workload Warning'}
                             </div>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{conflict.message}</p>
+                            <p className="subjects-text-65">{conflict.message}</p>
                           </div>
                         </div>
 
@@ -1152,10 +1110,10 @@ export default function Subjects() {
                   })}
 
                   {conflictsList.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)' }}>
-                      <CheckCircle2 className="text-success" size={32} style={{ margin: '0 auto 0.75rem' }} />
-                      <p style={{ fontWeight: 600, color: 'var(--text-main)' }}>Zero Conflicts Detected</p>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>The database is clean, all references are healthy.</p>
+                    <div className="subjects-div-66">
+                      <CheckCircle2 className="text-success subjects-text-success" size={32}  />
+                      <p className="subjects-text-68">Zero Conflicts Detected</p>
+                      <p className="subjects-text-69">The database is clean, all references are healthy.</p>
                     </div>
                   )}
                 </div>
@@ -1164,17 +1122,17 @@ export default function Subjects() {
           )}
 
           {activeAssignmentTab === 'wizard' && isAdminOrHOD && (
-            <div className="card" style={{ padding: '1.5rem', overflow: 'visible' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="card subjects-card">
+              <div className="subjects-row-71">
                 <div>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <h3 className="subjects-row-72">
                     <Sparkles size={20} className="text-primary" /> Bulk Allocation Spreadsheet Wizard
                   </h3>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  <p className="subjects-text-73">
                     Speed up configuration by mapping Section ↔ Subject ↔ Teacher directly in a grid.
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div className="subjects-row-74">
                   <button className="btn btn-outline" onClick={handleAddWizardRow}>
                     <PlusCircle size={16} /> Add Assignment Row
                   </button>
@@ -1187,10 +1145,10 @@ export default function Subjects() {
               </div>
 
               {wizardRows.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '4rem 1.5rem', border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', background: '#f8fafc' }}>
-                  <Sparkles className="text-primary" size={36} style={{ margin: '0 auto 1rem', opacity: 0.7 }} />
-                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)' }}>Spreadsheet Empty</h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '400px', margin: '0.25rem auto 1.25rem' }}>
+                <div className="subjects-div-75">
+                  <Sparkles className="text-primary subjects-text-primary" size={36}  />
+                  <h4 className="subjects-title-77">Spreadsheet Empty</h4>
+                  <p className="subjects-text-78">
                     Add rows to write allocations. Select class section, and we will automatically filter available subjects based on course program curriculum.
                   </p>
                   <button className="btn btn-primary" onClick={handleAddWizardRow}>
@@ -1198,19 +1156,19 @@ export default function Subjects() {
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="subjects-col-79">
                   <div className="wizard-table-container">
                     <table className="wizard-table">
                       <thead>
                         <tr>
-                          <th style={{ width: '22%' }}>Section</th>
-                          <th style={{ width: '24%' }}>Subject</th>
-                          <th style={{ width: '24%' }}>Teacher</th>
-                          <th style={{ width: '8%', textAlign: 'center' }}>Theory Hrs</th>
-                          <th style={{ width: '8%', textAlign: 'center' }}>Pract Hrs</th>
-                          <th style={{ width: '8%', textAlign: 'center' }}>Tut Hrs</th>
-                          <th style={{ width: '6%', textAlign: 'center' }}>Primary</th>
-                          <th style={{ width: '6%', textAlign: 'center' }}>Action</th>
+                          <th className="subjects-th-80">Section</th>
+                          <th className="subjects-th-81">Subject</th>
+                          <th className="subjects-th-82">Teacher</th>
+                          <th className="subjects-th-83">Theory Hrs</th>
+                          <th className="subjects-th-84">Pract Hrs</th>
+                          <th className="subjects-th-85">Tut Hrs</th>
+                          <th className="subjects-th-86">Primary</th>
+                          <th className="subjects-th-87">Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1281,20 +1239,11 @@ export default function Subjects() {
                                   min={0}
                                 />
                               </td>
-                              <td style={{ textAlign: 'center' }}>
-                                <input 
-                                  type="checkbox" 
-                                  checked={row.primary_teacher}
-                                  onChange={e => handleUpdateWizardRow(idx, { primary_teacher: e.target.checked })}
-                                  style={{ transform: 'scale(1.25)', cursor: 'pointer' }}
-                                />
+                              <td className="subjects-td-88">
+                                <input type="checkbox" checked={row.primary_teacher} onChange={e => handleUpdateWizardRow(idx, { primary_teacher: e.target.checked })} className="subjects-input-89"  />
                               </td>
-                              <td style={{ textAlign: 'center' }}>
-                                <button 
-                                  className="btn btn-sm btn-outline btn-danger" 
-                                  onClick={() => handleRemoveWizardRow(idx)}
-                                  style={{ padding: '0.35rem' }}
-                                >
+                              <td className="subjects-td-90">
+                                <button className="btn btn-sm btn-outline btn-danger subjects-btn" onClick={() => handleRemoveWizardRow(idx)}>
                                   <Trash size={14} />
                                 </button>
                               </td>
@@ -1305,8 +1254,8 @@ export default function Subjects() {
                     </table>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <div className="subjects-col-92">
+                    <div className="subjects-row-93">
                       <button 
                         className="btn btn-primary"
                         onClick={handleBulkPreviewSubmit}
@@ -1316,12 +1265,7 @@ export default function Subjects() {
                       </button>
                       
                       {bulkPreview && bulkPreview.errors.length === 0 && (
-                        <button 
-                          className="btn btn-success"
-                          style={{ background: 'var(--success)', color: '#ffffff' }}
-                          onClick={handleBulkCommitSubmit}
-                          disabled={bulkLoading}
-                        >
+                        <button className="btn btn-success subjects-btn" onClick={handleBulkCommitSubmit} disabled={bulkLoading}>
                           Commit allocations to DB
                         </button>
                       )}
@@ -1336,12 +1280,12 @@ export default function Subjects() {
                           borderLeft: `4px solid ${bulkPreview.errors.length > 0 ? 'var(--danger)' : 'var(--success)'}` 
                         }}
                       >
-                        <h4 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h4 className="subjects-row-95">
                           {bulkPreview.errors.length > 0 ? <AlertCircle className="text-danger" size={16} /> : <CheckCircle2 className="text-success" size={16} />}
                           Validation Report: {bulkPreview.errors.length > 0 ? 'Failed' : 'Success'} ({bulkPreview.total_allocations} allocations)
                         </h4>
 
-                        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', margin: '0.5rem 0' }}>
+                        <div className="subjects-row-96">
                           <span className="badge badge-success">✓ {bulkPreview.total_allocations} Verified</span>
                           <span className={`badge ${bulkPreview.errors.length > 0 ? 'badge-danger' : 'badge-secondary'}`}>
                             ✗ {bulkPreview.errors.length} Errors
@@ -1352,18 +1296,18 @@ export default function Subjects() {
                         </div>
 
                         {bulkPreview.errors.length > 0 && (
-                          <div style={{ marginTop: '0.75rem' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--danger)' }}>Blocking Errors (Must resolve to commit):</span>
-                            <ul style={{ paddingLeft: '1.25rem', marginTop: '0.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          <div className="subjects-div-97">
+                            <span className="subjects-span-98">Blocking Errors (Must resolve to commit):</span>
+                            <ul className="subjects-ul-99">
                               {bulkPreview.errors.map((e, idx) => <li key={idx}>{e}</li>)}
                             </ul>
                           </div>
                         )}
 
                         {bulkPreview.warnings.length > 0 && (
-                          <div style={{ marginTop: '0.75rem' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--warning)' }}>Warnings (Allowed to commit):</span>
-                            <ul style={{ paddingLeft: '1.25rem', marginTop: '0.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          <div className="subjects-div-100">
+                            <span className="subjects-span-101">Warnings (Allowed to commit):</span>
+                            <ul className="subjects-ul-102">
                               {bulkPreview.warnings.map((w, idx) => <li key={idx}>{w}</li>)}
                             </ul>
                           </div>
@@ -1377,13 +1321,13 @@ export default function Subjects() {
           )}
 
           {activeAssignmentTab === 'timeline' && (
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 800, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="card subjects-card">
+              <h3 className="subjects-row-104">
                 <History size={20} className="text-primary" /> Teaching Allocations Audit Trail
               </h3>
 
               {loadingData ? (
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Loading timeline records...</p>
+                <p className="subjects-text-105">Loading timeline records...</p>
               ) : (
                 <div className="timeline-list">
                   {timelineLogs.map((log) => (
@@ -1394,13 +1338,13 @@ export default function Subjects() {
                         <span className="timeline-item-time">{new Date(log.timestamp).toLocaleString()}</span>
                       </div>
                       <p className="timeline-item-desc">{log.description}</p>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                      <div className="subjects-div-106">
                         Performed by: {log.user_name} ({log.user_email})
                       </div>
                     </div>
                   ))}
                   {timelineLogs.length === 0 && (
-                    <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                    <p className="subjects-text-107">
                       No audit records logged for teaching allocations yet.
                     </p>
                   )}
@@ -1414,9 +1358,9 @@ export default function Subjects() {
       {/* MODALS — TAB 1: SUBJECTS */}
       {showSubjectModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '440px' }}>
+          <div className="modal-content subjects-modal-content">
             <h3>Add Subject</h3>
-            <form onSubmit={handleSubjectSubmit} style={{ marginTop: '1.25rem' }}>
+            <form onSubmit={handleSubjectSubmit} className="subjects-form-109">
               {institutionType !== 'school' && (
                 <div className="form-group">
                   <label>Subject Code (e.g., CS301)</label>
@@ -1457,10 +1401,10 @@ export default function Subjects() {
       {/* MODALS — TAB 2: SUBJECT ASSIGNMENTS */}
       {showAllocationFormModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '520px' }}>
+          <div className="modal-content subjects-modal-content">
             <h3>{editingAllocationId ? 'Edit Teaching Assignment' : 'New Teaching Allocation'}</h3>
             
-            <form onSubmit={handleSaveAllocationSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+            <form onSubmit={handleSaveAllocationSubmit} className="subjects-col-111">
               <div className="form-group">
                 <label>Class Section</label>
                 <select 
@@ -1513,7 +1457,7 @@ export default function Subjects() {
                 </select>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+              <div className="subjects-grid-112">
                 <div className="form-group">
                   <label>Theory Hrs/Wk</label>
                   <input 
@@ -1546,7 +1490,7 @@ export default function Subjects() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="subjects-grid-113">
                 <div className="form-group">
                   <label>Mentoring Hrs/Wk</label>
                   <input 
@@ -1569,15 +1513,9 @@ export default function Subjects() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.5rem 0' }}>
-                <input 
-                  type="checkbox" 
-                  id="primary_teacher"
-                  checked={allocationForm.primary_teacher}
-                  onChange={e => setAllocationForm({ ...allocationForm, primary_teacher: e.target.checked })}
-                  style={{ transform: 'scale(1.25)', cursor: 'pointer' }}
-                />
-                <label htmlFor="primary_teacher" style={{ fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
+              <div className="subjects-row-114">
+                <input type="checkbox" id="primary_teacher" checked={allocationForm.primary_teacher} onChange={e => setAllocationForm({ ...allocationForm, primary_teacher: e.target.checked })} className="subjects-input-115"  />
+                <label htmlFor="primary_teacher" className="subjects-label-116">
                   Assign as Primary Faculty for this Class
                 </label>
               </div>
@@ -1606,7 +1544,7 @@ export default function Subjects() {
               )}
 
               {allocationFormError && (
-                <div style={{ color: 'var(--danger)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div className="subjects-row-117">
                   <AlertCircle size={14} /> {allocationFormError}
                 </div>
               )}

@@ -1,3 +1,4 @@
+import './Transport.css';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { PageGuidance } from '../components/PageGuidance';
@@ -229,12 +230,12 @@ export default function Transport() {
       <div className="page-header">
         <div>
           <h2>Transport &amp; Bus Routes</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="transport-text-1">
             Managing transit vehicles, driver allocations, passenger tracking, and ledger billing
           </p>
         </div>
         {canManage && (
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div className="transport-row-2">
             <button className="btn btn-outline" onClick={() => setShowAssignModal(true)}>
               <UserCheck size={16} /> Assign Student
             </button>
@@ -246,7 +247,7 @@ export default function Transport() {
       </div>
 
       {/* Tabs */}
-      <div className="page-tabs" style={{ marginBottom: '1.5rem' }}>
+      <div className="page-tabs transport-page-tabs">
         <button className={`page-tab ${activeTab === 'routes' ? 'active' : ''}`} onClick={() => { setActiveTab('routes'); setSearchQuery(''); }}>
           Transit Routes
         </button>
@@ -262,16 +263,10 @@ export default function Transport() {
 
       {/* Toolbar / Search */}
       {activeTab !== 'billing' && (
-        <div className="card" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
-          <div style={{ position: 'relative' }}>
-            <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input
-              type="text"
-              placeholder={activeTab === 'routes' ? "Search by route name, driver, stops or vehicle number..." : "Search by student name, admission number or route stop..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ paddingLeft: '2.25rem', width: '100%', marginBottom: 0 }}
-            />
+        <div className="card transport-card">
+          <div className="transport-div-5">
+            <Search size={16} className="transport-Search-6"  />
+            <input type="text" placeholder={activeTab === 'routes' ? "Search by route name, driver, stops or vehicle number..." : "Search by student name, admission number or route stop..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="transport-input-7"  />
           </div>
         </div>
       )}
@@ -280,56 +275,56 @@ export default function Transport() {
         <>
           {activeTab === 'routes' && (
             // Route List Grid
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '1.5rem' }}>
+            <div className="transport-grid-8">
               {filteredRoutes.length === 0 ? (
-                <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem' }}>
-                  <Bus size={48} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
-                  <h3 style={{ color: 'var(--text-main)', marginBottom: '0.25rem' }}>No Routes Found</h3>
-                  <p style={{ color: 'var(--text-muted)' }}>There are no transit routes matching your criteria.</p>
+                <div className="card transport-card">
+                  <Bus size={48} className="transport-Bus-10"  />
+                  <h3 className="transport-title-11">No Routes Found</h3>
+                  <p className="transport-text-12">There are no transit routes matching your criteria.</p>
                 </div>
               ) : (
                 filteredRoutes.map(route => (
-                  <div key={route.id} className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '1.5rem', gap: '1.25rem' }}>
+                  <div key={route.id} className="card transport-card">
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span className="badge" style={{ backgroundColor: 'var(--primary-soft)', color: 'var(--primary)', fontWeight: 700, fontSize: '0.75rem' }}>
+                      <div className="transport-row-14">
+                        <span className="badge transport-badge">
                           🚌 Bus Route
                         </span>
-                        <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                          ₹{route.monthly_charge.toLocaleString('en-IN')}<span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>/mo</span>
+                        <span className="transport-span-16">
+                          ₹{route.monthly_charge.toLocaleString('en-IN')}<span className="transport-span-17">/mo</span>
                         </span>
                       </div>
-                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginTop: '0.75rem', color: 'var(--text-main)' }}>
+                      <h3 className="transport-title-18">
                         {route.route_name}
                       </h3>
                       
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem', fontSize: '0.875rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                          <MapPin size={14} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                      <div className="transport-col-19">
+                        <div className="transport-row-20">
+                          <MapPin size={14} className="transport-MapPin-21"  />
                           <span><strong>Path:</strong> {route.start_location || 'Start'} ➔ {route.end_location || 'End'}</span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                          <ShieldCheck size={14} style={{ color: 'var(--success)', flexShrink: 0 }} />
+                        <div className="transport-row-22">
+                          <ShieldCheck size={14} className="transport-ShieldCheck-23"  />
                           <span><strong>Vehicle:</strong> {route.vehicle_number || 'N/A'}</span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                          <User size={14} style={{ color: 'var(--warning)', flexShrink: 0 }} />
+                        <div className="transport-row-24">
+                          <User size={14} className="transport-User-25"  />
                           <span><strong>Driver:</strong> {route.driver_name || 'N/A'}</span>
                         </div>
                         {route.driver_phone && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                            <Phone size={14} style={{ color: 'var(--info)', flexShrink: 0 }} />
+                          <div className="transport-row-26">
+                            <Phone size={14} className="transport-Phone-27"  />
                             <span><strong>Phone:</strong> {route.driver_phone}</span>
                           </div>
                         )}
                       </div>
 
-                      <div style={{ marginTop: '0.875rem', paddingTop: '0.875rem', borderTop: '1px solid var(--border)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.375rem' }}>
+                      <div className="transport-div-28">
+                        <div className="transport-row-29">
                           <span>Capacity</span>
-                          <span style={{ fontWeight: 700 }}>{(route as any).allocated_count || 0} / {(route as any).capacity || (route as any).vehicle_capacity || '?'} seats</span>
+                          <span className="transport-span-30">{(route as any).allocated_count || 0} / {(route as any).capacity || (route as any).vehicle_capacity || '?'} seats</span>
                         </div>
-                        <div style={{ height: '6px', borderRadius: '999px', background: 'var(--border)', overflow: 'hidden' }}>
+                        <div className="transport-div-31">
                           <div style={{
                             height: '100%',
                             borderRadius: '999px',
@@ -344,31 +339,11 @@ export default function Transport() {
                     </div>
 
                     {canManage && (
-                      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                        <button 
-                          className="btn btn-outline" 
-                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }} 
-                          onClick={() => {
-                            setEditingRoute(route);
-                            setRouteForm({
-                              route_name: route.route_name,
-                              start_location: route.start_location,
-                              end_location: route.end_location,
-                              vehicle_number: route.vehicle_number,
-                              driver_name: route.driver_name,
-                              driver_phone: route.driver_phone,
-                              monthly_charge: route.monthly_charge
-                            });
-                            setShowRouteModal(true);
-                          }}
-                        >
+                      <div className="transport-row-32">
+                        <button className="btn btn-outline transport-btn" onClick={() => { setEditingRoute(route); setRouteForm({ route_name: route.route_name, start_location: route.start_location, end_location: route.end_location, vehicle_number: route.vehicle_number, driver_name: route.driver_name, driver_phone: route.driver_phone, monthly_charge: route.monthly_charge }); setShowRouteModal(true); }}>
                           <Edit size={14} /> Edit
                         </button>
-                        <button 
-                          className="btn btn-outline" 
-                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                          onClick={() => handleDeleteRoute(route.id)}
-                        >
+                        <button className="btn btn-outline transport-btn" onClick={() => handleDeleteRoute(route.id)}>
                           <Trash2 size={14} /> Delete
                         </button>
                       </div>
@@ -381,15 +356,15 @@ export default function Transport() {
 
           {activeTab === 'allocations' && (
             // Passenger allocations table
-            <div className="card" style={{ padding: '1rem' }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '1rem' }}>Active Passengers</h3>
+            <div className="card transport-card">
+              <h3 className="transport-title-36">Active Passengers</h3>
               {filteredAllocations.length === 0 ? (
-                <p className="no-data" style={{ padding: '3rem 0', color: 'var(--text-muted)', textAlign: 'center' }}>
+                <p className="no-data transport-no-data">
                   No student allocations found.
                 </p>
               ) : (
                 <div className="table-responsive">
-                  <table className="table" style={{ fontSize: '0.85rem' }}>
+                  <table className="table transport-table">
                     <thead>
                       <tr>
                         <th>Student Passenger</th>
@@ -397,8 +372,8 @@ export default function Transport() {
                         <th>Assigned Bus Route</th>
                         <th>Pickup Point stop</th>
                         <th>Vehicle Number</th>
-                        <th style={{ textAlign: 'right' }}>Monthly Rate</th>
-                        {canManage && <th style={{ textAlign: 'center' }}>Actions</th>}
+                        <th className="transport-th-39">Monthly Rate</th>
+                        {canManage && <th className="transport-th-40">Actions</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -406,25 +381,21 @@ export default function Transport() {
                         <tr key={alloc.id}>
                           <td>
                             <strong>{alloc.student_name}</strong>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Admission No: {alloc.admission_number}</div>
+                            <div className="transport-div-41">Admission No: {alloc.admission_number}</div>
                           </td>
                           <td>
                             {alloc.course_name || '-'}
-                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Section: {alloc.section_name || 'Unassigned'}</div>
+                            <div className="transport-div-42">Section: {alloc.section_name || 'Unassigned'}</div>
                           </td>
                           <td><strong>{alloc.route_name}</strong></td>
                           <td>{alloc.pickup_point || 'Standard Terminus'}</td>
                           <td>{alloc.vehicle_number || '-'}</td>
-                          <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--primary)' }}>
+                          <td className="transport-td-43">
                             ₹{alloc.monthly_charge.toLocaleString('en-IN')}
                           </td>
                           {canManage && (
-                            <td style={{ textAlign: 'center' }}>
-                              <button 
-                                className="btn btn-outline" 
-                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.2)' }}
-                                onClick={() => handleUnassignStudent(alloc.student_id)}
-                              >
+                            <td className="transport-td-44">
+                              <button className="btn btn-outline transport-btn" onClick={() => handleUnassignStudent(alloc.student_id)}>
                                 Remove
                               </button>
                             </td>
@@ -440,12 +411,12 @@ export default function Transport() {
 
           {activeTab === 'billing' && canManage && (
             // Generate Monthly billing invoices form
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              <div className="card" style={{ padding: '2rem' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <IndianRupee style={{ color: 'var(--primary)' }} /> Monthly Subscription Billing Generator
+            <div className="transport-div-46">
+              <div className="card transport-card">
+                <h3 className="transport-row-48">
+                  <IndianRupee className="transport-IndianRupee-49"  /> Monthly Subscription Billing Generator
                 </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.5', marginBottom: '2rem' }}>
+                <p className="transport-text-50">
                   This tool processes all active student bus route assignments. It automatically generates a <strong>"Transport Fee - [Month Year]"</strong> invoice directly into each passenger's outstanding ledger. Duplicate billing runs for the same month are automatically blocked.
                 </p>
 
@@ -459,12 +430,12 @@ export default function Transport() {
                       onChange={(e) => setBillingForm({ ...billingForm, billing_month_name: e.target.value })}
                       required
                     />
-                    <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                    <small className="transport-small-51">
                       This will append as the fee ledger descriptor: e.g. "Transport Fee - August 2026".
                     </small>
                   </div>
 
-                  <div className="form-group" style={{ marginTop: '1.25rem' }}>
+                  <div className="form-group transport-form-group">
                     <label>Payment Due Date</label>
                     <input
                       type="date"
@@ -474,12 +445,7 @@ export default function Transport() {
                     />
                   </div>
 
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary" 
-                    style={{ width: '100%', marginTop: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }} 
-                    disabled={submitting}
-                  >
+                  <button type="submit" className="btn btn-primary transport-btn" disabled={submitting}>
                     {submitting ? 'Generating Ledgers...' : 'Generate Transport Billing Run'}
                   </button>
                 </form>
@@ -492,7 +458,7 @@ export default function Transport() {
       {/* Route Modal */}
       {showRouteModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '550px' }}>
+          <div className="modal-content transport-modal-content">
             <h3>{editingRoute ? 'Edit Route Details' : 'Add New Bus Route'}</h3>
             <form onSubmit={handleRouteSubmit}>
               <div className="form-group">
@@ -506,7 +472,7 @@ export default function Transport() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="transport-grid-55">
                 <div className="form-group">
                   <label>Start Location Stop</label>
                   <input
@@ -527,7 +493,7 @@ export default function Transport() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="transport-grid-56">
                 <div className="form-group">
                   <label>Bus Vehicle Number</label>
                   <input
@@ -550,7 +516,7 @@ export default function Transport() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="transport-grid-57">
                 <div className="form-group">
                   <label>Driver Name</label>
                   <input
@@ -571,7 +537,7 @@ export default function Transport() {
                 </div>
               </div>
 
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <div className="modal-actions transport-modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => { setShowRouteModal(false); setEditingRoute(null); }}>
                   Cancel
                 </button>
@@ -587,7 +553,7 @@ export default function Transport() {
       {/* Assign Modal */}
       {showAssignModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
+          <div className="modal-content transport-modal-content">
             <h3>Assign Student to Bus Route</h3>
             <form onSubmit={handleAssignSubmit}>
               <div className="form-group">
@@ -628,7 +594,7 @@ export default function Transport() {
                 />
               </div>
 
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <div className="modal-actions transport-modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowAssignModal(false)}>
                   Cancel
                 </button>

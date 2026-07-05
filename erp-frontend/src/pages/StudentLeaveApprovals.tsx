@@ -1,3 +1,4 @@
+import './StudentLeaveApprovals.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -87,7 +88,7 @@ export default function StudentLeaveApprovals() {
       <div className="page-header">
         <div>
           <h2>Student Leave Inbox</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="student-leave-approvals-text-1">
             Review, approve, and track academic leave applications submitted by students or parents.
           </p>
         </div>
@@ -95,7 +96,7 @@ export default function StudentLeaveApprovals() {
 
       
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+      <div className="student-leave-approvals-row-2">
         {(['Pending', 'Approved', 'Rejected'] as const).map(tab => (
           <button
             key={tab}
@@ -107,7 +108,7 @@ export default function StudentLeaveApprovals() {
         ))}
       </div>
 
-      <div className="card" style={{ padding: '1.5rem' }}>
+      <div className="card student-leave-approvals-card">
         {loading ? <p>Loading leave inbox...</p> : (
           <table className="table">
             <thead>
@@ -118,7 +119,7 @@ export default function StudentLeaveApprovals() {
                 <th>Days</th>
                 <th>Reason / Applied By</th>
                 <th>Status</th>
-                {activeTab === 'Pending' && <th style={{ textAlign: 'right' }}>Actions</th>}
+                {activeTab === 'Pending' && <th className="student-leave-approvals-th-4">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -126,18 +127,18 @@ export default function StudentLeaveApprovals() {
                 <tr key={l.id}>
                   <td>
                     <strong>{l.first_name} {l.last_name}</strong>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Roll: {l.roll_number || '-'} | Adm: {l.admission_number}</div>
+                    <div className="student-leave-approvals-div-5">Roll: {l.roll_number || '-'} | Adm: {l.admission_number}</div>
                   </td>
                   <td>{l.course_name}</td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <div className="student-leave-approvals-row-6">
                       <Calendar size={14} /> {l.from_date} to {l.to_date}
                     </div>
                   </td>
                   <td>{l.days_count} days</td>
                   <td>
-                    <p style={{ margin: 0 }}>{l.reason}</p>
-                    <span style={{ fontSize: '0.7rem', textTransform: 'capitalize', color: 'var(--text-muted)' }}>
+                    <p className="student-leave-approvals-text-7">{l.reason}</p>
+                    <span className="student-leave-approvals-span-8">
                       Applied by {l.applied_by}
                     </span>
                   </td>
@@ -145,11 +146,11 @@ export default function StudentLeaveApprovals() {
                     <span className={`badge ${l.status === 'Approved' ? 'badge-success' : l.status === 'Rejected' ? 'badge-danger' : 'badge-warning'}`}>
                       {l.status}
                     </span>
-                    {l.remarks && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Notes: {l.remarks}</div>}
+                    {l.remarks && <div className="student-leave-approvals-div-9">Notes: {l.remarks}</div>}
                   </td>
                   {activeTab === 'Pending' && (
-                    <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    <td className="student-leave-approvals-td-10">
+                      <div className="student-leave-approvals-row-11">
                         <button className="btn btn-sm btn-success" onClick={() => handleApprove(l.id)}>
                           <Check size={12} /> Approve
                         </button>
@@ -163,7 +164,7 @@ export default function StudentLeaveApprovals() {
               ))}
               {filteredLeaves.length === 0 && (
                 <tr>
-                  <td colSpan={activeTab === 'Pending' ? 7 : 6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                  <td colSpan={activeTab === 'Pending' ? 7 : 6} className="student-leave-approvals-td-12">
                     No {activeTab.toLowerCase()} leave requests found.
                   </td>
                 </tr>
@@ -175,7 +176,7 @@ export default function StudentLeaveApprovals() {
 
       {showRejectModal && (
         <div className="modal-overlay">
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Reject Leave Request</h3>
               <button onClick={() => setShowRejectModal(false)}>✕</button>
@@ -184,14 +185,7 @@ export default function StudentLeaveApprovals() {
               <div className="modal-body">
                 <div className="form-group">
                   <label>Remarks / Reason for Rejection</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Enter reason for rejection..."
-                    value={reviewRemarks}
-                    onChange={(e) => setReviewRemarks(e.target.value)}
-                    required
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                  />
+                  <textarea rows={3} placeholder="Enter reason for rejection..." value={reviewRemarks} onChange={(e) => setReviewRemarks(e.target.value)} required className="student-leave-approvals-textarea-13"  />
                 </div>
               </div>
               <div className="modal-footer">

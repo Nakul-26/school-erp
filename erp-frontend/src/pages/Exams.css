@@ -1,0 +1,437 @@
+/* Component stylesheet for Exams.tsx */
+
+@media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-report-card, #printable-report-card * {
+            visibility: visible;
+          }
+          #printable-report-card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+
+.exams-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.exams-th-2 {
+  text-align: right;
+}
+
+.exams-td-3 {
+  text-align: right;
+}
+
+.exams-row-4 {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.exams-select-5 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  padding: 0.2rem;
+}
+
+.exams-td-6 {
+  padding: 3rem;
+  text-align: center;
+}
+
+.exams-ClipboardCheck-7 {
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.exams-text-8 {
+  color: var(--text-muted);
+}
+
+.exams-grid-9 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.exams-row-10 {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.exams-btn {
+  padding: 0.5rem;
+}
+
+.exams-text-12 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.exams-th-13 {
+  text-align: right;
+}
+
+.exams-td-14 {
+  text-align: right;
+}
+
+.exams-row-15 {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.exams-td-16 {
+  padding: 3rem;
+  text-align: center;
+}
+
+.exams-text-17 {
+  color: var(--text-muted);
+}
+
+.exams-grid-18 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.exams-grid-19 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.exams-row-20 {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.exams-btn {
+  padding: 0.5rem;
+}
+
+.exams-text-22 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.exams-th-23 {
+  width: 200px;
+}
+
+.exams-input-24 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-weight: 700;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+.exams-span-25 {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.exams-input-26 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+.exams-td-27 {
+  padding: 2rem;
+  text-align: center;
+}
+
+.exams-row-28 {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.exams-btn {
+  padding: 0.5rem;
+}
+
+.exams-text-30 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.exams-th-31 {
+  text-align: right;
+}
+
+.exams-span-32 {
+  padding: 0.25rem 0.5rem;
+}
+
+.exams-td-33 {
+  text-align: right;
+}
+
+.exams-td-34 {
+  padding: 3rem;
+  text-align: center;
+}
+
+.exams-text-35 {
+  color: var(--text-muted);
+}
+
+.exams-modal {
+  max-width: 800px;
+  width: 90%;
+}
+
+.exams-div-37 {
+  background-color: #fff;
+  color: #000;
+  padding: 1rem;
+}
+
+.exams-div-38 {
+  border-bottom: 2px solid #000;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  text-align: center;
+}
+
+.exams-title-39 {
+  margin: 0px;
+  text-transform: uppercase;
+}
+
+.exams-title-40 {
+  color: #555;
+  font-weight: normal;
+  margin: 0.25rem 0 0 0;
+}
+
+.exams-grid-41 {
+  display: grid;
+  font-size: 0.9rem;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 1.5rem;
+}
+
+.exams-text-42 {
+  margin: 0.25rem 0;
+}
+
+.exams-text-43 {
+  margin: 0.25rem 0;
+}
+
+.exams-text-44 {
+  margin: 0.25rem 0;
+}
+
+.exams-div-45 {
+  text-align: right;
+}
+
+.exams-text-46 {
+  margin: 0.25rem 0;
+}
+
+.exams-text-47 {
+  margin: 0.25rem 0;
+}
+
+.exams-text-48 {
+  margin: 0.25rem 0;
+}
+
+.exams-table {
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.exams-tr-50 {
+  border-bottom: 2px solid #000;
+}
+
+.exams-th-51 {
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.exams-th-52 {
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.exams-th-53 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-th-54 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-th-55 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-th-56 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-th-57 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-th-58 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-tr-59 {
+  border-bottom: 1px solid var(--border);
+}
+
+.exams-td-60 {
+  padding: 0.5rem;
+}
+
+.exams-td-61 {
+  padding: 0.5rem;
+}
+
+.exams-td-62 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-td-63 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-td-64 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-td-65 {
+  font-weight: bold;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-td-66 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-td-67 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-tr-68 {
+  border-bottom: 2px solid #000;
+  border-top: 2px solid #000;
+  font-weight: bold;
+}
+
+.exams-td-69 {
+  padding: 0.5rem;
+}
+
+.exams-td-70 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-td-71 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-td-72 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-td-73 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-td-74 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-td-75 {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.exams-grid-76 {
+  border-top: 1px dashed #ccc;
+  display: grid;
+  font-size: 0.9rem;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr 1fr;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+
+.exams-div-77 {
+  text-align: right;
+}
+
+.exams-row-78 {
+  color: #555;
+  display: flex;
+  font-size: 0.8rem;
+  justify-content: space-between;
+  margin-top: 3rem;
+}
+
+.exams-div-79 {
+  border-top: 1px solid #000;
+  padding-top: 0.25rem;
+  text-align: center;
+  width: 150px;
+}
+
+.exams-div-80 {
+  border-top: 1px solid #000;
+  padding-top: 0.25rem;
+  text-align: center;
+  width: 150px;
+}
+
+.exams-div-81 {
+  border-top: 1px solid #000;
+  padding-top: 0.25rem;
+  text-align: center;
+  width: 150px;
+}

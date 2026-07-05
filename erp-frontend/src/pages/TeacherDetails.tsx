@@ -1,3 +1,4 @@
+import './TeacherDetails.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import { useParams, Link } from 'react-router-dom';
@@ -372,8 +373,8 @@ export default function TeacherDetails() {
         title="Staff Profile"
         description="Use this page to view a teacher's personal files, assigned classes, and leaves."
         steps={["Inspect contact information and employment details.","Check the subjects and classes this teacher is assigned to teach.","Review their attendance record and leave history."]}
-      /><p style={{ textAlign: 'center', padding: '3rem' }}>Loading teacher profile...</p></Layout>;
-  if (!teacher) return <Layout><p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Teacher profile not found.</p></Layout>;
+      /><p className="teacher-details-text-1">Loading teacher profile...</p></Layout>;
+  if (!teacher) return <Layout><p className="teacher-details-text-2">Teacher profile not found.</p></Layout>;
 
   // Timeline building
   const timelineItems = [
@@ -449,133 +450,76 @@ export default function TeacherDetails() {
   return (
     <Layout>
       {/* Back button */}
-      <div style={{ marginBottom: '1rem' }}>
-        <Link to="/teachers" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 600 }}>
+      <div className="teacher-details-div-3">
+        <Link to="/teachers" className="teacher-details-row-4">
           <ArrowLeft size={16} /> Back to Teacher Directory
         </Link>
       </div>
 
       {/* Completion Banner */}
       {completionPercentage < 100 && (
-        <div style={{ 
-          padding: '1rem 1.5rem', 
-          backgroundColor: '#fffbeb', 
-          border: '1px solid #fef3c7', 
-          borderRadius: 'var(--radius-md)', 
-          marginBottom: '1.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '1rem',
-          flexWrap: 'wrap',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+        <div className="teacher-details-row-5">
+          <div className="teacher-details-row-6">
+            <span className="teacher-details-span-7">⚠️</span>
             <div>
-              <strong style={{ color: '#92400e', fontSize: '0.9rem', display: 'block' }}>This teacher profile isn't fully configured ({completionPercentage}% completed)</strong>
-              <span style={{ fontSize: '0.8rem', color: '#b45309' }}>
+              <strong className="teacher-details-strong-8">This teacher profile isn't fully configured ({completionPercentage}% completed)</strong>
+              <span className="teacher-details-span-9">
                 Remaining: {remaining.join(' • ')}
               </span>
             </div>
           </div>
-          <button 
-            onClick={handleContinueSetup} 
-            className="btn btn-sm btn-primary"
-            style={{ backgroundColor: '#d97706', borderColor: '#d97706', color: '#ffffff' }}
-          >
+          <button onClick={handleContinueSetup} className="btn btn-sm btn-primary teacher-details-btn">
             Continue Setup
           </button>
         </div>
       )}
 
       {/* LinkedIn Style Profile Banner Card */}
-      <div className="card" style={{ 
-        padding: 0, 
-        borderRadius: 'var(--radius-lg)', 
-        border: '1px solid var(--border)', 
-        background: 'linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%)',
-        boxShadow: 'var(--shadow-sm)',
-        marginBottom: '2rem',
-        position: 'relative',
-        overflow: 'hidden',
-        minHeight: 'fit-content'
-      }}>
+      <div className="card teacher-details-card">
         {/* Decorative Top Banner Stripe */}
-        <div style={{ 
-          height: '140px', 
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
-          borderTopLeftRadius: '15px', 
-          borderTopRightRadius: '15px' 
-        }}></div>
+        <div className="teacher-details-div-12"></div>
 
-        <div style={{ display: 'flex', gap: '2rem', position: 'relative', zIndex: 1, padding: '0 2.5rem 2.5rem 2.5rem', flexWrap: 'wrap' }}>
+        <div className="teacher-details-row-13">
           {/* Left Block: Avatar and Status Badge */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', alignSelf: 'flex-start', marginTop: '-70px', zIndex: 2 }}>
-            <div style={{ 
-              width: '120px', 
-              height: '120px', 
-              borderRadius: '50%', 
-              background: '#ffffff', 
-              border: '4px solid #ffffff',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              fontSize: '3.5rem',
-              fontWeight: 'bold',
-              overflow: 'hidden'
-            }}>
+          <div className="teacher-details-col-14">
+            <div className="teacher-details-row-15">
               👨‍🏫
             </div>
-            <span className={`badge badge-${teacher.status === 'ACTIVE' ? 'success' : 'secondary'}`} style={{ 
-              fontSize: '0.75rem', 
-              padding: '0.25rem 0.85rem', 
-              borderRadius: '20px', 
-              fontWeight: 700,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}>
+            <span className={`badge badge-${teacher.status === 'ACTIVE' ? 'success' : 'secondary'} teacher-details-span-16`}>
               {teacher.status}
             </span>
           </div>
 
           {/* Right Block: Content Details Grid */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '1.5rem', minWidth: '280px' }}>
+          <div className="teacher-details-col-17">
             <div>
-              <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 0.25rem 0' }}>
+              <h2 className="teacher-details-title-18">
                 {teacher.first_name} {teacher.middle_name ? teacher.middle_name + ' ' : ''}{teacher.last_name}
               </h2>
-              <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '0.25rem' }}>
+              <div className="teacher-details-div-19">
                 {teacher.designation || 'Faculty Member'}
               </div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              <div className="teacher-details-div-20">
                 🏢 {teacher.department || 'General Department'}
               </div>
             </div>
 
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-              gap: '1.25rem',
-              borderTop: '1px solid #e2e8f0',
-              paddingTop: '1.25rem',
-              marginTop: '0.5rem'
-            }}>
+            <div className="teacher-details-grid-21">
               <div>
-                <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Employee ID</span>
-                <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{teacher.employee_id}</strong>
+                <span className="teacher-details-span-22">Employee ID</span>
+                <strong className="teacher-details-strong-23">{teacher.employee_id}</strong>
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Joined Date</span>
-                <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{teacher.joining_date || 'N/A'}</strong>
+                <span className="teacher-details-span-24">Joined Date</span>
+                <strong className="teacher-details-strong-25">{teacher.joining_date || 'N/A'}</strong>
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Phone Number</span>
-                <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{teacher.phone || 'N/A'}</strong>
+                <span className="teacher-details-span-26">Phone Number</span>
+                <strong className="teacher-details-strong-27">{teacher.phone || 'N/A'}</strong>
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Email Address</span>
-                <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)', wordBreak: 'break-all' }}>{teacher.email || 'N/A'}</strong>
+                <span className="teacher-details-span-28">Email Address</span>
+                <strong className="teacher-details-strong-29">{teacher.email || 'N/A'}</strong>
               </div>
             </div>
           </div>
@@ -583,18 +527,10 @@ export default function TeacherDetails() {
       </div>
 
       {/* Onboarding Setup Progress Card */}
-      <div className="card" style={{ 
-        padding: '1.5rem 2rem', 
-        marginBottom: '2rem', 
-        backgroundColor: '#ffffff',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)',
-        boxShadow: 'var(--shadow-sm)',
-        minHeight: 'fit-content'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+      <div className="card teacher-details-card">
+        <div className="teacher-details-row-31">
           {/* Progress Circle & Text */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+          <div className="teacher-details-row-32">
             <div style={{ 
               width: '56px', 
               height: '56px', 
@@ -609,16 +545,16 @@ export default function TeacherDetails() {
               color: 'var(--text-main)',
               position: 'relative'
             }}>
-              <span style={{ position: 'absolute', zIndex: 1 }}>{completionPercentage}%</span>
+              <span className="teacher-details-span-33">{completionPercentage}%</span>
             </div>
             <div>
-              <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>Onboarding Checklist</h4>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Configure all details to complete onboarding</p>
+              <h4 className="teacher-details-title-34">Onboarding Checklist</h4>
+              <p className="teacher-details-text-35">Configure all details to complete onboarding</p>
             </div>
           </div>
 
           {/* Checklist Items */}
-          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
+          <div className="teacher-details-row-36">
             {checklistItems.map((item, idx) => (
               <div 
                 key={idx} 
@@ -653,9 +589,9 @@ export default function TeacherDetails() {
                 }}
               >
                 {item.done ? (
-                  <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                  <span className="teacher-details-span-37">✓</span>
                 ) : (
-                  <span style={{ color: '#94a3b8' }}>○</span>
+                  <span className="teacher-details-span-38">○</span>
                 )}
                 <span style={{ 
                   fontWeight: item.done ? 600 : 500,
@@ -671,22 +607,11 @@ export default function TeacherDetails() {
       </div>
 
       {/* Quick Actions Row */}
-      <div className="card" style={{ 
-        padding: '1rem 1.5rem', 
-        marginBottom: '2rem', 
-        display: 'flex', 
-        gap: '0.75rem', 
-        flexWrap: 'wrap', 
-        alignItems: 'center',
-        backgroundColor: '#ffffff',
-        border: '1px solid var(--border)',
-        boxShadow: 'var(--shadow-sm)',
-        minHeight: 'fit-content'
-      }}>
-        <strong style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '0.5rem' }}>Quick Actions:</strong>
+      <div className="card teacher-details-card">
+        <strong className="teacher-details-strong-40">Quick Actions:</strong>
         <button className="btn btn-sm btn-outline" onClick={handleEditClick}>Edit Profile</button>
         <button className="btn btn-sm btn-outline" onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }}>Assign Subject</button>
-        <Link to={`/weekly-timetable`} className="btn btn-sm btn-outline" style={{ display: 'inline-flex', alignItems: 'center' }}>Assign Timetable</Link>
+        <Link to={`/weekly-timetable`} className="btn btn-sm btn-outline teacher-details-btn">Assign Timetable</Link>
         <button className="btn btn-sm btn-outline" onClick={() => { setActiveTab('documents'); setShowUploadModal(true); }}>Upload Document</button>
         <button 
           className={`btn btn-sm ${teacher.status === 'ACTIVE' ? 'btn-outline-danger' : 'btn-primary'}`} 
@@ -697,193 +622,73 @@ export default function TeacherDetails() {
       </div>
 
       {/* Teacher Workload Dashboard (Instant KPI Summary Block) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="teacher-details-grid-42">
         
         {/* Assigned Subjects */}
-        <div 
-          onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }}
-          className="card"
-          style={{ 
-            padding: '1.25rem', 
-            backgroundColor: '#ffffff', 
-            border: '1px solid var(--border)', 
-            borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-sm)',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '120px'
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-          }}
-        >
+        <div onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }} className="card teacher-details-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
           <div>
-            <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Assigned Subjects</span>
-            <strong style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>
+            <span className="teacher-details-span-44">Assigned Subjects</span>
+            <strong className="teacher-details-strong-45">
               {workload?.subjects_count || [...new Set(assignments.map(a => a.subject_id))].length} Subjects
             </strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>
+          <div className="teacher-details-row-46">
             Assign →
           </div>
         </div>
 
         {/* Assigned Sections */}
-        <div 
-          onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }}
-          className="card"
-          style={{ 
-            padding: '1.25rem', 
-            backgroundColor: '#ffffff', 
-            border: '1px solid var(--border)', 
-            borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-sm)',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '120px'
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-          }}
-        >
+        <div onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }} className="card teacher-details-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
           <div>
-            <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Assigned Sections</span>
-            <strong style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>
+            <span className="teacher-details-span-48">Assigned Sections</span>
+            <strong className="teacher-details-strong-49">
               {workload?.sections_count || [...new Set(assignments.map(a => a.section_id))].length} Sections
             </strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>
+          <div className="teacher-details-row-50">
             Assign →
           </div>
         </div>
 
         {/* Classes Scheduled/Week */}
-        <div 
-          onClick={() => setActiveTab('timetable')}
-          className="card"
-          style={{ 
-            padding: '1.25rem', 
-            backgroundColor: '#ffffff', 
-            border: '1px solid var(--border)', 
-            borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-sm)',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '120px'
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-          }}
-        >
+        <div onClick={() => setActiveTab('timetable')} className="card teacher-details-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
           <div>
-            <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Classes Scheduled/Week</span>
-            <strong style={{ fontSize: '1.5rem', color: 'var(--primary)' }}>
+            <span className="teacher-details-span-52">Classes Scheduled/Week</span>
+            <strong className="teacher-details-strong-53">
               {teacher.periods_count || timetableEntries.length} Classes / Week
             </strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>
+          <div className="teacher-details-row-54">
             View Schedule →
           </div>
         </div>
 
         {/* Total Students Taught */}
-        <div 
-          onClick={() => setActiveTab('assignments')}
-          className="card"
-          style={{ 
-            padding: '1.25rem', 
-            backgroundColor: '#ffffff', 
-            border: '1px solid var(--border)', 
-            borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-sm)',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '120px'
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-          }}
-        >
+        <div onClick={() => setActiveTab('assignments')} className="card teacher-details-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
           <div>
-            <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Students Taught</span>
-            <strong style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>
+            <span className="teacher-details-span-56">Students Taught</span>
+            <strong className="teacher-details-strong-57">
               {teacher.students_count || 0} Students
             </strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>
+          <div className="teacher-details-row-58">
             View Sections →
           </div>
         </div>
 
         {/* Attendance Rate */}
-        <div 
-          onClick={() => setActiveTab('timeline')}
-          className="card"
-          style={{ 
-            padding: '1.25rem', 
-            backgroundColor: '#ffffff', 
-            border: '1px solid var(--border)', 
-            borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-sm)',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '120px'
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-          }}
-        >
+        <div onClick={() => setActiveTab('timeline')} className="card teacher-details-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
           <div>
-            <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Attendance Rate</span>
+            <span className="teacher-details-span-60">Attendance Rate</span>
             {workload && workload.total_attendance_days > 0 ? (
-              <strong style={{ fontSize: '1.75rem', color: '#10b981' }}>
+              <strong className="teacher-details-strong-61">
                 {Math.round(((workload.present_days + workload.half_day_days * 0.5) / workload.total_attendance_days) * 100)}%
               </strong>
             ) : (
-              <strong style={{ fontSize: '1.75rem', color: 'var(--text-muted)' }}>--</strong>
+              <strong className="teacher-details-strong-62">--</strong>
             )}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>
+          <div className="teacher-details-row-63">
             View History →
           </div>
         </div>
@@ -891,16 +696,7 @@ export default function TeacherDetails() {
       </div>
 
       {/* Profile Tabs Header */}
-      <div className="tabs" style={{ 
-        display: 'flex', 
-        gap: '0.5rem', 
-        borderBottom: '1px solid #e2e8f0', 
-        marginBottom: '1.5rem', 
-        overflowX: 'auto', 
-        height: '52px',
-        flexShrink: 0,
-        scrollbarWidth: 'none' 
-      }}>
+      <div className="tabs teacher-details-tabs">
         {[
           { id: 'overview', label: 'Overview', icon: User },
           { id: 'assignments', label: 'Subject Assignments', icon: Briefcase },
@@ -942,44 +738,44 @@ export default function TeacherDetails() {
       </div>
 
       {/* Tab Panels */}
-      <div className="card" style={{ padding: '2rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', minHeight: '350px' }}>
+      <div className="card teacher-details-card">
         
         {/* OVERVIEW PANEL */}
         {activeTab === 'overview' && (
           <div>
-            <h3 style={{ marginBottom: '1.5rem', fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)' }}>General Information</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '2rem' }}>
+            <h3 className="teacher-details-title-66">General Information</h3>
+            <div className="teacher-details-grid-67">
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Employee ID</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{teacher.employee_id}</span>
+                <label className="teacher-details-label-68">Employee ID</label>
+                <span className="teacher-details-span-69">{teacher.employee_id}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Email Address</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{teacher.email || '-'}</span>
+                <label className="teacher-details-label-70">Email Address</label>
+                <span className="teacher-details-span-71">{teacher.email || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Phone Number</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{teacher.phone || '-'}</span>
+                <label className="teacher-details-label-72">Phone Number</label>
+                <span className="teacher-details-span-73">{teacher.phone || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Department</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{teacher.department || '-'}</span>
+                <label className="teacher-details-label-74">Department</label>
+                <span className="teacher-details-span-75">{teacher.department || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Designation</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{teacher.designation || '-'}</span>
+                <label className="teacher-details-label-76">Designation</label>
+                <span className="teacher-details-span-77">{teacher.designation || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Joining Date</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{teacher.joining_date || '-'}</span>
+                <label className="teacher-details-label-78">Joining Date</label>
+                <span className="teacher-details-span-79">{teacher.joining_date || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Qualification</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{teacher.qualification || '-'}</span>
+                <label className="teacher-details-label-80">Qualification</label>
+                <span className="teacher-details-span-81">{teacher.qualification || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Experience (Years)</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{teacher.experience || '-'}</span>
+                <label className="teacher-details-label-82">Experience (Years)</label>
+                <span className="teacher-details-span-83">{teacher.experience || '-'}</span>
               </div>
             </div>
           </div>
@@ -988,14 +784,14 @@ export default function TeacherDetails() {
         {/* SUBJECT ASSIGNMENTS PANEL */}
         {activeTab === 'assignments' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)' }}>Subject Assignments</h3>
+            <div className="teacher-details-row-84">
+              <h3 className="teacher-details-title-85">Subject Assignments</h3>
               <button className="btn btn-sm btn-primary" onClick={() => setShowAssignModal(true)}>
                 Assign Subject
               </button>
             </div>
             {assignments.length > 0 ? (
-              <div style={{ overflowX: 'auto' }}>
+              <div className="teacher-details-div-86">
                 <table className="table">
                   <thead>
                     <tr>
@@ -1018,10 +814,10 @@ export default function TeacherDetails() {
                 </table>
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ fontSize: '2.5rem' }}>📚</span>
-                <p style={{ color: 'var(--text-muted)', margin: 0, fontWeight: 500 }}>No subjects assigned yet.</p>
-                <button className="btn btn-outline btn-sm" style={{ marginTop: '0.5rem' }} onClick={() => setShowAssignModal(true)}>
+              <div className="teacher-details-col-87">
+                <span className="teacher-details-span-88">📚</span>
+                <p className="teacher-details-text-89">No subjects assigned yet.</p>
+                <button className="btn btn-outline btn-sm teacher-details-btn" onClick={() => setShowAssignModal(true)}>
                   Assign Subject
                 </button>
               </div>
@@ -1032,23 +828,23 @@ export default function TeacherDetails() {
         {/* TIMETABLE SCHEDULE PANEL */}
         {activeTab === 'timetable' && (
           <div>
-            <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '1.5rem' }}>Weekly Class Timetable</h3>
+            <h3 className="teacher-details-title-91">Weekly Class Timetable</h3>
             {timetableSlots.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ fontSize: '2.5rem' }}>📅</span>
-                <p style={{ color: 'var(--text-muted)', margin: 0, fontWeight: 500 }}>No timetable has been created yet.</p>
-                <Link to="/weekly-timetable" className="btn btn-outline btn-sm" style={{ marginTop: '0.5rem' }}>
+              <div className="teacher-details-col-92">
+                <span className="teacher-details-span-93">📅</span>
+                <p className="teacher-details-text-94">No timetable has been created yet.</p>
+                <Link to="/weekly-timetable" className="btn btn-outline btn-sm teacher-details-btn">
                   Open Timetable
                 </Link>
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="table" style={{ borderCollapse: 'collapse', width: '100%', minWidth: '800px' }}>
+              <div className="teacher-details-div-96">
+                <table className="table teacher-details-table">
                   <thead>
                     <tr>
-                      <th style={{ border: '1px solid var(--border)', padding: '0.75rem', backgroundColor: '#f8fafc', width: '150px' }}>Time Slot</th>
+                      <th className="teacher-details-th-98">Time Slot</th>
                       {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-                        <th key={day} style={{ border: '1px solid var(--border)', padding: '0.75rem', backgroundColor: '#f8fafc', textAlign: 'center' }}>{day}</th>
+                        <th key={day} className="teacher-details-th-99">{day}</th>
                       ))}
                     </tr>
                   </thead>
@@ -1057,9 +853,9 @@ export default function TeacherDetails() {
                       .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''))
                       .map(slot => (
                         <tr key={slot.id}>
-                          <td style={{ border: '1px solid var(--border)', padding: '0.75rem', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                            <div style={{ color: 'var(--text-main)' }}>{slot.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>{slot.start_time} - {slot.end_time}</div>
+                          <td className="teacher-details-td-100">
+                            <div className="teacher-details-div-101">{slot.name}</div>
+                            <div className="teacher-details-div-102">{slot.start_time} - {slot.end_time}</div>
                           </td>
                           {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
                             const entry = timetableEntries.find(e => e.slot_id === slot.id && e.day_of_week === day);
@@ -1075,14 +871,14 @@ export default function TeacherDetails() {
                                 }}
                               >
                                 {entry ? (
-                                  <div style={{ fontSize: '0.85rem' }}>
-                                    <strong style={{ color: '#166534', display: 'block' }}>{entry.subject_name}</strong>
-                                    <span style={{ fontSize: '0.75rem', color: '#15803d', display: 'block', marginTop: '0.15rem' }}>
+                                  <div className="teacher-details-div-103">
+                                    <strong className="teacher-details-strong-104">{entry.subject_name}</strong>
+                                    <span className="teacher-details-span-105">
                                       {getProgramLabel()}: {entry.section_name}
                                     </span>
                                   </div>
                                 ) : (
-                                  <span style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>-</span>
+                                  <span className="teacher-details-span-106">-</span>
                                 )}
                               </td>
                             );
@@ -1099,47 +895,35 @@ export default function TeacherDetails() {
         {/* TIMELINE PANEL */}
         {activeTab === 'timeline' && (
           <div>
-            <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '1.5rem' }}>Teacher Professional Timeline</h3>
+            <h3 className="teacher-details-title-107">Teacher Professional Timeline</h3>
             
-            <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', paddingLeft: '2rem', gap: '2rem', marginTop: '1rem' }}>
+            <div className="teacher-details-col-108">
               {/* Vertical line indicator */}
-              <div style={{ position: 'absolute', left: '7px', top: '10px', bottom: '10px', width: '2px', backgroundColor: '#e2e8f0' }} />
+              <div className="teacher-details-div-109"  />
               
               {timelineItems.map((item, index) => (
-                <div key={index} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <div key={index} className="teacher-details-col-110">
                   {/* Dot */}
-                  <div style={{ 
-                    position: 'absolute', 
-                    left: '-2rem', 
-                    marginLeft: '-3px',
-                    top: '4px',
-                    width: '16px', 
-                    height: '16px', 
-                    borderRadius: '50%', 
-                    backgroundColor: '#0d9488', 
-                    border: '3px solid #ffffff',
-                    boxShadow: '0 0 0 1px #e2e8f0',
-                    zIndex: 2
-                  }} />
+                  <div className="teacher-details-div-111"  />
                   
-                  <h5 style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <h5 className="teacher-details-row-112">
                     {item.title}
-                    <span style={{ fontSize: '0.7rem', color: '#0d9488', backgroundColor: '#ccfbf1', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Active</span>
+                    <span className="teacher-details-span-113">Active</span>
                   </h5>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
+                  <p className="teacher-details-text-114">
                     {item.description}
                   </p>
                   {item.date && (
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)' }}>
+                    <span className="teacher-details-span-115">
                       Date: {item.date}
                     </span>
                   )}
                 </div>
               ))}
               {timelineItems.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                  <span style={{ fontSize: '2.5rem' }}>🕒</span>
-                  <p style={{ color: 'var(--text-muted)', margin: 0, fontWeight: 500 }}>No activity timeline logs recorded yet.</p>
+                <div className="teacher-details-col-116">
+                  <span className="teacher-details-span-117">🕒</span>
+                  <p className="teacher-details-text-118">No activity timeline logs recorded yet.</p>
                 </div>
               )}
             </div>
@@ -1149,11 +933,11 @@ export default function TeacherDetails() {
         {/* NOTES PANEL */}
         {activeTab === 'notes' && (
           <div>
-            <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '1.5rem' }}>Internal Performance & Admin Notes</h3>
+            <h3 className="teacher-details-title-119">Internal Performance & Admin Notes</h3>
             
             {/* Note creation form */}
-            <form onSubmit={handleAddNote} style={{ marginBottom: '2rem' }}>
-              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+            <form onSubmit={handleAddNote} className="teacher-details-form-120">
+              <div className="form-group teacher-details-form-group">
                 <textarea 
                   id="teacher-note-textarea"
                   value={newNote} 
@@ -1169,31 +953,26 @@ export default function TeacherDetails() {
             </form>
 
             {/* Notes list */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="teacher-details-col-122">
               {notes.map(note => (
-                <div key={note.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.25rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: '#f8fafc', position: 'relative' }}>
-                  <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-main)', whiteSpace: 'pre-line', paddingRight: '2rem' }}>
+                <div key={note.id} className="teacher-details-col-123">
+                  <p className="teacher-details-text-124">
                     {note.content}
                   </p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                  <div className="teacher-details-row-125">
                     <span>Author: <strong>{note.author_name}</strong></span>
                     <span>Posted: {note.created_at?.split('.')[0] || note.created_at}</span>
                   </div>
-                  <button 
-                    onClick={() => handleDeleteNote(note.id)} 
-                    style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: '0.2rem' }}
-                    onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
-                    onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
-                  >
+                  <button onClick={() => handleDeleteNote(note.id)} className="teacher-details-btn-126" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
                     <Trash2 size={16} />
                   </button>
                 </div>
               ))}
               {notes.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                  <span style={{ fontSize: '2.5rem' }}>📝</span>
-                  <p style={{ color: 'var(--text-muted)', margin: 0, fontWeight: 500 }}>No notes recorded.</p>
-                  <button type="button" className="btn btn-outline btn-sm" style={{ marginTop: '0.5rem' }} onClick={() => document.getElementById('teacher-note-textarea')?.focus()}>
+                <div className="teacher-details-col-127">
+                  <span className="teacher-details-span-128">📝</span>
+                  <p className="teacher-details-text-129">No notes recorded.</p>
+                  <button type="button" className="btn btn-outline btn-sm teacher-details-btn" onClick={() => document.getElementById('teacher-note-textarea')?.focus()}>
                     Add First Note
                   </button>
                 </div>
@@ -1205,47 +984,42 @@ export default function TeacherDetails() {
         {/* DOCUMENTS VAULT PANEL */}
         {activeTab === 'documents' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)' }}>Digital Documents Vault</h3>
+            <div className="teacher-details-row-131">
+              <h3 className="teacher-details-title-132">Digital Documents Vault</h3>
               <button className="btn btn-sm btn-primary" onClick={() => setShowUploadModal(true)}>
                 <Upload size={14} /> Upload Document
               </button>
             </div>
 
             {documents.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+              <div className="teacher-details-grid-133">
                 {documents.map(doc => (
-                  <div key={doc.id} style={{ display: 'flex', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: 'var(--radius-md)', gap: '1rem', backgroundColor: 'var(--bg-main)', position: 'relative' }}>
-                    <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#e2e8f0', color: '#475569', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => handleDownloadDoc(doc)}>
+                  <div key={doc.id} className="teacher-details-row-134">
+                    <div className="teacher-details-row-135" onClick={() => handleDownloadDoc(doc)}>
                       DOC
                     </div>
-                    <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => handleDownloadDoc(doc)}>
-                      <h5 style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '0 0 0.25rem' }} title={doc.name}>
+                    <div className="teacher-details-div-136" onClick={() => handleDownloadDoc(doc)}>
+                      <h5 className="teacher-details-title-137" title={doc.name}>
                         {doc.name}
                       </h5>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
+                      <p className="teacher-details-text-138">
                         {doc.document_type} • {(doc.file_size / 1024).toFixed(1)} KB
                       </p>
-                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>
+                      <p className="teacher-details-text-139">
                         Uploaded: {doc.uploaded_at?.split(' ')[0]}
                       </p>
                     </div>
-                    <button 
-                      onClick={() => handleDocDelete(doc.id)} 
-                      style={{ position: 'absolute', top: '1rem', right: '1rem', border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: '0.2rem' }}
-                      onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
-                      onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
-                    >
+                    <button onClick={() => handleDocDelete(doc.id)} className="teacher-details-btn-140" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
                       <Trash2 size={16} />
                     </button>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ fontSize: '2.5rem' }}>📁</span>
-                <p style={{ color: 'var(--text-muted)', margin: 0, fontWeight: 500 }}>No documents uploaded.</p>
-                <button className="btn btn-outline btn-sm" style={{ marginTop: '0.5rem' }} onClick={() => setShowUploadModal(true)}>
+              <div className="teacher-details-col-141">
+                <span className="teacher-details-span-142">📁</span>
+                <p className="teacher-details-text-143">No documents uploaded.</p>
+                <button className="btn btn-outline btn-sm teacher-details-btn" onClick={() => setShowUploadModal(true)}>
                   <Upload size={14} /> Upload Document
                 </button>
               </div>
@@ -1257,9 +1031,9 @@ export default function TeacherDetails() {
 
       {/* Upload Document Modal */}
       {showUploadModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '440px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-main)' }}>Upload Teacher Document</h3>
+        <div className="modal teacher-details-modal">
+          <div className="modal-content teacher-details-modal-content">
+            <h3 className="teacher-details-title-147">Upload Teacher Document</h3>
             <form onSubmit={handleDocUploadSubmit}>
               
               <div className="form-group">
@@ -1273,24 +1047,12 @@ export default function TeacherDetails() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group teacher-details-form-group">
                 <label>Choose File *</label>
-                <input 
-                  required 
-                  type="file" 
-                  onChange={e => {
-                    const files = e.target.files;
-                    if (files && files[0]) {
-                      setSelectedFile(files[0]);
-                    } else {
-                      setSelectedFile(null);
-                    }
-                  }} 
-                  style={{ border: 'none', padding: 0 }}
-                />
+                <input required type="file" onChange={e => { const files = e.target.files; if (files && files[0]) { setSelectedFile(files[0]); } else { setSelectedFile(null); } }} className="teacher-details-input-149"  />
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
+              <div className="modal-actions teacher-details-modal-actions">
                 <button type="button" onClick={() => { setShowUploadModal(false); setSelectedFile(null); }} className="btn btn-secondary" disabled={uploadingDoc}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={uploadingDoc || !selectedFile}>
                   {uploadingDoc ? 'Uploading...' : 'Upload File'}
@@ -1303,11 +1065,11 @@ export default function TeacherDetails() {
 
       {/* Subject Assignment Modal */}
       {showAssignModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '500px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Assign Subject to Teacher</h3>
+        <div className="modal teacher-details-modal">
+          <div className="modal-content teacher-details-modal-content">
+            <h3 className="teacher-details-title-153">Assign Subject to Teacher</h3>
             <form onSubmit={handleAssignSubject}>
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <div className="form-group teacher-details-form-group">
                 <label>Academic Year</label>
                 <select 
                   required
@@ -1321,7 +1083,7 @@ export default function TeacherDetails() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <div className="form-group teacher-details-form-group">
                 <label>{getProgramLabel()}</label>
                 <select 
                   required
@@ -1335,7 +1097,7 @@ export default function TeacherDetails() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <div className="form-group teacher-details-form-group">
                 <label>Section</label>
                 <select 
                   required
@@ -1351,7 +1113,7 @@ export default function TeacherDetails() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <div className="form-group teacher-details-form-group">
                 <label>Subject</label>
                 <select 
                   required
@@ -1367,7 +1129,7 @@ export default function TeacherDetails() {
                 </select>
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
+              <div className="modal-actions teacher-details-modal-actions">
                 <button type="button" onClick={() => setShowAssignModal(false)} className="btn btn-secondary" disabled={assigningSubject}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={assigningSubject}>
                   {assigningSubject ? 'Assigning...' : 'Assign Subject'}
@@ -1380,9 +1142,9 @@ export default function TeacherDetails() {
 
       {/* Create Login Account Modal */}
       {showLoginModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '440px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-main)' }}>Create Login Account</h3>
+        <div className="modal teacher-details-modal">
+          <div className="modal-content teacher-details-modal-content">
+            <h3 className="teacher-details-title-161">Create Login Account</h3>
             <form onSubmit={handleCreateLogin}>
               
               <div className="form-group">
@@ -1396,7 +1158,7 @@ export default function TeacherDetails() {
                 />
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group teacher-details-form-group">
                 <label>Email Address *</label>
                 <input 
                   required 
@@ -1407,7 +1169,7 @@ export default function TeacherDetails() {
                 />
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group teacher-details-form-group">
                 <label>Temporary Password *</label>
                 <input 
                   required 
@@ -1418,11 +1180,11 @@ export default function TeacherDetails() {
                 />
               </div>
 
-              <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f1f5f9', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              <div className="teacher-details-div-164">
                 <strong>Role:</strong> Teacher (This account will automatically link to this teacher profile).
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
+              <div className="modal-actions teacher-details-modal-actions">
                 <button type="button" onClick={() => setShowLoginModal(false)} className="btn btn-secondary" disabled={creatingLogin}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={creatingLogin}>
                   {creatingLogin ? 'Creating Account...' : 'Create Login'}
@@ -1435,12 +1197,12 @@ export default function TeacherDetails() {
 
       {/* Edit Modal (Tabbed Layout) */}
       {showEditModal && editForm && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '680px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Edit Teacher Profile</h3>
+        <div className="modal teacher-details-modal">
+          <div className="modal-content teacher-details-modal-content">
+            <h3 className="teacher-details-title-168">Edit Teacher Profile</h3>
             
             {/* Tabs */}
-            <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem', gap: '1rem', overflowX: 'auto', scrollbarWidth: 'none' }}>
+            <div className="teacher-details-row-169">
               {['personal', 'professional', 'account'].map(t => (
                 <button
                   key={t}
@@ -1466,8 +1228,8 @@ export default function TeacherDetails() {
             <form onSubmit={handleEditSubmit}>
               {/* TAB 1: Personal */}
               {editTab === 'personal' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div className="teacher-details-col-170">
+                  <div className="teacher-details-grid-171">
                     <div className="form-group">
                       <label>First Name *</label>
                       <input required type="text" value={editForm.first_name} onChange={e => setEditForm({...editForm, first_name: e.target.value})} />
@@ -1481,7 +1243,7 @@ export default function TeacherDetails() {
                       <input required type="text" value={editForm.last_name} onChange={e => setEditForm({...editForm, last_name: e.target.value})} />
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="teacher-details-grid-172">
                     <div className="form-group">
                       <label>Email *</label>
                       <input required type="email" value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} />
@@ -1496,8 +1258,8 @@ export default function TeacherDetails() {
 
               {/* TAB 2: Professional */}
               {editTab === 'professional' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="teacher-details-col-173">
+                  <div className="teacher-details-grid-174">
                     <div className="form-group">
                       <label>Employee ID *</label>
                       <input required type="text" value={editForm.employee_id} onChange={e => setEditForm({...editForm, employee_id: e.target.value})} />
@@ -1516,7 +1278,7 @@ export default function TeacherDetails() {
                       </select>
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="teacher-details-grid-175">
                     <div className="form-group">
                       <label>Designation</label>
                       <input type="text" value={editForm.designation} onChange={e => setEditForm({...editForm, designation: e.target.value})} />
@@ -1526,7 +1288,7 @@ export default function TeacherDetails() {
                       <input type="date" value={editForm.joining_date} onChange={e => setEditForm({...editForm, joining_date: e.target.value})} />
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="teacher-details-grid-176">
                     <div className="form-group">
                       <label>Qualification</label>
                       <input type="text" value={editForm.qualification} onChange={e => setEditForm({...editForm, qualification: e.target.value})} />
@@ -1541,7 +1303,7 @@ export default function TeacherDetails() {
 
               {/* TAB 3: Account Status */}
               {editTab === 'account' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="teacher-details-col-177">
                   <div className="form-group">
                     <label>Account Status</label>
                     <select value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
@@ -1551,14 +1313,14 @@ export default function TeacherDetails() {
                       <option value="RETIRED">RETIRED</option>
                     </select>
                   </div>
-                  <div style={{ padding: '1rem', backgroundColor: '#f1f5f9', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  <div className="teacher-details-div-178">
                     <strong>Administrative Note:</strong> Account credential resets and login profile adjustments must be performed through the general Users Directory access control configurations.
                   </div>
                 </div>
               )}
 
               {/* Modal Actions */}
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+              <div className="modal-actions teacher-details-modal-actions">
                 <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
               </div>

@@ -1,3 +1,4 @@
+import './Visitors.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -119,11 +120,11 @@ export default function Visitors() {
       <div className="page-header">
         <div>
           <h2>Visitor Register Log</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+          <p className="visitors-text-1">
             Track guest entries and checked-out visitors
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <button className="btn btn-primary visitors-btn" onClick={() => setShowAddModal(true)}>
           <Plus size={18} /> Check-In Visitor
         </button>
       </div>
@@ -152,7 +153,7 @@ export default function Visitors() {
                   <th>Meeting Host</th>
                   <th>Times (In / Out)</th>
                   <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th className="visitors-th-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -178,9 +179,9 @@ export default function Visitors() {
                         </span>
                       </td>
                       <td>{v.host_name}</td>
-                      <td style={{ fontSize: '0.85rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <Clock size={12} style={{ color: 'var(--text-muted)' }} />
+                      <td className="visitors-td-4">
+                        <div className="visitors-row-5">
+                          <Clock size={12} className="visitors-Clock-6"  />
                           <span>{v.in_time} {v.out_time ? `— ${v.out_time}` : ''}</span>
                         </div>
                       </td>
@@ -197,17 +198,13 @@ export default function Visitors() {
                           {isCheckedIn ? 'Checked In' : 'Completed'}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td className="visitors-td-7">
                         {isCheckedIn ? (
-                          <button
-                            className="btn btn-sm btn-outline"
-                            onClick={() => handleCheckout(v.id)}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', borderColor: '#c2410c', color: '#c2410c' }}
-                          >
+                          <button className="btn btn-sm btn-outline visitors-btn" onClick={() => handleCheckout(v.id)}>
                             <LogOut size={12} /> Checkout
                           </button>
                         ) : (
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Logged Out</span>
+                          <span className="visitors-span-9">Logged Out</span>
                         )}
                       </td>
                     </tr>
@@ -222,13 +219,13 @@ export default function Visitors() {
       {/* Add Visitor Modal */}
       {showAddModal && (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+          <div className="modal visitors-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">New Visitor Registration</h3>
               <button className="modal-close" onClick={() => setShowAddModal(false)}>×</button>
             </div>
             <form onSubmit={handleCreate}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="modal-body visitors-modal-body">
                 <div className="form-group">
                   <label>Visitor Full Name *</label>
                   <input

@@ -1,0 +1,71 @@
+/* Component stylesheet for TeacherDashboard.tsx */
+
+.teacher-dashboard-icon {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary);
+}
+
+.teacher-dashboard-icon {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.teacher-dashboard-icon {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.teacher-dashboard-teacher-actions {
+  margin-top: 2rem;
+}
+
+.teacher-dashboard-quick-actions-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin-top: 1rem;
+}
+
+.teacher-dashboard-action-btn {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.teacher-dashboard-FileSpreadsheet-7 {
+  color: var(--primary);
+}
+
+.teacher-dashboard-span-8 {
+  font-weight: 600;
+}
+
+.teacher-dashboard-action-btn {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.teacher-dashboard-Award-10 {
+  color: var(--success);
+}
+
+.teacher-dashboard-span-11 {
+  font-weight: 600;
+}

@@ -1,3 +1,4 @@
+import './TeacherAttendance.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -88,19 +89,14 @@ export default function TeacherAttendance() {
       <div className="page-header">
         <div>
           <h2>Teacher Attendance</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="teacher-attendance-text-1">
             Mark and update daily attendance logs for academic staff
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <div className="form-group" style={{ margin: 0, flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
-            <label style={{ whiteSpace: 'nowrap' }}><Calendar size={18} /> Select Date:</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              style={{ width: 'auto', padding: '0.5rem 1rem' }}
-            />
+        <div className="teacher-attendance-row-2">
+          <div className="form-group teacher-attendance-form-group">
+            <label className="teacher-attendance-label-4"><Calendar size={18} /> Select Date:</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="teacher-attendance-input-5"  />
           </div>
           <button className="btn btn-primary" onClick={handleSaveAttendance} disabled={loading || saving}>
             {saving ? 'Saving...' : 'Save Attendance'}
@@ -118,7 +114,7 @@ export default function TeacherAttendance() {
                 <th>Department</th>
                 <th>Designation</th>
                 <th>Status</th>
-                <th style={{ width: '300px' }}>Remarks</th>
+                <th className="teacher-attendance-th-6">Remarks</th>
               </tr>
             </thead>
             <tbody>
@@ -129,29 +125,14 @@ export default function TeacherAttendance() {
                   <td>{rec.department || '-'}</td>
                   <td>{rec.designation || '-'}</td>
                   <td>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <button
-                        type="button"
-                        className={`btn btn-sm ${rec.status === 'present' ? 'btn-success' : 'btn-outline'}`}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.4rem 0.6rem' }}
-                        onClick={() => handleMarkStatus(rec.teacher_id, 'present')}
-                      >
+                    <div className="teacher-attendance-row-7">
+                      <button type="button" className={`btn btn-sm ${rec.status === 'present' ? 'btn-success' : 'btn-outline'} teacher-attendance-row-8`} onClick={() => handleMarkStatus(rec.teacher_id, 'present')}>
                         <Check size={12} /> Present
                       </button>
-                      <button
-                        type="button"
-                        className={`btn btn-sm ${rec.status === 'absent' ? 'btn-danger' : 'btn-outline'}`}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.4rem 0.6rem' }}
-                        onClick={() => handleMarkStatus(rec.teacher_id, 'absent')}
-                      >
+                      <button type="button" className={`btn btn-sm ${rec.status === 'absent' ? 'btn-danger' : 'btn-outline'} teacher-attendance-row-9`} onClick={() => handleMarkStatus(rec.teacher_id, 'absent')}>
                         <X size={12} /> Absent
                       </button>
-                      <button
-                        type="button"
-                        className={`btn btn-sm ${rec.status === 'half_day' ? 'btn-warning' : 'btn-outline'}`}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.4rem 0.6rem' }}
-                        onClick={() => handleMarkStatus(rec.teacher_id, 'half_day')}
-                      >
+                      <button type="button" className={`btn btn-sm ${rec.status === 'half_day' ? 'btn-warning' : 'btn-outline'} teacher-attendance-row-10`} onClick={() => handleMarkStatus(rec.teacher_id, 'half_day')}>
                         <Clock size={12} /> Half Day
                       </button>
                       <button
@@ -172,26 +153,15 @@ export default function TeacherAttendance() {
                     </div>
                   </td>
                   <td>
-                    <input
-                      type="text"
-                      value={rec.remarks || ''}
-                      onChange={(e) => handleRemarksChange(rec.teacher_id, e.target.value)}
-                      placeholder="e.g. sick leave"
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: '4px',
-                        border: '1px solid var(--border)'
-                      }}
-                    />
+                    <input type="text" value={rec.remarks || ''} onChange={(e) => handleRemarksChange(rec.teacher_id, e.target.value)} placeholder="e.g. sick leave" className="teacher-attendance-input-11"  />
                   </td>
                 </tr>
               ))}
               {teachers.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '3rem' }}>
-                    <UserCheck size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
-                    <p style={{ color: 'var(--text-muted)' }}>No teachers registered in the system yet.</p>
+                  <td colSpan={6} className="teacher-attendance-td-12">
+                    <UserCheck size={32} className="teacher-attendance-UserCheck-13"  />
+                    <p className="teacher-attendance-text-14">No teachers registered in the system yet.</p>
                   </td>
                 </tr>
               )}

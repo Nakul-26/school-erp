@@ -1,3 +1,4 @@
+import './Login.css';
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -52,11 +53,11 @@ export default function Login() {
               placeholder="admin123"
             />
           </div>
-          <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
-            <Link to="/forgot-password" style={{ fontSize: '0.875rem', color: 'var(--primary)', textDecoration: 'none' }}>Forgot Password?</Link>
+          <div className="login-div-1">
+            <Link to="/forgot-password" className="login-Link-2">Forgot Password?</Link>
           </div>
-          {error && <p style={{ color: 'var(--danger)', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</p>}
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
+          {error && <p className="login-text-3">{error}</p>}
+          <button type="submit" className="btn btn-primary login-btn" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>

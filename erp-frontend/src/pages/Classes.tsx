@@ -1,3 +1,4 @@
+import './Classes.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -522,20 +523,20 @@ export default function Classes() {
       )}
 
       {/* 2. Page Header */}
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div className="page-header classes-page-header">
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>Classes & Sections</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <h2 className="classes-title-2">Classes & Sections</h2>
+          <p className="classes-text-3">
             Manage school courses, classes, sections, and classroom allocations.
           </p>
         </div>
         <div>
           {activeMainTab === 'sections' ? (
-            <button className="btn btn-primary" onClick={handleOpenCreateSection} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+            <button className="btn btn-primary classes-btn" onClick={handleOpenCreateSection}>
               <Plus size={18} /> Add {institutionType === 'school' ? 'Section' : 'Class/Section'}
             </button>
           ) : (
-            <button className="btn btn-primary" onClick={() => setShowAddProgramModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+            <button className="btn btn-primary classes-btn" onClick={() => setShowAddProgramModal(true)}>
               <Plus size={18} /> Add {getProgramLabel()}
             </button>
           )}
@@ -543,17 +544,7 @@ export default function Classes() {
       </div>
 
       {/* 3. Pill Tabs Switcher */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '0.5rem', 
-        backgroundColor: 'var(--bg-surface)', 
-        padding: '0.35rem', 
-        borderRadius: 'var(--radius-lg)', 
-        border: '1px solid var(--border)', 
-        width: 'fit-content', 
-        marginBottom: '2rem',
-        boxShadow: 'var(--shadow-sm)'
-      }}>
+      <div className="classes-row-6">
         <button 
           onClick={() => setActiveMainTab('sections')}
           style={{
@@ -602,104 +593,98 @@ export default function Classes() {
       {activeMainTab === 'sections' && (
         <>
           {/* KPI Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-            <div style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
+          <div className="classes-grid-7">
+            <div className="classes-row-8">
+              <div className="classes-row-9">
                 <SlidersHorizontal size={24} />
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Total Sections</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>{totalSectionsCount}</span>
+                <span className="classes-span-10">Total Sections</span>
+                <span className="classes-span-11">{totalSectionsCount}</span>
               </div>
             </div>
 
-            <div style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', color: '#dc2626' }}>
+            <div className="classes-row-12">
+              <div className="classes-row-13">
                 <AlertTriangle size={24} />
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>No Class Teacher</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>{sectionsWithoutTeacher}</span>
+                <span className="classes-span-14">No Class Teacher</span>
+                <span className="classes-span-15">{sectionsWithoutTeacher}</span>
               </div>
             </div>
 
-            <div style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', color: '#059669' }}>
+            <div className="classes-row-16">
+              <div className="classes-row-17">
                 <Info size={24} />
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Avg Capacity</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>{avgCapacity}</span>
+                <span className="classes-span-18">Avg Capacity</span>
+                <span className="classes-span-19">{avgCapacity}</span>
               </div>
             </div>
 
-            <div style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(139, 92, 246, 0.1)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', color: '#7c3aed' }}>
+            <div className="classes-row-20">
+              <div className="classes-row-21">
                 <Users size={24} />
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Active Enrolled</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>{enrolledStudentsCount}</span>
+                <span className="classes-span-22">Active Enrolled</span>
+                <span className="classes-span-23">{enrolledStudentsCount}</span>
               </div>
             </div>
           </div>
 
           {/* Filters Bar */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1rem', marginBottom: '1.5rem', alignItems: 'center' }}>
-            <div style={{ flex: '1', minWidth: '240px', position: 'relative' }}>
-              <Search size={18} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                type="text" 
-                value={sectionSearchQuery}
-                onChange={e => setSectionSearchQuery(e.target.value)}
-                placeholder="Search by section name, room, or teacher..." 
-                style={{ paddingLeft: '2.5rem', width: '100%' }}
-              />
+          <div className="classes-row-24">
+            <div className="classes-div-25">
+              <Search size={18} className="classes-Search-26"  />
+              <input type="text" value={sectionSearchQuery} onChange={e => setSectionSearchQuery(e.target.value)} placeholder="Search by section name, room, or teacher..." className="classes-input-27"  />
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <select value={sectionFilterYear} onChange={e => setSectionFilterYear(e.target.value)} style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', backgroundColor: 'var(--bg-main)', fontSize: '0.875rem' }}>
+            <div className="classes-row-28">
+              <select value={sectionFilterYear} onChange={e => setSectionFilterYear(e.target.value)} className="classes-select-29">
                 <option value="">All Academic Years</option>
                 {years.map(y => <option key={y.id} value={y.id}>{y.name}</option>)}
               </select>
 
-              <select value={sectionFilterProgram} onChange={e => setSectionFilterProgram(e.target.value)} style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', backgroundColor: 'var(--bg-main)', fontSize: '0.875rem' }}>
+              <select value={sectionFilterProgram} onChange={e => setSectionFilterProgram(e.target.value)} className="classes-select-30">
                 <option value="">All {getProgramLabel()}s</option>
                 {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
 
-              <select value={sectionFilterStatus} onChange={e => setSectionFilterStatus(e.target.value)} style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', backgroundColor: 'var(--bg-main)', fontSize: '0.875rem' }}>
+              <select value={sectionFilterStatus} onChange={e => setSectionFilterStatus(e.target.value)} className="classes-select-31">
                 <option value="1">Active Only</option>
                 <option value="0">Archived Only</option>
                 <option value="">All Statuses</option>
               </select>
               
-              <button className="btn btn-secondary" onClick={fetchData} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button className="btn btn-secondary classes-btn" onClick={fetchData}>
                 <RefreshCw size={14} /> Sync
               </button>
             </div>
           </div>
 
           {/* Table Listing */}
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="card classes-card">
             {loading ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem', gap: '1rem' }}>
-                <RefreshCw className="spinner" size={32} style={{ color: 'var(--primary)' }} />
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Loading sections database...</span>
+              <div className="classes-col-34">
+                <RefreshCw className="spinner classes-spinner" size={32}  />
+                <span className="classes-span-36">Loading sections database...</span>
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div className="classes-div-37">
+                <table className="table classes-table">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'rgba(248, 250, 252, 0.5)' }}>
-                    <th style={{ textAlign: 'left', padding: '1rem' }}>Section details</th>
-                    {institutionType !== 'school' && <th style={{ textAlign: 'left', padding: '1rem' }}>Year Level</th>}
-                    <th style={{ textAlign: 'left', padding: '1rem' }}>{getProgramLabel()}</th>
-                    <th style={{ textAlign: 'left', padding: '1rem' }}>Classroom / Room</th>
-                    <th style={{ textAlign: 'left', padding: '1rem' }}>Capacity Status</th>
-                    <th style={{ textAlign: 'left', padding: '1rem' }}>Class Teacher</th>
-                    <th style={{ textAlign: 'center', padding: '1rem' }}>Status</th>
-                    <th style={{ textAlign: 'right', padding: '1rem' }}>Actions</th>
+                  <tr className="classes-tr-39">
+                    <th className="classes-th-40">Section details</th>
+                    {institutionType !== 'school' && <th className="classes-th-41">Year Level</th>}
+                    <th className="classes-th-42">{getProgramLabel()}</th>
+                    <th className="classes-th-43">Classroom / Room</th>
+                    <th className="classes-th-44">Capacity Status</th>
+                    <th className="classes-th-45">Class Teacher</th>
+                    <th className="classes-th-46">Status</th>
+                    <th className="classes-th-47">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -708,38 +693,35 @@ export default function Classes() {
                     const percent = Math.min(100, Math.round(((cls.student_count || 0) / (cls.capacity || 40)) * 100));
                     
                     return (
-                      <tr key={cls.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background-color 0.2s' }} className="hover-row">
-                        <td style={{ padding: '1rem' }}>
-                          <span 
-                            onClick={() => navigate(`/classes/${cls.id}`)}
-                            style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.95rem', cursor: 'pointer', textDecoration: 'underline' }}
-                          >
+                      <tr key={cls.id} className="hover-row classes-hover-row">
+                        <td className="classes-td-49">
+                          <span onClick={() => navigate(`/classes/${cls.id}`)} className="classes-span-50">
                             {cls.name}
                           </span>
-                          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>{cls.academic_year_name || 'No Year'}</span>
+                          <span className="classes-span-51">{cls.academic_year_name || 'No Year'}</span>
                         </td>
                         {institutionType !== 'school' && (
-                           <td style={{ padding: '1rem', color: 'var(--text-main)' }}>Year {cls.year_number}</td>
+                           <td className="classes-td-52">Year {cls.year_number}</td>
                         )}
-                        <td style={{ padding: '1rem', color: 'var(--text-main)', fontWeight: 500 }}>
+                        <td className="classes-td-53">
                           {cls.course_name || 'Unknown'}
                         </td>
-                        <td style={{ padding: '1rem' }}>
+                        <td className="classes-td-54">
                           {cls.room ? (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-main)', fontSize: '0.9rem' }}>
-                              <MapPin size={14} style={{ color: 'var(--text-muted)' }} /> {cls.room}
+                            <span className="classes-row-55">
+                              <MapPin size={14} className="classes-MapPin-56"  /> {cls.room}
                             </span>
                           ) : (
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Not Assigned</span>
+                            <span className="classes-span-57">Not Assigned</span>
                           )}
                         </td>
-                        <td style={{ padding: '1rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', width: '130px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 600 }}>
+                        <td className="classes-td-58">
+                          <div className="classes-col-59">
+                            <div className="classes-row-60">
                               <span style={{ color: isOverfilled ? '#dc2626' : 'var(--text-main)' }}>{cls.student_count || 0} / {cls.capacity || 40}</span>
-                              <span style={{ color: 'var(--text-muted)' }}>{percent}%</span>
+                              <span className="classes-span-61">{percent}%</span>
                             </div>
-                            <div style={{ width: '100%', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div className="classes-div-62">
                               <div style={{ 
                                 width: `${percent}%`, 
                                 height: '100%', 
@@ -749,16 +731,16 @@ export default function Classes() {
                             </div>
                           </div>
                         </td>
-                        <td style={{ padding: '1rem' }}>
+                        <td className="classes-td-63">
                           {cls.class_teacher_name ? (
-                            <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.9rem' }}>{cls.class_teacher_name}</span>
+                            <span className="classes-span-64">{cls.class_teacher_name}</span>
                           ) : (
-                            <span style={{ display: 'inline-block', padding: '0.125rem 0.5rem', borderRadius: 'var(--radius-sm)', backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>
+                            <span className="classes-span-65">
                               Unassigned
                             </span>
                           )}
                         </td>
-                        <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <td className="classes-td-66">
                           <span style={{
                             display: 'inline-block',
                             padding: '0.25rem 0.625rem',
@@ -772,22 +754,22 @@ export default function Classes() {
                             {cls.is_active ? 'Active' : 'Archived'}
                           </span>
                         </td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>
-                          <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
-                            <button className="btn btn-sm btn-outline" onClick={() => handleOpenSectionDetails(cls)} title="View Section Dossier" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <td className="classes-td-67">
+                          <div className="classes-row-68">
+                            <button className="btn btn-sm btn-outline classes-btn" onClick={() => handleOpenSectionDetails(cls)} title="View Section Dossier">
                               <Info size={12} /> Dossier
                             </button>
-                            <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/classes/${cls.id}`)} title="Open Section Workspace" style={{ padding: '0.35rem' }}>
+                            <button className="btn btn-sm btn-secondary classes-btn" onClick={() => navigate(`/classes/${cls.id}`)} title="Open Section Workspace">
                               <Eye size={14} />
                             </button>
-                            <button className="btn btn-sm btn-secondary" onClick={() => handleOpenEditSection(cls)} title="Edit details" style={{ padding: '0.35rem' }}>
+                            <button className="btn btn-sm btn-secondary classes-btn" onClick={() => handleOpenEditSection(cls)} title="Edit details">
                               <Edit2 size={14} />
                             </button>
-                            <button className="btn btn-sm btn-secondary" onClick={() => handleToggleSectionStatus(cls)} title={cls.is_active ? 'Archive section' : 'Restore section'} style={{ padding: '0.35rem' }}>
+                            <button className="btn btn-sm btn-secondary classes-btn" onClick={() => handleToggleSectionStatus(cls)} title={cls.is_active ? 'Archive section' : 'Restore section'}>
                               <Archive size={14} />
                             </button>
                             {!cls.is_active && (
-                              <button className="btn btn-sm btn-danger" onClick={() => handleDeleteSection(cls.id)} title="Delete permanently" style={{ padding: '0.35rem' }}>
+                              <button className="btn btn-sm btn-danger classes-btn" onClick={() => handleDeleteSection(cls.id)} title="Delete permanently">
                                 <Trash2 size={14} />
                               </button>
                             )}
@@ -798,11 +780,11 @@ export default function Classes() {
                   })}
                   {filteredClasses.length === 0 && (
                     <tr>
-                      <td colSpan={institutionType === 'school' ? 7 : 8} style={{ textAlign: 'center', padding: '4rem' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                          <Users size={32} style={{ color: 'var(--text-muted)' }} />
-                          <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>No Classes or Sections Found</span>
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Try clearing filters or search to broaden search boundaries.</span>
+                      <td colSpan={institutionType === 'school' ? 7 : 8} className="classes-td-74">
+                        <div className="classes-col-75">
+                          <Users size={32} className="classes-Users-76"  />
+                          <span className="classes-span-77">No Classes or Sections Found</span>
+                          <span className="classes-span-78">Try clearing filters or search to broaden search boundaries.</span>
                         </div>
                       </td>
                     </tr>
@@ -819,153 +801,123 @@ export default function Classes() {
       {activeMainTab === 'programs' && (
         <>
           {/* KPI Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
-            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem', minHeight: '110px' }}>
-              <div style={{ padding: '0.75rem', backgroundColor: '#e0e7ff', borderRadius: 'var(--radius-md)', color: 'var(--primary)' }}>
+          <div className="classes-grid-79">
+            <div className="card classes-card">
+              <div className="classes-div-81">
                 <Shield size={24} />
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Total Active</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>{totalProgramsCount}</span>
+                <span className="classes-span-82">Total Active</span>
+                <span className="classes-span-83">{totalProgramsCount}</span>
               </div>
             </div>
 
-            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem', minHeight: '110px' }}>
-              <div style={{ padding: '0.75rem', backgroundColor: '#ecfdf5', borderRadius: 'var(--radius-md)', color: '#059669' }}>
+            <div className="card classes-card">
+              <div className="classes-div-85">
                 <Calendar size={24} />
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Semester Based</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>{semesterEnabledCount}</span>
+                <span className="classes-span-86">Semester Based</span>
+                <span className="classes-span-87">{semesterEnabledCount}</span>
               </div>
             </div>
 
-            <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem', minHeight: '110px' }}>
-              <div style={{ padding: '0.75rem', backgroundColor: '#fffbeb', borderRadius: 'var(--radius-md)', color: '#d97706' }}>
+            <div className="card classes-card">
+              <div className="classes-div-89">
                 <BookOpen size={24} />
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Credit System</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>{creditSystemCount}</span>
+                <span className="classes-span-90">Credit System</span>
+                <span className="classes-span-91">{creditSystemCount}</span>
               </div>
             </div>
           </div>
 
           {/* Search & Filters */}
-          <div className="card filters" style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem', padding: '1rem' }}>
-            <div className="search-container" style={{ flex: '1 1 300px', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--border)', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)' }}>
+          <div className="card filters classes-card">
+            <div className="search-container classes-search-container">
               <Search size={18} color="var(--text-muted)" />
-              <input 
-                type="text" 
-                placeholder={`Search by ${getProgramLabel().toLowerCase()} name or code...`} 
-                value={programSearchQuery}
-                onChange={(e) => setProgramSearchQuery(e.target.value)}
-                style={{ border: 'none', width: '100%', outline: 'none', background: 'transparent', fontSize: '0.875rem' }}
-              />
+              <input type="text" placeholder={`Search by ${getProgramLabel().toLowerCase()} name or code...`} value={programSearchQuery} onChange={(e) => setProgramSearchQuery(e.target.value)} className="classes-input-94"  />
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div className="classes-row-95">
               {institutionType !== 'school' && (
-                <select 
-                  value={programDeptFilter} 
-                  onChange={(e) => setProgramDeptFilter(e.target.value)}
-                  style={{ padding: '0.5rem 1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem', outline: 'none' }}
-                >
+                <select value={programDeptFilter} onChange={(e) => setProgramDeptFilter(e.target.value)} className="classes-select-96">
                   <option value="ALL">All Departments</option>
                   {departments.map(d => (
                     <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>
               )}
-              <select 
-                value={programStatusFilter} 
-                onChange={(e) => setProgramStatusFilter(e.target.value as any)}
-                style={{ padding: '0.5rem 1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem', outline: 'none' }}
-              >
+              <select value={programStatusFilter} onChange={(e) => setProgramStatusFilter(e.target.value as any)} className="classes-select-97">
                 <option value="ACTIVE">Active Only</option>
                 <option value="ARCHIVED">Archived Only</option>
                 <option value="ALL">All Statuses</option>
               </select>
-              <button className="btn btn-secondary" onClick={fetchData} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button className="btn btn-secondary classes-btn" onClick={fetchData}>
                 <RefreshCw size={14} /> Sync
               </button>
             </div>
           </div>
 
           {/* Main Grid Table */}
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="card classes-card">
             {loading ? (
-              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>
+              <div className="classes-div-100">Loading...</div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div className="classes-div-101">
+                <table className="table classes-table">
                   <thead>
                     <tr>
-                      <th style={{ textAlign: 'left', padding: '1rem' }}>Code</th>
-                      <th style={{ textAlign: 'left', padding: '1rem' }}>Name</th>
-                      {institutionType !== 'school' && <th style={{ textAlign: 'left', padding: '1rem' }}>Department</th>}
-                      {institutionType !== 'school' && <th style={{ textAlign: 'center', padding: '1rem' }}>Duration</th>}
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Semesters</th>
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Credits</th>
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Status</th>
-                      <th style={{ textAlign: 'right', padding: '1rem' }}>Actions</th>
+                      <th className="classes-th-103">Code</th>
+                      <th className="classes-th-104">Name</th>
+                      {institutionType !== 'school' && <th className="classes-th-105">Department</th>}
+                      {institutionType !== 'school' && <th className="classes-th-106">Duration</th>}
+                      <th className="classes-th-107">Semesters</th>
+                      <th className="classes-th-108">Credits</th>
+                      <th className="classes-th-109">Status</th>
+                      <th className="classes-th-110">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {displayedPrograms.map(prog => (
-                      <tr key={prog.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '1rem' }}>
-                          <code style={{ fontSize: '0.9rem', fontWeight: 700, backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-sm)', color: 'var(--text-main)' }}>
+                      <tr key={prog.id} className="classes-tr-111">
+                        <td className="classes-td-112">
+                          <code className="classes-code-113">
                             {prog.course_code}
                           </code>
                         </td>
-                        <td style={{ padding: '1rem', fontWeight: 600 }}>{prog.name}</td>
-                        {institutionType !== 'school' && <td style={{ padding: '1rem' }}>{getDeptCode(prog.department_id)}</td>}
+                        <td className="classes-td-114">{prog.name}</td>
+                        {institutionType !== 'school' && <td className="classes-td-115">{getDeptCode(prog.department_id)}</td>}
                         {institutionType !== 'school' && (
-                          <td style={{ padding: '1rem', textAlign: 'center' }}>
+                          <td className="classes-td-116">
                             {prog.duration_years} {prog.duration_years === 1 ? 'Year' : 'Years'}
                           </td>
                         )}
-                        <td style={{ padding: '1rem', textAlign: 'center' }}>
-                          {prog.semester_enabled === 1 ? <Check size={16} color="var(--success)" style={{ margin: '0 auto' }} /> : <X size={16} color="var(--secondary)" style={{ margin: '0 auto' }} />}
+                        <td className="classes-td-117">
+                          {prog.semester_enabled === 1 ? <Check size={16} color="var(--success)" className="classes-Check-118"  /> : <X size={16} color="var(--secondary)" className="classes-X-119"  />}
                         </td>
-                        <td style={{ padding: '1rem', textAlign: 'center' }}>
-                          {prog.credit_system_enabled === 1 ? <Check size={16} color="var(--success)" style={{ margin: '0 auto' }} /> : <X size={16} color="var(--secondary)" style={{ margin: '0 auto' }} />}
+                        <td className="classes-td-120">
+                          {prog.credit_system_enabled === 1 ? <Check size={16} color="var(--success)" className="classes-Check-121"  /> : <X size={16} color="var(--secondary)" className="classes-X-122"  />}
                         </td>
-                        <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <td className="classes-td-123">
                           <span className={`badge badge-${prog.is_active === 1 ? 'success' : 'secondary'}`}>
                             {prog.is_active === 1 ? 'ACTIVE' : 'ARCHIVED'}
                           </span>
                         </td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                            <button 
-                              onClick={() => openProgramDetailModal(prog)} 
-                              className="btn btn-sm btn-outline" 
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                            >
+                        <td className="classes-td-124">
+                          <div className="classes-row-125">
+                            <button onClick={() => openProgramDetailModal(prog)} className="btn btn-sm btn-outline classes-btn">
                               <Eye size={12} /> View
                             </button>
-                            <button 
-                              onClick={() => openEditProgramModal(prog)} 
-                              className="btn btn-sm btn-secondary" 
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                            >
+                            <button onClick={() => openEditProgramModal(prog)} className="btn btn-sm btn-secondary classes-btn">
                               <Edit3 size={12} /> Edit
                             </button>
                             {prog.is_active === 1 ? (
-                              <button 
-                                onClick={() => handleArchiveProgram(prog.id)} 
-                                className="btn btn-sm btn-outline-danger" 
-                                style={{ color: 'var(--danger)', borderColor: 'var(--danger)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                              >
+                              <button onClick={() => handleArchiveProgram(prog.id)} className="btn btn-sm btn-outline-danger classes-btn">
                                 <Trash2 size={12} /> Archive
                               </button>
                             ) : (
-                              <button 
-                                onClick={() => handleRestoreProgram(prog.id)} 
-                                className="btn btn-sm btn-outline-success" 
-                                style={{ color: 'var(--success)', borderColor: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                              >
+                              <button onClick={() => handleRestoreProgram(prog.id)} className="btn btn-sm btn-outline-success classes-btn">
                                 <RefreshCw size={12} /> Restore
                               </button>
                             )}
@@ -975,12 +927,12 @@ export default function Classes() {
                     ))}
                     {displayedPrograms.length === 0 && (
                       <tr>
-                        <td colSpan={institutionType === 'school' ? 6 : 8} style={{ textAlign: 'center', padding: '3rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                        <td colSpan={institutionType === 'school' ? 6 : 8} className="classes-td-130">
+                          <div className="classes-col-131">
                             <Shield size={48} color="#cbd5e1" />
-                            <h4 style={{ margin: 0, fontWeight: 700, color: 'var(--text-main)' }}>No {getProgramsLabel()} Found</h4>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Try adjusting filters or add a new {getProgramLabel().toLowerCase()}.</p>
-                            <button className="btn btn-primary btn-sm" onClick={() => setShowAddProgramModal(true)} style={{ marginTop: '0.5rem' }}>
+                            <h4 className="classes-title-132">No {getProgramsLabel()} Found</h4>
+                            <p className="classes-text-133">Try adjusting filters or add a new {getProgramLabel().toLowerCase()}.</p>
+                            <button className="btn btn-primary btn-sm classes-btn" onClick={() => setShowAddProgramModal(true)}>
                               Add {getProgramLabel()}
                             </button>
                           </div>
@@ -1001,14 +953,14 @@ export default function Classes() {
 
       {/* Modal A: Add / Edit Section */}
       {showSectionFormModal && (
-        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000 }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem' }}>
+        <div className="modal-overlay classes-modal-overlay">
+          <div className="modal-content classes-modal-content">
+            <h3 className="classes-title-137">
               {editingSection ? `Edit Class/Section: ${editingSection.name}` : `Add New ${institutionType === 'school' ? 'Section' : 'Class/Section'}`}
             </h3>
-            <form onSubmit={handleSectionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleSectionSubmit} className="classes-col-138">
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Section Name *</label>
+                <label className="classes-label-139">Section Name *</label>
                 <input 
                   type="text" 
                   value={sectionForm.name} 
@@ -1020,7 +972,7 @@ export default function Classes() {
 
               {institutionType !== 'school' && (
                 <div className="form-group">
-                  <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Year Level *</label>
+                  <label className="classes-label-140">Year Level *</label>
                   <input 
                     type="number" 
                     value={sectionForm.year_number} 
@@ -1032,7 +984,7 @@ export default function Classes() {
               )}
 
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>{getProgramLabel()} *</label>
+                <label className="classes-label-141">{getProgramLabel()} *</label>
                 <select value={sectionForm.course_id} onChange={e => setSectionForm({...sectionForm, course_id: e.target.value})} required>
                   {programs.map(p => {
                     if (p.is_active !== 1 && p.id !== sectionForm.course_id) return null;
@@ -1042,15 +994,15 @@ export default function Classes() {
               </div>
 
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Academic Year *</label>
+                <label className="classes-label-142">Academic Year *</label>
                 <select value={sectionForm.academic_year_id} onChange={e => setSectionForm({...sectionForm, academic_year_id: e.target.value})} required>
                   {years.map(y => <option key={y.id} value={y.id}>{y.name}</option>)}
                 </select>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="classes-grid-143">
                 <div className="form-group">
-                  <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Room / Location</label>
+                  <label className="classes-label-144">Room / Location</label>
                   <input 
                     type="text" 
                     value={sectionForm.room} 
@@ -1060,7 +1012,7 @@ export default function Classes() {
                 </div>
 
                 <div className="form-group">
-                  <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Max Capacity *</label>
+                  <label className="classes-label-145">Max Capacity *</label>
                   <input 
                     type="number" 
                     value={sectionForm.capacity} 
@@ -1072,7 +1024,7 @@ export default function Classes() {
               </div>
 
               <div className="form-group">
-                <label style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem', display: 'block' }}>Class Teacher / Advisor</label>
+                <label className="classes-label-146">Class Teacher / Advisor</label>
                 <select value={sectionForm.class_teacher_id} onChange={e => setSectionForm({...sectionForm, class_teacher_id: e.target.value})}>
                   <option value="">-- Assign Class Teacher (Optional) --</option>
                   {teachers.map(t => (
@@ -1081,7 +1033,7 @@ export default function Classes() {
                 </select>
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+              <div className="modal-actions classes-modal-actions">
                 <button type="button" onClick={() => setShowSectionFormModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
               </div>
@@ -1092,12 +1044,12 @@ export default function Classes() {
 
       {/* Modal B: Section Details Dossier Modal */}
       {showSectionDetailModal && selectedSection && (
-        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000 }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '640px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+        <div className="modal-overlay classes-modal-overlay">
+          <div className="modal-content classes-modal-content">
+            <div className="classes-row-150">
               <div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 850, color: 'var(--text-main)', margin: 0 }}>Section Dossier: {selectedSection.name}</h3>
-                <span style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                <h3 className="classes-title-151">Section Dossier: {selectedSection.name}</h3>
+                <span className="classes-span-152">
                   {selectedSection.course_name} • {selectedSection.academic_year_name}
                 </span>
               </div>
@@ -1105,7 +1057,7 @@ export default function Classes() {
             </div>
 
             {/* Tab Links */}
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', gap: '1rem', overflowX: 'auto', scrollbarWidth: 'none', height: '52px', alignItems: 'center' }}>
+            <div className="classes-row-153">
               {[
                 { tab: 'info', label: 'Info & Analytics' },
                 { tab: 'roster', label: `Student Roster (${sectionDetailLoading ? '...' : sectionStudents.length})` },
@@ -1135,35 +1087,35 @@ export default function Classes() {
             </div>
 
             {sectionDetailLoading ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', gap: '1rem' }}>
-                <RefreshCw className="spinner" size={24} style={{ color: 'var(--primary)' }} />
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Retrieving dossier logs...</span>
+              <div className="classes-col-154">
+                <RefreshCw className="spinner classes-spinner" size={24}  />
+                <span className="classes-span-156">Retrieving dossier logs...</span>
               </div>
             ) : (
               <div>
                 {/* Tab 1: Info & Analytics */}
                 {sectionDetailTab === 'info' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                      <div style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Classroom Location</span>
-                        <span style={{ fontWeight: 650, color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <div className="classes-col-157">
+                    <div className="classes-grid-158">
+                      <div className="classes-div-159">
+                        <span className="classes-span-160">Classroom Location</span>
+                        <span className="classes-row-161">
                           <MapPin size={16} /> {selectedSection.room || 'No Room Assigned'}
                         </span>
                       </div>
 
-                      <div style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Class Teacher</span>
-                        <span style={{ fontWeight: 650, color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <div className="classes-div-162">
+                        <span className="classes-span-163">Class Teacher</span>
+                        <span className="classes-row-164">
                           <Users size={16} /> {selectedSection.class_teacher_name || 'No Teacher Mapped'}
                         </span>
                       </div>
                     </div>
 
-                    <div style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: 'var(--radius-md)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontWeight: 700 }}>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase' }}>Section Enrollment Fill Rate</span>
-                        <span style={{ color: 'var(--text-main)' }}>{selectedSection.student_count || 0} / {selectedSection.capacity || 40} Students</span>
+                    <div className="classes-div-165">
+                      <div className="classes-row-166">
+                        <span className="classes-span-167">Section Enrollment Fill Rate</span>
+                        <span className="classes-span-168">{selectedSection.student_count || 0} / {selectedSection.capacity || 40} Students</span>
                       </div>
                       
                       {(() => {
@@ -1172,7 +1124,7 @@ export default function Classes() {
                         const percent = Math.min(100, Math.round((count / cap) * 100));
                         return (
                           <div>
-                            <div style={{ width: '100%', height: '12px', backgroundColor: '#e2e8f0', borderRadius: '6px', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                            <div className="classes-div-169">
                               <div style={{ 
                                 width: `${percent}%`, 
                                 height: '100%', 
@@ -1180,13 +1132,13 @@ export default function Classes() {
                                 backgroundColor: percent > 100 ? '#ef4444' : percent >= 85 ? '#f97316' : '#10b981'
                               }} />
                             </div>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <span className="classes-row-170">
                               {percent >= 100 ? (
-                                <><AlertTriangle size={14} style={{ color: '#ef4444' }} /> <span style={{ color: '#b91c1c', fontWeight: 600 }}>Capacity limit reached! Additional enrollments blocked.</span></>
+                                <><AlertTriangle size={14} className="classes-AlertTriangle-171"  /> <span className="classes-span-172">Capacity limit reached! Additional enrollments blocked.</span></>
                               ) : percent >= 85 ? (
-                                <><AlertTriangle size={14} style={{ color: '#f97316' }} /> <span style={{ color: '#c2410c', fontWeight: 600 }}>Approaching max capacity limit.</span></>
+                                <><AlertTriangle size={14} className="classes-AlertTriangle-173"  /> <span className="classes-span-174">Approaching max capacity limit.</span></>
                               ) : (
-                                <><CheckCircle2 size={14} style={{ color: '#10b981' }} /> <span>Safe capacity level. Enrolling new students is allowed.</span></>
+                                <><CheckCircle2 size={14} className="classes-CheckCircle2-175"  /> <span>Safe capacity level. Enrolling new students is allowed.</span></>
                               )}
                             </span>
                           </div>
@@ -1199,35 +1151,35 @@ export default function Classes() {
                 {/* Tab 2: Student Roster */}
                 {sectionDetailTab === 'roster' && (
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Enrolled Student Directory</span>
-                      <span style={{ fontSize: '0.8rem', padding: '0.125rem 0.5rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontWeight: 600 }}>
+                    <div className="classes-row-176">
+                      <span className="classes-span-177">Enrolled Student Directory</span>
+                      <span className="classes-span-178">
                         {sectionStudents.length} Students
                       </span>
                     </div>
 
-                    <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                      <table className="table" style={{ width: '100%', fontSize: '0.85rem' }}>
+                    <div className="classes-div-179">
+                      <table className="table classes-table">
                         <thead>
-                          <tr style={{ backgroundColor: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                            <th style={{ textAlign: 'left', padding: '0.75rem' }}>Student ID</th>
-                            <th style={{ textAlign: 'left', padding: '0.75rem' }}>Name</th>
-                            <th style={{ textAlign: 'left', padding: '0.75rem' }}>Email</th>
-                            <th style={{ textAlign: 'center', padding: '0.75rem' }}>Semester</th>
+                          <tr className="classes-tr-181">
+                            <th className="classes-th-182">Student ID</th>
+                            <th className="classes-th-183">Name</th>
+                            <th className="classes-th-184">Email</th>
+                            <th className="classes-th-185">Semester</th>
                           </tr>
                         </thead>
                         <tbody>
                           {sectionStudents.map(student => (
-                            <tr key={student.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                              <td style={{ padding: '0.75rem' }}><code>{student.student_id || student.id.substring(0,8)}</code></td>
-                              <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--text-main)' }}>{student.first_name} {student.last_name}</td>
-                              <td style={{ padding: '0.75rem', color: 'var(--text-muted)' }}>{student.email || 'N/A'}</td>
-                              <td style={{ padding: '0.75rem', textAlign: 'center', color: 'var(--text-main)' }}>Semester {student.semester || '1'}</td>
+                            <tr key={student.id} className="classes-tr-186">
+                              <td className="classes-td-187"><code>{student.student_id || student.id.substring(0,8)}</code></td>
+                              <td className="classes-td-188">{student.first_name} {student.last_name}</td>
+                              <td className="classes-td-189">{student.email || 'N/A'}</td>
+                              <td className="classes-td-190">Semester {student.semester || '1'}</td>
                             </tr>
                           ))}
                           {sectionStudents.length === 0 && (
                             <tr>
-                              <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                              <td colSpan={4} className="classes-td-191">
                                 No active students currently enrolled in this section.
                               </td>
                             </tr>
@@ -1241,33 +1193,33 @@ export default function Classes() {
                 {/* Tab 3: Timetable */}
                 {sectionDetailTab === 'timetable' && (
                   <div>
-                    <h4 style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Weekly Class Schedule</h4>
-                    <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                      <table className="table" style={{ width: '100%', fontSize: '0.85rem' }}>
+                    <h4 className="classes-title-192">Weekly Class Schedule</h4>
+                    <div className="classes-div-193">
+                      <table className="table classes-table">
                         <thead>
-                          <tr style={{ backgroundColor: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                            <th style={{ textAlign: 'left', padding: '0.75rem' }}>Day</th>
-                            <th style={{ textAlign: 'left', padding: '0.75rem' }}>Period Time</th>
-                            <th style={{ textAlign: 'left', padding: '0.75rem' }}>Subject</th>
-                            <th style={{ textAlign: 'left', padding: '0.75rem' }}>Teacher</th>
+                          <tr className="classes-tr-195">
+                            <th className="classes-th-196">Day</th>
+                            <th className="classes-th-197">Period Time</th>
+                            <th className="classes-th-198">Subject</th>
+                            <th className="classes-th-199">Teacher</th>
                           </tr>
                         </thead>
                         <tbody>
                           {sectionTimetable.map(item => (
-                            <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                              <td style={{ padding: '0.75rem', fontWeight: 600 }}>{item.day_of_week}</td>
-                              <td style={{ padding: '0.75rem' }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            <tr key={item.id} className="classes-tr-200">
+                              <td className="classes-td-201">{item.day_of_week}</td>
+                              <td className="classes-td-202">
+                                <span className="classes-row-203">
                                   <Clock size={12} /> {item.start_time} - {item.end_time}
                                 </span>
                               </td>
-                              <td style={{ padding: '0.75rem', color: 'var(--text-main)', fontWeight: 500 }}>{item.subject_name}</td>
-                              <td style={{ padding: '0.75rem', color: 'var(--text-main)' }}>{item.teacher_name}</td>
+                              <td className="classes-td-204">{item.subject_name}</td>
+                              <td className="classes-td-205">{item.teacher_name}</td>
                             </tr>
                           ))}
                           {sectionTimetable.length === 0 && (
                             <tr>
-                              <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                              <td colSpan={4} className="classes-td-206">
                                 No timetable schedule entries assigned for this section.
                               </td>
                             </tr>
@@ -1281,12 +1233,12 @@ export default function Classes() {
                 {/* Tab 4: Audit Timeline */}
                 {sectionDetailTab === 'timeline' && (
                   <div>
-                    <h4 style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Activity History Log</h4>
-                    <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.5rem' }}>
+                    <h4 className="classes-title-207">Activity History Log</h4>
+                    <div className="classes-col-208">
                       {sectionLogs.map((log: any) => (
-                        <div key={log.id} style={{ borderLeft: '3px solid var(--primary)', paddingLeft: '1rem', display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)' }}>{log.description}</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div key={log.id} className="classes-col-209">
+                          <span className="classes-span-210">{log.description}</span>
+                          <span className="classes-row-211">
                             <span>by {log.user_name} ({log.user_email})</span>
                             <span>•</span>
                             <span>{new Date(log.timestamp).toLocaleString()}</span>
@@ -1294,7 +1246,7 @@ export default function Classes() {
                         </div>
                       ))}
                       {sectionLogs.length === 0 && (
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '2rem' }}>
+                        <span className="classes-span-212">
                           No audit activity logs recorded for this section.
                         </span>
                       )}
@@ -1309,12 +1261,12 @@ export default function Classes() {
 
       {/* Modal C: Add Program */}
       {showAddProgramModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '520px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Add New {getProgramLabel()}</h3>
+        <div className="modal classes-modal">
+          <div className="modal-content classes-modal-content">
+            <h3 className="classes-title-215">Add New {getProgramLabel()}</h3>
             <form onSubmit={handleAddProgramSubmit}>
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Code / Identifier *</label>
+                <label className="classes-label-216">Code / Identifier *</label>
                 <input 
                   type="text" 
                   value={addProgramForm.course_code} 
@@ -1323,8 +1275,8 @@ export default function Classes() {
                   required 
                 />
               </div>
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label style={{ fontWeight: 600 }}>Name *</label>
+              <div className="form-group classes-form-group">
+                <label className="classes-label-218">Name *</label>
                 <input 
                   type="text" 
                   value={addProgramForm.name} 
@@ -1335,14 +1287,10 @@ export default function Classes() {
               </div>
 
               {institutionType !== 'school' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                <div className="classes-grid-219">
                   <div className="form-group">
-                    <label style={{ fontWeight: 600 }}>Department</label>
-                    <select 
-                      value={addProgramForm.department_id} 
-                      onChange={e => setAddProgramForm({...addProgramForm, department_id: e.target.value})}
-                      style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: '#ffffff', outline: 'none' }}
-                    >
+                    <label className="classes-label-220">Department</label>
+                    <select value={addProgramForm.department_id} onChange={e => setAddProgramForm({...addProgramForm, department_id: e.target.value})} className="classes-select-221">
                       <option value="">-- Choose Department --</option>
                       {departments.map(d => (
                         <option key={d.id} value={d.id}>{d.name}</option>
@@ -1350,7 +1298,7 @@ export default function Classes() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label style={{ fontWeight: 600 }}>Duration (Years)</label>
+                    <label className="classes-label-222">Duration (Years)</label>
                     <input 
                       type="number" 
                       value={addProgramForm.duration_years} 
@@ -1363,52 +1311,31 @@ export default function Classes() {
               )}
 
               {/* Toggles Panel */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.25rem', padding: '1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: '#f8fafc' }}>
-                <strong style={{ fontSize: '0.85rem', color: 'var(--text-main)', display: 'block', marginBottom: '0.25rem' }}>Academic Config Settings</strong>
+              <div className="classes-col-223">
+                <strong className="classes-strong-224">Academic Config Settings</strong>
                 
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={addProgramForm.semester_enabled === 1}
-                    onChange={e => setAddProgramForm({...addProgramForm, semester_enabled: e.target.checked ? 1 : 0})}
-                    style={{ accentColor: 'var(--primary)' }}
-                  />
+                <label className="classes-row-225">
+                  <input type="checkbox" checked={addProgramForm.semester_enabled === 1} onChange={e => setAddProgramForm({...addProgramForm, semester_enabled: e.target.checked ? 1 : 0})} className="classes-input-226"  />
                   <span>Enable Semester System (Semi-annual exams and classes)</span>
                 </label>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={addProgramForm.credit_system_enabled === 1}
-                    onChange={e => setAddProgramForm({...addProgramForm, credit_system_enabled: e.target.checked ? 1 : 0})}
-                    style={{ accentColor: 'var(--primary)' }}
-                  />
+                <label className="classes-row-227">
+                  <input type="checkbox" checked={addProgramForm.credit_system_enabled === 1} onChange={e => setAddProgramForm({...addProgramForm, credit_system_enabled: e.target.checked ? 1 : 0})} className="classes-input-228"  />
                   <span>Enable Credits System (Subjects carry academic weight/credits)</span>
                 </label>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={addProgramForm.electives_enabled === 1}
-                    onChange={e => setAddProgramForm({...addProgramForm, electives_enabled: e.target.checked ? 1 : 0})}
-                    style={{ accentColor: 'var(--primary)' }}
-                  />
+                <label className="classes-row-229">
+                  <input type="checkbox" checked={addProgramForm.electives_enabled === 1} onChange={e => setAddProgramForm({...addProgramForm, electives_enabled: e.target.checked ? 1 : 0})} className="classes-input-230"  />
                   <span>Allow Elective Registrations (Students can opt for selective subjects)</span>
                 </label>
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label style={{ fontWeight: 600 }}>Description</label>
-                <textarea 
-                  className="form-control" 
-                  value={addProgramForm.description} 
-                  onChange={e => setAddProgramForm({...addProgramForm, description: e.target.value})}
-                  placeholder="Provide syllabus outline or descriptions..."
-                  style={{ width: '100%', minHeight: '80px', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', outline: 'none' }}
-                />
+              <div className="form-group classes-form-group">
+                <label className="classes-label-232">Description</label>
+                <textarea className="form-control classes-form-control" value={addProgramForm.description} onChange={e => setAddProgramForm({...addProgramForm, description: e.target.value})} placeholder="Provide syllabus outline or descriptions..."  />
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.75rem' }}>
+              <div className="modal-actions classes-modal-actions">
                 <button type="button" onClick={() => setShowAddProgramModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save {getProgramLabel()}</button>
               </div>
@@ -1419,12 +1346,12 @@ export default function Classes() {
 
       {/* Modal D: Edit Program */}
       {showEditProgramModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '520px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Edit {getProgramLabel()}</h3>
+        <div className="modal classes-modal">
+          <div className="modal-content classes-modal-content">
+            <h3 className="classes-title-237">Edit {getProgramLabel()}</h3>
             <form onSubmit={handleEditProgramSubmit}>
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Code / Identifier *</label>
+                <label className="classes-label-238">Code / Identifier *</label>
                 <input 
                   type="text" 
                   value={editProgramForm.course_code} 
@@ -1432,8 +1359,8 @@ export default function Classes() {
                   required 
                 />
               </div>
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label style={{ fontWeight: 600 }}>Name *</label>
+              <div className="form-group classes-form-group">
+                <label className="classes-label-240">Name *</label>
                 <input 
                   type="text" 
                   value={editProgramForm.name} 
@@ -1443,14 +1370,10 @@ export default function Classes() {
               </div>
 
               {institutionType !== 'school' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                <div className="classes-grid-241">
                   <div className="form-group">
-                    <label style={{ fontWeight: 600 }}>Department</label>
-                    <select 
-                      value={editProgramForm.department_id} 
-                      onChange={e => setEditProgramForm({...editProgramForm, department_id: e.target.value})}
-                      style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: '#ffffff', outline: 'none' }}
-                    >
+                    <label className="classes-label-242">Department</label>
+                    <select value={editProgramForm.department_id} onChange={e => setEditProgramForm({...editProgramForm, department_id: e.target.value})} className="classes-select-243">
                       <option value="">-- Choose Department --</option>
                       {departments.map(d => (
                         <option key={d.id} value={d.id}>{d.name}</option>
@@ -1458,7 +1381,7 @@ export default function Classes() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label style={{ fontWeight: 600 }}>Duration (Years)</label>
+                    <label className="classes-label-244">Duration (Years)</label>
                     <input 
                       type="number" 
                       value={editProgramForm.duration_years} 
@@ -1471,51 +1394,31 @@ export default function Classes() {
               )}
 
               {/* Toggles Panel */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.25rem', padding: '1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: '#f8fafc' }}>
-                <strong style={{ fontSize: '0.85rem', color: 'var(--text-main)', display: 'block', marginBottom: '0.25rem' }}>Academic Config Settings</strong>
+              <div className="classes-col-245">
+                <strong className="classes-strong-246">Academic Config Settings</strong>
                 
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={editProgramForm.semester_enabled === 1}
-                    onChange={e => setEditProgramForm({...editProgramForm, semester_enabled: e.target.checked ? 1 : 0})}
-                    style={{ accentColor: 'var(--primary)' }}
-                  />
+                <label className="classes-row-247">
+                  <input type="checkbox" checked={editProgramForm.semester_enabled === 1} onChange={e => setEditProgramForm({...editProgramForm, semester_enabled: e.target.checked ? 1 : 0})} className="classes-input-248"  />
                   <span>Enable Semester System</span>
                 </label>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={editProgramForm.credit_system_enabled === 1}
-                    onChange={e => setEditProgramForm({...editProgramForm, credit_system_enabled: e.target.checked ? 1 : 0})}
-                    style={{ accentColor: 'var(--primary)' }}
-                  />
+                <label className="classes-row-249">
+                  <input type="checkbox" checked={editProgramForm.credit_system_enabled === 1} onChange={e => setEditProgramForm({...editProgramForm, credit_system_enabled: e.target.checked ? 1 : 0})} className="classes-input-250"  />
                   <span>Enable Credits System</span>
                 </label>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={editProgramForm.electives_enabled === 1}
-                    onChange={e => setEditProgramForm({...editProgramForm, electives_enabled: e.target.checked ? 1 : 0})}
-                    style={{ accentColor: 'var(--primary)' }}
-                  />
+                <label className="classes-row-251">
+                  <input type="checkbox" checked={editProgramForm.electives_enabled === 1} onChange={e => setEditProgramForm({...editProgramForm, electives_enabled: e.target.checked ? 1 : 0})} className="classes-input-252"  />
                   <span>Allow Elective Registrations</span>
                 </label>
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label style={{ fontWeight: 600 }}>Description</label>
-                <textarea 
-                  className="form-control" 
-                  value={editProgramForm.description} 
-                  onChange={e => setEditProgramForm({...editProgramForm, description: e.target.value})}
-                  style={{ width: '100%', minHeight: '80px', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', outline: 'none' }}
-                />
+              <div className="form-group classes-form-group">
+                <label className="classes-label-254">Description</label>
+                <textarea className="form-control classes-form-control" value={editProgramForm.description} onChange={e => setEditProgramForm({...editProgramForm, description: e.target.value})}  />
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.75rem' }}>
+              <div className="modal-actions classes-modal-actions">
                 <button type="button" onClick={() => setShowEditProgramModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
               </div>
@@ -1526,27 +1429,27 @@ export default function Classes() {
 
       {/* Modal E: Program Details Hub Modal */}
       {showProgramDetailModal && selectedProgram && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '720px', width: '100%', padding: '2.5rem', boxShadow: 'var(--shadow-lg)' }}>
+        <div className="modal classes-modal">
+          <div className="modal-content classes-modal-content">
             
             {/* Modal Hero Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', backgroundColor: '#fffbeb', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+            <div className="classes-row-259">
+              <div className="classes-row-260">
                 🎓
               </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>{selectedProgram.name}</h3>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.15rem' }}>
-                  Code: <code style={{ fontWeight: 700, color: 'var(--text-main)' }}>{selectedProgram.course_code}</code>
+                <h3 className="classes-title-261">{selectedProgram.name}</h3>
+                <span className="classes-span-262">
+                  Code: <code className="classes-code-263">{selectedProgram.course_code}</code>
                 </span>
               </div>
-              <span className={`badge badge-${selectedProgram.is_active === 1 ? 'success' : 'secondary'}`} style={{ marginLeft: 'auto' }}>
+              <span className={`badge badge-${selectedProgram.is_active === 1 ? 'success' : 'secondary'} classes-span-264`}>
                 {selectedProgram.is_active === 1 ? 'ACTIVE' : 'ARCHIVED'}
               </span>
             </div>
 
             {/* Tabs Header */}
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', gap: '1rem', overflowX: 'auto', scrollbarWidth: 'none', height: '52px', alignItems: 'center' }}>
+            <div className="classes-row-265">
               {[
                 { tab: 'info', label: 'Info Details' },
                 { tab: 'syllabus', label: `Syllabus / Subjects (${detailSubjects.length})` },
@@ -1577,29 +1480,29 @@ export default function Classes() {
 
             {/* Tab 1: Info */}
             {programDetailTab === 'info' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem' }}>
-                <div style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Description</span>
-                  <p style={{ margin: 0, color: 'var(--text-main)' }}>{selectedProgram.description || 'No syllabus description provided.'}</p>
+              <div className="classes-col-266">
+                <div className="classes-div-267">
+                  <span className="classes-span-268">Description</span>
+                  <p className="classes-text-269">{selectedProgram.description || 'No syllabus description provided.'}</p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: 'var(--radius-md)' }}>
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.5rem' }}>Curriculum Options</span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div className="classes-grid-270">
+                  <div className="classes-div-271">
+                    <span className="classes-span-272">Curriculum Options</span>
+                    <div className="classes-col-273">
+                      <div className="classes-row-274">
                         <span>Semesters Enforced:</span>
                         <strong style={{ color: selectedProgram.semester_enabled === 1 ? 'var(--success)' : 'var(--text-muted)' }}>
                           {selectedProgram.semester_enabled === 1 ? 'Yes' : 'No'}
                         </strong>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div className="classes-row-275">
                         <span>Credits System:</span>
                         <strong style={{ color: selectedProgram.credit_system_enabled === 1 ? 'var(--success)' : 'var(--text-muted)' }}>
                           {selectedProgram.credit_system_enabled === 1 ? 'Yes' : 'No'}
                         </strong>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div className="classes-row-276">
                         <span>Allows Electives:</span>
                         <strong style={{ color: selectedProgram.electives_enabled === 1 ? 'var(--success)' : 'var(--text-muted)' }}>
                           {selectedProgram.electives_enabled === 1 ? 'Yes' : 'No'}
@@ -1608,14 +1511,14 @@ export default function Classes() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', padding: '0.85rem', borderRadius: 'var(--radius-md)' }}>
-                      <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Department Mapped</span>
-                      <span style={{ fontWeight: 650, fontSize: '0.85rem' }}>{getDeptCode(selectedProgram.department_id)}</span>
+                  <div className="classes-col-277">
+                    <div className="classes-div-278">
+                      <span className="classes-span-279">Department Mapped</span>
+                      <span className="classes-span-280">{getDeptCode(selectedProgram.department_id)}</span>
                     </div>
-                    <div style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', padding: '0.85rem', borderRadius: 'var(--radius-md)' }}>
-                      <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Duration Cycle</span>
-                      <span style={{ fontWeight: 650, fontSize: '0.85rem' }}>{selectedProgram.duration_years} {selectedProgram.duration_years === 1 ? 'Year' : 'Years'}</span>
+                    <div className="classes-div-281">
+                      <span className="classes-span-282">Duration Cycle</span>
+                      <span className="classes-span-283">{selectedProgram.duration_years} {selectedProgram.duration_years === 1 ? 'Year' : 'Years'}</span>
                     </div>
                   </div>
                 </div>
@@ -1624,26 +1527,26 @@ export default function Classes() {
 
             {/* Tab 2: Syllabus / Subjects grouped */}
             {programDetailTab === 'syllabus' && (
-              <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="classes-col-284">
                 {Object.keys(groupedSubjects).map(term => (
-                  <div key={term} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1rem', backgroundColor: 'var(--bg-main)' }}>
-                    <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.25rem' }}>
+                  <div key={term} className="classes-div-285">
+                    <h4 className="classes-title-286">
                       {term}
                     </h4>
-                    <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+                    <table className="classes-table-287">
                       <thead>
-                        <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                          <th style={{ textAlign: 'left', padding: '0.25rem' }}>Code</th>
-                          <th style={{ textAlign: 'left', padding: '0.25rem' }}>Subject Name</th>
-                          <th style={{ textAlign: 'center', padding: '0.25rem' }}>Credits</th>
+                        <tr className="classes-tr-288">
+                          <th className="classes-th-289">Code</th>
+                          <th className="classes-th-290">Subject Name</th>
+                          <th className="classes-th-291">Credits</th>
                         </tr>
                       </thead>
                       <tbody>
                         {groupedSubjects[term]?.map((sub: any) => (
-                          <tr key={sub.id} style={{ borderBottom: '1px dotted var(--border)' }}>
-                            <td style={{ padding: '0.4rem 0.25rem' }}><code>{sub.subject_code}</code></td>
-                            <td style={{ padding: '0.4rem 0.25rem', fontWeight: 600 }}>{sub.subject_name}</td>
-                            <td style={{ padding: '0.4rem 0.25rem', textAlign: 'center' }}>{sub.credits || 0}</td>
+                          <tr key={sub.id} className="classes-tr-292">
+                            <td className="classes-td-293"><code>{sub.subject_code}</code></td>
+                            <td className="classes-td-294">{sub.subject_name}</td>
+                            <td className="classes-td-295">{sub.credits || 0}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1651,7 +1554,7 @@ export default function Classes() {
                   </div>
                 ))}
                 {detailSubjects.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                  <div className="classes-div-296">
                     No subjects mapped to this curriculum layout.
                   </div>
                 )}
@@ -1660,28 +1563,28 @@ export default function Classes() {
 
             {/* Tab 3: Class Sections */}
             {programDetailTab === 'sections' && (
-              <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
-                <table className="table" style={{ width: '100%', fontSize: '0.85rem' }}>
+              <div className="classes-div-297">
+                <table className="table classes-table">
                   <thead>
                     <tr>
-                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Section</th>
-                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Year / Sem Index</th>
-                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Class Teacher</th>
-                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Room</th>
+                      <th className="classes-th-299">Section</th>
+                      <th className="classes-th-300">Year / Sem Index</th>
+                      <th className="classes-th-301">Class Teacher</th>
+                      <th className="classes-th-302">Room</th>
                     </tr>
                   </thead>
                   <tbody>
                     {detailSections.map(sec => (
-                      <tr key={sec.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '0.5rem', fontWeight: 600 }}>{sec.name}</td>
-                        <td style={{ padding: '0.5rem' }}>Year {sec.year_number}</td>
-                        <td style={{ padding: '0.5rem' }}>{getTeacherName(sec.class_teacher_id)}</td>
-                        <td style={{ padding: '0.5rem', textAlign: 'center' }}>{sec.room || '-'}</td>
+                      <tr key={sec.id} className="classes-tr-303">
+                        <td className="classes-td-304">{sec.name}</td>
+                        <td className="classes-td-305">Year {sec.year_number}</td>
+                        <td className="classes-td-306">{getTeacherName(sec.class_teacher_id)}</td>
+                        <td className="classes-td-307">{sec.room || '-'}</td>
                       </tr>
                     ))}
                     {detailSections.length === 0 && (
                       <tr>
-                        <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        <td colSpan={4} className="classes-td-308">
                           No active sections provisioned for this program.
                         </td>
                       </tr>
@@ -1693,21 +1596,21 @@ export default function Classes() {
 
             {/* Tab 4: Timeline */}
             {programDetailTab === 'timeline' && (
-              <div style={{ maxHeight: '250px', overflowY: 'auto', paddingLeft: '0.5rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', borderLeft: '2px solid var(--border)', padding: '0.5rem 0 0.5rem 1rem', position: 'relative' }}>
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ position: 'absolute', left: '-1.45rem', top: '0.2rem', width: '0.75rem', height: '0.75rem', borderRadius: '50%', backgroundColor: 'var(--primary)', border: '2px solid #ffffff' }} />
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>
+              <div className="classes-div-309">
+                <div className="classes-col-310">
+                  <div className="classes-div-311">
+                    <div className="classes-div-312"  />
+                    <span className="classes-span-313">
                       {selectedProgram.created_at ? new Date(selectedProgram.created_at).toLocaleDateString() : 'N/A'}
                     </span>
-                    <strong style={{ fontSize: '0.85rem', display: 'block', color: 'var(--text-main)', marginTop: '0.15rem' }}>Curriculum Registered</strong>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Record initialized in system database.</span>
+                    <strong className="classes-strong-314">Curriculum Registered</strong>
+                    <span className="classes-span-315">Record initialized in system database.</span>
                   </div>
                   
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ position: 'absolute', left: '-1.45rem', top: '0.2rem', width: '0.75rem', height: '0.75rem', borderRadius: '50%', backgroundColor: '#cbd5e1', border: '2px solid #ffffff' }} />
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Current Status</span>
-                    <strong style={{ fontSize: '0.85rem', display: 'block', color: 'var(--text-main)', marginTop: '0.15rem' }}>
+                  <div className="classes-div-316">
+                    <div className="classes-div-317"  />
+                    <span className="classes-span-318">Current Status</span>
+                    <strong className="classes-strong-319">
                       Status set to {selectedProgram.is_active === 1 ? 'ACTIVE' : 'ARCHIVED'}
                     </strong>
                   </div>
@@ -1716,7 +1619,7 @@ export default function Classes() {
             )}
 
             {/* Close Actions */}
-            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+            <div className="modal-actions classes-modal-actions">
               <button type="button" onClick={() => setShowProgramDetailModal(false)} className="btn btn-secondary">Close Details</button>
             </div>
           </div>

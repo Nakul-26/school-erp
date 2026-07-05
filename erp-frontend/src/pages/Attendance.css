@@ -1,0 +1,270 @@
+/* Component stylesheet for Attendance.tsx */
+
+.attendance-page-header {
+  margin-bottom: 1.25rem;
+}
+
+.attendance-text-2 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.attendance-th-3 {
+  text-align: right;
+}
+
+.attendance-tr-4 {
+  cursor: pointer;
+}
+
+.attendance-td-5 {
+  text-align: right;
+}
+
+.attendance-row-6 {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.attendance-page-header {
+  margin-bottom: 1.25rem;
+}
+
+.attendance-row-8 {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.attendance-btn {
+  padding: 0.5rem;
+}
+
+.attendance-text-10 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.attendance-card {
+  margin: 0 auto;
+  max-width: 560px;
+}
+
+.attendance-modal-actions {
+  margin-top: 2rem;
+}
+
+.attendance-page-header {
+  margin-bottom: 1.25rem;
+}
+
+.attendance-row-14 {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.attendance-btn {
+  padding: 0.5rem;
+}
+
+.attendance-text-16 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.attendance-th-17 {
+  width: 120px;
+}
+
+.attendance-row-18 {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.attendance-input-19 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.attendance-td-20 {
+  padding: 2rem;
+  text-align: center;
+}
+
+.attendance-mobile-card {
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.attendance-row-22 {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.attendance-span-23 {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.attendance-title-24 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0.15rem 0 0 0;
+}
+
+.attendance-span-25 {
+  font-size: 0.7rem;
+  text-transform: capitalize;
+}
+
+.attendance-grid-26 {
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.attendance-input-27 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  padding: 0.45rem 0.75rem;
+  width: 100%;
+}
+
+.attendance-text-28 {
+  color: var(--text-muted);
+  padding: 2rem;
+  text-align: center;
+}
+
+.attendance-page-header {
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.attendance-text-30 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.attendance-row-31 {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.attendance-input-32 {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.attendance-span-33 {
+  font-weight: 600;
+}
+
+.attendance-span-34 {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.75rem;
+}
+
+.attendance-row-35 {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.attendance-input-36 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.attendance-td-37 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.attendance-UserCheck-38 {
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+
+.attendance-mobile-card {
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.attendance-row-40 {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.attendance-span-41 {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.attendance-title-42 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0.15rem 0 0 0;
+}
+
+.attendance-span-43 {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.75rem;
+}
+
+.attendance-span-44 {
+  font-size: 0.7rem;
+  text-transform: capitalize;
+}
+
+.attendance-grid-45 {
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.attendance-input-46 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  padding: 0.45rem 0.75rem;
+  width: 100%;
+}
+
+.attendance-text-47 {
+  color: var(--text-muted);
+  padding: 2rem;
+  text-align: center;
+}
+
+.attendance-page-header {
+  margin-bottom: 1.5rem;
+}
+
+.attendance-text-49 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}

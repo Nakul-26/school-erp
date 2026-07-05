@@ -1,0 +1,115 @@
+/* Component stylesheet for LeaveApprovals.tsx */
+
+.leave-approvals-ClipboardCheck-1 {
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+.leave-approvals-text-2 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.leave-approvals-form-group {
+  margin: 0px;
+}
+
+.leave-approvals-select-4 {
+  padding: 0.5rem 1rem;
+}
+
+.leave-approvals-row-5 {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.leave-approvals-text-6 {
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+.leave-approvals-span-7 {
+  font-weight: 600;
+}
+
+.leave-approvals-span-8 {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.78rem;
+}
+
+.leave-approvals-td-9 {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leave-approvals-row-10 {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.leave-approvals-btn {
+  background: #10b981;
+  border: none;
+  color: #fff;
+}
+
+.leave-approvals-span-12 {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.leave-approvals-td-13 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.leave-approvals-ClipboardCheck-14 {
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+
+.leave-approvals-modal {
+  max-width: 420px;
+}
+
+.leave-approvals-Check-16 {
+  color: #10b981;
+  margin-right: 0.4rem;
+}
+
+.leave-approvals-textarea-17 {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem;
+  resize: vertical;
+  width: 100%;
+}
+
+.leave-approvals-btn {
+  background: #10b981;
+  border: none;
+  color: #fff;
+}
+
+.leave-approvals-modal {
+  max-width: 420px;
+}
+
+.leave-approvals-AlertTriangle-20 {
+  color: #ef4444;
+  margin-right: 0.4rem;
+}
+
+.leave-approvals-textarea-21 {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem;
+  resize: vertical;
+  width: 100%;
+}

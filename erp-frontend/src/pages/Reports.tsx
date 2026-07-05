@@ -1,3 +1,4 @@
+import './Reports.css';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -199,15 +200,11 @@ export default function Reports() {
 
   const renderAttendance = () => (
     <>
-      <div className="page-sub-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+      <div className="page-sub-header reports-page-sub-header">
         {attInitialLoading ? <p>Loading...</p> : (
-          <div className="form-group" style={{ margin: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
-            <label style={{ whiteSpace: 'nowrap' }}>Select Class / Section:</label>
-            <select
-              value={attSelectedSectionId}
-              onChange={(e) => setAttSelectedSectionId(e.target.value)}
-              style={{ width: 'auto', padding: '0.5rem 1.5rem' }}
-            >
+          <div className="form-group reports-form-group">
+            <label className="reports-label-3">Select Class / Section:</label>
+            <select value={attSelectedSectionId} onChange={(e) => setAttSelectedSectionId(e.target.value)} className="reports-select-4">
               <option value="">-- Select Section --</option>
               {attSections.map(s => <option key={s.id} value={s.id}>{s.name} (Year {s.year_number})</option>)}
             </select>
@@ -216,26 +213,26 @@ export default function Reports() {
       </div>
 
       {attSelectedSectionId && attReport.length > 0 && (
-        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div className="stats-grid reports-stats-grid">
           <div className="stat-card card">
-            <div className="icon" style={{ background: '#e6f7ff', color: '#1890ff', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Users size={24} /></div>
+            <div className="icon reports-icon"><Users size={24} /></div>
             <div className="info">
-              <h3 style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>Total Students</h3>
-              <div className="value" style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.25rem' }}>{attTotalStudents}</div>
+              <h3 className="reports-title-7">Total Students</h3>
+              <div className="value reports-value">{attTotalStudents}</div>
             </div>
           </div>
           <div className="stat-card card">
-            <div className="icon" style={{ background: '#f6ffed', color: '#52c41a', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Percent size={24} /></div>
+            <div className="icon reports-icon"><Percent size={24} /></div>
             <div className="info">
-              <h3 style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>Class Average</h3>
-              <div className="value" style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.25rem' }}>{attClassAverage.toFixed(1)}%</div>
+              <h3 className="reports-title-10">Class Average</h3>
+              <div className="value reports-value">{attClassAverage.toFixed(1)}%</div>
             </div>
           </div>
           <div className="stat-card card">
-            <div className="icon" style={{ background: '#fff1f0', color: '#f5222d', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AlertTriangle size={24} /></div>
+            <div className="icon reports-icon"><AlertTriangle size={24} /></div>
             <div className="info">
-              <h3 style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>Below 75% Limit</h3>
-              <div className="value" style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.25rem', color: '#f5222d' }}>{attLowCount} students</div>
+              <h3 className="reports-title-13">Below 75% Limit</h3>
+              <div className="value reports-value">{attLowCount} students</div>
             </div>
           </div>
         </div>
@@ -243,9 +240,9 @@ export default function Reports() {
 
       <div className="card">
         {attLoading ? <p>Loading report data...</p> : !attSelectedSectionId ? (
-          <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Please select a section to view the attendance report.</p>
+          <p className="reports-text-15">Please select a section to view the attendance report.</p>
         ) : attReport.length === 0 ? (
-          <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No enrollment or session data found for this class.</p>
+          <p className="reports-text-16">No enrollment or session data found for this class.</p>
         ) : (
           <table className="table">
             <thead>
@@ -279,8 +276,8 @@ export default function Reports() {
                     <td>{row.late_count}</td>
                     <td>{row.excused_count}</td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '80px', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div className="reports-row-17">
+                        <div className="reports-div-18">
                           <div style={{ width: `${percentage}%`, height: '100%', background: progressColor }} />
                         </div>
                         <span className={`badge ${badgeClass}`}>{percentage.toFixed(1)}%</span>
@@ -301,26 +298,26 @@ export default function Reports() {
   const renderTeacher = () => (
     <>
       {!teacherLoading && teacherReport.length > 0 && (
-        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-          <div className="stat-card card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-            <div className="icon" style={{ background: '#e6f7ff', color: '#1890ff', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Users size={24} /></div>
+        <div className="stats-grid reports-stats-grid">
+          <div className="stat-card card reports-stat-card">
+            <div className="icon reports-icon"><Users size={24} /></div>
             <div className="info">
-              <h3 style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>Total Faculty</h3>
-              <div className="value" style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.25rem' }}>{teacherTotalCount}</div>
+              <h3 className="reports-title-22">Total Faculty</h3>
+              <div className="value reports-value">{teacherTotalCount}</div>
             </div>
           </div>
-          <div className="stat-card card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-            <div className="icon" style={{ background: '#f6ffed', color: '#52c41a', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><BookOpen size={24} /></div>
+          <div className="stat-card card reports-stat-card">
+            <div className="icon reports-icon"><BookOpen size={24} /></div>
             <div className="info">
-              <h3 style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>Avg Classes Conducted</h3>
-              <div className="value" style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.25rem' }}>{teacherAvgClasses.toFixed(1)} lectures</div>
+              <h3 className="reports-title-26">Avg Classes Conducted</h3>
+              <div className="value reports-value">{teacherAvgClasses.toFixed(1)} lectures</div>
             </div>
           </div>
-          <div className="stat-card card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-            <div className="icon" style={{ background: '#fff7e6', color: '#fa8c16', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Clock size={24} /></div>
+          <div className="stat-card card reports-stat-card">
+            <div className="icon reports-icon"><Clock size={24} /></div>
             <div className="info">
-              <h3 style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>Faculty Avg Attendance</h3>
-              <div className="value" style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.25rem' }}>{teacherAvgAttendance.toFixed(1)}%</div>
+              <h3 className="reports-title-30">Faculty Avg Attendance</h3>
+              <div className="value reports-value">{teacherAvgAttendance.toFixed(1)}%</div>
             </div>
           </div>
         </div>
@@ -328,7 +325,7 @@ export default function Reports() {
 
       <div className="card">
         {teacherLoading ? <p>Loading workload report...</p> : teacherReport.length === 0 ? (
-          <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No teachers or assignment data found.</p>
+          <p className="reports-text-32">No teachers or assignment data found.</p>
         ) : (
           <table className="table">
             <thead>
@@ -363,8 +360,8 @@ export default function Reports() {
                     <td><strong>{row.classes_conducted} lectures</strong></td>
                     <td>{row.total_attendance_days} days</td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '80px', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div className="reports-row-33">
+                        <div className="reports-div-34">
                           <div style={{ width: `${percentage}%`, height: '100%', background: progressColor }} />
                         </div>
                         <span className={`badge ${badgeClass}`}>{total > 0 ? `${percentage.toFixed(1)}%` : 'No logs'}</span>
@@ -386,56 +383,56 @@ export default function Reports() {
     <>
       {feeLoading ? <p>Loading reports...</p> : (
         <>
-          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div className="stat-card card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-              <div className="icon" style={{ background: '#f6ffed', color: '#52c41a', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IndianRupee size={24} /></div>
+          <div className="stats-grid reports-stats-grid">
+            <div className="stat-card card reports-stat-card">
+              <div className="icon reports-icon"><IndianRupee size={24} /></div>
               <div className="info">
-                <h3 style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>Total Collected</h3>
-                <div className="value" style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.25rem', color: 'var(--success)' }}>
+                <h3 className="reports-title-38">Total Collected</h3>
+                <div className="value reports-value">
                   ₹{feeStats.totalCollected.toLocaleString('en-IN')}
                 </div>
               </div>
             </div>
-            <div className="stat-card card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-              <div className="icon" style={{ background: '#fff7e6', color: '#fa8c16', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Clock size={24} /></div>
+            <div className="stat-card card reports-stat-card">
+              <div className="icon reports-icon"><Clock size={24} /></div>
               <div className="info">
-                <h3 style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>Pending Liabilities</h3>
-                <div className="value" style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.25rem', color: 'var(--warning)' }}>
+                <h3 className="reports-title-42">Pending Liabilities</h3>
+                <div className="value reports-value">
                   ₹{feeStats.totalPending.toLocaleString('en-IN')}
                 </div>
               </div>
             </div>
-            <div className="stat-card card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-              <div className="icon" style={{ background: '#fff1f0', color: '#f5222d', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AlertTriangle size={24} /></div>
+            <div className="stat-card card reports-stat-card">
+              <div className="icon reports-icon"><AlertTriangle size={24} /></div>
               <div className="info">
-                <h3 style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>Overdue Amount</h3>
-                <div className="value" style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.25rem', color: '#f5222d' }}>
+                <h3 className="reports-title-46">Overdue Amount</h3>
+                <div className="value reports-value">
                   ₹{feeStats.totalOverdue.toLocaleString('en-IN')}
                 </div>
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+          <div className="reports-grid-48">
             <div className="card">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 className="reports-row-49">
                 <TrendingUp size={18} /> Monthly Collection Trends
               </h3>
               {feeMonthly.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No payments logged yet.</p>
+                <p className="reports-text-50">No payments logged yet.</p>
               ) : (
-                <table className="table" style={{ minWidth: 'auto' }}>
+                <table className="table reports-table">
                   <thead>
                     <tr>
                       <th>Month</th>
-                      <th style={{ textAlign: 'right' }}>Total Collected</th>
+                      <th className="reports-th-52">Total Collected</th>
                     </tr>
                   </thead>
                   <tbody>
                     {feeMonthly.map((row) => (
                       <tr key={row.month}>
                         <td><strong>{row.month}</strong></td>
-                        <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--success)' }}>
+                        <td className="reports-td-53">
                           ₹{row.amount.toLocaleString('en-IN')}
                         </td>
                       </tr>
@@ -446,20 +443,20 @@ export default function Reports() {
             </div>
 
             <div className="card">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Users size={18} style={{ color: '#f5222d' }} /> Top Dues Outstanding
+              <h3 className="reports-row-54">
+                <Users size={18} className="reports-Users-55"  /> Top Dues Outstanding
               </h3>
               {feeDefaulters.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No pending dues found in the ledger.</p>
+                <p className="reports-text-56">No pending dues found in the ledger.</p>
               ) : (
-                <table className="table" style={{ minWidth: 'auto' }}>
+                <table className="table reports-table">
                   <thead>
                     <tr>
                       <th>Admission No</th>
                       <th>Student</th>
                       <th>Program</th>
-                      <th style={{ textAlign: 'right' }}>Dues Outstanding</th>
-                      <th style={{ textAlign: 'center' }}>Action</th>
+                      <th className="reports-th-58">Dues Outstanding</th>
+                      <th className="reports-th-59">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -468,16 +465,11 @@ export default function Reports() {
                         <td><strong>{row.admission_number}</strong></td>
                         <td>{row.first_name} {row.last_name}</td>
                         <td>{row.course_name}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#f5222d' }}>
+                        <td className="reports-td-60">
                           ₹{row.pending_amount.toLocaleString('en-IN')}
                         </td>
-                        <td style={{ textAlign: 'center' }}>
-                          <button
-                            className="btn btn-outline"
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', borderColor: 'var(--warning)', color: 'var(--warning)', cursor: 'pointer' }}
-                            onClick={() => sendFeeReminder(row.student_id, row.pending_amount)}
-                            disabled={sendingReminderId === row.student_id}
-                          >
+                        <td className="reports-td-61">
+                          <button className="btn btn-outline reports-btn" onClick={() => sendFeeReminder(row.student_id, row.pending_amount)} disabled={sendingReminderId === row.student_id}>
                             {sendingReminderId === row.student_id ? 'Sending...' : 'Send Reminder'}
                           </button>
                         </td>
@@ -500,7 +492,7 @@ export default function Reports() {
       <div className="page-header">
         <div>
           <h2>Reports</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="reports-text-63">
             View attendance, teacher, and fee reports
           </p>
         </div>

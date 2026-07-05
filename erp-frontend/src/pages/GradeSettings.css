@@ -1,0 +1,91 @@
+/* Component stylesheet for GradeSettings.tsx */
+
+.grade-settings-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.grade-settings-row-2 {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.grade-settings-RefreshCw-3 {
+  margin-right: 0.25rem;
+}
+
+.grade-settings-Save-4 {
+  margin-right: 0.25rem;
+}
+
+.grade-settings-card {
+  padding: 1.5rem;
+}
+
+.grade-settings-table {
+  margin-bottom: 1.5rem;
+}
+
+.grade-settings-input-7 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem;
+  width: 80px;
+}
+
+.grade-settings-input-8 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem;
+  width: 80px;
+}
+
+.grade-settings-input-9 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem;
+  width: 80px;
+}
+
+.grade-settings-input-10 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem;
+  width: 80px;
+}
+
+.grade-settings-input-11 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  min-width: 150px;
+  padding: 0.4rem;
+  width: 100%;
+}
+
+.grade-settings-select-12 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem;
+}
+
+.grade-settings-input-13 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem;
+  width: 70px;
+}
+
+.grade-settings-td-14 {
+  padding: 3rem;
+  text-align: center;
+}
+
+.grade-settings-Award-15 {
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.grade-settings-text-16 {
+  color: var(--text-muted);
+}

@@ -1,3 +1,4 @@
+import './ToastContext.css';
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { CheckCircle, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 
@@ -98,17 +99,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ toasts, success, error, warning, info }}>
       {children}
       {/* Toast container */}
-      <div style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        zIndex: 9999,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
-        maxWidth: '350px',
-        width: '100%'
-      }}>
+      <div className="toast-context-col-1">
         {toasts.map((toast) => {
           const config = {
             success: { bg: '#e6fffa', border: '#319795', color: '#234e52', icon: CheckCircle },
@@ -138,22 +129,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 position: 'relative'
               }}
             >
-              <IconComponent size={18} style={{ flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>{toast.message}</div>
-              <button
-                onClick={() => removeToast(toast.id)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'inherit',
-                  cursor: 'pointer',
-                  opacity: 0.6,
-                  padding: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
+              <IconComponent size={18} className="toast-context-IconComponent-2"  />
+              <div className="toast-context-div-3">{toast.message}</div>
+              <button onClick={() => removeToast(toast.id)} className="toast-context-row-4">
                 <X size={14} />
               </button>
             </div>

@@ -1,3 +1,4 @@
+import './WorkspaceShell.css';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -78,7 +79,7 @@ export default function WorkspaceShell({
     return (
       <div className="workspace-loading">
         <Loader2 className="animate-spin text-primary" size={40} />
-        <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Loading workspace data...</p>
+        <p className="workspace-shell-text-1">Loading workspace data...</p>
       </div>
     );
   }

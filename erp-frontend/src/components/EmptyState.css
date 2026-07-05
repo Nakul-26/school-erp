@@ -1,0 +1,59 @@
+/* Component stylesheet for EmptyState.tsx */
+
+.empty-state-col-1 {
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 2rem auto;
+  max-width: 500px;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.empty-state-row-2 {
+  align-items: center;
+  background-color: rgba(99, 102, 241, 0.08);
+  border-radius: 50%;
+  color: var(--primary);
+  display: flex;
+  height: 56px;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  width: 56px;
+}
+
+.empty-state-title-3 {
+  color: var(--text-main);
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-state-text-4 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0 0 1.5rem 0;
+}
+
+.empty-state-row-5 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.empty-state-btn {
+  font-size: 0.85rem;
+  padding: 0.5rem 1.25rem;
+}
+
+.empty-state-btn {
+  font-size: 0.85rem;
+  padding: 0.5rem 1.25rem;
+}

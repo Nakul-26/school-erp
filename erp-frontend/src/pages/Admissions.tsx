@@ -1,3 +1,4 @@
+import './Admissions.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -475,59 +476,35 @@ export default function Admissions() {
       />
 
       {/* Header */}
-      <div className="page-header" style={{ marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="page-header admissions-page-header">
         <div>
           <h2>Admissions & Inquiry Pipeline</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+          <p className="admissions-text-2">
             Unified board management for lead generation and candidate enrollment
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button
-            className="btn btn-outline"
-            onClick={() => setInqShowAdd(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
-          >
+        <div className="admissions-row-3">
+          <button className="btn btn-outline admissions-btn" onClick={() => setInqShowAdd(true)}>
             <Plus size={16} /> Add Inquiry
           </button>
-          <button
-            className="btn btn-primary"
-            onClick={() => setAppShowAdd(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
-          >
+          <button className="btn btn-primary admissions-btn" onClick={() => setAppShowAdd(true)}>
             <Plus size={16} /> New Application
           </button>
         </div>
       </div>
 
       {/* Filters Panel */}
-      <div className="card" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+      <div className="card admissions-card">
+        <div className="admissions-row-7">
           {/* Search bar */}
-          <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
-            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input
-              type="text"
-              placeholder="Search candidate name, parent, phone..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.5rem 1rem 0.5rem 2.25rem',
-                borderRadius: '8px',
-                border: '1px solid var(--border)',
-                fontSize: '0.875rem'
-              }}
-            />
+          <div className="admissions-div-8">
+            <Search size={16} className="admissions-Search-9"  />
+            <input type="text" placeholder="Search candidate name, parent, phone..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="admissions-input-10"  />
           </div>
 
           {/* Class Filter */}
-          <div style={{ minWidth: '180px' }}>
-            <select
-              value={classFilter}
-              onChange={e => setClassFilter(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem' }}
-            >
+          <div className="admissions-div-11">
+            <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="admissions-select-12">
               <option value="All">All Grades/Classes</option>
               {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               {uniqueClassOptions.map(clsName => {
@@ -538,12 +515,8 @@ export default function Admissions() {
           </div>
 
           {/* Year Filter */}
-          <div style={{ minWidth: '180px' }}>
-            <select
-              value={yearFilter}
-              onChange={e => setYearFilter(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem' }}
-            >
+          <div className="admissions-div-13">
+            <select value={yearFilter} onChange={e => setYearFilter(e.target.value)} className="admissions-select-14">
               <option value="All">All Academic Years</option>
               {academicYears.map(y => <option key={y.id} value={y.id}>{y.name}</option>)}
             </select>
@@ -555,67 +528,34 @@ export default function Admissions() {
         <SkeletonLoader type="card" count={3} />
       ) : (
         /* Kanban Board Grid */
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
-          gap: '1.5rem',
-          alignItems: 'start'
-        }}>
+        <div className="admissions-grid-15">
           {/* COLUMN 1: Leads & Inquiries */}
           <div
             onDragOver={(e) => handleDragOver(e, 'lead')}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, 'lead')}
+            className="admissions-column"
             style={{
-              background: '#f8fafc',
-              border: dragOverStage === 'lead' ? '2px dashed var(--primary)' : '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '1rem',
-              minHeight: '550px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-              transition: 'background 0.2s'
+              border: dragOverStage === 'lead' ? '2px dashed var(--primary)' : '1px solid var(--border)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }} />
+            <div className="admissions-row-16">
+              <h3 className="admissions-row-17">
+                <span className="admissions-span-18"  />
                 Leads & Inquiries
               </h3>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '12px', background: '#e2e8f0', color: 'var(--text-secondary)' }}>
+              <span className="admissions-span-19">
                 {filteredLeads.length}
               </span>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="admissions-col-20">
               {filteredLeads.map(card => {
                 const badge = getBadgeStyle(card.status);
                 return (
-                  <div
-                    key={card.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, card.id, card.type, 'lead')}
-                    style={{
-                      background: 'white',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      cursor: 'grab',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                      transition: 'transform 0.15s, box-shadow 0.15s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-                      <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                  <div key={card.id} draggable onDragStart={(e) => handleDragStart(e, card.id, card.type, 'lead')} className="admissions-div-21" onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; }}>
+                    <div className="admissions-row-22">
+                      <span className="admissions-span-23">
                         {card.classLabel}
                       </span>
                       <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', background: badge.bg, color: badge.color }}>
@@ -623,45 +563,33 @@ export default function Admissions() {
                       </span>
                     </div>
 
-                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                    <h4 className="admissions-title-24">
                       {card.title}
                     </h4>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <User size={12} style={{ opacity: 0.6 }} />
+                    <div className="admissions-col-25">
+                      <div className="admissions-row-26">
+                        <User size={12} className="admissions-User-27"  />
                         <span>{card.subtitle}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <Phone size={12} style={{ opacity: 0.6 }} />
+                      <div className="admissions-row-28">
+                        <Phone size={12} className="admissions-Phone-29"  />
                         <span>{card.phone}</span>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '0.5rem' }}>
-                      <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => setDetailInquiry(card.rawItem)}
-                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                      >
+                    <div className="admissions-row-30">
+                      <button className="btn btn-sm btn-outline admissions-btn" onClick={() => setDetailInquiry(card.rawItem)}>
                         <Eye size={11} /> Details
                       </button>
 
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <div className="admissions-row-32">
                         {card.status === 'New' && (
-                          <button
-                            className="btn btn-sm"
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#f1f5f9', border: 'none', color: 'var(--text-main)' }}
-                            onClick={() => updateInquiryStatus(card.id, 'Contacted')}
-                          >
+                          <button className="btn btn-sm admissions-btn" onClick={() => updateInquiryStatus(card.id, 'Contacted')}>
                             Mark Called
                           </button>
                         )}
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => setConvertInquiry(card.rawItem)}
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.15rem' }}
-                        >
+                        <button className="btn btn-sm btn-primary admissions-btn" onClick={() => setConvertInquiry(card.rawItem)}>
                           Convert <ArrowRight size={11} />
                         </button>
                       </div>
@@ -685,56 +613,28 @@ export default function Admissions() {
             onDragOver={(e) => handleDragOver(e, 'applied')}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, 'applied')}
+            className="admissions-column"
             style={{
-              background: '#f8fafc',
-              border: dragOverStage === 'applied' ? '2px dashed var(--primary)' : '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '1rem',
-              minHeight: '550px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-              transition: 'background 0.2s'
+              border: dragOverStage === 'applied' ? '2px dashed var(--primary)' : '1px solid var(--border)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6' }} />
+            <div className="admissions-row-35">
+              <h3 className="admissions-row-36">
+                <span className="admissions-span-37"  />
                 Applied & In-Review
               </h3>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '12px', background: '#e2e8f0', color: 'var(--text-secondary)' }}>
+              <span className="admissions-span-38">
                 {filteredApplied.length}
               </span>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="admissions-col-39">
               {filteredApplied.map(card => {
                 const badge = getBadgeStyle(card.status);
                 return (
-                  <div
-                    key={card.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, card.id, card.type, 'applied')}
-                    style={{
-                      background: 'white',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      cursor: 'grab',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                      transition: 'transform 0.15s, box-shadow 0.15s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-                      <code style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--primary)' }}>
+                  <div key={card.id} draggable onDragStart={(e) => handleDragStart(e, card.id, card.type, 'applied')} className="admissions-div-40" onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; }}>
+                    <div className="admissions-row-41">
+                      <code className="admissions-code-42">
                         {card.rawItem.application_number}
                       </code>
                       <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', background: badge.bg, color: badge.color }}>
@@ -742,47 +642,35 @@ export default function Admissions() {
                       </span>
                     </div>
 
-                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                    <h4 className="admissions-title-43">
                       {card.title}
                     </h4>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <ChevronRight size={11} style={{ opacity: 0.6 }} />
+                    <div className="admissions-col-44">
+                      <div className="admissions-row-45">
+                        <ChevronRight size={11} className="admissions-ChevronRight-46"  />
                         <span>Applying Grade: <strong>{card.classLabel}</strong></span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <User size={12} style={{ opacity: 0.6 }} />
+                      <div className="admissions-row-47">
+                        <User size={12} className="admissions-User-48"  />
                         <span>{card.subtitle}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <Phone size={12} style={{ opacity: 0.6 }} />
+                      <div className="admissions-row-49">
+                        <Phone size={12} className="admissions-Phone-50"  />
                         <span>{card.phone}</span>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '0.5rem' }}>
-                      <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => setDetailApp(card.rawItem)}
-                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                      >
+                    <div className="admissions-row-51">
+                      <button className="btn btn-sm btn-outline admissions-btn" onClick={() => setDetailApp(card.rawItem)}>
                         <Eye size={11} /> View App
                       </button>
 
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button
-                          className="btn btn-sm btn-outline"
-                          onClick={() => { setRejectApp(card.rawItem); setRejectReason(''); }}
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', border: '1px solid #ef4444', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.15rem' }}
-                        >
+                      <div className="admissions-row-53">
+                        <button className="btn btn-sm btn-outline admissions-btn" onClick={() => { setRejectApp(card.rawItem); setRejectReason(''); }}>
                           <XCircle size={11} /> Reject
                         </button>
-                        <button
-                          className="btn btn-sm"
-                          onClick={() => setApproveApp(card.rawItem)}
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#10b981', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.15rem' }}
-                        >
+                        <button className="btn btn-sm admissions-btn" onClick={() => setApproveApp(card.rawItem)}>
                           <CheckCircle size={11} /> Admit
                         </button>
                       </div>
@@ -806,45 +694,28 @@ export default function Admissions() {
             onDragOver={(e) => handleDragOver(e, 'outcome')}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, 'outcome')}
+            className="admissions-column"
             style={{
-              background: '#f8fafc',
-              border: dragOverStage === 'outcome' ? '2px dashed var(--primary)' : '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '1rem',
-              minHeight: '550px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-              transition: 'background 0.2s'
+              border: dragOverStage === 'outcome' ? '2px dashed var(--primary)' : '1px solid var(--border)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+            <div className="admissions-row-56">
+              <h3 className="admissions-row-57">
+                <span className="admissions-span-58"  />
                 Closed Outcomes
               </h3>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '12px', background: '#e2e8f0', color: 'var(--text-secondary)' }}>
+              <span className="admissions-span-59">
                 {filteredOutcomes.length}
               </span>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="admissions-col-60">
               {filteredOutcomes.map(card => {
                 const badge = getBadgeStyle(card.status);
                 return (
-                  <div
-                    key={card.id}
-                    style={{
-                      background: 'white',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                      opacity: 0.9
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-                      <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                  <div key={card.id} className="admissions-div-61">
+                    <div className="admissions-row-62">
+                      <span className="admissions-span-63">
                         {card.classLabel}
                       </span>
                       <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', background: badge.bg, color: badge.color }}>
@@ -852,33 +723,23 @@ export default function Admissions() {
                       </span>
                     </div>
 
-                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                    <h4 className="admissions-title-64">
                       {card.title}
                     </h4>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <User size={12} style={{ opacity: 0.6 }} />
+                    <div className="admissions-col-65">
+                      <div className="admissions-row-66">
+                        <User size={12} className="admissions-User-67"  />
                         <span>{card.subtitle}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <FileText size={12} style={{ opacity: 0.6 }} />
+                      <div className="admissions-row-68">
+                        <FileText size={12} className="admissions-FileText-69"  />
                         <span>Flow Type: <strong>{card.type.toUpperCase()}</strong></span>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '0.5rem' }}>
-                      <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => {
-                          if (card.type === 'inquiry') {
-                            setDetailInquiry(card.rawItem);
-                          } else {
-                            setDetailApp(card.rawItem);
-                          }
-                        }}
-                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2', width: '100%', justifyContent: 'center' }}
-                      >
+                    <div className="admissions-row-70">
+                      <button className="btn btn-sm btn-outline admissions-btn" onClick={() => { if (card.type === 'inquiry') { setDetailInquiry(card.rawItem); } else { setDetailApp(card.rawItem); } }}>
                         <Eye size={11} /> View Record
                       </button>
                     </div>
@@ -905,14 +766,14 @@ export default function Admissions() {
       {/* Add Inquiry Modal */}
       {inqShowAdd && (
         <div className="modal-overlay" onClick={() => setInqShowAdd(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '560px' }}>
+          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Add Admission Inquiry</h3>
               <button className="modal-close" onClick={() => setInqShowAdd(false)}>×</button>
             </div>
             <form onSubmit={handleInqAddSubmit}>
-              <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <div className="modal-body admissions-modal-body">
+                <div className="form-group admissions-form-group">
                   <label>Student Name *</label>
                   <input
                     required value={inqAddForm.student_name}
@@ -977,7 +838,7 @@ export default function Admissions() {
                     ))}
                   </select>
                 </div>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <div className="form-group admissions-form-group">
                   <label>Notes</label>
                   <textarea
                     value={inqAddForm.notes}
@@ -1001,16 +862,16 @@ export default function Admissions() {
       {/* Convert Confirmation Modal */}
       {convertInquiry && (
         <div className="modal-overlay" onClick={() => setConvertInquiry(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Convert to Application</h3>
               <button className="modal-close" onClick={() => setConvertInquiry(null)}>×</button>
             </div>
             <div className="modal-body">
-              <p style={{ marginBottom: '1rem' }}>
+              <p className="admissions-text-77">
                 Convert <strong>{convertInquiry.student_name}</strong>'s inquiry into a formal admission application?
               </p>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+              <p className="admissions-text-78">
                 This will create an application record and mark this inquiry as <strong>Applied</strong>. You can review and approve the application from the Applied tab.
               </p>
             </div>
@@ -1027,13 +888,13 @@ export default function Admissions() {
       {/* Inquiry Detail Modal */}
       {detailInquiry && (
         <div className="modal-overlay" onClick={() => setDetailInquiry(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Inquiry Details</h3>
               <button className="modal-close" onClick={() => setDetailInquiry(null)}>×</button>
             </div>
             <div className="modal-body">
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+              <table className="admissions-table-80">
                 <tbody>
                   {[
                     ['Student Name', detailInquiry.student_name],
@@ -1048,9 +909,9 @@ export default function Admissions() {
                     ['Status', detailInquiry.status],
                     ['Created', new Date(detailInquiry.created_at).toLocaleString()],
                   ].map(([label, value]) => (
-                    <tr key={label} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '0.6rem 0.5rem', color: 'var(--text-muted)', width: '40%' }}>{label}</td>
-                      <td style={{ padding: '0.6rem 0.5rem', fontWeight: 500 }}>
+                    <tr key={label} className="admissions-tr-81">
+                      <td className="admissions-td-82">{label}</td>
+                      <td className="admissions-td-83">
                         {label === 'Status' ? (
                           <span style={{
                             display: 'inline-block', padding: '0.2rem 0.65rem', borderRadius: '9999px',
@@ -1079,28 +940,28 @@ export default function Admissions() {
       {/* Add Application Modal */}
       {appShowAdd && (
         <div className="modal-overlay" onClick={() => setAppShowAdd(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '620px' }}>
+          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">New Admission Application</h3>
               <button className="modal-close" onClick={() => setAppShowAdd(false)}>×</button>
             </div>
             <form onSubmit={handleAppAddSubmit}>
               <div className="modal-body">
-                <p style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Student Information</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
+                <p className="admissions-text-85">Student Information</p>
+                <div className="admissions-grid-86">
+                  <div className="form-group admissions-form-group">
                     <label>First Name *</label>
                     <input required value={appAddForm.student_first_name} onChange={e => setAppAddForm(f => ({ ...f, student_first_name: e.target.value }))} placeholder="First name" />
                   </div>
-                  <div className="form-group" style={{ margin: 0 }}>
+                  <div className="form-group admissions-form-group">
                     <label>Last Name *</label>
                     <input required value={appAddForm.student_last_name} onChange={e => setAppAddForm(f => ({ ...f, student_last_name: e.target.value }))} placeholder="Last name" />
                   </div>
-                  <div className="form-group" style={{ margin: 0 }}>
+                  <div className="form-group admissions-form-group">
                     <label>Date of Birth</label>
                     <input type="date" value={appAddForm.date_of_birth} onChange={e => setAppAddForm(f => ({ ...f, date_of_birth: e.target.value }))} />
                   </div>
-                  <div className="form-group" style={{ margin: 0 }}>
+                  <div className="form-group admissions-form-group">
                     <label>Gender</label>
                     <select value={appAddForm.gender} onChange={e => setAppAddForm(f => ({ ...f, gender: e.target.value }))}>
                       <option value="">— Select —</option>
@@ -1111,16 +972,16 @@ export default function Admissions() {
                   </div>
                 </div>
 
-                <p style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Academic Details</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
+                <p className="admissions-text-91">Academic Details</p>
+                <div className="admissions-grid-92">
+                  <div className="form-group admissions-form-group">
                     <label>Applying For (Course / Program)</label>
                     <select value={appAddForm.applying_for_course_id} onChange={e => setAppAddForm(f => ({ ...f, applying_for_course_id: e.target.value }))}>
                       <option value="">— Select Program —</option>
                       {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
-                  <div className="form-group" style={{ margin: 0 }}>
+                  <div className="form-group admissions-form-group">
                     <label>Academic Year *</label>
                     <select required value={appAddForm.academic_year_id} onChange={e => setAppAddForm(f => ({ ...f, academic_year_id: e.target.value }))}>
                       <option value="">— Select Year —</option>
@@ -1129,29 +990,29 @@ export default function Admissions() {
                   </div>
                 </div>
 
-                <p style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Parent / Guardian</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
+                <p className="admissions-text-95">Parent / Guardian</p>
+                <div className="admissions-grid-96">
+                  <div className="form-group admissions-form-group">
                     <label>Parent Name *</label>
                     <input required value={appAddForm.parent_name} onChange={e => setAppAddForm(f => ({ ...f, parent_name: e.target.value }))} placeholder="Full name" />
                   </div>
-                  <div className="form-group" style={{ margin: 0 }}>
+                  <div className="form-group admissions-form-group">
                     <label>Parent Phone *</label>
                     <input required value={appAddForm.parent_phone} onChange={e => setAppAddForm(f => ({ ...f, parent_phone: e.target.value }))} placeholder="+91 98765 43210" />
                   </div>
-                  <div className="form-group" style={{ margin: 0, gridColumn: '1 / -1' }}>
+                  <div className="form-group admissions-form-group">
                     <label>Parent Email</label>
                     <input type="email" value={appAddForm.parent_email} onChange={e => setAppAddForm(f => ({ ...f, parent_email: e.target.value }))} placeholder="email@example.com" />
                   </div>
                 </div>
 
-                <p style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Previous Education</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
+                <p className="admissions-text-100">Previous Education</p>
+                <div className="admissions-grid-101">
+                  <div className="form-group admissions-form-group">
                     <label>Previous School</label>
                     <input value={appAddForm.previous_school} onChange={e => setAppAddForm(f => ({ ...f, previous_school: e.target.value }))} placeholder="Name of last school attended" />
                   </div>
-                  <div className="form-group" style={{ margin: 0 }}>
+                  <div className="form-group admissions-form-group">
                     <label>Previous Class</label>
                     <input value={appAddForm.previous_class} onChange={e => setAppAddForm(f => ({ ...f, previous_class: e.target.value }))} placeholder="e.g. Class 9" />
                   </div>
@@ -1171,16 +1032,16 @@ export default function Admissions() {
       {/* Application Detail Modal */}
       {detailApp && (
         <div className="modal-overlay" onClick={() => setDetailApp(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '540px' }}>
+          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <h3 className="modal-title">Application Details</h3>
-                <code style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{detailApp.application_number}</code>
+                <code className="admissions-code-105">{detailApp.application_number}</code>
               </div>
               <button className="modal-close" onClick={() => setDetailApp(null)}>×</button>
             </div>
             <div className="modal-body">
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
+              <table className="admissions-table-106">
                 <tbody>
                   {[
                     ['Student Name', `${detailApp.student_first_name} ${detailApp.student_last_name}`],
@@ -1198,9 +1059,9 @@ export default function Admissions() {
                     ['Approved At', detailApp.approved_at ? new Date(detailApp.approved_at).toLocaleString() : '—'],
                     ['Applied On', new Date(detailApp.created_at).toLocaleString()],
                   ].map(([label, value]) => (
-                    <tr key={label} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '0.55rem 0.5rem', color: 'var(--text-muted)', width: '42%' }}>{label}</td>
-                      <td style={{ padding: '0.55rem 0.5rem', fontWeight: 500 }}>
+                    <tr key={label} className="admissions-tr-107">
+                      <td className="admissions-td-108">{label}</td>
+                      <td className="admissions-td-109">
                         {label === 'Status' ? (
                           <span style={{
                             display: 'inline-block', padding: '0.2rem 0.65rem', borderRadius: '9999px',
@@ -1225,30 +1086,22 @@ export default function Admissions() {
       {/* Approve Confirmation Modal */}
       {approveApp && (
         <div className="modal-overlay" onClick={() => setApproveApp(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Approve Application</h3>
               <button className="modal-close" onClick={() => setApproveApp(null)}>×</button>
             </div>
             <div className="modal-body">
-              <p style={{ marginBottom: '0.75rem' }}>
+              <p className="admissions-text-111">
                 Approve application for <strong>{approveApp.student_first_name} {approveApp.student_last_name}</strong>?
               </p>
-              <div style={{
-                background: '#fffbeb', border: '1px solid #f59e0b', borderRadius: '8px',
-                padding: '0.75rem 1rem', color: '#92400e', fontSize: '0.875rem',
-              }}>
+              <div className="admissions-div-112">
                 ⚠️ Approving will <strong>automatically create a student record</strong> in the system with admission number <code>{approveApp.application_number}</code>.
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setApproveApp(null)}>Cancel</button>
-              <button
-                className="btn"
-                style={{ background: '#16a34a', color: '#fff' }}
-                onClick={handleApprove}
-                disabled={approveLoading}
-              >
+              <button className="btn admissions-btn" onClick={handleApprove} disabled={approveLoading}>
                 {approveLoading ? 'Approving...' : 'Approve & Create Student'}
               </button>
             </div>
@@ -1259,13 +1112,13 @@ export default function Admissions() {
       {/* Reject Modal */}
       {rejectApp && (
         <div className="modal-overlay" onClick={() => setRejectApp(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Reject Application</h3>
               <button className="modal-close" onClick={() => setRejectApp(null)}>×</button>
             </div>
             <div className="modal-body">
-              <p style={{ marginBottom: '1rem' }}>
+              <p className="admissions-text-115">
                 Reject application for <strong>{rejectApp.student_first_name} {rejectApp.student_last_name}</strong>?
               </p>
               <div className="form-group">
@@ -1280,12 +1133,7 @@ export default function Admissions() {
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setRejectApp(null)}>Cancel</button>
-              <button
-                className="btn"
-                style={{ background: '#dc2626', color: '#fff' }}
-                onClick={handleReject}
-                disabled={rejectLoading}
-              >
+              <button className="btn admissions-btn" onClick={handleReject} disabled={rejectLoading}>
                 {rejectLoading ? 'Rejecting...' : 'Reject Application'}
               </button>
             </div>

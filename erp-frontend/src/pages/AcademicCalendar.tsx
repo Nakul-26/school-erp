@@ -1,3 +1,4 @@
+import './AcademicCalendar.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -97,7 +98,7 @@ export default function AcademicCalendar() {
       <div className="page-header">
         <div>
           <h2>Academic Calendar</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="academic-calendar-text-1">
             Manage holidays, events, exam days, and vacations
           </p>
         </div>
@@ -117,7 +118,7 @@ export default function AcademicCalendar() {
                 <th>Type</th>
                 <th>Dates</th>
                 <th>Description</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+                <th className="academic-calendar-th-2">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -132,7 +133,7 @@ export default function AcademicCalendar() {
                     </span>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+                    <div className="academic-calendar-row-3">
                       <CalendarIcon size={14} className="text-muted" />
                       <span>
                         {formatDate(entry.start_date)}
@@ -141,11 +142,11 @@ export default function AcademicCalendar() {
                     </div>
                   </td>
                   <td>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                    <span className="academic-calendar-span-4">
                       {entry.description || '-'}
                     </span>
                   </td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td className="academic-calendar-td-5">
                     <button className="btn btn-sm btn-danger" onClick={() => handleDelete(entry.id)}>
                       <Trash2 size={14} /> Delete
                     </button>
@@ -154,9 +155,9 @@ export default function AcademicCalendar() {
               ))}
               {entries.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '3rem' }}>
-                    <CalendarIcon size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
-                    <p style={{ color: 'var(--text-muted)' }}>No academic calendar entries found.</p>
+                  <td colSpan={5} className="academic-calendar-td-6">
+                    <CalendarIcon size={32} className="academic-calendar-CalendarIcon-7"  />
+                    <p className="academic-calendar-text-8">No academic calendar entries found.</p>
                   </td>
                 </tr>
               )}
@@ -193,7 +194,7 @@ export default function AcademicCalendar() {
                   <option value="vacation">Vacation</option>
                 </select>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="academic-calendar-grid-9">
                 <div className="form-group">
                   <label>Start Date</label>
                   <input
@@ -215,20 +216,7 @@ export default function AcademicCalendar() {
               </div>
               <div className="form-group">
                 <label>Description</label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Brief details or remarks..."
-                  rows={3}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border)',
-                    fontFamily: 'inherit',
-                    resize: 'vertical'
-                  }}
-                />
+                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Brief details or remarks..." rows={3} className="academic-calendar-textarea-10"  />
               </div>
               <div className="modal-actions">
                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">

@@ -1,0 +1,30 @@
+/* Component stylesheet for AdminDashboard.tsx */
+
+.admin-dashboard-setup-checklist {
+  margin-bottom: 1.5rem;
+}
+
+.admin-dashboard-icon {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary);
+}
+
+.admin-dashboard-icon {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.admin-dashboard-icon {
+  background: rgba(245, 185, 11, 0.1);
+  color: var(--warning);
+}
+
+.admin-dashboard-icon {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.admin-dashboard-icon {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}

@@ -1,3 +1,4 @@
+import './FeeStructures.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -102,7 +103,7 @@ export default function FeeStructures() {
       <div className="page-header">
         <div>
           <h2>Fee Structures</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="fee-structures-text-1">
             Configure and define billing structures for academic courses by year
           </p>
         </div>
@@ -113,8 +114,8 @@ export default function FeeStructures() {
 
       <div className="card">
         {loading ? <p>Loading fee structures...</p> : structures.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-            <IndianRupee size={32} style={{ marginBottom: '0.5rem' }} />
+          <div className="fee-structures-div-2">
+            <IndianRupee size={32} className="fee-structures-IndianRupee-3"  />
             <p>No fee structures configured yet. Click "Add Fee Config" to configure one.</p>
           </div>
         ) : (
@@ -126,7 +127,7 @@ export default function FeeStructures() {
                 <th>Year</th>
                 <th>Fee Head</th>
                 <th>Amount</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+                <th className="fee-structures-th-4">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -138,13 +139,13 @@ export default function FeeStructures() {
                   </td>
                   <td>Year {s.year_number}</td>
                   <td>
-                    <span className="badge badge-secondary" style={{ textTransform: 'none' }}>
+                    <span className="badge badge-secondary fee-structures-badge">
                       {s.fee_type}
                     </span>
                   </td>
                   <td><strong>₹{s.amount.toLocaleString('en-IN')}</strong></td>
-                  <td style={{ textAlign: 'right' }}>
-                    <button className="btn btn-sm btn-outline" style={{ color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.2)' }} onClick={() => handleDelete(s.id)}>
+                  <td className="fee-structures-td-6">
+                    <button className="btn btn-sm btn-outline fee-structures-btn" onClick={() => handleDelete(s.id)}>
                       <Trash2 size={14} /> Delete
                     </button>
                   </td>
@@ -157,7 +158,7 @@ export default function FeeStructures() {
 
       {showModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
+          <div className="modal-content fee-structures-modal-content">
             <h3>Add Fee Config</h3>
             <form onSubmit={handleCreate}>
               <div className="form-group">
@@ -212,20 +213,13 @@ export default function FeeStructures() {
 
               <div className="form-group">
                 <label>Amount (INR)</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>₹</span>
-                  <input
-                    type="number"
-                    value={form.amount}
-                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                    placeholder="75000"
-                    required
-                    style={{ paddingLeft: '2rem' }}
-                  />
+                <div className="fee-structures-div-9">
+                  <span className="fee-structures-span-10">₹</span>
+                  <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="75000" required className="fee-structures-input-11"  />
                 </div>
               </div>
 
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <div className="modal-actions fee-structures-modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>

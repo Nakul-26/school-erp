@@ -1,3 +1,4 @@
+import './AdminDashboard.css';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Clock, IndianRupee, Award, CheckCircle } from 'lucide-react';
@@ -13,9 +14,16 @@ const formatCurrency = (val: number) => {
 export default function AdminDashboard({ stats }: AdminDashboardProps) {
   return (
     <div className="portal-dashboard">
+
+      return (
+        <div style={{ background: "red", color: "white", padding: 50 }}>
+          ADMIN DASHBOARD TEST
+        </div>
+      );
+      
       {/* Setup Checklist */}
       {(!(stats?.totalStudents) || !(stats?.totalTeachers)) && (
-        <div className="setup-checklist" style={{ marginBottom: '1.5rem' }}>
+        <div className="setup-checklist admin-dashboard-setup-checklist">
           <div className="setup-checklist-header">
             <div className="setup-checklist-icon">
               <CheckCircle size={20} />
@@ -49,7 +57,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
       )}
       <div className="stats-grid">
         <div className="stat-card card">
-          <div className="icon" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)' }}>
+          <div className="icon admin-dashboard-icon">
             <Users size={24} />
           </div>
           <div className="info">
@@ -59,7 +67,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
         </div>
         
         <div className="stat-card card">
-          <div className="icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>
+          <div className="icon admin-dashboard-icon">
             <Users size={24} />
           </div>
           <div className="info">
@@ -69,7 +77,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
         </div>
         
         <div className="stat-card card">
-          <div className="icon" style={{ background: 'rgba(245, 185, 11, 0.1)', color: 'var(--warning)' }}>
+          <div className="icon admin-dashboard-icon">
             <Clock size={24} />
           </div>
           <div className="info">
@@ -79,7 +87,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
         </div>
         
         <div className="stat-card card">
-          <div className="icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>
+          <div className="icon admin-dashboard-icon">
             <IndianRupee size={24} />
           </div>
           <div className="info">
@@ -89,7 +97,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
         </div>
 
         <div className="stat-card card">
-          <div className="icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}>
+          <div className="icon admin-dashboard-icon">
             <Award size={24} />
           </div>
           <div className="info">

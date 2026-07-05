@@ -1,3 +1,4 @@
+import './Sidebar.css';
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
@@ -183,35 +184,22 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   }).filter(group => group.always || group.links.length > 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#0d1117' }}>
+    <div className="sidebar-col-1">
       {/* Brand */}
-      <div style={{ padding: '1.125rem 1rem 0.75rem 1rem', borderBottom: '1px solid #161b22', flexShrink: 0 }}>
+      <div className="sidebar-div-2">
         <div className="sidebar-brand">
           <div className="sidebar-brand-icon">
             <School size={16} color="white" />
           </div>
           <div className="sidebar-brand-text">
             <span className="sidebar-brand-name">{user?.institution_name || 'School ERP'}</span>
-            <span className="sidebar-brand-tag">Management Portal</span>
+            <span className="sidebar-brand-tag">Management aaaa Portal</span>
           </div>
         </div>
 
         {isSuperAdmin && branches.length > 0 && (
-          <div style={{ marginTop: '0.75rem' }}>
-            <select
-              value={user?.institution_id || ''}
-              onChange={(e) => handleBranchSwitch(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.35rem 0.5rem',
-                fontSize: '0.75rem',
-                backgroundColor: '#1f2937',
-                border: '1px solid #374151',
-                color: '#e5e7eb',
-                borderRadius: 'var(--radius-xs)',
-                cursor: 'pointer'
-              }}
-            >
+          <div className="sidebar-div-3">
+            <select value={user?.institution_id || ''} onChange={(e) => handleBranchSwitch(e.target.value)} className="sidebar-select-4">
               <option value="">-- Switch Branch --</option>
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
@@ -222,39 +210,22 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav
-        ref={navRef}
-        onScroll={(e) => sessionStorage.setItem('sidebar_scroll_top', String(e.currentTarget.scrollTop))}
-        style={{
-          flex: 1, overflowY: 'auto', padding: '0.625rem',
-          display: 'flex', flexDirection: 'column',
-          scrollbarWidth: 'thin', scrollbarColor: '#1e293b transparent',
-        }}
-      >
+      <nav ref={navRef} onScroll={(e) => sessionStorage.setItem('sidebar_scroll_top', String(e.currentTarget.scrollTop))} className="sidebar-col-5">
         {groups.map((group) => {
           const isOverview = group.key === '__overview';
           const isCollapsed = !isOverview && !group.always && collapsed[group.key];
           return (
             <div key={group.key} style={{ marginBottom: isOverview ? '0.5rem' : '0' }}>
               {!isOverview && (
-                <div
-                  onClick={() => toggle(group.key)}
-                  style={{
-                    padding: '0.5rem 0.625rem 0.25rem',
-                    fontSize: '0.6rem', fontWeight: 800,
-                    color: '#3d4e5e', textTransform: 'uppercase', letterSpacing: '0.1em',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center',
-                    justifyContent: 'space-between', userSelect: 'none', marginTop: '0.5rem',
-                  }}
-                >
+                <div onClick={() => toggle(group.key)} className="sidebar-row-6">
                   <span>{group.label}</span>
-                  <span style={{ opacity: 0.5 }}>
+                  <span className="sidebar-span-7">
                     {isCollapsed ? <ChevronRight size={9} /> : <ChevronDown size={9} />}
                   </span>
                 </div>
               )}
               {(!isCollapsed || isOverview || group.always) && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '0.125rem' }}>
+                <div className="sidebar-col-8">
                   {group.links.map((link) => (
                     <NavLink
                       key={link.to}
@@ -263,12 +234,9 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
                       onClick={onNavigate}
                     >
                       <link.icon size={14} />
-                      <span style={{ flex: 1 }}>{link.label}</span>
+                      <span className="sidebar-span-9">{link.label}</span>
                       {(link.badge ?? 0) > 0 && (
-                        <span style={{
-                          background: '#ef4444', color: 'white', borderRadius: '9999px',
-                          padding: '0.1rem 0.4rem', fontSize: '0.65rem', fontWeight: 700, lineHeight: 1.4,
-                        }}>
+                        <span className="sidebar-span-10">
                           {link.badge}
                         </span>
                       )}
@@ -280,7 +248,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
           );
         })}
 
-        <div style={{ marginTop: 'auto', paddingTop: '0.625rem', borderTop: '1px solid #161b22' }}>
+        <div className="sidebar-div-11">
           <NavLink to="/profile" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={onNavigate}>
             <UserCog size={14} />
             <span>My Profile</span>
@@ -289,37 +257,14 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       </nav>
 
       {/* User pill */}
-      <div 
-        className="sidebar-user-pill" 
-        style={{ cursor: 'pointer' }} 
-        onClick={() => { navigate('/profile'); if (onNavigate) onNavigate(); }} 
-        title="View profile"
-      >
+      <div className="sidebar-user-pill sidebar-user-pill" onClick={() => { navigate('/profile'); if (onNavigate) onNavigate(); }} title="View profile">
         <div className="sidebar-user-avatar">{initials}</div>
         <div className="sidebar-user-info">
           <div className="sidebar-user-name">{displayName}</div>
           <div className="sidebar-user-role">{roleLabel}</div>
         </div>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); handleLogout(); }}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '0.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '4px',
-            color: '#475569',
-            transition: 'color 0.15s, background 0.15s'
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.backgroundColor = 'transparent'; }}
-          title="Logout"
-        >
-          <LogOut size={13} style={{ flexShrink: 0 }} />
+        <button type="button" onClick={(e) => { e.stopPropagation(); handleLogout(); }} className="sidebar-row-13" onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.backgroundColor = 'transparent'; }} title="Logout">
+          <LogOut size={13} className="sidebar-LogOut-14"  />
         </button>
       </div>
     </div>

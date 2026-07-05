@@ -1,3 +1,4 @@
+import './Teachers.css';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -420,20 +421,20 @@ export default function Teachers() {
     <Layout>
       {showModal ? (
         <>
-          <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-            <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => setShowModal(false)}>
+          <div className="page-header teachers-page-header">
+            <button className="btn btn-secondary teachers-btn" onClick={() => setShowModal(false)}>
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)' }}>Add New Teacher Walkthrough</h2>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Follow the steps to register a new teacher and set up their portal account.</p>
+              <h2 className="teachers-title-3">Add New Teacher Walkthrough</h2>
+              <p className="teachers-text-4">Follow the steps to register a new teacher and set up their portal account.</p>
             </div>
           </div>
 
-          <div className="card" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
+          <div className="card teachers-card">
             {/* Step Indicators */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative', padding: '0 1rem' }}>
-              <div style={{ position: 'absolute', top: '50%', left: '1rem', right: '1rem', height: '2px', backgroundColor: '#e2e8f0', transform: 'translateY(-50%)', zIndex: 0 }} />
+            <div className="teachers-row-6">
+              <div className="teachers-div-7"  />
               <div style={{ position: 'absolute', top: '50%', left: '1rem', width: `calc(${((createStep - 1) / 3) * 100}% - 2rem)`, height: '2px', backgroundColor: 'var(--primary)', transform: 'translateY(-50%)', transition: 'width 0.3s ease', zIndex: 0 }} />
               
               {[
@@ -445,7 +446,7 @@ export default function Teachers() {
                 const isActive = createStep >= s.step;
                 const isCurrent = createStep === s.step;
                 return (
-                  <div key={s.step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1, position: 'relative' }}>
+                  <div key={s.step} className="teachers-col-8">
                     <div style={{
                       width: '2.25rem',
                       height: '2.25rem',
@@ -480,8 +481,8 @@ export default function Teachers() {
             <form onSubmit={handleSubmit}>
               {/* Step 1: Personal Details */}
               {createStep === 1 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div className="teachers-col-9">
+                  <div className="teachers-grid-10">
                     <div className="form-group">
                       <label>First Name *</label>
                       <input required type="text" value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} placeholder="e.g. John" />
@@ -496,7 +497,7 @@ export default function Teachers() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="teachers-grid-11">
                     <div className="form-group">
                       <label>Email Address (Optional)</label>
                       <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="e.g. john.smith@example.com" />
@@ -511,8 +512,8 @@ export default function Teachers() {
 
               {/* Step 2: Professional Details */}
               {createStep === 2 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div className="teachers-col-12">
+                  <div className="teachers-grid-13">
                     <div className="form-group">
                       <label>Employee ID *</label>
                       <input required type="text" value={form.employee_id} onChange={e => setForm({...form, employee_id: e.target.value})} placeholder="e.g. EMP1024" />
@@ -536,7 +537,7 @@ export default function Teachers() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                  <div className="teachers-grid-14">
                     <div className="form-group">
                       <label>Joining Date</label>
                       <input type="date" value={form.joining_date} onChange={e => setForm({...form, joining_date: e.target.value})} />
@@ -552,13 +553,13 @@ export default function Teachers() {
                   </div>
 
                   {form.department && (
-                    <div className="form-group" style={{ marginTop: '0.5rem' }}>
-                      <label style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.875rem' }}>Available Subjects (Autocreated Assignments)</label>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem', marginTop: '0.5rem', maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--border)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+                    <div className="form-group teachers-form-group">
+                      <label className="teachers-label-16">Available Subjects (Autocreated Assignments)</label>
+                      <div className="teachers-grid-17">
                         {getSubjectsForDepartment(form.department).map(s => {
                           const programName = programs.find(p => p.id === s.course_id)?.name || '';
                           return (
-                            <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', cursor: 'pointer' }}>
+                            <label key={s.id} className="teachers-row-18">
                               <input 
                                 type="checkbox" 
                                 checked={form.selectedSubjects?.includes(s.id)}
@@ -571,14 +572,14 @@ export default function Teachers() {
                                 }}
                               />
                               <div>
-                                <span style={{ fontWeight: 600 }}>{s.subject_name}</span>
-                                <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)' }}>{programName}</span>
+                                <span className="teachers-span-19">{s.subject_name}</span>
+                                <span className="teachers-span-20">{programName}</span>
                               </div>
                             </label>
                           );
                         })}
                         {getSubjectsForDepartment(form.department).length === 0 && (
-                          <span style={{ gridColumn: '1 / -1', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No subjects found for this department.</span>
+                          <span className="teachers-span-21">No subjects found for this department.</span>
                         )}
                       </div>
                     </div>
@@ -588,21 +589,16 @@ export default function Teachers() {
 
               {/* Step 3: Account Setup */}
               {createStep === 3 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-main)' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={form.create_login} 
-                      onChange={e => setForm({...form, create_login: e.target.checked})}
-                      style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--primary)' }}
-                    />
+                <div className="teachers-col-22">
+                  <label className="teachers-row-23">
+                    <input type="checkbox" checked={form.create_login} onChange={e => setForm({...form, create_login: e.target.checked})} className="teachers-input-24"  />
                     <span>Create Login Account</span>
                   </label>
 
                   {form.create_login ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.25rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: '#f8fafc' }}>
+                    <div className="teachers-col-25">
                       <div className="form-group">
-                        <label style={{ fontWeight: 600 }}>Username *</label>
+                        <label className="teachers-label-26">Username *</label>
                         <input 
                           required 
                           type="text" 
@@ -610,14 +606,14 @@ export default function Teachers() {
                           onChange={e => setForm({...form, username: e.target.value})} 
                           placeholder="e.g. john.smith"
                         />
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                        <span className="teachers-span-27">
                           Unique identifier used to access the portal.
                         </span>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div className="teachers-grid-28">
                         <div className="form-group">
-                          <label style={{ fontWeight: 600 }}>Temporary Password *</label>
+                          <label className="teachers-label-29">Temporary Password *</label>
                           <input 
                             required 
                             type="text" 
@@ -627,18 +623,13 @@ export default function Teachers() {
                           />
                         </div>
                         <div className="form-group">
-                          <label style={{ fontWeight: 600 }}>Role</label>
-                          <input 
-                            type="text" 
-                            value="Teacher" 
-                            disabled 
-                            style={{ backgroundColor: '#e2e8f0', color: '#64748b', cursor: 'not-allowed', fontWeight: 600 }}
-                          />
+                          <label className="teachers-label-30">Role</label>
+                          <input type="text" value="Teacher" disabled className="teachers-input-31"  />
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1.25rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: '#f8fafc', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                    <div className="teachers-row-32">
                       <span>Login account will be created later.</span>
                     </div>
                   )}
@@ -647,38 +638,38 @@ export default function Teachers() {
 
               {/* Step 4: Review & Confirm */}
               {createStep === 4 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div style={{ backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1.25rem' }}>
-                    <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Personal Details</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.875rem' }}>
-                      <div><strong style={{ color: 'var(--text-muted)' }}>Name:</strong> {form.first_name} {form.middle_name ? form.middle_name + ' ' : ''}{form.last_name}</div>
-                      <div><strong style={{ color: 'var(--text-muted)' }}>Email:</strong> {form.email || 'N/A'}</div>
-                      <div><strong style={{ color: 'var(--text-muted)' }}>Phone:</strong> {form.phone || 'N/A'}</div>
+                <div className="teachers-col-33">
+                  <div className="teachers-div-34">
+                    <h4 className="teachers-title-35">Personal Details</h4>
+                    <div className="teachers-grid-36">
+                      <div><strong className="teachers-strong-37">Name:</strong> {form.first_name} {form.middle_name ? form.middle_name + ' ' : ''}{form.last_name}</div>
+                      <div><strong className="teachers-strong-38">Email:</strong> {form.email || 'N/A'}</div>
+                      <div><strong className="teachers-strong-39">Phone:</strong> {form.phone || 'N/A'}</div>
                     </div>
                   </div>
 
-                  <div style={{ backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1.25rem' }}>
-                    <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Professional Details</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.875rem' }}>
-                      <div><strong style={{ color: 'var(--text-muted)' }}>Employee ID:</strong> {form.employee_id}</div>
-                      <div><strong style={{ color: 'var(--text-muted)' }}>Department:</strong> {form.department}</div>
-                      <div><strong style={{ color: 'var(--text-muted)' }}>Designation:</strong> {form.designation || 'N/A'}</div>
-                      <div><strong style={{ color: 'var(--text-muted)' }}>Joining Date:</strong> {form.joining_date || 'N/A'}</div>
-                      <div><strong style={{ color: 'var(--text-muted)' }}>Qualification:</strong> {form.qualification || 'N/A'}</div>
-                      <div><strong style={{ color: 'var(--text-muted)' }}>Experience:</strong> {form.experience || 'N/A'}</div>
+                  <div className="teachers-div-40">
+                    <h4 className="teachers-title-41">Professional Details</h4>
+                    <div className="teachers-grid-42">
+                      <div><strong className="teachers-strong-43">Employee ID:</strong> {form.employee_id}</div>
+                      <div><strong className="teachers-strong-44">Department:</strong> {form.department}</div>
+                      <div><strong className="teachers-strong-45">Designation:</strong> {form.designation || 'N/A'}</div>
+                      <div><strong className="teachers-strong-46">Joining Date:</strong> {form.joining_date || 'N/A'}</div>
+                      <div><strong className="teachers-strong-47">Qualification:</strong> {form.qualification || 'N/A'}</div>
+                      <div><strong className="teachers-strong-48">Experience:</strong> {form.experience || 'N/A'}</div>
                     </div>
                   </div>
 
-                  <div style={{ backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1.25rem' }}>
-                    <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Account Setup</h4>
+                  <div className="teachers-div-49">
+                    <h4 className="teachers-title-50">Account Setup</h4>
                     {form.create_login ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.875rem' }}>
-                        <div><strong style={{ color: 'var(--text-muted)' }}>Username:</strong> {form.username}</div>
-                        <div><strong style={{ color: 'var(--text-muted)' }}>Password:</strong> {form.password}</div>
-                        <div><strong style={{ color: 'var(--text-muted)' }}>Role:</strong> Teacher</div>
+                      <div className="teachers-grid-51">
+                        <div><strong className="teachers-strong-52">Username:</strong> {form.username}</div>
+                        <div><strong className="teachers-strong-53">Password:</strong> {form.password}</div>
+                        <div><strong className="teachers-strong-54">Role:</strong> Teacher</div>
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                      <div className="teachers-div-55">
                         Login account will be created later.
                       </div>
                     )}
@@ -687,9 +678,9 @@ export default function Teachers() {
               )}
 
               {/* Wizard Form Actions */}
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
-                <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary" style={{ marginRight: 'auto' }}>Cancel</button>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <div className="modal-actions teachers-modal-actions">
+                <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary teachers-btn">Cancel</button>
+                <div className="teachers-row-58">
                   {createStep > 1 && (
                     <button type="button" onClick={prevStep} className="btn btn-secondary">
                       Back
@@ -711,14 +702,14 @@ export default function Teachers() {
         </>
       ) : (
         <>
-          <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <div className="page-header teachers-page-header">
             <h2>Teachers</h2>
         <button className="btn btn-primary" onClick={handleAddTeacherClick}>
           <Plus size={18} /> Add Teacher
         </button>
       </div>
 
-      <div className="card filters" style={{ marginBottom: '1rem' }}>
+      <div className="card filters teachers-card">
         <div className="search-container">
           <Search size={18} />
           <input 
@@ -755,15 +746,11 @@ export default function Teachers() {
                       {t.status}
                     </span>
                   </td>
-                  <td style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Link to={`/teachers/${t.id}`} className="btn btn-sm btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <td className="teachers-row-61">
+                    <Link to={`/teachers/${t.id}`} className="btn btn-sm btn-outline teachers-btn">
                       <Eye size={14} /> View
                     </Link>
-                    <button 
-                      onClick={() => handleEditClick(t)} 
-                      className="btn btn-sm btn-secondary"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                    >
+                    <button onClick={() => handleEditClick(t)} className="btn btn-sm btn-secondary teachers-btn">
                       <Edit3 size={14} /> Edit
                     </button>
                   </td>
@@ -771,7 +758,7 @@ export default function Teachers() {
               ))}
               {filteredTeachers.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No teachers found.</td>
+                  <td colSpan={6} className="teachers-td-64">No teachers found.</td>
                 </tr>
               )}
             </tbody>
@@ -784,93 +771,39 @@ export default function Teachers() {
 
       {/* Success Dialog */}
       {showSuccessDialog && createdCredentials && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2.5rem', boxShadow: 'var(--shadow-lg)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-            <div style={{
-              width: '4.5rem',
-              height: '4.5rem',
-              borderRadius: '50%',
-              backgroundColor: '#ecfdf5',
-              border: '2px solid #34d399',
-              color: '#059669',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2rem',
-              margin: '0 auto 1.5rem',
-              boxShadow: '0 0 0 8px rgba(16, 185, 129, 0.1)'
-            }}>
+        <div className="modal teachers-modal">
+          <div className="modal-content teachers-modal-content">
+            <div className="teachers-row-67">
               ✓
             </div>
             
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-main)' }}>Teacher Created Successfully</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '2rem' }}>
+            <h3 className="teachers-title-68">Teacher Created Successfully</h3>
+            <p className="teachers-text-69">
               The profile for <strong>{createdCredentials.name}</strong> has been saved.
             </p>
 
             {createdCredentials.login_created ? (
-              <div style={{
-                backgroundColor: 'var(--bg-main)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
-                padding: '1.5rem',
-                marginBottom: '2rem',
-                textAlign: 'left'
-              }}>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="teachers-div-70">
+                <h4 className="teachers-row-71">
                   🔑 Login Credentials
                 </h4>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div className="teachers-col-72">
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Username</span>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                      <code style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', fontFamily: 'monospace' }}>{createdCredentials.username}</code>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(createdCredentials.username);
-                          alert('Username copied to clipboard!');
-                        }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--primary)',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          padding: '2px 6px',
-                          borderRadius: 'var(--radius-sm)',
-                          backgroundColor: '#e0e7ff'
-                        }}
-                      >
+                    <span className="teachers-span-73">Username</span>
+                    <div className="teachers-row-74">
+                      <code className="teachers-code-75">{createdCredentials.username}</code>
+                      <button type="button" onClick={() => { navigator.clipboard.writeText(createdCredentials.username); alert('Username copied to clipboard!'); }} className="teachers-btn-76">
                         Copy
                       </button>
                     </div>
                   </div>
 
-                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Temporary Password</span>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                      <code style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', fontFamily: 'monospace' }}>{createdCredentials.password}</code>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(createdCredentials.password);
-                          alert('Password copied to clipboard!');
-                        }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--primary)',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          padding: '2px 6px',
-                          borderRadius: 'var(--radius-sm)',
-                          backgroundColor: '#e0e7ff'
-                        }}
-                      >
+                  <div className="teachers-div-77">
+                    <span className="teachers-span-78">Temporary Password</span>
+                    <div className="teachers-row-79">
+                      <code className="teachers-code-80">{createdCredentials.password}</code>
+                      <button type="button" onClick={() => { navigator.clipboard.writeText(createdCredentials.password); alert('Password copied to clipboard!'); }} className="teachers-btn-81">
                         Copy
                       </button>
                     </div>
@@ -878,65 +811,25 @@ export default function Teachers() {
                 </div>
               </div>
             ) : (
-              <div style={{
-                backgroundColor: '#f8fafc',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
-                padding: '1rem',
-                marginBottom: '2rem',
-                fontSize: '0.875rem',
-                color: 'var(--text-muted)'
-              }}>
+              <div className="teachers-div-82">
                 ℹ️ Login account creation was skipped. This can be created later from user settings.
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  const text = `Teacher Credentials\nName: ${createdCredentials.name}\nUsername: ${createdCredentials.username || 'N/A'}\nTemporary Password: ${createdCredentials.password || 'N/A'}`;
-                  navigator.clipboard.writeText(text);
-                  alert('Credentials copied to clipboard!');
-                }}
-                className="btn btn-primary"
-                style={{ flex: '1 1 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', minWidth: '120px' }}
-                disabled={!createdCredentials.login_created}
-              >
+            <div className="teachers-row-83">
+              <button type="button" onClick={() => { const text = `Teacher Credentials\nName: ${createdCredentials.name}\nUsername: ${createdCredentials.username || 'N/A'}\nTemporary Password: ${createdCredentials.password || 'N/A'}`; navigator.clipboard.writeText(text); alert('Credentials copied to clipboard!'); }} className="btn btn-primary teachers-btn" disabled={!createdCredentials.login_created}>
                 Copy Credentials
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  window.print();
-                }}
-                className="btn btn-secondary"
-                style={{ flex: '1 1 auto', minWidth: '80px' }}
-              >
+              <button type="button" onClick={() => { window.print(); }} className="btn btn-secondary teachers-btn">
                 Print
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  alert('Credential delivery scheduled.');
-                }}
-                className="btn btn-secondary"
-                style={{ flex: '1 1 auto', minWidth: '90px' }}
-              >
+              <button type="button" onClick={() => { alert('Credential delivery scheduled.'); }} className="btn btn-secondary teachers-btn">
                 Send Later
               </button>
             </div>
             
-            <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowSuccessDialog(false);
-                  setCreatedCredentials(null);
-                }}
-                className="btn btn-outline"
-                style={{ width: '100%' }}
-              >
+            <div className="teachers-div-87">
+              <button type="button" onClick={() => { setShowSuccessDialog(false); setCreatedCredentials(null); }} className="btn btn-outline teachers-btn">
                 Close
               </button>
             </div>
@@ -946,12 +839,12 @@ export default function Teachers() {
 
       {/* Edit Modal (Tabbed Layout) */}
       {showEditModal && editForm && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '680px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Edit Teacher Profile</h3>
+        <div className="modal teachers-modal">
+          <div className="modal-content teachers-modal-content">
+            <h3 className="teachers-title-91">Edit Teacher Profile</h3>
             
             {/* Tabs */}
-            <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem', gap: '1rem', overflowX: 'auto', scrollbarWidth: 'none' }}>
+            <div className="teachers-row-92">
               {['personal', 'professional', 'academic', 'account'].map(t => (
                 <button
                   key={t}
@@ -977,8 +870,8 @@ export default function Teachers() {
             <form onSubmit={handleEditSubmit}>
               {/* TAB 1: Personal */}
               {editTab === 'personal' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div className="teachers-col-93">
+                  <div className="teachers-grid-94">
                     <div className="form-group">
                       <label>First Name *</label>
                       <input required type="text" value={editForm.first_name} onChange={e => setEditForm({...editForm, first_name: e.target.value})} />
@@ -992,7 +885,7 @@ export default function Teachers() {
                       <input required type="text" value={editForm.last_name} onChange={e => setEditForm({...editForm, last_name: e.target.value})} />
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="teachers-grid-95">
                     <div className="form-group">
                       <label>Email *</label>
                       <input required type="email" value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} />
@@ -1007,8 +900,8 @@ export default function Teachers() {
 
               {/* TAB 2: Professional */}
               {editTab === 'professional' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="teachers-col-96">
+                  <div className="teachers-grid-97">
                     <div className="form-group">
                       <label>Employee ID *</label>
                       <input required type="text" value={editForm.employee_id} onChange={e => setEditForm({...editForm, employee_id: e.target.value})} />
@@ -1027,7 +920,7 @@ export default function Teachers() {
                       </select>
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="teachers-grid-98">
                     <div className="form-group">
                       <label>Designation</label>
                       <input type="text" value={editForm.designation} onChange={e => setEditForm({...editForm, designation: e.target.value})} />
@@ -1037,7 +930,7 @@ export default function Teachers() {
                       <input type="date" value={editForm.joining_date} onChange={e => setEditForm({...editForm, joining_date: e.target.value})} />
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="teachers-grid-99">
                     <div className="form-group">
                       <label>Qualification</label>
                       <input type="text" value={editForm.qualification} onChange={e => setEditForm({...editForm, qualification: e.target.value})} />
@@ -1053,11 +946,11 @@ export default function Teachers() {
               {/* TAB 3: Academic Assignments */}
               {editTab === 'academic' && (
                 <div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-main)' }}>Add Subject Assignment</h4>
+                  <h4 className="teachers-title-100">Add Subject Assignment</h4>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem', alignItems: 'end', marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                    <div className="form-group" style={{ margin: 0 }}>
-                      <label style={{ fontSize: '0.75rem' }}>Academic Year</label>
+                  <div className="teachers-grid-101">
+                    <div className="form-group teachers-form-group">
+                      <label className="teachers-label-103">Academic Year</label>
                       <select 
                         value={newAssignment.academic_year_id} 
                         onChange={e => setNewAssignment({...newAssignment, academic_year_id: e.target.value})}
@@ -1068,8 +961,8 @@ export default function Teachers() {
                       </select>
                     </div>
 
-                    <div className="form-group" style={{ margin: 0 }}>
-                      <label style={{ fontSize: '0.75rem' }}>Class / Program</label>
+                    <div className="form-group teachers-form-group">
+                      <label className="teachers-label-105">Class / Program</label>
                       <select 
                         value={newAssignment.course_id} 
                         onChange={e => setNewAssignment({...newAssignment, course_id: e.target.value, section_id: '', subject_id: ''})}
@@ -1080,8 +973,8 @@ export default function Teachers() {
                       </select>
                     </div>
 
-                    <div className="form-group" style={{ margin: 0 }}>
-                      <label style={{ fontSize: '0.75rem' }}>Section</label>
+                    <div className="form-group teachers-form-group">
+                      <label className="teachers-label-107">Section</label>
                       <select 
                         value={newAssignment.section_id} 
                         onChange={e => setNewAssignment({...newAssignment, section_id: e.target.value})}
@@ -1095,8 +988,8 @@ export default function Teachers() {
                       </select>
                     </div>
 
-                    <div className="form-group" style={{ margin: 0 }}>
-                      <label style={{ fontSize: '0.75rem' }}>Subject</label>
+                    <div className="form-group teachers-form-group">
+                      <label className="teachers-label-109">Subject</label>
                       <select 
                         value={newAssignment.subject_id} 
                         onChange={e => setNewAssignment({...newAssignment, subject_id: e.target.value})}
@@ -1110,18 +1003,13 @@ export default function Teachers() {
                       </select>
                     </div>
 
-                    <button 
-                      type="button" 
-                      onClick={handleAddAssignment} 
-                      className="btn btn-primary btn-sm"
-                      style={{ height: '38px', padding: '0 1rem' }}
-                    >
+                    <button type="button" onClick={handleAddAssignment} className="btn btn-primary btn-sm teachers-btn">
                       Assign
                     </button>
                   </div>
 
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--text-main)' }}>Current Assignments</h4>
-                  <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                  <h4 className="teachers-title-111">Current Assignments</h4>
+                  <div className="teachers-div-112">
                     <table className="table">
                       <thead>
                         <tr>
@@ -1140,12 +1028,7 @@ export default function Teachers() {
                             <td>{sections.find(s => s.id === a.section_id)?.name || 'N/A'}</td>
                             <td>{subjects.find(s => s.id === a.subject_id)?.subject_name || 'N/A'}</td>
                             <td>
-                              <button 
-                                type="button" 
-                                onClick={() => handleRemoveAssignment(a.id)} 
-                                className="btn btn-sm btn-outline-danger"
-                                style={{ color: 'var(--danger)', borderColor: 'var(--danger)', padding: '0.15rem 0.4rem', fontSize: '0.75rem' }}
-                              >
+                              <button type="button" onClick={() => handleRemoveAssignment(a.id)} className="btn btn-sm btn-outline-danger teachers-btn">
                                 Remove
                               </button>
                             </td>
@@ -1153,7 +1036,7 @@ export default function Teachers() {
                         ))}
                         {editAssignments.length === 0 && (
                           <tr>
-                            <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>No assignments mapped.</td>
+                            <td colSpan={5} className="teachers-td-114">No assignments mapped.</td>
                           </tr>
                         )}
                       </tbody>
@@ -1164,7 +1047,7 @@ export default function Teachers() {
 
               {/* TAB 4: Account Status */}
               {editTab === 'account' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="teachers-col-115">
                   <div className="form-group">
                     <label>Account Status</label>
                     <select value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
@@ -1174,14 +1057,14 @@ export default function Teachers() {
                       <option value="RETIRED">RETIRED</option>
                     </select>
                   </div>
-                  <div style={{ padding: '1rem', backgroundColor: '#f1f5f9', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  <div className="teachers-div-116">
                     <strong>Administrative Note:</strong> Account credential resets and login profile adjustments must be performed through the general Users Directory access control configurations.
                   </div>
                 </div>
               )}
 
               {/* Modal Actions */}
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+              <div className="modal-actions teachers-modal-actions">
                 <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
                 {editTab !== 'academic' && (
                   <button type="submit" className="btn btn-primary">Save Changes</button>

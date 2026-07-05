@@ -1,3 +1,4 @@
+import './DataTools.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -240,7 +241,7 @@ export default function DataTools() {
         {/* Core Records Card */}
         <div className="card export-card">
           <div className="card-header-icon">
-            <Users style={{ color: 'var(--primary)' }} />
+            <Users className="data-tools-Users-1"  />
             <h3>Core Records</h3>
           </div>
           <p className="card-desc">Download complete register of all current students and teaching staff.</p>
@@ -267,7 +268,7 @@ export default function DataTools() {
         {/* Attendance Reports */}
         <div className="card export-card">
           <div className="card-header-icon">
-            <FileSpreadsheet style={{ color: 'var(--success)' }} />
+            <FileSpreadsheet className="data-tools-FileSpreadsheet-2"  />
             <h3>Class Attendance Registers</h3>
           </div>
           <p className="card-desc">Export overall session summary logs per student for a selected section.</p>
@@ -294,7 +295,7 @@ export default function DataTools() {
         {/* Exam Results */}
         <div className="card export-card">
           <div className="card-header-icon">
-            <Award style={{ color: 'var(--warning)' }} />
+            <Award className="data-tools-Award-3"  />
             <h3>Academic Performance Sheets</h3>
           </div>
           <p className="card-desc">Generate scorecards and student mark compilation spreadsheets for selected exam events.</p>
@@ -321,7 +322,7 @@ export default function DataTools() {
         {/* Finance Records */}
         <div className="card export-card">
           <div className="card-header-icon">
-            <IndianRupee style={{ color: 'var(--success)' }} />
+            <IndianRupee className="data-tools-IndianRupee-4"  />
             <h3>Finance &amp; Fee Ledgers</h3>
           </div>
           <p className="card-desc">Download student dues, collections, dates, and outstanding payment logs.</p>
@@ -374,7 +375,7 @@ export default function DataTools() {
         {/* CSV Format Guide */}
         <div className="card guide-card">
           <div className="guide-header">
-            <HelpCircle size={20} style={{ color: 'var(--primary)' }} />
+            <HelpCircle size={20} className="data-tools-HelpCircle-5"  />
             <h3>CSV Formatting Requirements</h3>
           </div>
           <p>Your spreadsheet file must contain a header row matching the fields below (order does not matter):</p>
@@ -383,7 +384,7 @@ export default function DataTools() {
             {currentTemplate.headers.map(h => <code key={h}>{h}</code>)}
           </div>
 
-          <p style={{ marginTop: '1rem', fontWeight: 600 }}>Example Row Sample:</p>
+          <p className="data-tools-text-6">Example Row Sample:</p>
           <div className="example-box">
             <table>
               <thead>
@@ -405,28 +406,28 @@ export default function DataTools() {
           <h3>Upload CSV File</h3>
 
           {importError && (
-            <div className="alert alert-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div className="alert alert-danger data-tools-alert">
               <AlertCircle size={18} />
               <span>{importError}</span>
             </div>
           )}
 
           {importResult && (
-            <div className="alert alert-success" style={{ marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+            <div className="alert alert-success data-tools-alert">
+              <div className="data-tools-row-9">
                 <CheckCircle2 size={18} />
                 <span>Import completed successfully!</span>
               </div>
-              <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+              <p className="data-tools-text-10">
                 Imported: <strong>{importResult.imported}</strong> rows | Skipped/Errors: <strong>{importResult.skipped}</strong> rows
               </p>
 
               {importResult.errors && importResult.errors.length > 0 && (
-                <div className="error-log-box" style={{ marginTop: '0.75rem' }}>
+                <div className="error-log-box data-tools-error-log-box">
                   <strong>Error Logs:</strong>
                   <ul>
                     {importResult.errors.map((errStr: string, idx: number) => (
-                      <li key={idx} style={{ color: 'var(--danger)', fontSize: '0.75rem', marginTop: '0.15rem' }}>{errStr}</li>
+                      <li key={idx} className="data-tools-li-12">{errStr}</li>
                     ))}
                   </ul>
                 </div>
@@ -436,26 +437,15 @@ export default function DataTools() {
 
           <form onSubmit={handleUploadSubmit} className="upload-form">
             <div className="file-dropzone">
-              <Upload size={32} style={{ color: 'var(--secondary)', opacity: 0.5 }} />
+              <Upload size={32} className="data-tools-Upload-13"  />
               <p>{importFile ? `Selected file: ${importFile.name}` : 'Drag and drop or select a CSV spreadsheet'}</p>
-              <label className="btn btn-outline" style={{ marginTop: '0.75rem' }}>
+              <label className="btn btn-outline data-tools-btn">
                 Browse Files
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileChange}
-                  disabled={importLoading}
-                  style={{ display: 'none' }}
-                />
+                <input type="file" accept=".csv" onChange={handleFileChange} disabled={importLoading} className="data-tools-input-15"  />
               </label>
             </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={importLoading || !importFile}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', width: 'fit-content' }}
-            >
+            <button type="submit" className="btn btn-primary data-tools-btn" disabled={importLoading || !importFile}>
               {importLoading ? (
                 <>
                   <Loader2 className="animate-spin" size={18} />
@@ -492,14 +482,14 @@ export default function DataTools() {
       <div className="page-header">
         <div>
           <h2>Data Tools</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="data-tools-text-17">
             Export and import school data in CSV format
           </p>
         </div>
       </div>
 
       {/* Page-level Tabs */}
-      <div className="page-tabs" style={{ marginBottom: '1.5rem' }}>
+      <div className="page-tabs data-tools-page-tabs">
         <button
           className={`page-tab${activeTab === 'export' ? ' active' : ''}`}
           onClick={() => setActiveTab('export')}
@@ -518,188 +508,7 @@ export default function DataTools() {
       {activeTab === 'export' ? renderExport() : renderImport()}
 
       {/* Shared styles for both export and import sections */}
-      <style>{`
-        .export-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
-          gap: 2rem;
-          margin-top: 1rem;
-        }
-        @media (max-width: 480px) {
-          .export-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-        .export-card {
-          padding: 2rem;
-          display: flex;
-          flex-direction: column;
-        }
-        .card-header-icon {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 0.5rem;
-        }
-        .card-header-icon h3 {
-          margin: 0;
-          font-size: 1.1rem;
-          font-weight: 700;
-        }
-        .card-desc {
-          color: var(--text-muted);
-          font-size: 0.875rem;
-          margin-bottom: 1.5rem;
-          line-height: 1.5;
-        }
-        .action-row {
-          display: flex;
-          gap: 1rem;
-          margin-top: auto;
-          flex-wrap: wrap;
-        }
-        .filter-select-row {
-          display: flex;
-          gap: 1rem;
-          margin-top: auto;
-          flex-wrap: wrap;
-        }
-        .filter-select-row select {
-          flex: 1;
-          min-width: 180px;
-        }
-        .import-tabs {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 2rem;
-          border-bottom: 1px solid var(--border);
-          padding-bottom: 0.75rem;
-        }
-        .tab-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.6rem 1.25rem;
-          border-radius: 20px;
-          border: 1px solid var(--border);
-          background: white;
-          cursor: pointer;
-          font-weight: 600;
-          color: var(--text-muted);
-          transition: all 0.2s;
-        }
-        .tab-btn.active {
-          background: var(--primary);
-          color: white;
-          border-color: var(--primary);
-        }
-        .tab-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        .import-container {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 2rem;
-        }
-        .guide-card {
-          padding: 1.5rem;
-        }
-        .guide-header {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 0.75rem;
-        }
-        .guide-header h3 {
-          margin: 0;
-          font-size: 1rem;
-        }
-        .guide-card p {
-          font-size: 0.875rem;
-          color: var(--text-muted);
-        }
-        .headers-box {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-          margin-top: 0.75rem;
-          padding: 0.75rem;
-          background: #f8fafc;
-          border-radius: var(--radius-sm);
-          border: 1px dashed var(--border);
-        }
-        .headers-box code {
-          background: #e2e8f0;
-          padding: 0.25rem 0.5rem;
-          border-radius: 4px;
-          font-size: 0.8rem;
-          font-weight: 600;
-        }
-        .example-box {
-          margin-top: 0.5rem;
-          overflow-x: auto;
-          border: 1px solid var(--border);
-          border-radius: var(--radius-sm);
-        }
-        .example-box table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 0.75rem;
-        }
-        .example-box th, .example-box td {
-          padding: 0.5rem 0.75rem;
-          text-align: left;
-          border-bottom: 1px solid var(--border);
-          white-space: nowrap;
-        }
-        .example-box th {
-          background: #f1f5f9;
-          font-weight: 700;
-        }
-        .form-card {
-          padding: 2rem;
-        }
-        .form-card h3 {
-          margin-top: 0;
-          margin-bottom: 1.5rem;
-          font-size: 1.1rem;
-        }
-        .file-dropzone {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 3rem 2rem;
-          border: 2px dashed var(--border);
-          border-radius: var(--radius-md);
-          background: #fafafa;
-          text-align: center;
-        }
-        .file-dropzone p {
-          font-size: 0.875rem;
-          color: var(--text-muted);
-          margin-top: 0.5rem;
-        }
-        .error-log-box {
-          background: #fff1f0;
-          border: 1px solid #ffa39e;
-          border-radius: 4px;
-          padding: 0.75rem;
-          max-height: 200px;
-          overflow-y: auto;
-        }
-        .error-log-box ul {
-          margin: 0;
-          padding-left: 1.25rem;
-        }
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+      
     </Layout>
   );
 }

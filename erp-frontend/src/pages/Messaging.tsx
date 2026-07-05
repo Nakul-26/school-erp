@@ -1,3 +1,4 @@
+import './Messaging.css';
 import React, { useEffect, useState, useRef } from 'react';
 import Layout from '../components/Layout';
 import { PageGuidance } from '../components/PageGuidance';
@@ -142,7 +143,7 @@ export default function Messaging() {
       <div className="page-header">
         <div>
           <h2>Direct Messaging Workspace</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="messaging-text-1">
             Built-in communication channel for parents, teachers, and administration staff
           </p>
         </div>
@@ -163,36 +164,19 @@ export default function Messaging() {
       }} className="chat-container">
         
         {/* Left Panel: Contacts list */}
-        <div style={{
-          borderRight: '1px solid var(--border)',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: '#f8fafc'
-        }}>
+        <div className="messaging-col-2">
           {/* Search Contacts */}
-          <div style={{ padding: '1rem', borderBottom: '1px solid var(--border)', position: 'relative' }}>
-            <Search size={14} style={{ position: 'absolute', left: '1.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input
-              type="text"
-              placeholder="Search conversation..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                paddingLeft: '2.25rem',
-                fontSize: '0.85rem',
-                marginBottom: 0,
-                backgroundColor: '#ffffff'
-              }}
-            />
+          <div className="messaging-div-3">
+            <Search size={14} className="messaging-Search-4"  />
+            <input type="text" placeholder="Search conversation..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="messaging-input-5"  />
           </div>
 
           {/* Contacts Scrolling wrapper */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div className="messaging-div-6">
             {loading ? (
-              <p style={{ padding: '1rem', color: 'var(--text-muted)' }}>Loading contacts...</p>
+              <p className="messaging-text-7">Loading contacts...</p>
             ) : filteredContacts.length === 0 ? (
-              <p style={{ padding: '1.5rem', color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.85rem' }}>
+              <p className="messaging-text-8">
                 No active contacts found.
               </p>
             ) : (
@@ -229,18 +213,11 @@ export default function Messaging() {
                       <User size={18} />
                     </div>
                     
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontSize: '0.875rem',
-                        fontWeight: 700,
-                        color: 'var(--text-main)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}>
+                    <div className="messaging-div-9">
+                      <div className="messaging-div-10">
                         {c.name}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <div className="messaging-div-11">
                         {c.role}
                       </div>
                     </div>
@@ -252,61 +229,32 @@ export default function Messaging() {
         </div>
 
         {/* Right Panel: Chat Window */}
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#fff' }}>
+        <div className="messaging-col-12">
           {activeContact ? (
             <>
               {/* Chat Header */}
-              <div style={{
-                padding: '1rem 1.5rem',
-                borderBottom: '1px solid var(--border)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                backgroundColor: '#ffffff'
-              }}>
-                <button
-                  type="button"
-                  onClick={() => setActiveContactId('')}
-                  className="mobile-back-btn btn btn-outline btn-sm"
-                  style={{ display: 'none', padding: '0.35rem 0.5rem', marginRight: '0.5rem' }}
-                >
+              <div className="messaging-row-13">
+                <button type="button" onClick={() => setActiveContactId('')} className="mobile-back-btn btn btn-outline btn-sm messaging-mobile-back-btn">
                   <ArrowLeft size={16} />
                 </button>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--primary-soft)',
-                  color: 'var(--primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
+                <div className="messaging-row-15">
                   <MessageSquare size={20} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '0.975rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                  <h3 className="messaging-title-16">
                     {activeContact.name}
                   </h3>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  <span className="messaging-span-17">
                     {activeContact.role}
                   </span>
                 </div>
               </div>
 
               {/* Message history */}
-              <div style={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: '1.5rem',
-                backgroundColor: '#f1f5f9',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem'
-              }} className="chat-messages-box">
+              <div className="chat-messages-box messaging-chat-messages-box">
                 {messages.length === 0 ? (
-                  <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                    <MessageSquare size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
+                  <div className="messaging-div-19">
+                    <MessageSquare size={32} className="messaging-MessageSquare-20"  />
                     <p>No messages yet. Start the conversation!</p>
                   </div>
                 ) : (
@@ -335,14 +283,7 @@ export default function Messaging() {
                         }}>
                           {msg.message}
                         </div>
-                        <span style={{
-                          fontSize: '0.65rem',
-                          color: 'var(--text-muted)',
-                          marginTop: '0.25rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem'
-                        }}>
+                        <span className="messaging-row-21">
                           <Clock size={10} />
                           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
@@ -354,37 +295,16 @@ export default function Messaging() {
               </div>
 
               {/* Chat Send Input Form */}
-              <form
-                onSubmit={handleSendMessage}
-                style={{
-                  padding: '1rem 1.5rem',
-                  borderTop: '1px solid var(--border)',
-                  display: 'flex',
-                  gap: '0.75rem',
-                  backgroundColor: '#ffffff'
-                }}
-              >
-                <input
-                  type="text"
-                  placeholder={`Send message to ${activeContact.name}...`}
-                  value={typedMessage}
-                  onChange={e => setTypedMessage(e.target.value)}
-                  required
-                  style={{ flex: 1, marginBottom: 0 }}
-                />
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.625rem 1rem' }}
-                  disabled={sending || !typedMessage.trim()}
-                >
+              <form onSubmit={handleSendMessage} className="messaging-row-22">
+                <input type="text" placeholder={`Send message to ${activeContact.name}...`} value={typedMessage} onChange={e => setTypedMessage(e.target.value)} required className="messaging-input-23"  />
+                <button type="submit" className="btn btn-primary messaging-btn" disabled={sending || !typedMessage.trim()}>
                   <Send size={16} />
                 </button>
               </form>
             </>
           ) : (
-            <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-              <MessageSquare size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
+            <div className="messaging-div-25">
+              <MessageSquare size={48} className="messaging-MessageSquare-26"  />
               <h3>Select a Conversation</h3>
               <p>Choose a contact from the left panel list to begin messaging.</p>
             </div>

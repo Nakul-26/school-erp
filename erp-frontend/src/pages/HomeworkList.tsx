@@ -1,3 +1,4 @@
+import './HomeworkList.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -137,7 +138,7 @@ export default function HomeworkList() {
       <div className="page-header">
         <div>
           <h2>Academic Homework Logs</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="homework-list-text-1">
             Post daily homework, assign projects, specify due dates, and track logs per subject section.
           </p>
         </div>
@@ -151,24 +152,24 @@ export default function HomeworkList() {
       
 
       {/* Filter panel */}
-      <div className="card" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Filter Class:</label>
-          <select value={filterSection} onChange={(e) => setFilterSection(e.target.value)} style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}>
+      <div className="card homework-list-card">
+        <div className="homework-list-row-3">
+          <label className="homework-list-label-4">Filter Class:</label>
+          <select value={filterSection} onChange={(e) => setFilterSection(e.target.value)} className="homework-list-select-5">
             <option value="">All Classes</option>
             {sections.map(s => <option key={s.id} value={s.id}>{s.name} - {s.course_name}</option>)}
           </select>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Filter Subject:</label>
-          <select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}>
+        <div className="homework-list-row-6">
+          <label className="homework-list-label-7">Filter Subject:</label>
+          <select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} className="homework-list-select-8">
             <option value="">All Subjects</option>
             {subjects.map(s => <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>)}
           </select>
         </div>
       </div>
 
-      <div className="card" style={{ padding: '1.5rem' }}>
+      <div className="card homework-list-card">
         {loading ? <p>Loading homework logs...</p> : (
           <table className="table">
             <thead>
@@ -178,7 +179,7 @@ export default function HomeworkList() {
                 <th>Homework Title & Task</th>
                 <th>Assigned By</th>
                 <th>Due Date</th>
-                {canManage && <th style={{ textAlign: 'right' }}>Actions</th>}
+                {canManage && <th className="homework-list-th-10">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -187,20 +188,20 @@ export default function HomeworkList() {
                   <td><strong>{h.section_name}</strong></td>
                   <td>
                     <strong>{h.subject_name}</strong>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{h.subject_code}</div>
+                    <div className="homework-list-div-11">{h.subject_code}</div>
                   </td>
                   <td>
-                    <strong style={{ fontSize: '0.95rem' }}>{h.title}</strong>
-                    {h.description && <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{h.description}</p>}
+                    <strong className="homework-list-strong-12">{h.title}</strong>
+                    {h.description && <p className="homework-list-text-13">{h.description}</p>}
                   </td>
                   <td>Teacher {h.teacher_first} {h.teacher_last}</td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--danger)', fontWeight: 'bold' }}>
+                    <div className="homework-list-row-14">
                       <Calendar size={14} /> {h.due_date}
                     </div>
                   </td>
                   {canManage && (
-                    <td style={{ textAlign: 'right' }}>
+                    <td className="homework-list-td-15">
                       <button className="btn btn-sm btn-outline btn-danger" onClick={() => handleDelete(h.id)}>
                         <Trash2 size={12} />
                       </button>
@@ -210,8 +211,8 @@ export default function HomeworkList() {
               ))}
               {homeworkList.length === 0 && (
                 <tr>
-                  <td colSpan={canManage ? 6 : 5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    <Clipboard size={32} style={{ marginBottom: '0.5rem' }} />
+                  <td colSpan={canManage ? 6 : 5} className="homework-list-td-16">
+                    <Clipboard size={32} className="homework-list-Clipboard-17"  />
                     <p>No homework assignments found matching filter criteria.</p>
                   </td>
                 </tr>
@@ -223,14 +224,14 @@ export default function HomeworkList() {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal" style={{ maxWidth: '600px', width: '90%' }} onClick={e => e.stopPropagation()}>
+          <div className="modal homework-list-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Create Homework Assignment</h3>
               <button onClick={() => setShowModal(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="homework-list-grid-19">
                   <div className="form-group">
                     <label>Select Class / Section</label>
                     <select
@@ -281,13 +282,7 @@ export default function HomeworkList() {
 
                 <div className="form-group">
                   <label>Detailed Instructions / Notes</label>
-                  <textarea
-                    rows={4}
-                    placeholder="Provide details about the homework task, references, textbooks, page numbers..."
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                  />
+                  <textarea rows={4} placeholder="Provide details about the homework task, references, textbooks, page numbers..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="homework-list-textarea-20"  />
                 </div>
 
                 <div className="form-group">

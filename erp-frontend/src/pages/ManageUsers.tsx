@@ -1,3 +1,4 @@
+import './ManageUsers.css';
 import React, { useState, useEffect } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -132,7 +133,7 @@ export default function ManageUsers() {
       <div className="page-header">
         <div>
           <h2>User Management</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="manage-users-text-1">
             Manage organization users, assign roles, and configure system access.
           </p>
         </div>
@@ -173,13 +174,13 @@ export default function ManageUsers() {
                   <td>{user.username}</td>
                   <td>{user.email}</td>
                   <td>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                    <div className="manage-users-row-2">
                       {user.roles && user.roles.map(r => (
-                        <span key={r} className="badge badge-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <span key={r} className="badge badge-secondary manage-users-badge">
                           <Shield size={10} /> {r}
                         </span>
                       ))}
-                      {(!user.roles || user.roles.length === 0) && <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>No Roles</span>}
+                      {(!user.roles || user.roles.length === 0) && <span className="manage-users-span-4">No Roles</span>}
                     </div>
                   </td>
                   <td>
@@ -188,7 +189,7 @@ export default function ManageUsers() {
                     </span>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div className="manage-users-row-5">
                       <button className="btn btn-sm btn-outline" onClick={() => handleOpenEdit(user)}>
                         <Edit size={12} /> Edit
                       </button>
@@ -201,7 +202,7 @@ export default function ManageUsers() {
               ))}
               {filteredUsers.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No users found.</td>
+                  <td colSpan={6} className="manage-users-td-6">No users found.</td>
                 </tr>
               )}
             </tbody>
@@ -211,14 +212,14 @@ export default function ManageUsers() {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-              <UserCog size={24} style={{ color: 'var(--primary)' }} />
-              <h3 style={{ margin: 0 }}>{editingUser ? 'Edit User Roles & Details' : 'Add New User'}</h3>
+          <div className="modal-content manage-users-modal-content">
+            <div className="manage-users-row-8">
+              <UserCog size={24} className="manage-users-UserCog-9"  />
+              <h3 className="manage-users-title-10">{editingUser ? 'Edit User Roles & Details' : 'Add New User'}</h3>
             </div>
             
             <form onSubmit={handleSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="manage-users-grid-11">
                 <div className="form-group">
                   <label>Full Name</label>
                   <input 
@@ -242,7 +243,7 @@ export default function ManageUsers() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="manage-users-grid-12">
                 <div className="form-group">
                   <label>Email Address</label>
                   <input 
@@ -278,11 +279,11 @@ export default function ManageUsers() {
                 </div>
               )}
 
-              <div className="form-group" style={{ marginTop: '0.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem' }}>Assigned Roles (Select Multiple)</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem', background: '#f8fafc', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+              <div className="form-group manage-users-form-group">
+                <label className="manage-users-label-14">Assigned Roles (Select Multiple)</label>
+                <div className="manage-users-grid-15">
                   {roles.map(role => (
-                    <label key={role.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', fontWeight: '600', color: '#334155', cursor: 'pointer' }}>
+                    <label key={role.id} className="manage-users-row-16">
                       <input 
                         type="checkbox" 
                         checked={form.roles.includes(role.name)}

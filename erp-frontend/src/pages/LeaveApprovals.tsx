@@ -1,3 +1,4 @@
+import './LeaveApprovals.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -131,13 +132,13 @@ export default function LeaveApprovals() {
       />
       <div className="page-header">
         <div>
-          <h2><ClipboardCheck size={22} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />Leave Approvals</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <h2><ClipboardCheck size={22} className="leave-approvals-ClipboardCheck-1"  />Leave Approvals</h2>
+          <p className="leave-approvals-text-2">
             Review and act on staff leave applications
           </p>
         </div>
-        <div className="form-group" style={{ margin: 0 }}>
-          <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} style={{ padding: '0.5rem 1rem' }}>
+        <div className="form-group leave-approvals-form-group">
+          <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="leave-approvals-select-4">
             <option value="">All Years</option>
             {academicYears.map((ay) => (
               <option key={ay.id} value={ay.id}>{ay.name}</option>
@@ -149,7 +150,7 @@ export default function LeaveApprovals() {
       
 
       {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
+      <div className="leave-approvals-row-5">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -163,7 +164,7 @@ export default function LeaveApprovals() {
 
       <div className="card">
         {loading ? (
-          <p style={{ padding: '2rem', color: 'var(--text-muted)' }}>Loading applications…</p>
+          <p className="leave-approvals-text-6">Loading applications…</p>
         ) : (
           <table className="table">
             <thead>
@@ -185,23 +186,18 @@ export default function LeaveApprovals() {
                   <td><strong>{app.employee_id || '—'}</strong></td>
                   <td>{app.teacher_first_name} {app.teacher_last_name}</td>
                   <td>
-                    <span style={{ fontWeight: 600 }}>{app.leave_type_code}</span>
-                    <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)' }}>{app.leave_type_name}</span>
+                    <span className="leave-approvals-span-7">{app.leave_type_code}</span>
+                    <span className="leave-approvals-span-8">{app.leave_type_name}</span>
                   </td>
                   <td>{app.from_date}</td>
                   <td>{app.to_date}</td>
                   <td>{app.days_count}</td>
-                  <td style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={app.reason}>{app.reason}</td>
+                  <td className="leave-approvals-td-9" title={app.reason}>{app.reason}</td>
                   <td><StatusBadge status={app.status} /></td>
                   <td>
                     {app.status === 'Pending' ? (
-                      <div style={{ display: 'flex', gap: '0.4rem' }}>
-                        <button
-                          className="btn btn-sm btn-success"
-                          style={{ background: '#10b981', color: '#fff', border: 'none' }}
-                          onClick={() => { setApprovingId(app.id); setApproveRemarks(''); }}
-                          title="Approve"
-                        >
+                      <div className="leave-approvals-row-10">
+                        <button className="btn btn-sm btn-success leave-approvals-btn" onClick={() => { setApprovingId(app.id); setApproveRemarks(''); }} title="Approve">
                           <Check size={13} /> Approve
                         </button>
                         <button
@@ -213,15 +209,15 @@ export default function LeaveApprovals() {
                         </button>
                       </div>
                     ) : (
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{app.remarks || '—'}</span>
+                      <span className="leave-approvals-span-12">{app.remarks || '—'}</span>
                     )}
                   </td>
                 </tr>
               ))}
               {applications.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    <ClipboardCheck size={32} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
+                  <td colSpan={9} className="leave-approvals-td-13">
+                    <ClipboardCheck size={32} className="leave-approvals-ClipboardCheck-14"  />
                     No {activeTab === 'All' ? '' : activeTab.toLowerCase() + ' '}leave applications found.
                   </td>
                 </tr>
@@ -234,31 +230,20 @@ export default function LeaveApprovals() {
       {/* Approve Modal */}
       {approvingId && (
         <div className="modal-overlay" onClick={() => setApprovingId(null)}>
-          <div className="modal" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal leave-approvals-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3><Check size={18} style={{ marginRight: '0.4rem', color: '#10b981' }} />Approve Leave</h3>
+              <h3><Check size={18} className="leave-approvals-Check-16"  />Approve Leave</h3>
               <button className="btn btn-sm btn-outline" onClick={() => setApprovingId(null)}><X size={16} /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">
                 <label>Remarks (optional)</label>
-                <textarea
-                  rows={3}
-                  value={approveRemarks}
-                  onChange={(e) => setApproveRemarks(e.target.value)}
-                  placeholder="Add an optional note for the teacher…"
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', resize: 'vertical' }}
-                />
+                <textarea rows={3} value={approveRemarks} onChange={(e) => setApproveRemarks(e.target.value)} placeholder="Add an optional note for the teacher…" className="leave-approvals-textarea-17"  />
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setApprovingId(null)}>Cancel</button>
-              <button
-                className="btn"
-                style={{ background: '#10b981', color: '#fff', border: 'none' }}
-                onClick={handleApprove}
-                disabled={approving}
-              >
+              <button className="btn leave-approvals-btn" onClick={handleApprove} disabled={approving}>
                 {approving ? 'Approving…' : 'Confirm Approve'}
               </button>
             </div>
@@ -269,21 +254,15 @@ export default function LeaveApprovals() {
       {/* Reject Modal */}
       {rejectingId && (
         <div className="modal-overlay" onClick={() => setRejectingId(null)}>
-          <div className="modal" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal leave-approvals-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3><AlertTriangle size={18} style={{ marginRight: '0.4rem', color: '#ef4444' }} />Reject Leave</h3>
+              <h3><AlertTriangle size={18} className="leave-approvals-AlertTriangle-20"  />Reject Leave</h3>
               <button className="btn btn-sm btn-outline" onClick={() => setRejectingId(null)}><X size={16} /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">
                 <label>Remarks * (required)</label>
-                <textarea
-                  rows={3}
-                  value={rejectRemarks}
-                  onChange={(e) => setRejectRemarks(e.target.value)}
-                  placeholder="Provide a reason for rejection…"
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', resize: 'vertical' }}
-                />
+                <textarea rows={3} value={rejectRemarks} onChange={(e) => setRejectRemarks(e.target.value)} placeholder="Provide a reason for rejection…" className="leave-approvals-textarea-21"  />
               </div>
             </div>
             <div className="modal-footer">

@@ -1,0 +1,22 @@
+/* Component stylesheet for Login.tsx */
+
+.login-div-1 {
+  margin-bottom: 1rem;
+  text-align: right;
+}
+
+.login-Link-2 {
+  color: var(--primary);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.login-text-3 {
+  color: var(--danger);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.login-btn {
+  width: 100%;
+}

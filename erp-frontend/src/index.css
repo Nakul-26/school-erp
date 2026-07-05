@@ -1632,3 +1632,19 @@ select, input[type="date"], input[type="text"], input[type="email"], input[type=
 
 
 
+
+
+/* ── UI Audit Fixes: Tables, Modals, Spacing ────────────────────────────────── */
+
+/* Automatic table responsiveness wrapper */
+div:has(> table), div:has(> .table), div:has(> .data-table) {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* Ensure modal contents are responsive and have padding on small devices */
+.modal-content {
+  width: 100%;
+  box-sizing: border-box;
+}

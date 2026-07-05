@@ -1,3 +1,4 @@
+import './MyLeaveApplications.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -147,21 +148,21 @@ export default function MyLeaveApplications() {
       />
       <div className="page-header">
         <div>
-          <h2><CalendarDays size={22} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />My Leave Applications</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <h2><CalendarDays size={22} className="my-leave-applications-CalendarDays-1"  />My Leave Applications</h2>
+          <p className="my-leave-applications-text-2">
             View your leave balances and apply for leave
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <div className="form-group" style={{ margin: 0 }}>
-            <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} style={{ padding: '0.5rem 1rem' }}>
+        <div className="my-leave-applications-row-3">
+          <div className="form-group my-leave-applications-form-group">
+            <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="my-leave-applications-select-5">
               {academicYears.map((ay) => (
                 <option key={ay.id} value={ay.id}>{ay.name}</option>
               ))}
             </select>
           </div>
           <button className="btn btn-primary" onClick={() => setShowApplyModal(true)}>
-            <Plus size={16} style={{ marginRight: '0.4rem' }} />
+            <Plus size={16} className="my-leave-applications-Plus-6"  />
             Apply for Leave
           </button>
         </div>
@@ -171,23 +172,23 @@ export default function MyLeaveApplications() {
 
       {/* Balance Cards */}
       {balances.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div className="my-leave-applications-grid-7">
           {balances.map((b) => {
             const pct = b.total_days > 0 ? Math.min(100, (b.used_days / b.total_days) * 100) : 0;
             const remaining = b.total_days - b.used_days;
             return (
-              <div key={b.leave_type_id} className="card" style={{ padding: '1rem', margin: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{b.leave_type_name}</span>
-                  <span style={{ fontSize: '0.75rem', background: 'var(--primary)', color: '#fff', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{b.leave_type_code}</span>
+              <div key={b.leave_type_id} className="card my-leave-applications-card">
+                <div className="my-leave-applications-row-9">
+                  <span className="my-leave-applications-span-10">{b.leave_type_name}</span>
+                  <span className="my-leave-applications-span-11">{b.leave_type_code}</span>
                 </div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>
-                  {remaining} <span style={{ fontSize: '0.85rem', fontWeight: 400, color: 'var(--text-muted)' }}>remaining</span>
+                <div className="my-leave-applications-div-12">
+                  {remaining} <span className="my-leave-applications-span-13">remaining</span>
                 </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                <div className="my-leave-applications-div-14">
                   {b.used_days} used of {b.total_days} days
                 </div>
-                <div style={{ background: 'var(--border)', borderRadius: '4px', height: '6px', overflow: 'hidden' }}>
+                <div className="my-leave-applications-div-15">
                   <div style={{ width: `${pct}%`, height: '100%', background: pct > 80 ? '#ef4444' : pct > 50 ? '#f59e0b' : 'var(--primary)', borderRadius: '4px', transition: 'width 0.3s' }} />
                 </div>
               </div>
@@ -198,13 +199,13 @@ export default function MyLeaveApplications() {
 
       {/* Applications Table */}
       <div className="card">
-        <div style={{ padding: '1rem 1rem 0', borderBottom: '1px solid var(--border)', marginBottom: '0' }}>
-          <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <div className="my-leave-applications-div-16">
+          <h4 className="my-leave-applications-row-17">
             <FileText size={16} /> Application History
           </h4>
         </div>
         {loading ? (
-          <p style={{ padding: '2rem', color: 'var(--text-muted)' }}>Loading…</p>
+          <p className="my-leave-applications-text-18">Loading…</p>
         ) : (
           <table className="table">
             <thead>
@@ -222,20 +223,20 @@ export default function MyLeaveApplications() {
             <tbody>
               {applications.map((app) => (
                 <tr key={app.id}>
-                  <td><span style={{ fontWeight: 600 }}>{app.leave_type_code}</span> <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{app.leave_type_name}</span></td>
+                  <td><span className="my-leave-applications-span-19">{app.leave_type_code}</span> <span className="my-leave-applications-span-20">{app.leave_type_name}</span></td>
                   <td>{app.from_date}</td>
                   <td>{app.to_date}</td>
                   <td>{app.days_count}</td>
-                  <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={app.reason}>{app.reason}</td>
+                  <td className="my-leave-applications-td-21" title={app.reason}>{app.reason}</td>
                   <td><StatusBadge status={app.status} /></td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{app.remarks || '—'}</td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{new Date(app.created_at).toLocaleDateString()}</td>
+                  <td className="my-leave-applications-td-22">{app.remarks || '—'}</td>
+                  <td className="my-leave-applications-td-23">{new Date(app.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}
               {applications.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    <CalendarDays size={32} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
+                  <td colSpan={8} className="my-leave-applications-td-24">
+                    <CalendarDays size={32} className="my-leave-applications-CalendarDays-25"  />
                     No leave applications found. Click "Apply for Leave" to submit one.
                   </td>
                 </tr>
@@ -248,7 +249,7 @@ export default function MyLeaveApplications() {
       {/* Apply for Leave Modal */}
       {showApplyModal && (
         <div className="modal-overlay" onClick={() => setShowApplyModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Apply for Leave</h3>
               <button className="btn btn-sm btn-outline" onClick={() => setShowApplyModal(false)}><X size={16} /></button>
@@ -263,7 +264,7 @@ export default function MyLeaveApplications() {
                   ))}
                 </select>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="my-leave-applications-grid-26">
                 <div className="form-group">
                   <label>From Date *</label>
                   <input type="date" value={applyFromDate} onChange={(e) => setApplyFromDate(e.target.value)} />
@@ -274,19 +275,13 @@ export default function MyLeaveApplications() {
                 </div>
               </div>
               {daysCount > 0 && (
-                <div style={{ background: 'var(--bg-secondary, #f8fafc)', borderRadius: '6px', padding: '0.6rem 1rem', marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  Duration: <strong style={{ color: 'var(--text)' }}>{daysCount} day{daysCount !== 1 ? 's' : ''}</strong>
+                <div className="my-leave-applications-div-27">
+                  Duration: <strong className="my-leave-applications-strong-28">{daysCount} day{daysCount !== 1 ? 's' : ''}</strong>
                 </div>
               )}
               <div className="form-group">
                 <label>Reason *</label>
-                <textarea
-                  rows={3}
-                  value={applyReason}
-                  onChange={(e) => setApplyReason(e.target.value)}
-                  placeholder="Briefly describe the reason for leave…"
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', resize: 'vertical' }}
-                />
+                <textarea rows={3} value={applyReason} onChange={(e) => setApplyReason(e.target.value)} placeholder="Briefly describe the reason for leave…" className="my-leave-applications-textarea-29"  />
               </div>
             </div>
             <div className="modal-footer">

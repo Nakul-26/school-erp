@@ -1,3 +1,4 @@
+import './Attendance.css';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -290,10 +291,10 @@ export default function Attendance() {
     if (stdView === 'list') {
       return (
         <>
-          <div className="page-header" style={{ marginBottom: '1.25rem' }}>
+          <div className="page-header attendance-page-header">
             <div>
               <h3>Daily Class Registers</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Track and manage active class registers</p>
+              <p className="attendance-text-2">Track and manage active class registers</p>
             </div>
             <button className="btn btn-primary" onClick={() => setStdView('new')}>
               <Plus size={16} /> Start Class Session
@@ -323,19 +324,19 @@ export default function Attendance() {
                       <th>Subject</th>
                       <th>Teacher</th>
                       <th>Period Slot</th>
-                      <th style={{ textAlign: 'right' }}>Actions</th>
+                      <th className="attendance-th-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {stdSessions.map((sess) => (
-                      <tr key={sess.id} style={{ cursor: 'pointer' }} onClick={() => handleOpenMarking(sess)}>
+                      <tr key={sess.id} className="attendance-tr-4" onClick={() => handleOpenMarking(sess)}>
                         <td><strong>{sess.date}</strong></td>
                         <td>{sess.section_name || 'Unknown'}</td>
                         <td><strong>{sess.subject_code}</strong> - {sess.subject_name}</td>
                         <td>{sess.teacher_name}</td>
                         <td>{sess.slot_name || 'Ad-hoc'}</td>
-                        <td style={{ textAlign: 'right' }} onClick={e => e.stopPropagation()}>
-                          <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                        <td className="attendance-td-5" onClick={e => e.stopPropagation()}>
+                          <div className="attendance-row-6">
                             <button className="btn btn-sm btn-primary" onClick={() => handleOpenMarking(sess)}>
                               Open Register
                             </button>
@@ -358,19 +359,19 @@ export default function Attendance() {
     if (stdView === 'new') {
       return (
         <>
-          <div className="page-header" style={{ marginBottom: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => setStdView('list')}>
+          <div className="page-header attendance-page-header">
+            <div className="attendance-row-8">
+              <button className="btn btn-secondary attendance-btn" onClick={() => setStdView('list')}>
                 <ArrowLeft size={18} />
               </button>
               <div>
                 <h3>Create Class Register</h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Start a session to mark class attendance</p>
+                <p className="attendance-text-10">Start a session to mark class attendance</p>
               </div>
             </div>
           </div>
 
-          <div className="card" style={{ maxWidth: '560px', margin: '0 auto' }}>
+          <div className="card attendance-card">
             <form onSubmit={handleStartSession}>
               <div className="form-group">
                 <label>Attendance Date</label>
@@ -426,7 +427,7 @@ export default function Attendance() {
                 </select>
               </div>
 
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <div className="modal-actions attendance-modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setStdView('list')}>
                   Cancel
                 </button>
@@ -443,14 +444,14 @@ export default function Attendance() {
     if (stdView === 'mark' && selectedSession) {
       return (
         <>
-          <div className="page-header" style={{ marginBottom: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => { setStdView('list'); setSelectedSession(null); }}>
+          <div className="page-header attendance-page-header">
+            <div className="attendance-row-14">
+              <button className="btn btn-secondary attendance-btn" onClick={() => { setStdView('list'); setSelectedSession(null); }}>
                 <ArrowLeft size={18} />
               </button>
               <div>
                 <h3>Mark Class Roll: {selectedSession.section_name}</h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                <p className="attendance-text-16">
                   {selectedSession.date} | {selectedSession.subject_code} · {selectedSession.subject_name}
                 </p>
               </div>
@@ -469,7 +470,7 @@ export default function Attendance() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th style={{ width: '120px' }}>Roll No</th>
+                        <th className="attendance-th-17">Roll No</th>
                         <th>Student</th>
                         <th>Status Marks</th>
                         <th>Reason Remarks</th>
@@ -481,7 +482,7 @@ export default function Attendance() {
                           <td><strong>{rec.roll_number || '-'}</strong></td>
                           <td>{rec.first_name} {rec.last_name}</td>
                           <td>
-                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <div className="attendance-row-18">
                               <button
                                 type="button"
                                 className={`btn btn-sm ${rec.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
@@ -522,19 +523,13 @@ export default function Attendance() {
                             </div>
                           </td>
                           <td>
-                            <input
-                              type="text"
-                              value={rec.remarks || ''}
-                              onChange={(e) => handleStudentRemarksChange(rec.student_id, e.target.value)}
-                              placeholder="e.g. sick leave"
-                              style={{ padding: '0.35rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.8rem' }}
-                            />
+                            <input type="text" value={rec.remarks || ''} onChange={(e) => handleStudentRemarksChange(rec.student_id, e.target.value)} placeholder="e.g. sick leave" className="attendance-input-19"  />
                           </td>
                         </tr>
                       ))}
                       {studentRecords.length === 0 && (
                         <tr>
-                          <td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>
+                          <td colSpan={4} className="attendance-td-20">
                             No students found. Add student enrollments first.
                           </td>
                         </tr>
@@ -545,31 +540,20 @@ export default function Attendance() {
 
                 <div className="attendance-mobile-cards">
                   {studentRecords.map((rec) => (
-                    <div key={rec.student_id} className="attendance-mobile-card card" style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.75rem',
-                      padding: '1rem',
-                      marginBottom: '1rem',
-                      border: '1px solid var(--border)'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div key={rec.student_id} className="attendance-mobile-card card attendance-mobile-card">
+                      <div className="attendance-row-22">
                         <div>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Roll No: {rec.roll_number || '-'}</span>
-                          <h4 style={{ margin: '0.15rem 0 0 0', fontSize: '0.95rem', fontWeight: 700 }}>{rec.first_name} {rec.last_name}</h4>
+                          <span className="attendance-span-23">Roll No: {rec.roll_number || '-'}</span>
+                          <h4 className="attendance-title-24">{rec.first_name} {rec.last_name}</h4>
                         </div>
                         <div>
-                          <span className={`badge ${
-                            rec.status === 'present' ? 'badge-success' :
-                            rec.status === 'absent' ? 'badge-danger' :
-                            rec.status === 'late' ? 'badge-warning' : 'badge-secondary'
-                          }`} style={{ textTransform: 'capitalize', fontSize: '0.7rem' }}>
+                          <span className={`badge ${ rec.status === 'present' ? 'badge-success' : rec.status === 'absent' ? 'badge-danger' : rec.status === 'late' ? 'badge-warning' : 'badge-secondary' } attendance-span-25`}>
                             {rec.status}
                           </span>
                         </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.25rem' }}>
+                      <div className="attendance-grid-26">
                         <button
                           type="button"
                           className={`btn btn-sm ${rec.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
@@ -610,18 +594,12 @@ export default function Attendance() {
                       </div>
 
                       <div>
-                        <input
-                          type="text"
-                          value={rec.remarks || ''}
-                          onChange={(e) => handleStudentRemarksChange(rec.student_id, e.target.value)}
-                          placeholder="Add remarks (e.g. sick leave)"
-                          style={{ width: '100%', padding: '0.45rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.8rem' }}
-                        />
+                        <input type="text" value={rec.remarks || ''} onChange={(e) => handleStudentRemarksChange(rec.student_id, e.target.value)} placeholder="Add remarks (e.g. sick leave)" className="attendance-input-27"  />
                       </div>
                     </div>
                   ))}
                   {studentRecords.length === 0 && (
-                    <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No students found.</p>
+                    <p className="attendance-text-28">No students found.</p>
                   )}
                 </div>
               </>
@@ -635,19 +613,14 @@ export default function Attendance() {
   const renderTeacherAttendance = () => {
     return (
       <>
-        <div className="page-header" style={{ marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        <div className="page-header attendance-page-header">
           <div>
             <h3>Staff Attendance Registers</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Mark and verify institutional staff attendance logs</p>
+            <p className="attendance-text-30">Mark and verify institutional staff attendance logs</p>
           </div>
           
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            <input 
-              type="date"
-              value={tchrDate}
-              onChange={(e) => setTchrDate(e.target.value)}
-              style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem' }}
-            />
+          <div className="attendance-row-31">
+            <input type="date" value={tchrDate} onChange={(e) => setTchrDate(e.target.value)} className="attendance-input-32"  />
             <button className="btn btn-primary" onClick={handleSaveTeacherAttendance} disabled={tchrSaving || tchrLoading}>
               {tchrSaving ? 'Saving...' : 'Save Registers'}
             </button>
@@ -676,11 +649,11 @@ export default function Attendance() {
                         <td><strong>{t.employee_id}</strong></td>
                         <td>{t.first_name} {t.last_name}</td>
                         <td>
-                          <span style={{ fontWeight: 600 }}>{t.department}</span>
-                          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.designation}</span>
+                          <span className="attendance-span-33">{t.department}</span>
+                          <span className="attendance-span-34">{t.designation}</span>
                         </td>
                         <td>
-                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <div className="attendance-row-35">
                             <button
                               type="button"
                               className={`btn btn-sm ${t.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
@@ -721,20 +694,14 @@ export default function Attendance() {
                           </div>
                         </td>
                         <td>
-                          <input
-                            type="text"
-                            value={t.remarks || ''}
-                            onChange={(e) => handleTeacherRemarksChange(t.teacher_id, e.target.value)}
-                            placeholder="Add comments..."
-                            style={{ padding: '0.35rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.8rem' }}
-                          />
+                          <input type="text" value={t.remarks || ''} onChange={(e) => handleTeacherRemarksChange(t.teacher_id, e.target.value)} placeholder="Add comments..." className="attendance-input-36"  />
                         </td>
                       </tr>
                     ))}
                     {tchrRecords.length === 0 && (
                       <tr>
-                        <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                          <UserCheck size={32} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
+                        <td colSpan={5} className="attendance-td-37">
+                          <UserCheck size={32} className="attendance-UserCheck-38"  />
                           No active teachers found in the directory.
                         </td>
                       </tr>
@@ -745,32 +712,21 @@ export default function Attendance() {
 
               <div className="attendance-mobile-cards">
                 {tchrRecords.map((t) => (
-                  <div key={t.teacher_id} className="attendance-mobile-card card" style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.75rem',
-                    padding: '1rem',
-                    marginBottom: '1rem',
-                    border: '1px solid var(--border)'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={t.teacher_id} className="attendance-mobile-card card attendance-mobile-card">
+                    <div className="attendance-row-40">
                       <div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {t.employee_id}</span>
-                        <h4 style={{ margin: '0.15rem 0 0 0', fontSize: '0.95rem', fontWeight: 700 }}>{t.first_name} {t.last_name}</h4>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.department} · {t.designation}</span>
+                        <span className="attendance-span-41">ID: {t.employee_id}</span>
+                        <h4 className="attendance-title-42">{t.first_name} {t.last_name}</h4>
+                        <span className="attendance-span-43">{t.department} · {t.designation}</span>
                       </div>
                       <div>
-                        <span className={`badge ${
-                          t.status === 'present' ? 'badge-success' :
-                          t.status === 'absent' ? 'badge-danger' :
-                          t.status === 'half_day' ? 'badge-warning' : 'badge-secondary'
-                        }`} style={{ textTransform: 'capitalize', fontSize: '0.7rem' }}>
+                        <span className={`badge ${ t.status === 'present' ? 'badge-success' : t.status === 'absent' ? 'badge-danger' : t.status === 'half_day' ? 'badge-warning' : 'badge-secondary' } attendance-span-44`}>
                           {t.status}
                         </span>
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.25rem' }}>
+                    <div className="attendance-grid-45">
                       <button
                         type="button"
                         className={`btn btn-sm ${t.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
@@ -811,18 +767,12 @@ export default function Attendance() {
                     </div>
 
                     <div>
-                      <input
-                        type="text"
-                        value={t.remarks || ''}
-                        onChange={(e) => handleTeacherRemarksChange(t.teacher_id, e.target.value)}
-                        placeholder="Add remarks..."
-                        style={{ width: '100%', padding: '0.45rem 0.75rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.8rem' }}
-                      />
+                      <input type="text" value={t.remarks || ''} onChange={(e) => handleTeacherRemarksChange(t.teacher_id, e.target.value)} placeholder="Add remarks..." className="attendance-input-46"  />
                     </div>
                   </div>
                 ))}
                 {tchrRecords.length === 0 && (
-                  <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No teachers found.</p>
+                  <p className="attendance-text-47">No teachers found.</p>
                 )}
               </div>
             </>
@@ -844,10 +794,10 @@ export default function Attendance() {
         ]}
       />
 
-      <div className="page-header" style={{ marginBottom: '1.5rem' }}>
+      <div className="page-header attendance-page-header">
         <div>
           <h2>Attendance Register</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="attendance-text-49">
             Verify daily attendance sessions for students and institutional teaching staff
           </p>
         </div>

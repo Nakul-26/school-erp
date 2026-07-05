@@ -1,3 +1,4 @@
+import './Departments.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -179,144 +180,118 @@ export default function Departments() {
         steps={["Click \"Add Department\" to create a new division.","Enter the name and assign a head teacher to lead it.","Manage or update department details from the list below."]}
       />
       {/* Page Header */}
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div className="page-header departments-page-header">
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>Departments</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Manage academic departments, assign HODs, and view statistics.</p>
+          <h2 className="departments-title-2">Departments</h2>
+          <p className="departments-text-3">Manage academic departments, assign HODs, and view statistics.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowAddModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+        <button className="btn btn-primary departments-btn" onClick={() => setShowAddModal(true)}>
           <Plus size={18} /> Add Department
         </button>
       </div>
 
       {/* KPI Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem', minHeight: '110px' }}>
-          <div style={{ padding: '0.75rem', backgroundColor: '#e0e7ff', borderRadius: 'var(--radius-md)', color: 'var(--primary)' }}>
+      <div className="departments-grid-5">
+        <div className="card departments-card">
+          <div className="departments-div-7">
             <Shield size={24} />
           </div>
           <div>
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Total Active</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>{totalActiveDepts}</span>
+            <span className="departments-span-8">Total Active</span>
+            <span className="departments-span-9">{totalActiveDepts}</span>
           </div>
         </div>
 
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem', minHeight: '110px' }}>
-          <div style={{ padding: '0.75rem', backgroundColor: '#ecfdf5', borderRadius: 'var(--radius-md)', color: '#059669' }}>
+        <div className="card departments-card">
+          <div className="departments-div-11">
             <Users size={24} />
           </div>
           <div>
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Mapped Teachers</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>{mappedTeachersCount}</span>
+            <span className="departments-span-12">Mapped Teachers</span>
+            <span className="departments-span-13">{mappedTeachersCount}</span>
           </div>
         </div>
 
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem', minHeight: '110px' }}>
-          <div style={{ padding: '0.75rem', backgroundColor: '#fffbeb', borderRadius: 'var(--radius-md)', color: '#d97706' }}>
+        <div className="card departments-card">
+          <div className="departments-div-15">
             <BookOpen size={24} />
           </div>
           <div>
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Mapped Subjects</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>{mappedSubjectsCount}</span>
+            <span className="departments-span-16">Mapped Subjects</span>
+            <span className="departments-span-17">{mappedSubjectsCount}</span>
           </div>
         </div>
       </div>
 
       {/* Search & Filters Bar */}
-      <div className="card filters" style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem', padding: '1rem' }}>
-        <div className="search-container" style={{ flex: '1 1 300px', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--border)', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)' }}>
+      <div className="card filters departments-card">
+        <div className="search-container departments-search-container">
           <Search size={18} color="var(--text-muted)" />
-          <input 
-            type="text" 
-            placeholder="Search by department name or code..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ border: 'none', width: '100%', outline: 'none', background: 'transparent', fontSize: '0.875rem' }}
-          />
+          <input type="text" placeholder="Search by department name or code..." value={search} onChange={(e) => setSearch(e.target.value)} className="departments-input-20"  />
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <select 
-            value={statusFilter} 
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            style={{ padding: '0.5rem 1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem', outline: 'none' }}
-          >
+        <div className="departments-row-21">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="departments-select-22">
             <option value="ACTIVE">Active Only</option>
             <option value="ARCHIVED">Archived Only</option>
             <option value="ALL">All Statuses</option>
           </select>
-          <button className="btn btn-secondary" onClick={fetchData} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button className="btn btn-secondary departments-btn" onClick={fetchData}>
             <RefreshCw size={14} /> Sync
           </button>
         </div>
       </div>
 
       {/* Main Grid / Table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card departments-card">
         {loading ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>
+          <div className="departments-div-25">Loading...</div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="departments-div-26">
+            <table className="table departments-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '1rem' }}>Code</th>
-                  <th style={{ textAlign: 'left', padding: '1rem' }}>Name</th>
-                  <th style={{ textAlign: 'left', padding: '1rem' }}>HOD</th>
-                  <th style={{ textAlign: 'center', padding: '1rem' }}>Teachers</th>
-                  <th style={{ textAlign: 'center', padding: '1rem' }}>Subjects</th>
-                  <th style={{ textAlign: 'center', padding: '1rem' }}>Status</th>
-                  <th style={{ textAlign: 'right', padding: '1rem' }}>Actions</th>
+                  <th className="departments-th-28">Code</th>
+                  <th className="departments-th-29">Name</th>
+                  <th className="departments-th-30">HOD</th>
+                  <th className="departments-th-31">Teachers</th>
+                  <th className="departments-th-32">Subjects</th>
+                  <th className="departments-th-33">Status</th>
+                  <th className="departments-th-34">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {displayedDepartments.map(dept => (
-                  <tr key={dept.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '1rem' }}>
-                      <code style={{ fontSize: '0.9rem', fontWeight: 700, backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-sm)', color: 'var(--text-main)' }}>
+                  <tr key={dept.id} className="departments-tr-35">
+                    <td className="departments-td-36">
+                      <code className="departments-code-37">
                         {dept.code}
                       </code>
                     </td>
-                    <td style={{ padding: '1rem', fontWeight: 600 }}>{dept.name}</td>
+                    <td className="departments-td-38">{dept.name}</td>
                     <td style={{ padding: '1rem', color: dept.head_teacher_name ? 'var(--text-main)' : 'var(--text-muted)' }}>
                       {dept.head_teacher_name || 'Not Assigned'}
                     </td>
-                    <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>{dept.teachers_count || 0}</td>
-                    <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>{dept.subjects_count || 0}</td>
-                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                    <td className="departments-td-39">{dept.teachers_count || 0}</td>
+                    <td className="departments-td-40">{dept.subjects_count || 0}</td>
+                    <td className="departments-td-41">
                       <span className={`badge badge-${dept.is_active === 1 ? 'success' : 'secondary'}`}>
                         {dept.is_active === 1 ? 'ACTIVE' : 'ARCHIVED'}
                       </span>
                     </td>
-                    <td style={{ padding: '1rem', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                        <button 
-                          onClick={() => openDetailModal(dept)} 
-                          className="btn btn-sm btn-outline" 
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                        >
+                    <td className="departments-td-42">
+                      <div className="departments-row-43">
+                        <button onClick={() => openDetailModal(dept)} className="btn btn-sm btn-outline departments-btn">
                           <Eye size={12} /> View
                         </button>
-                        <button 
-                          onClick={() => openEditModal(dept)} 
-                          className="btn btn-sm btn-secondary" 
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                        >
+                        <button onClick={() => openEditModal(dept)} className="btn btn-sm btn-secondary departments-btn">
                           <Edit3 size={12} /> Edit
                         </button>
                         {dept.is_active === 1 ? (
-                          <button 
-                            onClick={() => handleArchive(dept.id)} 
-                            className="btn btn-sm btn-outline-danger" 
-                            style={{ color: 'var(--danger)', borderColor: 'var(--danger)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                          >
+                          <button onClick={() => handleArchive(dept.id)} className="btn btn-sm btn-outline-danger departments-btn">
                             <Trash2 size={12} /> Archive
                           </button>
                         ) : (
-                          <button 
-                            onClick={() => handleRestore(dept.id)} 
-                            className="btn btn-sm btn-outline-success" 
-                            style={{ color: 'var(--success)', borderColor: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                          >
+                          <button onClick={() => handleRestore(dept.id)} className="btn btn-sm btn-outline-success departments-btn">
                             <RefreshCw size={12} /> Restore
                           </button>
                         )}
@@ -326,13 +301,13 @@ export default function Departments() {
                 ))}
                 {displayedDepartments.length === 0 && (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '3rem' }}>
+                    <td colSpan={7} className="departments-td-48">
                       {/* Empty State Standard */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                      <div className="departments-col-49">
                         <Shield size={48} color="#cbd5e1" />
-                        <h4 style={{ margin: 0, fontWeight: 700, color: 'var(--text-main)' }}>No Departments Found</h4>
-                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Try adjusting your search query or filters, or add a new department.</p>
-                        <button className="btn btn-primary btn-sm" onClick={() => setShowAddModal(true)} style={{ marginTop: '0.5rem' }}>
+                        <h4 className="departments-title-50">No Departments Found</h4>
+                        <p className="departments-text-51">Try adjusting your search query or filters, or add a new department.</p>
+                        <button className="btn btn-primary btn-sm departments-btn" onClick={() => setShowAddModal(true)}>
                           Add Department
                         </button>
                       </div>
@@ -347,12 +322,12 @@ export default function Departments() {
 
       {/* Modal 1: Add Department */}
       {showAddModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '520px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Add Department</h3>
+        <div className="modal departments-modal">
+          <div className="modal-content departments-modal-content">
+            <h3 className="departments-title-55">Add Department</h3>
             <form onSubmit={handleAddSubmit}>
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Department Code *</label>
+                <label className="departments-label-56">Department Code *</label>
                 <input 
                   type="text" 
                   value={addForm.code} 
@@ -360,10 +335,10 @@ export default function Departments() {
                   placeholder="e.g. CSE" 
                   required 
                 />
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>Unique code identifier.</span>
+                <span className="departments-span-57">Unique code identifier.</span>
               </div>
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label style={{ fontWeight: 600 }}>Department Name *</label>
+              <div className="form-group departments-form-group">
+                <label className="departments-label-59">Department Name *</label>
                 <input 
                   type="text" 
                   value={addForm.name} 
@@ -372,13 +347,9 @@ export default function Departments() {
                   required 
                 />
               </div>
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label style={{ fontWeight: 600 }}>Head of Department (HOD)</label>
-                <select 
-                  value={addForm.head_teacher_id} 
-                  onChange={e => setAddForm({...addForm, head_teacher_id: e.target.value})}
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: '#ffffff', outline: 'none' }}
-                >
+              <div className="form-group departments-form-group">
+                <label className="departments-label-61">Head of Department (HOD)</label>
+                <select value={addForm.head_teacher_id} onChange={e => setAddForm({...addForm, head_teacher_id: e.target.value})} className="departments-select-62">
                   <option value="">-- Assign Optional HOD --</option>
                   {teachers.map(t => (
                     <option key={t.id} value={t.id}>
@@ -387,17 +358,11 @@ export default function Departments() {
                   ))}
                 </select>
               </div>
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label style={{ fontWeight: 600 }}>Description</label>
-                <textarea 
-                  className="form-control" 
-                  value={addForm.description} 
-                  onChange={e => setAddForm({...addForm, description: e.target.value})}
-                  placeholder="Provide department detail summaries..."
-                  style={{ width: '100%', minHeight: '80px', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', outline: 'none' }}
-                />
+              <div className="form-group departments-form-group">
+                <label className="departments-label-64">Description</label>
+                <textarea className="form-control departments-form-control" value={addForm.description} onChange={e => setAddForm({...addForm, description: e.target.value})} placeholder="Provide department detail summaries..."  />
               </div>
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.75rem' }}>
+              <div className="modal-actions departments-modal-actions">
                 <button type="button" onClick={() => setShowAddModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Department</button>
               </div>
@@ -408,12 +373,12 @@ export default function Departments() {
 
       {/* Modal 2: Edit Department */}
       {showEditModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '520px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-main)' }}>Edit Department</h3>
+        <div className="modal departments-modal">
+          <div className="modal-content departments-modal-content">
+            <h3 className="departments-title-69">Edit Department</h3>
             <form onSubmit={handleEditSubmit}>
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Department Code *</label>
+                <label className="departments-label-70">Department Code *</label>
                 <input 
                   type="text" 
                   value={editForm.code} 
@@ -422,8 +387,8 @@ export default function Departments() {
                   required 
                 />
               </div>
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label style={{ fontWeight: 600 }}>Department Name *</label>
+              <div className="form-group departments-form-group">
+                <label className="departments-label-72">Department Name *</label>
                 <input 
                   type="text" 
                   value={editForm.name} 
@@ -432,13 +397,9 @@ export default function Departments() {
                   required 
                 />
               </div>
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label style={{ fontWeight: 600 }}>Head of Department (HOD)</label>
-                <select 
-                  value={editForm.head_teacher_id} 
-                  onChange={e => setEditForm({...editForm, head_teacher_id: e.target.value})}
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: '#ffffff', outline: 'none' }}
-                >
+              <div className="form-group departments-form-group">
+                <label className="departments-label-74">Head of Department (HOD)</label>
+                <select value={editForm.head_teacher_id} onChange={e => setEditForm({...editForm, head_teacher_id: e.target.value})} className="departments-select-75">
                   <option value="">-- Unassigned --</option>
                   {teachers.map(t => (
                     <option key={t.id} value={t.id}>
@@ -447,16 +408,11 @@ export default function Departments() {
                   ))}
                 </select>
               </div>
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label style={{ fontWeight: 600 }}>Description</label>
-                <textarea 
-                  className="form-control" 
-                  value={editForm.description} 
-                  onChange={e => setEditForm({...editForm, description: e.target.value})}
-                  style={{ width: '100%', minHeight: '80px', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', outline: 'none' }}
-                />
+              <div className="form-group departments-form-group">
+                <label className="departments-label-77">Description</label>
+                <textarea className="form-control departments-form-control" value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})}  />
               </div>
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.75rem' }}>
+              <div className="modal-actions departments-modal-actions">
                 <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
               </div>
@@ -467,27 +423,27 @@ export default function Departments() {
 
       {/* Modal 3: View Details Hub */}
       {showDetailModal && selectedDept && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem', overflowY: 'auto' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '680px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative' }}>
+        <div className="modal departments-modal">
+          <div className="modal-content departments-modal-content">
             
             {/* Modal Hero Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', backgroundColor: '#e0e7ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+            <div className="departments-row-82">
+              <div className="departments-row-83">
                 🏢
               </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>{selectedDept.name}</h3>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.15rem' }}>
-                  Code: <code style={{ fontWeight: 700, color: 'var(--text-main)' }}>{selectedDept.code}</code>
+                <h3 className="departments-title-84">{selectedDept.name}</h3>
+                <span className="departments-span-85">
+                  Code: <code className="departments-code-86">{selectedDept.code}</code>
                 </span>
               </div>
-              <span className={`badge badge-${selectedDept.is_active === 1 ? 'success' : 'secondary'}`} style={{ marginLeft: 'auto' }}>
+              <span className={`badge badge-${selectedDept.is_active === 1 ? 'success' : 'secondary'} departments-span-87`}>
                 {selectedDept.is_active === 1 ? 'ACTIVE' : 'ARCHIVED'}
               </span>
             </div>
 
             {/* Tabs Header (Locked 52px, single line) */}
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', gap: '1rem', overflowX: 'auto', scrollbarWidth: 'none', height: '52px', alignItems: 'center' }}>
+            <div className="departments-row-88">
               {[
                 { tab: 'info', label: 'Info' },
                 { tab: 'teachers', label: `Teachers (${selectedDept.teachers_count || 0})` },
@@ -518,20 +474,20 @@ export default function Departments() {
 
             {/* Tab 1: Info */}
             {detailTab === 'info' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem' }}>
-                <div style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Description</span>
-                  <p style={{ margin: 0, color: 'var(--text-main)' }}>{selectedDept.description || 'No description provided.'}</p>
+              <div className="departments-col-89">
+                <div className="departments-div-90">
+                  <span className="departments-span-91">Description</span>
+                  <p className="departments-text-92">{selectedDept.description || 'No description provided.'}</p>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Head of Department</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{selectedDept.head_teacher_name || 'Not Assigned'}</span>
+                <div className="departments-grid-93">
+                  <div className="departments-div-94">
+                    <span className="departments-span-95">Head of Department</span>
+                    <span className="departments-span-96">{selectedDept.head_teacher_name || 'Not Assigned'}</span>
                   </div>
-                  <div style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Programs Enrolled</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{filteredPrograms.length} Active Courses</span>
+                  <div className="departments-div-97">
+                    <span className="departments-span-98">Programs Enrolled</span>
+                    <span className="departments-span-99">{filteredPrograms.length} Active Courses</span>
                   </div>
                 </div>
               </div>
@@ -539,26 +495,26 @@ export default function Departments() {
 
             {/* Tab 2: Teachers Roster */}
             {detailTab === 'teachers' && (
-              <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
-                <table className="table" style={{ width: '100%', fontSize: '0.85rem' }}>
+              <div className="departments-div-100">
+                <table className="table departments-table">
                   <thead>
                     <tr>
-                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Employee ID</th>
-                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Name</th>
-                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Designation</th>
+                      <th className="departments-th-102">Employee ID</th>
+                      <th className="departments-th-103">Name</th>
+                      <th className="departments-th-104">Designation</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredTeachers.map(t => (
-                      <tr key={t.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '0.5rem' }}><code>{t.employee_id}</code></td>
-                        <td style={{ padding: '0.5rem', fontWeight: 600 }}>{t.first_name} {t.last_name}</td>
-                        <td style={{ padding: '0.5rem', color: 'var(--text-muted)' }}>{t.designation || 'Lecturer'}</td>
+                      <tr key={t.id} className="departments-tr-105">
+                        <td className="departments-td-106"><code>{t.employee_id}</code></td>
+                        <td className="departments-td-107">{t.first_name} {t.last_name}</td>
+                        <td className="departments-td-108">{t.designation || 'Lecturer'}</td>
                       </tr>
                     ))}
                     {filteredTeachers.length === 0 && (
                       <tr>
-                        <td colSpan={3} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        <td colSpan={3} className="departments-td-109">
                           No active teachers assigned to this department.
                         </td>
                       </tr>
@@ -570,26 +526,26 @@ export default function Departments() {
 
             {/* Tab 3: Subjects Roster */}
             {detailTab === 'subjects' && (
-              <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
-                <table className="table" style={{ width: '100%', fontSize: '0.85rem' }}>
+              <div className="departments-div-110">
+                <table className="table departments-table">
                   <thead>
                     <tr>
-                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Code</th>
-                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Name</th>
-                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Credits</th>
+                      <th className="departments-th-112">Code</th>
+                      <th className="departments-th-113">Subject Name</th>
+                      <th className="departments-th-114">Credits</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredSubjects.map(s => (
-                      <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '0.5rem' }}><code>{s.subject_code}</code></td>
-                        <td style={{ padding: '0.5rem', fontWeight: 600 }}>{s.subject_name}</td>
-                        <td style={{ padding: '0.5rem', textAlign: 'center' }}>{s.credits || 0}</td>
+                      <tr key={s.id} className="departments-tr-115">
+                        <td className="departments-td-116"><code>{s.subject_code}</code></td>
+                        <td className="departments-td-117">{s.subject_name}</td>
+                        <td className="departments-td-118">{s.credits || 0}</td>
                       </tr>
                     ))}
                     {filteredSubjects.length === 0 && (
                       <tr>
-                        <td colSpan={3} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        <td colSpan={3} className="departments-td-119">
                           No subjects mapped under courses for this department.
                         </td>
                       </tr>
@@ -601,36 +557,36 @@ export default function Departments() {
 
             {/* Tab 4: Timeline Activities */}
             {detailTab === 'timeline' && (
-              <div style={{ maxHeight: '250px', overflowY: 'auto', paddingLeft: '0.5rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', borderLeft: '2px solid var(--border)', padding: '0.5rem 0 0.5rem 1rem', position: 'relative' }}>
+              <div className="departments-div-120">
+                <div className="departments-col-121">
                   
                   {/* Item 1 */}
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ position: 'absolute', left: '-1.45rem', top: '0.2rem', width: '0.75rem', height: '0.75rem', borderRadius: '50%', backgroundColor: 'var(--primary)', border: '2px solid #ffffff' }} />
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>
+                  <div className="departments-div-122">
+                    <div className="departments-div-123"  />
+                    <span className="departments-span-124">
                       {selectedDept.created_at ? new Date(selectedDept.created_at).toLocaleDateString() : 'N/A'}
                     </span>
-                    <strong style={{ fontSize: '0.85rem', display: 'block', color: 'var(--text-main)', marginTop: '0.15rem' }}>Department Provisioned</strong>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Record initialized in system.</span>
+                    <strong className="departments-strong-125">Department Provisioned</strong>
+                    <span className="departments-span-126">Record initialized in system.</span>
                   </div>
 
                   {/* Item 2 */}
                   {selectedDept.head_teacher_name && (
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ position: 'absolute', left: '-1.45rem', top: '0.2rem', width: '0.75rem', height: '0.75rem', borderRadius: '50%', backgroundColor: '#059669', border: '2px solid #ffffff' }} />
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>
+                    <div className="departments-div-127">
+                      <div className="departments-div-128"  />
+                      <span className="departments-span-129">
                         Active Schedule State
                       </span>
-                      <strong style={{ fontSize: '0.85rem', display: 'block', color: 'var(--text-main)', marginTop: '0.15rem' }}>HOD Mapped Successfully</strong>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mapped to active teacher: {selectedDept.head_teacher_name}</span>
+                      <strong className="departments-strong-130">HOD Mapped Successfully</strong>
+                      <span className="departments-span-131">Mapped to active teacher: {selectedDept.head_teacher_name}</span>
                     </div>
                   )}
 
                   {/* Item 3 */}
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ position: 'absolute', left: '-1.45rem', top: '0.2rem', width: '0.75rem', height: '0.75rem', borderRadius: '50%', backgroundColor: '#cbd5e1', border: '2px solid #ffffff' }} />
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Current Status</span>
-                    <strong style={{ fontSize: '0.85rem', display: 'block', color: 'var(--text-main)', marginTop: '0.15rem' }}>
+                  <div className="departments-div-132">
+                    <div className="departments-div-133"  />
+                    <span className="departments-span-134">Current Status</span>
+                    <strong className="departments-strong-135">
                       Status set to {selectedDept.is_active === 1 ? 'ACTIVE' : 'ARCHIVED'}
                     </strong>
                   </div>
@@ -639,7 +595,7 @@ export default function Departments() {
             )}
 
             {/* Modal Actions */}
-            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+            <div className="modal-actions departments-modal-actions">
               <button type="button" onClick={() => setShowDetailModal(false)} className="btn btn-secondary">Close Details</button>
             </div>
           </div>

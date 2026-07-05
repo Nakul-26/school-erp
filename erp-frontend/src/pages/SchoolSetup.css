@@ -1,0 +1,106 @@
+/* Component stylesheet for SchoolSetup.tsx */
+
+.school-setup-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.school-setup-col-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.school-setup-row-3 {
+  align-items: center;
+  display: flex;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.school-setup-title-4 {
+  color: var(--text-main);
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0px;
+}
+
+.school-setup-text-5 {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin: 0px;
+}
+
+.school-setup-grid-6 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.school-setup-Link-7 {
+  text-decoration: none;
+}
+
+.school-setup-card {
+  align-items: center;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.school-setup-div-9 {
+  flex: 1;
+  min-width: 0px;
+}
+
+.school-setup-div-10 {
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.school-setup-div-11 {
+  color: var(--text-muted);
+  font-size: 0.775rem;
+  margin-top: 0.1rem;
+}
+
+.school-setup-ChevronRight-12 {
+  color: var(--text-subtle);
+  flex-shrink: 0;
+}
+
+.school-setup-row-13 {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(139,92,246,0.04) 100%);
+  border: 1px solid rgba(99,102,241,0.12);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+}
+
+.school-setup-div-14 {
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.school-setup-div-15 {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+.school-setup-btn {
+  align-items: center;
+  display: flex;
+  font-size: 0.85rem;
+  gap: 0.5rem;
+}

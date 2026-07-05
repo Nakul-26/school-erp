@@ -1,3 +1,4 @@
+import './Alumni.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -104,44 +105,44 @@ export default function Alumni() {
       <div className="page-header">
         <div>
           <h2>Alumni Database</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+          <p className="alumni-text-1">
             Graduate tracking, carrier pathways, and batch lists
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <button className="btn btn-primary alumni-btn" onClick={() => setShowAddModal(true)}>
           <Plus size={18} /> Add Alumnus
         </button>
       </div>
 
       {/* Stats Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-          <div style={{ padding: '0.75rem', borderRadius: '50%', backgroundColor: 'rgba(99, 102, 241, 0.08)', color: 'var(--primary)' }}>
+      <div className="alumni-grid-3">
+        <div className="card alumni-card">
+          <div className="alumni-div-5">
             <GraduationCap size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{totalAlumni}</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Total Graduates Tracked</div>
+            <div className="alumni-div-6">{totalAlumni}</div>
+            <div className="alumni-div-7">Total Graduates Tracked</div>
           </div>
         </div>
 
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-          <div style={{ padding: '0.75rem', borderRadius: '50%', backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
+        <div className="card alumni-card">
+          <div className="alumni-div-9">
             <Building size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{higherEdPct}%</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>In Higher Education</div>
+            <div className="alumni-div-10">{higherEdPct}%</div>
+            <div className="alumni-div-11">In Higher Education</div>
           </div>
         </div>
 
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-          <div style={{ padding: '0.75rem', borderRadius: '50%', backgroundColor: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}>
+        <div className="card alumni-card">
+          <div className="alumni-div-13">
             <Briefcase size={24} />
           </div>
           <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{employedPct}%</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Employed or Startup</div>
+            <div className="alumni-div-14">{employedPct}%</div>
+            <div className="alumni-div-15">Employed or Startup</div>
           </div>
         </div>
       </div>
@@ -180,19 +181,19 @@ export default function Alumni() {
                       <span className="badge badge-primary">{a.current_status || 'Other'}</span>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.875rem' }}>
-                        <Building size={12} style={{ color: 'var(--text-muted)' }} />
+                      <div className="alumni-row-16">
+                        <Building size={12} className="alumni-Building-17"  />
                         <span>{a.institution || '—'}</span>
                       </div>
                     </td>
                     <td>
                       {a.contact ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem' }}>
-                          <Mail size={12} style={{ color: 'var(--text-muted)' }} />
+                        <div className="alumni-row-18">
+                          <Mail size={12} className="alumni-Mail-19"  />
                           <span>{a.contact}</span>
                         </div>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No contact</span>
+                        <span className="alumni-span-20">No contact</span>
                       )}
                     </td>
                   </tr>
@@ -206,13 +207,13 @@ export default function Alumni() {
       {/* Add Alumnus Modal */}
       {showAddModal && (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+          <div className="modal alumni-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Record Graduate Alumnus</h3>
               <button className="modal-close" onClick={() => setShowAddModal(false)}>×</button>
             </div>
             <form onSubmit={handleCreate}>
-              <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="modal-body alumni-modal-body">
                 <div className="form-group">
                   <label>First Name *</label>
                   <input
@@ -253,7 +254,7 @@ export default function Alumni() {
                     <option>Other</option>
                   </select>
                 </div>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <div className="form-group alumni-form-group">
                   <label>Current Institution / Corporate Employer</label>
                   <input
                     value={form.institution}
@@ -261,7 +262,7 @@ export default function Alumni() {
                     placeholder="e.g. Stanford University, Google India"
                   />
                 </div>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <div className="form-group alumni-form-group">
                   <label>Contact Email / Phone</label>
                   <input
                     value={form.contact}

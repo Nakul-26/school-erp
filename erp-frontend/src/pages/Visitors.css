@@ -1,0 +1,57 @@
+/* Component stylesheet for Visitors.tsx */
+
+.visitors-text-1 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.visitors-btn {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.visitors-th-3 {
+  text-align: right;
+}
+
+.visitors-td-4 {
+  font-size: 0.85rem;
+}
+
+.visitors-row-5 {
+  align-items: center;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.visitors-Clock-6 {
+  color: var(--text-muted);
+}
+
+.visitors-td-7 {
+  text-align: right;
+}
+
+.visitors-btn {
+  align-items: center;
+  border-color: #c2410c;
+  color: #c2410c;
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.visitors-span-9 {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.visitors-modal {
+  max-width: 480px;
+}
+
+.visitors-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

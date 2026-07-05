@@ -1,3 +1,4 @@
+import './GradeSettings.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -118,26 +119,26 @@ export default function GradeSettings() {
       <div className="page-header">
         <div>
           <h2>Grade Settings</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="grade-settings-text-1">
             Configure default marks-to-grade scaling ranges used across exams and report card generation.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div className="grade-settings-row-2">
           <button className="btn btn-outline" onClick={handleLoadDefaults} disabled={loading || saving}>
-            <RefreshCw size={16} style={{ marginRight: '0.25rem' }} /> Load Default Scale
+            <RefreshCw size={16} className="grade-settings-RefreshCw-3"  /> Load Default Scale
           </button>
           <button className="btn btn-primary" onClick={handleSave} disabled={loading || saving || scales.length === 0}>
-            <Save size={16} style={{ marginRight: '0.25rem' }} /> Save Changes
+            <Save size={16} className="grade-settings-Save-4"  /> Save Changes
           </button>
         </div>
       </div>
 
       
 
-      <div className="card" style={{ padding: '1.5rem' }}>
+      <div className="card grade-settings-card">
         {loading ? <p>Loading grade scale configuration...</p> : (
           <div>
-            <table className="table" style={{ marginBottom: '1.5rem' }}>
+            <table className="table grade-settings-table">
               <thead>
                 <tr>
                   <th>Grade</th>
@@ -154,65 +155,28 @@ export default function GradeSettings() {
                 {scales.map((s, idx) => (
                   <tr key={idx}>
                     <td>
-                      <input
-                        type="text"
-                        value={s.grade}
-                        onChange={(e) => handleRowChange(idx, 'grade', e.target.value)}
-                        placeholder="e.g. A+"
-                        style={{ width: '80px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                      />
+                      <input type="text" value={s.grade} onChange={(e) => handleRowChange(idx, 'grade', e.target.value)} placeholder="e.g. A+" className="grade-settings-input-7"  />
                     </td>
                     <td>
-                      <input
-                        type="number"
-                        value={s.min_percent}
-                        onChange={(e) => handleRowChange(idx, 'min_percent', e.target.value)}
-                        style={{ width: '80px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                      />
+                      <input type="number" value={s.min_percent} onChange={(e) => handleRowChange(idx, 'min_percent', e.target.value)} className="grade-settings-input-8"  />
                     </td>
                     <td>
-                      <input
-                        type="number"
-                        value={s.max_percent}
-                        onChange={(e) => handleRowChange(idx, 'max_percent', e.target.value)}
-                        style={{ width: '80px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                      />
+                      <input type="number" value={s.max_percent} onChange={(e) => handleRowChange(idx, 'max_percent', e.target.value)} className="grade-settings-input-9"  />
                     </td>
                     <td>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={s.grade_point}
-                        onChange={(e) => handleRowChange(idx, 'grade_point', e.target.value)}
-                        style={{ width: '80px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                      />
+                      <input type="number" step="0.1" value={s.grade_point} onChange={(e) => handleRowChange(idx, 'grade_point', e.target.value)} className="grade-settings-input-10"  />
                     </td>
                     <td>
-                      <input
-                        type="text"
-                        value={s.remarks || ''}
-                        onChange={(e) => handleRowChange(idx, 'remarks', e.target.value)}
-                        placeholder="e.g. Outstanding"
-                        style={{ width: '100%', minWidth: '150px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                      />
+                      <input type="text" value={s.remarks || ''} onChange={(e) => handleRowChange(idx, 'remarks', e.target.value)} placeholder="e.g. Outstanding" className="grade-settings-input-11"  />
                     </td>
                     <td>
-                      <select
-                        value={s.is_passing}
-                        onChange={(e) => handleRowChange(idx, 'is_passing', e.target.value)}
-                        style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                      >
+                      <select value={s.is_passing} onChange={(e) => handleRowChange(idx, 'is_passing', e.target.value)} className="grade-settings-select-12">
                         <option value={1}>Pass</option>
                         <option value={0}>Fail</option>
                       </select>
                     </td>
                     <td>
-                      <input
-                        type="number"
-                        value={s.sort_order}
-                        onChange={(e) => handleRowChange(idx, 'sort_order', e.target.value)}
-                        style={{ width: '70px', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                      />
+                      <input type="number" value={s.sort_order} onChange={(e) => handleRowChange(idx, 'sort_order', e.target.value)} className="grade-settings-input-13"  />
                     </td>
                     <td>
                       <button className="btn btn-sm btn-outline btn-danger" onClick={() => handleRemoveRow(idx)}>
@@ -223,9 +187,9 @@ export default function GradeSettings() {
                 ))}
                 {scales.length === 0 && (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '3rem' }}>
-                      <Award size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
-                      <p style={{ color: 'var(--text-muted)' }}>No grading scales defined yet. Click 'Load Default Scale' or add a custom row.</p>
+                    <td colSpan={8} className="grade-settings-td-14">
+                      <Award size={32} className="grade-settings-Award-15"  />
+                      <p className="grade-settings-text-16">No grading scales defined yet. Click 'Load Default Scale' or add a custom row.</p>
                     </td>
                   </tr>
                 )}

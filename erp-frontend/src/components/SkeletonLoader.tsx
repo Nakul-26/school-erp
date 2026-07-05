@@ -1,3 +1,4 @@
+import './SkeletonLoader.css';
 import React from 'react';
 
 interface SkeletonLoaderProps {
@@ -14,33 +15,21 @@ export default function SkeletonLoader({
   cols = 4,
 }: SkeletonLoaderProps) {
   const renderCard = () => (
-    <div
-      className="skeleton-shimmer"
-      style={{
-        padding: '1.5rem',
-        borderRadius: '12px',
-        background: '#f1f5f9',
-        height: '140px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.75rem',
-        boxShadow: 'var(--shadow-sm)'
-      }}
-    >
-      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#cbd5e1' }} />
-      <div style={{ width: '60%', height: '16px', borderRadius: '4px', background: '#cbd5e1' }} />
-      <div style={{ width: '40%', height: '24px', borderRadius: '4px', background: '#cbd5e1' }} />
+    <div className="skeleton-shimmer skeleton-loader-skeleton-shimmer">
+      <div className="skeleton-loader-div-2"  />
+      <div className="skeleton-loader-div-3"  />
+      <div className="skeleton-loader-div-4"  />
     </div>
   );
 
   const renderTable = () => (
-    <div style={{ width: '100%', overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <div className="skeleton-loader-div-5">
+      <table className="skeleton-loader-table-6">
         <thead>
           <tr>
             {Array.from({ length: cols }).map((_, idx) => (
-              <th key={idx} style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>
-                <div className="skeleton-shimmer" style={{ width: '70px', height: '14px', borderRadius: '4px', background: '#e2e8f0' }} />
+              <th key={idx} className="skeleton-loader-th-7">
+                <div className="skeleton-shimmer skeleton-loader-skeleton-shimmer"  />
               </th>
             ))}
           </tr>
@@ -49,7 +38,7 @@ export default function SkeletonLoader({
           {Array.from({ length: rows }).map((_, rIdx) => (
             <tr key={rIdx}>
               {Array.from({ length: cols }).map((_, cIdx) => (
-                <td key={cIdx} style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>
+                <td key={cIdx} className="skeleton-loader-td-9">
                   <div className="skeleton-shimmer" style={{ width: cIdx === 0 ? '50px' : '90px', height: '14px', borderRadius: '4px', background: '#e2e8f0' }} />
                 </td>
               ))}
@@ -61,24 +50,13 @@ export default function SkeletonLoader({
   );
 
   const renderList = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div className="skeleton-loader-col-10">
       {Array.from({ length: count }).map((_, idx) => (
-        <div
-          key={idx}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            padding: '1rem',
-            background: '#ffffff',
-            borderRadius: '8px',
-            border: '1px solid var(--border)'
-          }}
-        >
-          <div className="skeleton-shimmer" style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#e2e8f0', flexShrink: 0 }} />
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <div className="skeleton-shimmer" style={{ width: '40%', height: '14px', borderRadius: '4px', background: '#e2e8f0' }} />
-            <div className="skeleton-shimmer" style={{ width: '75%', height: '12px', borderRadius: '4px', background: '#e2e8f0' }} />
+        <div key={idx} className="skeleton-loader-row-11">
+          <div className="skeleton-shimmer skeleton-loader-skeleton-shimmer"  />
+          <div className="skeleton-loader-col-13">
+            <div className="skeleton-shimmer skeleton-loader-skeleton-shimmer"  />
+            <div className="skeleton-shimmer skeleton-loader-skeleton-shimmer"  />
           </div>
         </div>
       ))}
@@ -86,20 +64,7 @@ export default function SkeletonLoader({
   );
 
   const renderChart = () => (
-    <div
-      className="skeleton-shimmer"
-      style={{
-        padding: '1.5rem',
-        borderRadius: '12px',
-        background: '#f1f5f9',
-        height: '220px',
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'space-around',
-        gap: '0.5rem',
-        boxShadow: 'var(--shadow-sm)'
-      }}
-    >
+    <div className="skeleton-shimmer skeleton-loader-skeleton-shimmer">
       {[40, 70, 50, 90, 60, 80, 45].map((h, idx) => (
         <div key={idx} style={{ width: '12%', height: `${h}%`, borderRadius: '4px 4px 0 0', background: '#cbd5e1' }} />
       ))}
@@ -108,7 +73,7 @@ export default function SkeletonLoader({
 
   if (type === 'card') {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+      <div className="skeleton-loader-grid-17">
         {Array.from({ length: count }).map((_, idx) => (
           <React.Fragment key={idx}>{renderCard()}</React.Fragment>
         ))}

@@ -1,3 +1,4 @@
+import './TimetablePage.css';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -221,15 +222,15 @@ export default function TimetablePage() {
 
   const renderWeekly = () => (
     <>
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
+      <div className="card timetable-page-card">
         <div className="filters">
-          <div className="form-group" style={{ marginBottom: 0, minWidth: '200px' }}>
+          <div className="form-group timetable-page-form-group">
             <label>Select Academic Year</label>
             <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
               {academicYears.map(y => <option key={y.id} value={y.id}>{y.name}</option>)}
             </select>
           </div>
-          <div className="form-group" style={{ marginBottom: 0, minWidth: '200px' }}>
+          <div className="form-group timetable-page-form-group">
             <label>Select Section/Class</label>
             <select value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)}>
               <option value="">-- Choose Section --</option>
@@ -240,7 +241,7 @@ export default function TimetablePage() {
       </div>
 
       {selectedSection ? (
-        <div className="card" style={{ padding: '1rem' }}>
+        <div className="card timetable-page-card">
           {weeklyLoading ? (
             <SkeletonLoader type="table" rows={6} cols={6} />
           ) : weeklySlots.length === 0 ? (
@@ -256,15 +257,15 @@ export default function TimetablePage() {
           ) : (
             <>
               {/* Desktop Table View */}
-              <div className="table-responsive timetable-table-desktop" style={{ overflowX: 'auto' }}>
-                <table className="table" style={{ borderCollapse: 'collapse', width: '100%', minWidth: '800px' }}>
+              <div className="table-responsive timetable-table-desktop timetable-page-table-responsive">
+                <table className="table timetable-page-table">
                   <thead>
                     <tr>
-                      <th style={{ width: '120px', border: '1px solid var(--border)' }}>Day</th>
+                      <th className="timetable-page-th-7">Day</th>
                       {weeklySlots.map(slot => (
-                        <th key={slot.id} style={{ border: '1px solid var(--border)', textAlign: 'center', padding: '1rem' }}>
-                          <div style={{ fontWeight: 700 }}>{slot.name}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '0.25rem' }}>
+                        <th key={slot.id} className="timetable-page-th-8">
+                          <div className="timetable-page-div-9">{slot.name}</div>
+                          <div className="timetable-page-div-10">
                             {slot.start_time} - {slot.end_time}
                           </div>
                         </th>
@@ -274,7 +275,7 @@ export default function TimetablePage() {
                   <tbody>
                     {DAYS.map(day => (
                       <tr key={day}>
-                        <td style={{ fontWeight: 700, border: '1px solid var(--border)', backgroundColor: '#f8fafc', padding: '1rem' }}>
+                        <td className="timetable-page-td-11">
                           {day}
                         </td>
                         {weeklySlots.map(slot => {
@@ -296,41 +297,27 @@ export default function TimetablePage() {
                               onMouseLeave={(e) => { if (!entry) e.currentTarget.style.backgroundColor = '#ffffff'; }}
                             >
                               {entry ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                                <div className="timetable-page-col-12">
                                   <div>
-                                    <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <div className="timetable-page-row-13">
                                       <BookOpen size={12} />
                                       <span>{entry.subject_code}</span>
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', marginTop: '0.25rem' }}>
+                                    <div className="timetable-page-div-14">
                                       {entry.subject_name}
                                     </div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <div className="timetable-page-row-15">
                                       <User size={12} />
                                       <span>{entry.teacher_name || 'No Teacher'}</span>
                                     </div>
                                   </div>
-                                  <button
-                                    className="btn btn-sm"
-                                    onClick={(e) => handleWeeklyDelete(entry.id, e)}
-                                    style={{
-                                      alignSelf: 'flex-end',
-                                      padding: '0.2rem 0.4rem',
-                                      fontSize: '0.75rem',
-                                      color: 'var(--danger)',
-                                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                      border: 'none',
-                                      borderRadius: '4px',
-                                      marginTop: '0.5rem',
-                                      cursor: 'pointer',
-                                    }}
-                                  >
+                                  <button className="btn btn-sm timetable-page-btn" onClick={(e) => handleWeeklyDelete(entry.id, e)}>
                                     Remove
                                   </button>
                                 </div>
                               ) : (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '0.8rem', opacity: 0.4 }}>
-                                  <Plus size={14} style={{ marginRight: '0.25rem' }} /> Assign
+                                <div className="timetable-page-row-17">
+                                  <Plus size={14} className="timetable-page-Plus-18"  /> Assign
                                 </div>
                               )}
                             </td>
@@ -344,15 +331,7 @@ export default function TimetablePage() {
 
               {/* Mobile Timeline View */}
               <div className="timetable-timeline-mobile">
-                <div className="day-selector-scroll" style={{
-                  display: 'flex',
-                  gap: '0.5rem',
-                  overflowX: 'auto',
-                  paddingBottom: '0.75rem',
-                  marginBottom: '1.25rem',
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none'
-                }}>
+                <div className="day-selector-scroll timetable-page-day-selector-scroll">
                   {DAYS.map(day => (
                     <button
                       key={day}
@@ -376,7 +355,7 @@ export default function TimetablePage() {
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="timetable-page-col-20">
                   {weeklySlots.map(slot => {
                     const entry = getCellEntry(selectedDayMobile, slot.id);
                     return (
@@ -392,54 +371,39 @@ export default function TimetablePage() {
                           background: entry ? (slot.slot_type === 'break' ? '#f8fafc' : '#f0f4ff') : 'white'
                         }}
                       >
-                        <div style={{ width: '85px', flexShrink: 0 }}>
-                          <span style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{slot.name}</span>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        <div className="timetable-page-div-21">
+                          <span className="timetable-page-span-22">{slot.name}</span>
+                          <div className="timetable-page-row-23">
                             <Clock size={10} />
                             <span>{slot.start_time}</span>
                           </div>
                         </div>
 
-                        <div style={{ width: '1px', alignSelf: 'stretch', background: 'var(--border)' }}></div>
+                        <div className="timetable-page-div-24"></div>
 
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="timetable-page-div-25">
                           {entry ? (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div className="timetable-page-row-26">
                               <div>
-                                <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700 }}>
+                                <span className="timetable-page-span-27">
                                   {entry.subject_code}
                                 </span>
-                                <h4 style={{ margin: '0.15rem 0 0 0', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                                <h4 className="timetable-page-title-28">
                                   {entry.subject_name}
                                 </h4>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <div className="timetable-page-row-29">
                                   <User size={12} />
                                   <span>{entry.teacher_name || 'No Teacher'}</span>
                                 </div>
                               </div>
-                              <button
-                                className="btn btn-sm"
-                                onClick={(e) => handleWeeklyDelete(entry.id, e)}
-                                style={{
-                                  padding: '0.2rem 0.4rem',
-                                  fontSize: '0.7rem',
-                                  color: 'var(--danger)',
-                                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer',
-                                }}
-                              >
+                              <button className="btn btn-sm timetable-page-btn" onClick={(e) => handleWeeklyDelete(entry.id, e)}>
                                 Remove
                               </button>
                             </div>
                           ) : (
-                            <div
-                              onClick={() => handleCellClick(selectedDayMobile, slot.id)}
-                              style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer', height: '100%' }}
-                            >
-                              <Plus size={14} style={{ opacity: 0.5 }} />
-                              <span style={{ opacity: 0.6 }}>Tap to assign...</span>
+                            <div onClick={() => handleCellClick(selectedDayMobile, slot.id)} className="timetable-page-row-31">
+                              <Plus size={14} className="timetable-page-Plus-32"  />
+                              <span className="timetable-page-span-33">Tap to assign...</span>
                             </div>
                           )}
                         </div>
@@ -447,7 +411,7 @@ export default function TimetablePage() {
                     );
                   })}
                   {weeklySlots.length === 0 && (
-                    <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No class periods configured.</p>
+                    <p className="timetable-page-text-34">No class periods configured.</p>
                   )}
                 </div>
               </div>
@@ -455,8 +419,8 @@ export default function TimetablePage() {
           )}
         </div>
       ) : (
-        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <p style={{ color: 'var(--text-muted)' }}>Please select a section/class to display its weekly timetable.</p>
+        <div className="card timetable-page-card">
+          <p className="timetable-page-text-36">Please select a section/class to display its weekly timetable.</p>
         </div>
       )}
 
@@ -465,7 +429,7 @@ export default function TimetablePage() {
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Assign Timetable Slot</h3>
-            <div style={{ marginBottom: '1.25rem', padding: '0.75rem', backgroundColor: '#f8fafc', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+            <div className="timetable-page-div-37">
               <strong>Day:</strong> {weeklyForm.day_of_week} | <strong>Slot:</strong> {weeklySlots.find(s => s.id === weeklyForm.slot_id)?.name || 'Unknown'}
             </div>
             <form onSubmit={handleWeeklySubmit}>
@@ -516,7 +480,7 @@ export default function TimetablePage() {
                 <th>Period Name</th>
                 <th>Timings</th>
                 <th>Type</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+                <th className="timetable-page-th-38">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -524,7 +488,7 @@ export default function TimetablePage() {
                 <tr key={slot.id} style={slot.slot_type === 'break' ? { backgroundColor: '#f1f5f9' } : {}}>
                   <td><strong>{slot.name}</strong></td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+                    <div className="timetable-page-row-39">
                       <Clock size={14} className="text-muted" />
                       <span>{slot.start_time} - {slot.end_time}</span>
                     </div>
@@ -534,7 +498,7 @@ export default function TimetablePage() {
                       {slot.slot_type.toUpperCase()}
                     </span>
                   </td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td className="timetable-page-td-40">
                     <button className="btn btn-sm btn-danger" onClick={() => handleSlotDelete(slot.id)}>
                       <Trash2 size={14} /> Delete
                     </button>
@@ -570,7 +534,7 @@ export default function TimetablePage() {
                   <option value="break">Break / Recess</option>
                 </select>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="timetable-page-grid-41">
                 <div className="form-group">
                   <label>Start Time (HH:MM)</label>
                   <input
@@ -608,7 +572,7 @@ export default function TimetablePage() {
       <div className="page-header">
         <div>
           <h2>Timetable</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="timetable-page-text-42">
             View the weekly schedule and manage class periods
           </p>
         </div>

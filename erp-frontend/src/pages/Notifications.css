@@ -1,0 +1,119 @@
+/* Component stylesheet for Notifications.tsx */
+
+.notifications-Award-1 {
+  color: var(--success);
+}
+
+.notifications-text-2 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.notifications-row-3 {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.notifications-btn {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.notifications-btn {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.notifications-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.notifications-card {
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.notifications-Bell-8 {
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.notifications-title-9 {
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.notifications-text-10 {
+  color: var(--text-muted);
+}
+
+.notifications-div-11 {
+  flex: 1;
+}
+
+.notifications-row-12 {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.notifications-span-13 {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.notifications-div-14 {
+  background: var(--primary);
+  border-radius: 50%;
+  flex-shrink: 0;
+  height: 8px;
+  width: 8px;
+}
+
+.notifications-modal {
+  align-items: center;
+  background-color: rgba(15, 23, 42, 0.45);
+  bottom: 0px;
+  display: flex;
+  justify-content: center;
+  left: 0px;
+  padding: 1rem;
+  position: fixed;
+  right: 0px;
+  top: 0px;
+  z-index: 1000;
+}
+
+.notifications-modal-content {
+  background-color: #ffffff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 480px;
+  padding: 2rem;
+  width: 100%;
+}
+
+.notifications-title-17 {
+  color: var(--text-main);
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+}
+
+.notifications-col-18 {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.notifications-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}

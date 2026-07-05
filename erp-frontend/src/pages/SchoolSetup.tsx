@@ -1,3 +1,4 @@
+import './SchoolSetup.css';
 import React from 'react';
 import Layout from '../components/Layout';
 import { Link } from 'react-router-dom';
@@ -155,17 +156,17 @@ export default function SchoolSetup() {
       <div className="page-header">
         <div>
           <h2>School Setup</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="school-setup-text-1">
             Everything you need to configure your school — all in one place
           </p>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <div className="school-setup-col-2">
         {visibleSections.map(section => (
           <div key={section.title}>
             {/* Section Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', marginBottom: '1rem' }}>
+            <div className="school-setup-row-3">
               <div style={{
                 width: '42px', height: '42px', borderRadius: 'var(--radius-sm)',
                 background: section.colorSoft, color: section.color,
@@ -175,49 +176,20 @@ export default function SchoolSetup() {
                 {section.icon}
               </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                <h3 className="school-setup-title-4">
                   {section.title}
                 </h3>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                <p className="school-setup-text-5">
                   {section.description}
                 </p>
               </div>
             </div>
 
             {/* Cards grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: '1rem'
-            }}>
+            <div className="school-setup-grid-6">
               {section.items.map(item => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  style={{ textDecoration: 'none' }}
-                >
-                  <div
-                    className="card"
-                    style={{
-                      padding: '1.25rem 1.5rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      border: '1px solid var(--border)',
-                    }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLDivElement).style.borderColor = section.color;
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 3px ${section.colorSoft}`;
-                      (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)';
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
-                      (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-                    }}
-                  >
+                <Link key={item.to} to={item.to} className="school-setup-Link-7">
+                  <div className="card school-setup-card" onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = section.color; (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 3px ${section.colorSoft}`; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)'; }} onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}>
                     <div style={{
                       width: '38px', height: '38px',
                       borderRadius: 'var(--radius-sm)',
@@ -228,15 +200,15 @@ export default function SchoolSetup() {
                     }}>
                       {item.icon}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                    <div className="school-setup-div-9">
+                      <div className="school-setup-div-10">
                         {item.label}
                       </div>
-                      <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                      <div className="school-setup-div-11">
                         {item.description}
                       </div>
                     </div>
-                    <ChevronRight size={16} style={{ color: 'var(--text-subtle)', flexShrink: 0 }} />
+                    <ChevronRight size={16} className="school-setup-ChevronRight-12"  />
                   </div>
                 </Link>
               ))}
@@ -245,27 +217,17 @@ export default function SchoolSetup() {
         ))}
 
         {/* Quick actions footer */}
-        <div style={{
-          padding: '1.25rem 1.5rem',
-          background: 'linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(139,92,246,0.04) 100%)',
-          border: '1px solid rgba(99,102,241,0.12)',
-          borderRadius: 'var(--radius-md)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '1rem'
-        }}>
+        <div className="school-setup-row-13">
           <div>
-            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+            <div className="school-setup-div-14">
               First time setting up?
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+            <div className="school-setup-div-15">
               Start with School Profile → Academic Years → Departments → Classes
             </div>
           </div>
           <Link to="/institution-setup">
-            <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+            <button className="btn btn-primary school-setup-btn">
               Start Setup <ArrowRight size={14} />
             </button>
           </Link>

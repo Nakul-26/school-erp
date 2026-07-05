@@ -1,0 +1,94 @@
+/* Component stylesheet for ManageUsers.tsx */
+
+.manage-users-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.manage-users-row-2 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.manage-users-badge {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.manage-users-span-4 {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.manage-users-row-5 {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.manage-users-td-6 {
+  padding: 2rem;
+  text-align: center;
+}
+
+.manage-users-modal-content {
+  max-width: 600px;
+}
+
+.manage-users-row-8 {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.manage-users-UserCog-9 {
+  color: var(--primary);
+}
+
+.manage-users-title-10 {
+  margin: 0px;
+}
+
+.manage-users-grid-11 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.manage-users-grid-12 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.manage-users-form-group {
+  margin-top: 0.5rem;
+}
+
+.manage-users-label-14 {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.manage-users-grid-15 {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  padding: 1rem;
+}
+
+.manage-users-row-16 {
+  align-items: center;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.875rem;
+  font-weight: 600;
+  gap: 0.5rem;
+}

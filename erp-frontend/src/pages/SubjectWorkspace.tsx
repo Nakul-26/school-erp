@@ -1,3 +1,4 @@
+import './SubjectWorkspace.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
@@ -388,11 +389,11 @@ export default function SubjectWorkspace() {
         description="Use this page to manage syllabus documents, teaching notes, and exam schedules for a subject."
         steps={["Upload notes, syllabus files, or worksheets for students.","Track teacher allocations and lesson schedules.","Create assessments and view student performance lists."]}
       />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem' }}>
-          <div style={{ height: '40px', width: '300px', backgroundColor: '#e2e8f0', borderRadius: '4px' }} className="animate-pulse"></div>
-          <div style={{ height: '100px', backgroundColor: '#e2e8f0', borderRadius: '8px' }} className="animate-pulse"></div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-            {[1, 2, 3, 4].map(i => <div key={i} style={{ height: '120px', backgroundColor: '#e2e8f0', borderRadius: '8px' }} className="animate-pulse"></div>)}
+        <div className="subject-workspace-col-1">
+          <div className="animate-pulse subject-workspace-animate-pulse"></div>
+          <div className="animate-pulse subject-workspace-animate-pulse"></div>
+          <div className="subject-workspace-grid-4">
+            {[1, 2, 3, 4].map(i => <div key={i} className="animate-pulse subject-workspace-animate-pulse"></div>)}
           </div>
         </div>
       </Layout>
@@ -402,11 +403,11 @@ export default function SubjectWorkspace() {
   if (!subject) {
     return (
       <Layout>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <ShieldAlert size={48} style={{ color: 'var(--badge-danger)', marginBottom: '1rem' }} />
+        <div className="subject-workspace-div-6">
+          <ShieldAlert size={48} className="subject-workspace-ShieldAlert-7"  />
           <h3>Subject Not Found</h3>
-          <p style={{ color: 'var(--text-muted)' }}>The subject you are trying to view does not exist or you do not have permission.</p>
-          <button className="btn btn-outline" style={{ marginTop: '1rem' }} onClick={() => navigate('/subjects')}>
+          <p className="subject-workspace-text-8">The subject you are trying to view does not exist or you do not have permission.</p>
+          <button className="btn btn-outline subject-workspace-btn" onClick={() => navigate('/subjects')}>
             <ArrowLeft size={16} /> Back to Subjects
           </button>
         </div>
@@ -417,24 +418,24 @@ export default function SubjectWorkspace() {
   return (
     <Layout>
       {/* 1. Hero Header */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          <span style={{ cursor: 'pointer' }} onClick={() => navigate('/subjects')}>Subjects</span>
+      <div className="subject-workspace-col-10">
+        <div className="subject-workspace-row-11">
+          <span className="subject-workspace-span-12" onClick={() => navigate('/subjects')}>Subjects</span>
           <span>&gt;</span>
-          <span style={{ fontWeight: 600 }}>{subject.subject_code}</span>
+          <span className="subject-workspace-span-13">{subject.subject_code}</span>
         </div>
         
-        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="page-header subject-workspace-page-header">
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <h2 className="subject-workspace-row-15">
               {subject.subject_name}
-              <span className="badge badge-secondary" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>{subject.subject_code}</span>
+              <span className="badge badge-secondary subject-workspace-badge">{subject.subject_code}</span>
             </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+            <p className="subject-workspace-text-17">
               {getProgramLabel()}: <strong>{subject.course_name || 'Not Mapped'}</strong> &bull; Semester {subject.semester} &bull; Credits: {subject.credits} &bull; Department: {subject.department_name || 'N/A'}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="subject-workspace-row-18">
             <button className="btn btn-outline" onClick={() => navigate('/subjects')}>
               <ArrowLeft size={16} /> Back
             </button>
@@ -449,32 +450,32 @@ export default function SubjectWorkspace() {
 
       {/* 2. Health Banner */}
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1.25rem', marginBottom: '1.5rem', borderLeft: `5px solid ${healthStatus === 'critical' ? '#ef4444' : healthStatus === 'warning' ? '#f59e0b' : '#10b981'}` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="subject-workspace-row-19">
+          <div className="subject-workspace-row-20">
             <Activity size={18} style={{ color: healthStatus === 'critical' ? '#ef4444' : healthStatus === 'warning' ? '#f59e0b' : '#10b981' }} />
-            <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>
+            <span className="subject-workspace-span-21">
               Workspace Health: {healthStatus === 'critical' ? '🔴 Critical Action Required' : healthStatus === 'warning' ? '🟡 Attention Required' : '🟢 Fully Functional'}
             </span>
           </div>
-          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Score: {healthScore}/100</span>
+          <span className="subject-workspace-span-22">Score: {healthScore}/100</span>
         </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', marginTop: '0.25rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+        <div className="subject-workspace-grid-23">
+          <div className="subject-workspace-row-24">
             {hasFaculty ? <CheckCircle2 size={16} color="#10b981" /> : <AlertTriangle size={16} color="#ef4444" />}
             <span style={{ color: hasFaculty ? 'var(--text-main)' : 'var(--text-muted)' }}>Assigned Faculty</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+          <div className="subject-workspace-row-25">
             {hasSections ? <CheckCircle2 size={16} color="#10b981" /> : <AlertTriangle size={16} color="#ef4444" />}
             <span style={{ color: hasSections ? 'var(--text-main)' : 'var(--text-muted)' }}>Sections Mapped</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+          <div className="subject-workspace-row-26">
             {hasLessonPlan ? (syllabusPercent >= 70 ? <CheckCircle2 size={16} color="#10b981" /> : <CheckCircle2 size={16} color="#f59e0b" />) : <AlertTriangle size={16} color="#ef4444" />}
             <span style={{ color: hasLessonPlan ? 'var(--text-main)' : 'var(--text-muted)' }}>
               Lesson Plan ({hasLessonPlan ? `${syllabusPercent}% complete` : 'Not Set'})
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+          <div className="subject-workspace-row-27">
             {hasAssessments ? <CheckCircle2 size={16} color="#10b981" /> : <AlertTriangle size={16} color="#ef4444" />}
             <span style={{ color: hasAssessments ? 'var(--text-main)' : 'var(--text-muted)' }}>Assessments Configured</span>
           </div>
@@ -482,50 +483,50 @@ export default function SubjectWorkspace() {
       </div>
 
       {/* 3. KPI Stats Grid */}
-      <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
-        <div className="card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-          <div style={{ padding: '0.75rem', backgroundColor: '#eef2ff', borderRadius: 'var(--radius-sm)', color: 'var(--primary)' }}>
+      <div className="stats-grid subject-workspace-stats-grid">
+        <div className="card stat-card subject-workspace-card">
+          <div className="subject-workspace-div-30">
             <Users size={22} />
           </div>
           <div>
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Enrolled Students</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800 }}>{students.length}</span>
+            <span className="subject-workspace-span-31">Enrolled Students</span>
+            <span className="subject-workspace-span-32">{students.length}</span>
           </div>
         </div>
 
-        <div className="card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-          <div style={{ padding: '0.75rem', backgroundColor: '#f0fdf4', borderRadius: 'var(--radius-sm)', color: '#16a34a' }}>
+        <div className="card stat-card subject-workspace-card">
+          <div className="subject-workspace-div-34">
             <Layers size={22} />
           </div>
           <div>
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Mapped Sections</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800 }}>{Array.from(new Set(teaching.map(t => t.section_id))).length}</span>
+            <span className="subject-workspace-span-35">Mapped Sections</span>
+            <span className="subject-workspace-span-36">{Array.from(new Set(teaching.map(t => t.section_id))).length}</span>
           </div>
         </div>
 
-        <div className="card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-          <div style={{ padding: '0.75rem', backgroundColor: '#fef8e7', borderRadius: 'var(--radius-sm)', color: '#d97706' }}>
+        <div className="card stat-card subject-workspace-card">
+          <div className="subject-workspace-div-38">
             <BookMarked size={22} />
           </div>
           <div>
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Syllabus Complete</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800 }}>{syllabusPercent}%</span>
+            <span className="subject-workspace-span-39">Syllabus Complete</span>
+            <span className="subject-workspace-span-40">{syllabusPercent}%</span>
           </div>
         </div>
 
-        <div className="card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-          <div style={{ padding: '0.75rem', backgroundColor: '#f5f3ff', borderRadius: 'var(--radius-sm)', color: '#7c3aed' }}>
+        <div className="card stat-card subject-workspace-card">
+          <div className="subject-workspace-div-42">
             <FolderOpen size={22} />
           </div>
           <div>
-            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Resources Count</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800 }}>{documents.length}</span>
+            <span className="subject-workspace-span-43">Resources Count</span>
+            <span className="subject-workspace-span-44">{documents.length}</span>
           </div>
         </div>
       </div>
 
       {/* 4. Tab Navigation */}
-      <div className="tabs" style={{ marginBottom: '1.5rem' }}>
+      <div className="tabs subject-workspace-tabs">
         {[
           { id: 'overview', label: 'Overview', icon: <BookOpen size={16} /> },
           { id: 'teaching', label: 'Teaching', icon: <UserCheck size={16} /> },
@@ -536,69 +537,64 @@ export default function SubjectWorkspace() {
           { id: 'analytics', label: 'Analytics', icon: <BarChart2 size={16} /> },
           { id: 'timeline', label: 'Timeline', icon: <Activity size={16} /> }
         ].map(tab => (
-          <button
-            key={tab.id}
-            className={activeTab === tab.id ? 'active' : ''}
-            onClick={() => handleTabChange(tab.id)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
+          <button key={tab.id} className={`${ activeTab === tab.id ? 'active' : '' } subject-workspace-row-46`} onClick={() => handleTabChange(tab.id)}>
             {tab.icon} {tab.label}
           </button>
         ))}
       </div>
 
       {/* 5. Tab Content rendering */}
-      <div style={{ minHeight: '350px' }}>
+      <div className="subject-workspace-div-47">
         
         {/* --- OVERVIEW TAB --- */}
         {activeTab === 'overview' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div className="card" style={{ padding: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="subject-workspace-grid-48">
+            <div className="subject-workspace-col-49">
+              <div className="card subject-workspace-card">
+                <h3 className="subject-workspace-row-51">
                   <BookOpen size={18} color="var(--primary)" /> Academic Context & Description
                 </h3>
-                <table className="table" style={{ width: '100%', minWidth: 'unset' }}>
+                <table className="table subject-workspace-table">
                   <tbody>
                     <tr>
-                      <td style={{ padding: '0.75rem 0', fontWeight: 600, color: 'var(--text-muted)' }}>Subject Name</td>
-                      <td style={{ padding: '0.75rem 0', fontWeight: 700 }}>{subject.subject_name}</td>
+                      <td className="subject-workspace-td-53">Subject Name</td>
+                      <td className="subject-workspace-td-54">{subject.subject_name}</td>
                     </tr>
                     <tr>
-                      <td style={{ padding: '0.75rem 0', fontWeight: 600, color: 'var(--text-muted)' }}>Subject Code</td>
-                      <td style={{ padding: '0.75rem 0', fontFamily: 'monospace', fontWeight: 700 }}>{subject.subject_code}</td>
+                      <td className="subject-workspace-td-55">Subject Code</td>
+                      <td className="subject-workspace-td-56">{subject.subject_code}</td>
                     </tr>
                     <tr>
-                      <td style={{ padding: '0.75rem 0', fontWeight: 600, color: 'var(--text-muted)' }}>Department Mapped</td>
-                      <td style={{ padding: '0.75rem 0' }}>{subject.department_name || 'N/A'}</td>
+                      <td className="subject-workspace-td-57">Department Mapped</td>
+                      <td className="subject-workspace-td-58">{subject.department_name || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <td style={{ padding: '0.75rem 0', fontWeight: 600, color: 'var(--text-muted)' }}>{getProgramLabel()} Association</td>
-                      <td style={{ padding: '0.75rem 0' }}>{subject.course_name}</td>
+                      <td className="subject-workspace-td-59">{getProgramLabel()} Association</td>
+                      <td className="subject-workspace-td-60">{subject.course_name}</td>
                     </tr>
                     <tr>
-                      <td style={{ padding: '0.75rem 0', fontWeight: 600, color: 'var(--text-muted)' }}>Credits Value</td>
-                      <td style={{ padding: '0.75rem 0' }}><span className="badge badge-info">{subject.credits} Credits</span></td>
+                      <td className="subject-workspace-td-61">Credits Value</td>
+                      <td className="subject-workspace-td-62"><span className="badge badge-info">{subject.credits} Credits</span></td>
                     </tr>
                     <tr>
-                      <td style={{ padding: '0.75rem 0', fontWeight: 600, color: 'var(--text-muted)' }}>Curriculum Duration</td>
-                      <td style={{ padding: '0.75rem 0' }}>Semester {subject.semester}</td>
+                      <td className="subject-workspace-td-63">Curriculum Duration</td>
+                      <td className="subject-workspace-td-64">Semester {subject.semester}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              <div className="card" style={{ padding: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="card subject-workspace-card">
+                <h3 className="subject-workspace-row-66">
                   <TrendingUp size={18} color="var(--primary)" /> Delivery Progress Summary
                 </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                  <div style={{ position: 'relative', width: '90px', height: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', borderRadius: '50%', border: '4px solid var(--border)' }}>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{syllabusPercent}%</span>
+                <div className="subject-workspace-row-67">
+                  <div className="subject-workspace-row-68">
+                    <span className="subject-workspace-span-69">{syllabusPercent}%</span>
                   </div>
                   <div>
-                    <h4 style={{ margin: 0, fontWeight: 700 }}>Syllabus Coverage Progress</h4>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                    <h4 className="subject-workspace-title-70">Syllabus Coverage Progress</h4>
+                    <p className="subject-workspace-text-71">
                       {completedTopicsCount} of {lessonPlans.length} syllabus topics completed. {totalCompletedHours} lecture hours delivered out of {totalPlannedHours} hours planned.
                     </p>
                   </div>
@@ -606,27 +602,27 @@ export default function SubjectWorkspace() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div className="card" style={{ padding: '1.5rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem' }}>Related Workspaces</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div className="subject-workspace-col-72">
+              <div className="card subject-workspace-card">
+                <h3 className="subject-workspace-title-74">Related Workspaces</h3>
+                <div className="subject-workspace-col-75">
                   {subject.department_id && (
-                    <div style={{ padding: '0.75rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.85rem' }}>Department</span>
-                      <span style={{ fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/departments')}>
+                    <div className="subject-workspace-row-76">
+                      <span className="subject-workspace-span-77">Department</span>
+                      <span className="subject-workspace-span-78" onClick={() => navigate('/departments')}>
                         {subject.department_name}
                       </span>
                     </div>
                   )}
-                  <div style={{ padding: '0.75rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.85rem' }}>{getProgramLabel()}</span>
-                    <span style={{ fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/programs')}>
+                  <div className="subject-workspace-row-79">
+                    <span className="subject-workspace-span-80">{getProgramLabel()}</span>
+                    <span className="subject-workspace-span-81" onClick={() => navigate('/programs')}>
                       {subject.course_name}
                     </span>
                   </div>
-                  <div style={{ padding: '0.75rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.85rem' }}>Assigned Faculty</span>
-                    <span style={{ fontWeight: 600 }} className="badge badge-secondary">{teaching.length} staff</span>
+                  <div className="subject-workspace-row-82">
+                    <span className="subject-workspace-span-83">Assigned Faculty</span>
+                    <span className="badge badge-secondary subject-workspace-badge">{teaching.length} staff</span>
                   </div>
                 </div>
               </div>
@@ -636,8 +632,8 @@ export default function SubjectWorkspace() {
 
         {/* --- TEACHING TAB --- */}
         {activeTab === 'teaching' && (
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem' }}>Faculty & Section Mappings</h3>
+          <div className="card subject-workspace-card">
+            <h3 className="subject-workspace-title-86">Faculty & Section Mappings</h3>
             <table className="table">
               <thead>
                 <tr>
@@ -653,11 +649,11 @@ export default function SubjectWorkspace() {
                     <td>
                       <div>
                         <strong>{t.teacher_name}</strong>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {t.teacher_employee_id || 'N/A'}</span>
+                        <span className="subject-workspace-span-87">ID: {t.teacher_employee_id || 'N/A'}</span>
                       </div>
                     </td>
                     <td>
-                      <span style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate(`/classes/${t.section_id}`)}>
+                      <span className="subject-workspace-span-88" onClick={() => navigate(`/classes/${t.section_id}`)}>
                         {t.section_name}
                       </span>
                     </td>
@@ -667,7 +663,7 @@ export default function SubjectWorkspace() {
                 ))}
                 {teaching.length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No teachers or sections mapped to this subject. Assign them in Section / Weekly Timetable settings.</td>
+                    <td colSpan={4} className="subject-workspace-td-89">No teachers or sections mapped to this subject. Assign them in Section / Weekly Timetable settings.</td>
                   </tr>
                 )}
               </tbody>
@@ -677,12 +673,12 @@ export default function SubjectWorkspace() {
 
         {/* --- STUDENTS TAB --- */}
         {activeTab === 'students' && (
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Enrolled Student Roster</h3>
+          <div className="card subject-workspace-card">
+            <div className="subject-workspace-row-91">
+              <h3 className="subject-workspace-title-92">Enrolled Student Roster</h3>
               
-              <div className="filters" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
-                <div className="search-container" style={{ margin: 0 }}>
+              <div className="filters subject-workspace-filters">
+                <div className="search-container subject-workspace-search-container">
                   <Search size={16} />
                   <input
                     type="text"
@@ -692,14 +688,14 @@ export default function SubjectWorkspace() {
                   />
                 </div>
                 
-                <select value={selectedSectionFilter} onChange={(e) => setSelectedSectionFilter(e.target.value)} style={{ padding: '0.5rem', width: 'auto' }}>
+                <select value={selectedSectionFilter} onChange={(e) => setSelectedSectionFilter(e.target.value)} className="subject-workspace-select-95">
                   <option value="">All Sections</option>
                   {getDistinctSections().map(sec => (
                     <option key={sec.id} value={sec.id}>{sec.name}</option>
                   ))}
                 </select>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>
+                <label className="subject-workspace-row-96">
                   <input type="checkbox" checked={lowAttendanceFilter} onChange={(e) => setLowAttendanceFilter(e.target.checked)} />
                   Attendance &lt; 75%
                 </label>
@@ -723,7 +719,7 @@ export default function SubjectWorkspace() {
                   const isLowMarks = student.marks_avg !== null && student.marks_avg < 40;
                   return (
                     <tr key={student.id}>
-                      <td style={{ fontFamily: 'monospace' }}>{student.roll_no || student.admission_no}</td>
+                      <td className="subject-workspace-td-97">{student.roll_no || student.admission_no}</td>
                       <td>
                         <strong>{student.first_name} {student.last_name}</strong>
                       </td>
@@ -732,7 +728,7 @@ export default function SubjectWorkspace() {
                         <span style={{ fontWeight: 700, color: isLowAttendance ? '#ef4444' : '#16a34a' }}>
                           {student.attendance_percent !== null ? `${student.attendance_percent}%` : 'N/A'}
                         </span>
-                        <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                        <span className="subject-workspace-span-98">
                           ({student.present_classes}/{student.total_classes} classes)
                         </span>
                       </td>
@@ -742,7 +738,7 @@ export default function SubjectWorkspace() {
                         </span>
                       </td>
                       <td>
-                        {isLowAttendance && <span className="badge badge-danger" style={{ marginRight: '0.25rem' }}>Low Attendance</span>}
+                        {isLowAttendance && <span className="badge badge-danger subject-workspace-badge">Low Attendance</span>}
                         {isLowMarks && <span className="badge badge-danger">Poor Grades</span>}
                         {!isLowAttendance && !isLowMarks && <span className="badge badge-success">On Track</span>}
                       </td>
@@ -751,7 +747,7 @@ export default function SubjectWorkspace() {
                 })}
                 {filteredStudents.length === 0 && (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No students match the criteria.</td>
+                    <td colSpan={6} className="subject-workspace-td-100">No students match the criteria.</td>
                   </tr>
                 )}
               </tbody>
@@ -761,11 +757,11 @@ export default function SubjectWorkspace() {
 
         {/* --- LESSON PLAN TAB --- */}
         {activeTab === 'lesson-plan' && (
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <div className="card subject-workspace-card">
+            <div className="subject-workspace-row-102">
               <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Course Curriculum & Lesson Plan</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                <h3 className="subject-workspace-title-103">Course Curriculum & Lesson Plan</h3>
+                <p className="subject-workspace-text-104">
                   Track units, chapters, planned teaching hours, and delivery completion status.
                 </p>
               </div>
@@ -790,11 +786,11 @@ export default function SubjectWorkspace() {
               <tbody>
                 {lessonPlans.map(topic => (
                   <tr key={topic.id}>
-                    <td style={{ fontWeight: 700 }}>{topic.unit_number}</td>
+                    <td className="subject-workspace-td-105">{topic.unit_number}</td>
                     <td>
                       <div>
                         <strong>{topic.topic_title}</strong>
-                        {topic.topic_description && <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{topic.topic_description}</span>}
+                        {topic.topic_description && <span className="subject-workspace-span-106">{topic.topic_description}</span>}
                       </div>
                     </td>
                     <td>{topic.planned_hours} Hrs</td>
@@ -805,19 +801,19 @@ export default function SubjectWorkspace() {
                     </td>
                     <td>{topic.completed_at || '--'}</td>
                     <td>
-                      <div style={{ display: 'flex', gap: '0.35rem' }}>
+                      <div className="subject-workspace-row-107">
                         {topic.status !== 'completed' && (
-                          <button className="btn btn-sm btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => handleUpdateTopicStatus(topic.id, 'completed', topic.planned_hours)}>
+                          <button className="btn btn-sm btn-secondary subject-workspace-btn" onClick={() => handleUpdateTopicStatus(topic.id, 'completed', topic.planned_hours)}>
                             <Check size={14} /> Complete
                           </button>
                         )}
                         {topic.status === 'completed' && (
-                          <button className="btn btn-sm btn-outline" style={{ padding: '0.25rem 0.5rem' }} onClick={() => handleUpdateTopicStatus(topic.id, 'pending', 0)}>
+                          <button className="btn btn-sm btn-outline subject-workspace-btn" onClick={() => handleUpdateTopicStatus(topic.id, 'pending', 0)}>
                             Reopen
                           </button>
                         )}
                         {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'Principal' || user?.role === 'Teacher') && (
-                          <button className="btn btn-sm btn-danger" style={{ padding: '0.25rem' }} onClick={() => handleDeleteTopic(topic.id)}>
+                          <button className="btn btn-sm btn-danger subject-workspace-btn" onClick={() => handleDeleteTopic(topic.id)}>
                             <Trash2 size={13} />
                           </button>
                         )}
@@ -827,7 +823,7 @@ export default function SubjectWorkspace() {
                 ))}
                 {lessonPlans.length === 0 && (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No syllabus items defined. Click Add Topic to set up your syllabus structure.</td>
+                    <td colSpan={6} className="subject-workspace-td-111">No syllabus items defined. Click Add Topic to set up your syllabus structure.</td>
                   </tr>
                 )}
               </tbody>
@@ -837,11 +833,11 @@ export default function SubjectWorkspace() {
 
         {/* --- ASSESSMENTS TAB --- */}
         {activeTab === 'assessments' && (
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <div className="card subject-workspace-card">
+            <div className="subject-workspace-row-113">
               <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Subject Assessments Map</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                <h3 className="subject-workspace-title-114">Subject Assessments Map</h3>
+                <p className="subject-workspace-text-115">
                   Define tests, assignments, projects, and final exam weightages.
                 </p>
               </div>
@@ -867,13 +863,13 @@ export default function SubjectWorkspace() {
                 {assessments.map(item => (
                   <tr key={item.id}>
                     <td><strong>{item.name}</strong></td>
-                    <td style={{ textTransform: 'capitalize' }}>{item.assessment_type.replace('_', ' ')}</td>
+                    <td className="subject-workspace-td-116">{item.assessment_type.replace('_', ' ')}</td>
                     <td>{item.max_marks} Marks</td>
                     <td><span className="badge badge-info">{item.weightage_percent}%</span></td>
                     <td>{item.due_date || 'N/A'}</td>
                     <td>
                       {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'Principal' || user?.role === 'Teacher') && (
-                        <button className="btn btn-sm btn-danger" style={{ padding: '0.25rem' }} onClick={() => handleDeleteAssessment(item.id)}>
+                        <button className="btn btn-sm btn-danger subject-workspace-btn" onClick={() => handleDeleteAssessment(item.id)}>
                           <Trash2 size={13} />
                         </button>
                       )}
@@ -882,7 +878,7 @@ export default function SubjectWorkspace() {
                 ))}
                 {assessments.length === 0 && (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No assessments configured for this subject.</td>
+                    <td colSpan={6} className="subject-workspace-td-118">No assessments configured for this subject.</td>
                   </tr>
                 )}
               </tbody>
@@ -892,11 +888,11 @@ export default function SubjectWorkspace() {
 
         {/* --- RESOURCES TAB --- */}
         {activeTab === 'resources' && (
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <div className="card subject-workspace-card">
+            <div className="subject-workspace-row-120">
               <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Course Resources & Study Materials</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                <h3 className="subject-workspace-title-121">Course Resources & Study Materials</h3>
+                <p className="subject-workspace-text-122">
                   Upload syllabi, slides, previous year papers, and assignment sheets.
                 </p>
               </div>
@@ -919,7 +915,7 @@ export default function SubjectWorkspace() {
                 {documents.map(doc => (
                   <tr key={doc.id}>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="subject-workspace-row-123">
                         <FileText size={16} color="var(--primary)" />
                         <strong>{doc.name}</strong>
                       </div>
@@ -930,11 +926,11 @@ export default function SubjectWorkspace() {
                     <td>{Math.round(doc.file_size / 1024)} KB</td>
                     <td>{new Date(doc.created_at).toLocaleDateString()}</td>
                     <td>
-                      <div style={{ display: 'flex', gap: '0.35rem' }}>
-                        <button className="btn btn-sm btn-outline" style={{ padding: '0.25rem 0.5rem' }} onClick={() => handleDocDownload(doc.id)}>
+                      <div className="subject-workspace-row-124">
+                        <button className="btn btn-sm btn-outline subject-workspace-btn" onClick={() => handleDocDownload(doc.id)}>
                           Download
                         </button>
-                        <button className="btn btn-sm btn-danger" style={{ padding: '0.25rem' }} onClick={() => handleDocDelete(doc.id)}>
+                        <button className="btn btn-sm btn-danger subject-workspace-btn" onClick={() => handleDocDelete(doc.id)}>
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -943,7 +939,7 @@ export default function SubjectWorkspace() {
                 ))}
                 {documents.length === 0 && (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No resources uploaded yet. Click Upload Material to add resources.</td>
+                    <td colSpan={5} className="subject-workspace-td-127">No resources uploaded yet. Click Upload Material to add resources.</td>
                   </tr>
                 )}
               </tbody>
@@ -953,41 +949,41 @@ export default function SubjectWorkspace() {
 
         {/* --- ANALYTICS TAB --- */}
         {activeTab === 'analytics' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="subject-workspace-grid-128">
+            <div className="card subject-workspace-card">
+              <h3 className="subject-workspace-row-130">
                 <Users size={18} color="var(--primary)" /> Attendance Warnings
               </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Students with attendance levels below the mandated 75% threshold:</p>
+              <p className="subject-workspace-text-131">Students with attendance levels below the mandated 75% threshold:</p>
               
-              <div style={{ marginTop: '1rem', minHeight: '60px', maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <div className="subject-workspace-col-132">
                 {students.filter(s => s.attendance_percent !== null && s.attendance_percent < 75).map(s => (
-                  <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--border)' }}>
+                  <div key={s.id} className="subject-workspace-row-133">
                     <span>{s.first_name} {s.last_name} ({s.section_name})</span>
-                    <span style={{ fontWeight: 700, color: '#ef4444' }}>{s.attendance_percent}%</span>
+                    <span className="subject-workspace-span-134">{s.attendance_percent}%</span>
                   </div>
                 ))}
                 {students.filter(s => s.attendance_percent !== null && s.attendance_percent < 75).length === 0 && (
-                  <p style={{ color: '#16a34a', fontWeight: 600, fontSize: '0.9rem' }}>🟢 Great job! All students are above the 75% attendance threshold.</p>
+                  <p className="subject-workspace-text-135">🟢 Great job! All students are above the 75% attendance threshold.</p>
                 )}
               </div>
             </div>
 
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="card subject-workspace-card">
+              <h3 className="subject-workspace-row-137">
                 <Award size={18} color="var(--primary)" /> Grades Overview
               </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Students struggling with low grades (average marks &lt; 40%):</p>
+              <p className="subject-workspace-text-138">Students struggling with low grades (average marks &lt; 40%):</p>
               
-              <div style={{ marginTop: '1rem', minHeight: '60px', maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <div className="subject-workspace-col-139">
                 {students.filter(s => s.marks_avg !== null && s.marks_avg < 40).map(s => (
-                  <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--border)' }}>
+                  <div key={s.id} className="subject-workspace-row-140">
                     <span>{s.first_name} {s.last_name} ({s.section_name})</span>
-                    <span style={{ fontWeight: 700, color: '#ef4444' }}>{s.marks_avg}%</span>
+                    <span className="subject-workspace-span-141">{s.marks_avg}%</span>
                   </div>
                 ))}
                 {students.filter(s => s.marks_avg !== null && s.marks_avg < 40).length === 0 && (
-                  <p style={{ color: '#16a34a', fontWeight: 600, fontSize: '0.9rem' }}>🟢 All students are performing satisfactorily in active evaluations.</p>
+                  <p className="subject-workspace-text-142">🟢 All students are performing satisfactorily in active evaluations.</p>
                 )}
               </div>
             </div>
@@ -996,24 +992,24 @@ export default function SubjectWorkspace() {
 
         {/* --- TIMELINE TAB --- */}
         {activeTab === 'timeline' && (
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.25rem' }}>Subject Timeline & History</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="card subject-workspace-card">
+            <h3 className="subject-workspace-title-144">Subject Timeline & History</h3>
+            <div className="subject-workspace-col-145">
               {timeline.map(log => (
-                <div key={log.id} style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-                  <div style={{ minWidth: '130px', fontSize: '0.8rem', color: 'var(--text-muted)', paddingTop: '0.1rem' }}>
+                <div key={log.id} className="subject-workspace-row-146">
+                  <div className="subject-workspace-div-147">
                     {new Date(log.timestamp).toLocaleString()}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{log.description}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>
-                      By: <strong>{log.user_name}</strong> ({log.user_email}) &bull; Action: <span className="badge badge-secondary" style={{ fontSize: '0.65rem' }}>{log.action}</span>
+                    <div className="subject-workspace-div-148">{log.description}</div>
+                    <div className="subject-workspace-div-149">
+                      By: <strong>{log.user_name}</strong> ({log.user_email}) &bull; Action: <span className="badge badge-secondary subject-workspace-badge">{log.action}</span>
                     </div>
                   </div>
                 </div>
               ))}
               {timeline.length === 0 && (
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No audit history records available for this subject.</p>
+                <p className="subject-workspace-text-151">No audit history records available for this subject.</p>
               )}
             </div>
           </div>
@@ -1161,9 +1157,9 @@ export default function SubjectWorkspace() {
                   ))}
                 </select>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
+              <div className="subject-workspace-row-152">
                 <button type="button" className="btn btn-danger" onClick={handleDeleteSubject}>Delete Subject</button>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div className="subject-workspace-row-153">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowSettingsModal(false)}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={submitting}>
                     {submitting ? 'Saving...' : 'Save Settings'}

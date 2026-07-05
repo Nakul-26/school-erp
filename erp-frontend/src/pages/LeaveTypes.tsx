@@ -1,3 +1,4 @@
+import './LeaveTypes.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -127,18 +128,18 @@ export default function LeaveTypes() {
       />
       <div className="page-header">
         <div>
-          <h2><BookOpen size={22} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />Leave Types</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <h2><BookOpen size={22} className="leave-types-BookOpen-1"  />Leave Types</h2>
+          <p className="leave-types-text-2">
             Manage leave categories and seed annual balances for all teaching staff.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div className="leave-types-row-3">
           <button className="btn btn-outline" onClick={() => setShowSeedModal(true)}>
-            <RefreshCw size={16} style={{ marginRight: '0.4rem' }} />
+            <RefreshCw size={16} className="leave-types-RefreshCw-4"  />
             Give Leave Balance
           </button>
           <button className="btn btn-primary" onClick={openAddModal}>
-            <Plus size={16} style={{ marginRight: '0.4rem' }} />
+            <Plus size={16} className="leave-types-Plus-5"  />
             Add Leave Type
           </button>
         </div>
@@ -148,7 +149,7 @@ export default function LeaveTypes() {
 
       <div className="card">
         {loading ? (
-          <p style={{ padding: '2rem', color: 'var(--text-muted)' }}>Loading leave types…</p>
+          <p className="leave-types-text-6">Loading leave types…</p>
         ) : (
           <table className="table">
             <thead>
@@ -156,17 +157,17 @@ export default function LeaveTypes() {
                 <th>Code</th>
                 <th>Name</th>
                 <th>Days / Year</th>
-                <th style={{ width: '120px' }}>Actions</th>
+                <th className="leave-types-th-7">Actions</th>
               </tr>
             </thead>
             <tbody>
               {leaveTypes.map((lt) => (
                 <tr key={lt.id}>
-                  <td><span className="badge" style={{ background: 'var(--primary)', color: '#fff', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem' }}>{lt.code}</span></td>
+                  <td><span className="badge leave-types-badge">{lt.code}</span></td>
                   <td><strong>{lt.name}</strong></td>
                   <td>{lt.days_per_year}</td>
                   <td>
-                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <div className="leave-types-row-9">
                       <button className="btn btn-sm btn-outline" onClick={() => openEditModal(lt)} title="Edit">
                         <Edit size={14} />
                       </button>
@@ -179,8 +180,8 @@ export default function LeaveTypes() {
               ))}
               {leaveTypes.length === 0 && (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    <BookOpen size={32} style={{ marginBottom: '0.5rem', display: 'block', margin: '0 auto 0.5rem' }} />
+                  <td colSpan={4} className="leave-types-td-10">
+                    <BookOpen size={32} className="leave-types-BookOpen-11"  />
                     No leave types defined yet. Click "Add Leave Type" to get started.
                   </td>
                 </tr>
@@ -193,7 +194,7 @@ export default function LeaveTypes() {
       {/* Add / Edit Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editingType ? 'Edit Leave Type' : 'Add Leave Type'}</h3>
               <button className="btn btn-sm btn-outline" onClick={() => setShowModal(false)}><X size={16} /></button>
@@ -244,13 +245,13 @@ export default function LeaveTypes() {
       {/* Seed Balances Modal */}
       {showSeedModal && (
         <div className="modal-overlay" onClick={() => setShowSeedModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Seed Leave Balances</h3>
               <button className="btn btn-sm btn-outline" onClick={() => setShowSeedModal(false)}><X size={16} /></button>
             </div>
             <div className="modal-body">
-              <p style={{ color: 'var(--text-muted)', marginBottom: '1rem', fontSize: '0.875rem' }}>
+              <p className="leave-types-text-12">
                 This will create leave balance entries for all active teachers for the selected academic year. Already existing balances will be skipped.
               </p>
               <div className="form-group">

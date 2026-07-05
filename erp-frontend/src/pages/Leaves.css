@@ -1,0 +1,257 @@
+/* Component stylesheet for Leaves.tsx */
+
+.leaves-grid-1 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  margin-bottom: 1.5rem;
+}
+
+.leaves-card {
+  margin: 0px;
+  padding: 1rem;
+}
+
+.leaves-row-3 {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.leaves-span-4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.leaves-div-5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.leaves-span-6 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.leaves-div-7 {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.leaves-div-8 {
+  background: var(--border);
+  border-radius: 4px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.leaves-row-9 {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem 1rem;
+}
+
+.leaves-title-10 {
+  margin: 0px;
+}
+
+.leaves-text-11 {
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+.leaves-span-12 {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.75rem;
+}
+
+.leaves-td-13 {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaves-td-14 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.leaves-td-15 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.leaves-td-16 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.leaves-CalendarDays-17 {
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+
+.leaves-row-18 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.leaves-text-19 {
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+.leaves-th-20 {
+  text-align: right;
+}
+
+.leaves-span-21 {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.75rem;
+}
+
+.leaves-td-22 {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaves-td-23 {
+  text-align: right;
+}
+
+.leaves-row-24 {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.leaves-span-25 {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.leaves-td-26 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.leaves-ClipboardCheck-27 {
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+
+.leaves-text-28 {
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+.leaves-th-29 {
+  text-align: right;
+}
+
+.leaves-td-30 {
+  text-align: right;
+}
+
+.leaves-row-31 {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.leaves-td-32 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.leaves-BookOpen-33 {
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+
+.leaves-page-header {
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.leaves-text-35 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.leaves-row-36 {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.leaves-select-37 {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.leaves-select-38 {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.leaves-modal-content {
+  max-width: 500px;
+}
+
+.leaves-grid-40 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.leaves-div-41 {
+  background: #f8fafc;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  padding: 0.6rem 1rem;
+}
+
+.leaves-modal-content {
+  max-width: 420px;
+}
+
+.leaves-modal-content {
+  max-width: 420px;
+}
+
+.leaves-modal-content {
+  max-width: 480px;
+}
+
+.leaves-modal-content {
+  max-width: 480px;
+}
+
+.leaves-text-46 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}

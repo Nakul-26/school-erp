@@ -1,0 +1,95 @@
+/* Component stylesheet for SalaryStructures.tsx */
+
+.salary-structures-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.salary-structures-card {
+  padding: 1.5rem;
+}
+
+.salary-structures-table {
+  font-size: 0.85rem;
+}
+
+.salary-structures-th-4 {
+  text-align: right;
+}
+
+.salary-structures-div-5 {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.salary-structures-input-6 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem;
+  width: 80px;
+}
+
+.salary-structures-input-7 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem;
+  width: 70px;
+}
+
+.salary-structures-input-8 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem;
+  width: 70px;
+}
+
+.salary-structures-input-9 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem;
+  width: 70px;
+}
+
+.salary-structures-input-10 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem;
+  width: 70px;
+}
+
+.salary-structures-input-11 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem;
+  width: 70px;
+}
+
+.salary-structures-input-12 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem;
+  width: 70px;
+}
+
+.salary-structures-input-13 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  padding: 0.3rem;
+  width: 120px;
+}
+
+.salary-structures-td-14 {
+  text-align: right;
+}
+
+.salary-structures-td-15 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.salary-structures-Landmark-16 {
+  margin-bottom: 0.5rem;
+}

@@ -1,3 +1,4 @@
+import './StudentDashboard.css';
 import React from 'react';
 import { Clock, IndianRupee, Printer, BookOpen, Calendar, HelpCircle } from 'lucide-react';
 
@@ -37,11 +38,11 @@ export default function StudentDashboard({
   );
 
   return (
-    <div className="portal-dashboard student-portal" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="portal-dashboard student-portal student-dashboard-portal-dashboard">
       <div className="stats-grid">
         {/* Attendance Overview */}
         <div className="stat-card card">
-          <div className="icon" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)' }}>
+          <div className="icon student-dashboard-icon">
             <Clock size={24} />
           </div>
           <div className="info">
@@ -68,43 +69,35 @@ export default function StudentDashboard({
       </div>
 
       {/* Homework Section (PWA focus) */}
-      <div className="card" style={{ padding: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          <div style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
+      <div className="card student-dashboard-card">
+        <div className="student-dashboard-row-4">
+          <div className="student-dashboard-div-5">
             <BookOpen size={20} />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>Active Homework &amp; Assignments</h3>
-            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Daily assignments and tasks assigned by your subject teachers</p>
+            <h3 className="student-dashboard-title-6">Active Homework &amp; Assignments</h3>
+            <p className="student-dashboard-text-7">Daily assignments and tasks assigned by your subject teachers</p>
           </div>
         </div>
 
         {homework.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem 1rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)' }}>
-            <HelpCircle size={32} style={{ color: 'var(--text-subtle)', marginBottom: '0.5rem' }} />
-            <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>No active homework</h4>
-            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>All caught up! No assignments are currently pending.</p>
+          <div className="student-dashboard-div-8">
+            <HelpCircle size={32} className="student-dashboard-HelpCircle-9"  />
+            <h4 className="student-dashboard-title-10">No active homework</h4>
+            <p className="student-dashboard-text-11">All caught up! No assignments are currently pending.</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="student-dashboard-col-12">
             {homework.slice(0, 5).map((hw: any) => {
               const isOverdue = new Date(hw.due_date) < new Date() && hw.due_date;
               return (
-                <div key={hw.id} style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.5rem',
-                  padding: '1rem',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md)',
-                  background: 'var(--bg-main)'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div key={hw.id} className="student-dashboard-col-13">
+                  <div className="student-dashboard-row-14">
                     <div>
-                      <span className="badge" style={{ background: 'var(--primary-soft)', color: 'var(--primary)', fontWeight: 700, fontSize: '0.7rem', padding: '0.15rem 0.40rem', marginRight: '0.5rem' }}>
+                      <span className="badge student-dashboard-badge">
                         {hw.subject_name}
                       </span>
-                      <strong style={{ fontSize: '0.875rem', color: 'var(--text-main)' }}>{hw.title}</strong>
+                      <strong className="student-dashboard-strong-16">{hw.title}</strong>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: isOverdue ? 'var(--danger)' : 'var(--text-muted)', fontWeight: 500 }}>
                       <Calendar size={12} />
@@ -112,11 +105,11 @@ export default function StudentDashboard({
                     </div>
                   </div>
                   {hw.description && (
-                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                    <p className="student-dashboard-text-17">
                       {hw.description}
                     </p>
                   )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                  <div className="student-dashboard-row-18">
                     <span>Assigned by: {hw.teacher_first} {hw.teacher_last}</span>
                   </div>
                 </div>
@@ -126,18 +119,18 @@ export default function StudentDashboard({
         )}
       </div>
 
-      <div className="dashboard-content-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))', gap: '2rem' }}>
+      <div className="dashboard-content-grid student-dashboard-dashboard-content-grid">
         
         {/* Left Column: Academics */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className="student-dashboard-col-20">
           {/* Exam Results Summary */}
           <div className="card dashboard-section">
-            <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Latest Subject Marks</h3>
+            <h3 className="student-dashboard-title-21">Latest Subject Marks</h3>
             {results.length === 0 ? (
-              <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No exam results published yet.</p>
+              <p className="no-data student-dashboard-no-data">No exam results published yet.</p>
             ) : (
               <div className="table-responsive">
-                <table className="table" style={{ fontSize: '0.85rem' }}>
+                <table className="table student-dashboard-table">
                   <thead>
                     <tr>
                       <th>Exam</th>
@@ -170,17 +163,17 @@ export default function StudentDashboard({
 
           {/* Official Report Cards */}
           <div className="card dashboard-section">
-            <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Official Report Cards</h3>
+            <h3 className="student-dashboard-title-24">Official Report Cards</h3>
             {studentExams.length === 0 ? (
-              <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No official report cards available for download yet.</p>
+              <p className="no-data student-dashboard-no-data">No official report cards available for download yet.</p>
             ) : (
               <div className="table-responsive">
-                <table className="table" style={{ fontSize: '0.85rem' }}>
+                <table className="table student-dashboard-table">
                   <thead>
                     <tr>
                       <th>Exam Title</th>
                       <th>Timeline</th>
-                      <th style={{ textAlign: 'right' }}>Action</th>
+                      <th className="student-dashboard-th-27">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -188,12 +181,8 @@ export default function StudentDashboard({
                       <tr key={e.id}>
                         <td><strong>{e.name}</strong></td>
                         <td>{new Date(e.start_date).toLocaleDateString()} - {new Date(e.end_date).toLocaleDateString()}</td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button 
-                            className="btn btn-sm btn-primary" 
-                            onClick={() => handleOpenReportCard(e.id, sInfo.id)}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                          >
+                        <td className="student-dashboard-td-28">
+                          <button className="btn btn-sm btn-primary student-dashboard-btn" onClick={() => handleOpenReportCard(e.id, sInfo.id)}>
                             <Printer size={12} /> View &amp; Print
                           </button>
                         </td>
@@ -207,22 +196,22 @@ export default function StudentDashboard({
         </div>
 
         {/* Right Column: Fees and Collections */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className="student-dashboard-col-30">
           {/* Fee Ledger Installments */}
           <div className="card dashboard-section">
-            <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Fee Ledger details</h3>
+            <h3 className="student-dashboard-title-31">Fee Ledger details</h3>
             {ledgerRecords.length === 0 ? (
-              <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No fee allocations found for your account.</p>
+              <p className="no-data student-dashboard-no-data">No fee allocations found for your account.</p>
             ) : (
               <div className="table-responsive">
-                <table className="table" style={{ fontSize: '0.85rem' }}>
+                <table className="table student-dashboard-table">
                   <thead>
                     <tr>
                       <th>Fee Component</th>
                       <th>Due Date</th>
-                      <th style={{ textAlign: 'right' }}>Amount Due</th>
-                      <th style={{ textAlign: 'center' }}>Status</th>
-                      <th style={{ textAlign: 'center' }}>Action</th>
+                      <th className="student-dashboard-th-34">Amount Due</th>
+                      <th className="student-dashboard-th-35">Status</th>
+                      <th className="student-dashboard-th-36">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -230,25 +219,21 @@ export default function StudentDashboard({
                       <tr key={rec.id}>
                         <td><strong>{rec.fee_type}</strong></td>
                         <td>{new Date(rec.due_date).toLocaleDateString()}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 'bold' }}>₹{(rec.total_amount - rec.paid_amount).toLocaleString('en-IN')}</td>
-                        <td style={{ textAlign: 'center' }}>
+                        <td className="student-dashboard-td-37">₹{(rec.total_amount - rec.paid_amount).toLocaleString('en-IN')}</td>
+                        <td className="student-dashboard-td-38">
                           <span className={`badge ${
                             rec.status === 'PAID' ? 'badge-success' : rec.status === 'PARTIAL' ? 'badge-warning' : 'badge-danger'
                           }`}>
                             {rec.status}
                           </span>
                         </td>
-                        <td style={{ textAlign: 'center' }}>
+                        <td className="student-dashboard-td-39">
                           {rec.status !== 'PAID' ? (
-                            <button
-                              className="btn btn-outline"
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', borderColor: 'var(--primary)', color: 'var(--primary)', cursor: 'pointer' }}
-                              onClick={() => handlePayOnlineInit(rec)}
-                            >
+                            <button className="btn btn-outline student-dashboard-btn" onClick={() => handlePayOnlineInit(rec)}>
                               Pay Online
                             </button>
                           ) : (
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Paid</span>
+                            <span className="student-dashboard-span-41">Paid</span>
                           )}
                         </td>
                       </tr>
@@ -261,19 +246,19 @@ export default function StudentDashboard({
 
           {/* Payment Receipts History */}
           <div className="card dashboard-section">
-            <h3 style={{ marginBottom: '1.25rem', fontSize: '1.05rem', fontWeight: 800 }}>Payment History &amp; Receipts</h3>
+            <h3 className="student-dashboard-title-42">Payment History &amp; Receipts</h3>
             {payments.length === 0 ? (
-              <p className="no-data" style={{ padding: '2rem 0', color: 'var(--text-muted)' }}>No payment transactions logged in the system.</p>
+              <p className="no-data student-dashboard-no-data">No payment transactions logged in the system.</p>
             ) : (
               <div className="table-responsive">
-                <table className="table" style={{ fontSize: '0.85rem' }}>
+                <table className="table student-dashboard-table">
                   <thead>
                     <tr>
                       <th>Date Paid</th>
                       <th>Fee Type</th>
                       <th>Method</th>
-                      <th style={{ textAlign: 'right' }}>Amount</th>
-                      <th style={{ textAlign: 'right' }}>Receipt</th>
+                      <th className="student-dashboard-th-45">Amount</th>
+                      <th className="student-dashboard-th-46">Receipt</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -282,13 +267,9 @@ export default function StudentDashboard({
                         <td>{new Date(p.payment_date).toLocaleDateString()}</td>
                         <td>{p.fee_type}</td>
                         <td>{p.payment_method}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--success)' }}>₹{p.amount.toLocaleString('en-IN')}</td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button 
-                            className="btn btn-sm btn-outline" 
-                            onClick={() => handleOpenReceipt(p)}
-                            style={{ padding: '0.25rem 0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                          >
+                        <td className="student-dashboard-td-47">₹{p.amount.toLocaleString('en-IN')}</td>
+                        <td className="student-dashboard-td-48">
+                          <button className="btn btn-sm btn-outline student-dashboard-btn" onClick={() => handleOpenReceipt(p)}>
                             <Printer size={12} /> Receipt
                           </button>
                         </td>

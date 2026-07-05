@@ -1,3 +1,4 @@
+import './Leaves.css';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -358,23 +359,23 @@ export default function Leaves() {
       <>
         {/* Balance cards */}
         {balances.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div className="leaves-grid-1">
             {balances.map((b) => {
               const pct = b.total_days > 0 ? Math.min(100, (b.used_days / b.total_days) * 100) : 0;
               const remaining = b.total_days - b.used_days;
               return (
-                <div key={b.leave_type_id} className="card" style={{ padding: '1rem', margin: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{b.leave_type_name}</span>
+                <div key={b.leave_type_id} className="card leaves-card">
+                  <div className="leaves-row-3">
+                    <span className="leaves-span-4">{b.leave_type_name}</span>
                     <span className="badge badge-secondary">{b.leave_type_code}</span>
                   </div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>
-                    {remaining} <span style={{ fontSize: '0.85rem', fontWeight: 400, color: 'var(--text-muted)' }}>remaining</span>
+                  <div className="leaves-div-5">
+                    {remaining} <span className="leaves-span-6">remaining</span>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                  <div className="leaves-div-7">
                     {b.used_days} used of {b.total_days} days
                   </div>
-                  <div style={{ background: 'var(--border)', borderRadius: '4px', height: '6px', overflow: 'hidden' }}>
+                  <div className="leaves-div-8">
                     <div style={{ width: `${pct}%`, height: '100%', background: pct > 80 ? 'var(--danger)' : pct > 50 ? 'var(--warning)' : 'var(--primary)', borderRadius: '4px', transition: 'width 0.3s' }} />
                   </div>
                 </div>
@@ -384,13 +385,13 @@ export default function Leaves() {
         )}
 
         <div className="card">
-          <div style={{ padding: '0.5rem 0.5rem 1rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="leaves-row-9">
             <FileText size={18} />
-            <h4 style={{ margin: 0 }}>Application History</h4>
+            <h4 className="leaves-title-10">Application History</h4>
           </div>
 
           {myLoading ? (
-            <p style={{ padding: '2rem', color: 'var(--text-muted)' }}>Loading records...</p>
+            <p className="leaves-text-11">Loading records...</p>
           ) : (
             <div className="table-responsive">
               <table className="table">
@@ -411,23 +412,23 @@ export default function Leaves() {
                     <tr key={app.id}>
                       <td>
                         <strong>{app.leave_type_code}</strong>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{app.leave_type_name}</span>
+                        <span className="leaves-span-12">{app.leave_type_name}</span>
                       </td>
                       <td>{app.from_date}</td>
                       <td>{app.to_date}</td>
                       <td>{app.days_count}</td>
-                      <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={app.reason}>
+                      <td className="leaves-td-13" title={app.reason}>
                         {app.reason}
                       </td>
                       <td><StatusBadge status={app.status} /></td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{app.remarks || '—'}</td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{new Date(app.created_at).toLocaleDateString()}</td>
+                      <td className="leaves-td-14">{app.remarks || '—'}</td>
+                      <td className="leaves-td-15">{new Date(app.created_at).toLocaleDateString()}</td>
                     </tr>
                   ))}
                   {myApplications.length === 0 && (
                     <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                        <CalendarDays size={32} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
+                      <td colSpan={8} className="leaves-td-16">
+                        <CalendarDays size={32} className="leaves-CalendarDays-17"  />
                         No leave applications found. Click "Apply for Leave" to submit one.
                       </td>
                     </tr>
@@ -445,7 +446,7 @@ export default function Leaves() {
     return (
       <>
         {/* Filter buttons */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        <div className="leaves-row-18">
           {(['Pending', 'Approved', 'Rejected', 'All'] as const).map((filter) => (
             <button
               key={filter}
@@ -459,7 +460,7 @@ export default function Leaves() {
 
         <div className="card">
           {appLoading ? (
-            <p style={{ padding: '2rem', color: 'var(--text-muted)' }}>Loading applications...</p>
+            <p className="leaves-text-19">Loading applications...</p>
           ) : (
             <div className="table-responsive">
               <table className="table">
@@ -473,7 +474,7 @@ export default function Leaves() {
                     <th>Days</th>
                     <th>Reason</th>
                     <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th className="leaves-th-20">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -483,18 +484,18 @@ export default function Leaves() {
                       <td>{app.teacher_first_name} {app.teacher_last_name}</td>
                       <td>
                         <strong>{app.leave_type_code}</strong>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{app.leave_type_name}</span>
+                        <span className="leaves-span-21">{app.leave_type_name}</span>
                       </td>
                       <td>{app.from_date}</td>
                       <td>{app.to_date}</td>
                       <td>{app.days_count}</td>
-                      <td style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={app.reason}>
+                      <td className="leaves-td-22" title={app.reason}>
                         {app.reason}
                       </td>
                       <td><StatusBadge status={app.status} /></td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td className="leaves-td-23">
                         {app.status === 'Pending' ? (
-                          <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                          <div className="leaves-row-24">
                             <button
                               className="btn btn-sm btn-success"
                               onClick={() => { setApprovingId(app.id); setApproveRemarks(''); }}
@@ -509,15 +510,15 @@ export default function Leaves() {
                             </button>
                           </div>
                         ) : (
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{app.remarks || '—'}</span>
+                          <span className="leaves-span-25">{app.remarks || '—'}</span>
                         )}
                       </td>
                     </tr>
                   ))}
                   {appApplications.length === 0 && (
                     <tr>
-                      <td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                        <ClipboardCheck size={32} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
+                      <td colSpan={9} className="leaves-td-26">
+                        <ClipboardCheck size={32} className="leaves-ClipboardCheck-27"  />
                         No {appActiveFilter === 'All' ? '' : appActiveFilter.toLowerCase() + ' '} leave requests found.
                       </td>
                     </tr>
@@ -535,7 +536,7 @@ export default function Leaves() {
     return (
       <div className="card">
         {quotasLoading ? (
-          <p style={{ padding: '2rem', color: 'var(--text-muted)' }}>Loading leave structures...</p>
+          <p className="leaves-text-28">Loading leave structures...</p>
         ) : (
           <div className="table-responsive">
             <table className="table">
@@ -544,7 +545,7 @@ export default function Leaves() {
                   <th>Code</th>
                   <th>Name</th>
                   <th>Days / Year</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th className="leaves-th-29">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -553,8 +554,8 @@ export default function Leaves() {
                     <td><span className="badge badge-secondary">{lt.code}</span></td>
                     <td><strong>{lt.name}</strong></td>
                     <td>{lt.days_per_year}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                    <td className="leaves-td-30">
+                      <div className="leaves-row-31">
                         <button className="btn btn-sm btn-outline" onClick={() => openEditTypeModal(lt)}>
                           Edit
                         </button>
@@ -567,8 +568,8 @@ export default function Leaves() {
                 ))}
                 {leaveTypes.length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                      <BookOpen size={32} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
+                    <td colSpan={4} className="leaves-td-32">
+                      <BookOpen size={32} className="leaves-BookOpen-33"  />
                       No leave types configured yet. Click "Add Leave Type" to create one.
                     </td>
                   </tr>
@@ -593,22 +594,18 @@ export default function Leaves() {
         ]}
       />
 
-      <div className="page-header" style={{ marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+      <div className="page-header leaves-page-header">
         <div>
           <h2>Staff Leave Management</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="leaves-text-35">
             Submit leaves, approve teacher absences, and configure institutional leave categories
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div className="leaves-row-36">
           {activeTab === 'my' && (
             <>
-              <select 
-                value={mySelectedYear} 
-                onChange={(e) => setMySelectedYear(e.target.value)}
-                style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem' }}
-              >
+              <select value={mySelectedYear} onChange={(e) => setMySelectedYear(e.target.value)} className="leaves-select-37">
                 {academicYears.map((ay) => (
                   <option key={ay.id} value={ay.id}>{ay.name}</option>
                 ))}
@@ -620,11 +617,7 @@ export default function Leaves() {
           )}
 
           {activeTab === 'approvals' && (
-            <select 
-              value={appSelectedYear} 
-              onChange={(e) => setAppSelectedYear(e.target.value)}
-              style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem' }}
-            >
+            <select value={appSelectedYear} onChange={(e) => setAppSelectedYear(e.target.value)} className="leaves-select-38">
               <option value="">All Years</option>
               {academicYears.map((ay) => (
                 <option key={ay.id} value={ay.id}>{ay.name}</option>
@@ -677,7 +670,7 @@ export default function Leaves() {
       {/* --- APPLY FOR LEAVE MODAL --- */}
       {showApplyModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
+          <div className="modal-content leaves-modal-content">
             <h3>Apply for Leave</h3>
             <div className="form-group">
               <label>Leave Type *</label>
@@ -688,7 +681,7 @@ export default function Leaves() {
                 ))}
               </select>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="leaves-grid-40">
               <div className="form-group">
                 <label>From Date *</label>
                 <input type="date" value={applyFromDate} onChange={(e) => setApplyFromDate(e.target.value)} />
@@ -699,7 +692,7 @@ export default function Leaves() {
               </div>
             </div>
             {daysCount > 0 && (
-              <div style={{ background: '#f8fafc', borderRadius: '6px', padding: '0.6rem 1rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
+              <div className="leaves-div-41">
                 Duration: <strong>{daysCount} day{daysCount !== 1 ? 's' : ''}</strong>
               </div>
             )}
@@ -725,7 +718,7 @@ export default function Leaves() {
       {/* --- APPROVE MODAL --- */}
       {approvingId && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '420px' }}>
+          <div className="modal-content leaves-modal-content">
             <h3>Approve Leave Request</h3>
             <div className="form-group">
               <label>Approve remarks (optional)</label>
@@ -749,7 +742,7 @@ export default function Leaves() {
       {/* --- REJECT MODAL --- */}
       {rejectingId && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '420px' }}>
+          <div className="modal-content leaves-modal-content">
             <h3>Reject Leave Request</h3>
             <div className="form-group">
               <label>Rejection reason * (required)</label>
@@ -774,7 +767,7 @@ export default function Leaves() {
       {/* --- ADD / EDIT LEAVE TYPE MODAL --- */}
       {showTypeModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '480px' }}>
+          <div className="modal-content leaves-modal-content">
             <h3>{editingType ? 'Edit Leave Type' : 'Add Leave Type'}</h3>
             <div className="form-group">
               <label>Name *</label>
@@ -820,9 +813,9 @@ export default function Leaves() {
       {/* --- SEED BALANCES MODAL --- */}
       {showSeedModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '480px' }}>
+          <div className="modal-content leaves-modal-content">
             <h3>Seed Annual Leave Balances</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+            <p className="leaves-text-46">
               Create yearly leave balance slots for all teachers based on current active leave types. Existing balances will be preserved.
             </p>
             <div className="form-group">

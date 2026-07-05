@@ -1,0 +1,6 @@
+/* Component stylesheet for WorkspaceShell.tsx */
+
+.workspace-shell-text-1 {
+  color: var(--text-muted);
+  margin-top: 1rem;
+}

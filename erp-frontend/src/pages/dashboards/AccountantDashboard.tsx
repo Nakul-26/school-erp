@@ -1,3 +1,4 @@
+import './AccountantDashboard.css';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { IndianRupee, AlertCircle, FileText, CheckCircle, ArrowUpRight } from 'lucide-react';
@@ -12,11 +13,11 @@ const formatCurrency = (val: number) => {
 
 export default function AccountantDashboard({ stats }: AccountantDashboardProps) {
   return (
-    <div className="portal-dashboard accountant-dashboard" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="portal-dashboard accountant-dashboard accountant-dashboard-portal-dashboard">
       <div className="stats-grid">
         {/* Today's Collections */}
         <div className="stat-card card">
-          <div className="icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>
+          <div className="icon accountant-dashboard-icon">
             <IndianRupee size={24} />
           </div>
           <div className="info">
@@ -27,7 +28,7 @@ export default function AccountantDashboard({ stats }: AccountantDashboardProps)
 
         {/* Pending Dues */}
         <div className="stat-card card">
-          <div className="icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}>
+          <div className="icon accountant-dashboard-icon">
             <AlertCircle size={24} />
           </div>
           <div className="info">
@@ -39,7 +40,7 @@ export default function AccountantDashboard({ stats }: AccountantDashboardProps)
 
         {/* Receipts Issued Today */}
         <div className="stat-card card">
-          <div className="icon" style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary)' }}>
+          <div className="icon accountant-dashboard-icon">
             <FileText size={24} />
           </div>
           <div className="info">
@@ -50,7 +51,7 @@ export default function AccountantDashboard({ stats }: AccountantDashboardProps)
 
         {/* Online Payments to Verify */}
         <div className="stat-card card">
-          <div className="icon" style={{ background: 'rgba(245, 185, 11, 0.1)', color: 'var(--warning)' }}>
+          <div className="icon accountant-dashboard-icon">
             <CheckCircle size={24} />
           </div>
           <div className="info">
@@ -62,67 +63,31 @@ export default function AccountantDashboard({ stats }: AccountantDashboardProps)
       </div>
 
       {/* Accountant Quick Actions */}
-      <div className="accountant-actions card" style={{ marginTop: '1rem' }}>
+      <div className="accountant-actions card accountant-dashboard-accountant-actions">
         <h3>Finance Quick Actions</h3>
-        <div className="quick-actions-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginTop: '1.25rem' }}>
-          <Link to="/student-fees" className="action-btn" style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '1.25rem 1.5rem',
-            background: '#f8fafc',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            color: 'var(--text-main)',
-            textDecoration: 'none',
-            transition: 'all 0.2s',
-            fontWeight: 600
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <IndianRupee size={20} style={{ color: 'var(--primary)' }} />
+        <div className="quick-actions-grid accountant-dashboard-quick-actions-grid">
+          <Link to="/student-fees" className="action-btn accountant-dashboard-action-btn">
+            <div className="accountant-dashboard-row-9">
+              <IndianRupee size={20} className="accountant-dashboard-IndianRupee-10"  />
               <span>Collect Student Fees</span>
             </div>
-            <ArrowUpRight size={16} style={{ color: 'var(--text-muted)' }} />
+            <ArrowUpRight size={16} className="accountant-dashboard-ArrowUpRight-11"  />
           </Link>
 
-          <Link to="/fee-structures" className="action-btn" style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '1.25rem 1.5rem',
-            background: '#f8fafc',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            color: 'var(--text-main)',
-            textDecoration: 'none',
-            transition: 'all 0.2s',
-            fontWeight: 600
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <FileText size={20} style={{ color: 'var(--success)' }} />
+          <Link to="/fee-structures" className="action-btn accountant-dashboard-action-btn">
+            <div className="accountant-dashboard-row-13">
+              <FileText size={20} className="accountant-dashboard-FileText-14"  />
               <span>Manage Fee Plans</span>
             </div>
-            <ArrowUpRight size={16} style={{ color: 'var(--text-muted)' }} />
+            <ArrowUpRight size={16} className="accountant-dashboard-ArrowUpRight-15"  />
           </Link>
 
-          <Link to="/reports?tab=fees" className="action-btn" style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '1.25rem 1.5rem',
-            background: '#f8fafc',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            color: 'var(--text-main)',
-            textDecoration: 'none',
-            transition: 'all 0.2s',
-            fontWeight: 600
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <FileText size={20} style={{ color: 'var(--warning)' }} />
+          <Link to="/reports?tab=fees" className="action-btn accountant-dashboard-action-btn">
+            <div className="accountant-dashboard-row-17">
+              <FileText size={20} className="accountant-dashboard-FileText-18"  />
               <span>View Fee Reports</span>
             </div>
-            <ArrowUpRight size={16} style={{ color: 'var(--text-muted)' }} />
+            <ArrowUpRight size={16} className="accountant-dashboard-ArrowUpRight-19"  />
           </Link>
         </div>
       </div>

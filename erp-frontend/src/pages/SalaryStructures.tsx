@@ -1,3 +1,4 @@
+import './SalaryStructures.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -107,7 +108,7 @@ export default function SalaryStructures() {
       <div className="page-header">
         <div>
           <h2>Staff Salary Structures</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="salary-structures-text-1">
             Set standard salary scales, tax withholdings, and provident fund components per teacher.
           </p>
         </div>
@@ -115,9 +116,9 @@ export default function SalaryStructures() {
 
       
 
-      <div className="card" style={{ padding: '1.5rem' }}>
+      <div className="card salary-structures-card">
         {loading ? <p>Loading staff salary details...</p> : (
-          <table className="table" style={{ fontSize: '0.85rem' }}>
+          <table className="table salary-structures-table">
             <thead>
               <tr>
                 <th>Teacher</th>
@@ -129,7 +130,7 @@ export default function SalaryStructures() {
                 <th>TDS Ded (₹)</th>
                 <th>Other Ded (₹)</th>
                 <th>Effective</th>
-                <th style={{ textAlign: 'right' }}>Action</th>
+                <th className="salary-structures-th-4">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -137,73 +138,33 @@ export default function SalaryStructures() {
                 <tr key={t.teacher_id}>
                   <td>
                     <strong>{t.first_name} {t.last_name}</strong>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.employee_id} ({t.designation})</div>
+                    <div className="salary-structures-div-5">{t.employee_id} ({t.designation})</div>
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      value={t.basic_salary}
-                      onChange={(e) => handleValueChange(idx, 'basic_salary', e.target.value)}
-                      style={{ width: '80px', padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                    />
+                    <input type="number" value={t.basic_salary} onChange={(e) => handleValueChange(idx, 'basic_salary', e.target.value)} className="salary-structures-input-6"  />
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      value={t.da}
-                      onChange={(e) => handleValueChange(idx, 'da', e.target.value)}
-                      style={{ width: '70px', padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                    />
+                    <input type="number" value={t.da} onChange={(e) => handleValueChange(idx, 'da', e.target.value)} className="salary-structures-input-7"  />
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      value={t.hra}
-                      onChange={(e) => handleValueChange(idx, 'hra', e.target.value)}
-                      style={{ width: '70px', padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                    />
+                    <input type="number" value={t.hra} onChange={(e) => handleValueChange(idx, 'hra', e.target.value)} className="salary-structures-input-8"  />
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      value={t.other_allowances}
-                      onChange={(e) => handleValueChange(idx, 'other_allowances', e.target.value)}
-                      style={{ width: '70px', padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                    />
+                    <input type="number" value={t.other_allowances} onChange={(e) => handleValueChange(idx, 'other_allowances', e.target.value)} className="salary-structures-input-9"  />
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      value={t.pf_deduction}
-                      onChange={(e) => handleValueChange(idx, 'pf_deduction', e.target.value)}
-                      style={{ width: '70px', padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                    />
+                    <input type="number" value={t.pf_deduction} onChange={(e) => handleValueChange(idx, 'pf_deduction', e.target.value)} className="salary-structures-input-10"  />
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      value={t.tds_deduction}
-                      onChange={(e) => handleValueChange(idx, 'tds_deduction', e.target.value)}
-                      style={{ width: '70px', padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                    />
+                    <input type="number" value={t.tds_deduction} onChange={(e) => handleValueChange(idx, 'tds_deduction', e.target.value)} className="salary-structures-input-11"  />
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      value={t.other_deductions}
-                      onChange={(e) => handleValueChange(idx, 'other_deductions', e.target.value)}
-                      style={{ width: '70px', padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                    />
+                    <input type="number" value={t.other_deductions} onChange={(e) => handleValueChange(idx, 'other_deductions', e.target.value)} className="salary-structures-input-12"  />
                   </td>
                   <td>
-                    <input
-                      type="date"
-                      value={t.effective_from}
-                      onChange={(e) => handleValueChange(idx, 'effective_from', e.target.value)}
-                      style={{ width: '120px', padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '0.75rem' }}
-                    />
+                    <input type="date" value={t.effective_from} onChange={(e) => handleValueChange(idx, 'effective_from', e.target.value)} className="salary-structures-input-13"  />
                   </td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td className="salary-structures-td-14">
                     <button
                       className="btn btn-sm btn-primary"
                       onClick={() => handleSave(t)}
@@ -216,8 +177,8 @@ export default function SalaryStructures() {
               ))}
               {teachers.length === 0 && (
                 <tr>
-                  <td colSpan={10} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    <Landmark size={32} style={{ marginBottom: '0.5rem' }} />
+                  <td colSpan={10} className="salary-structures-td-15">
+                    <Landmark size={32} className="salary-structures-Landmark-16"  />
                     <p>No teachers registered in the system yet.</p>
                   </td>
                 </tr>

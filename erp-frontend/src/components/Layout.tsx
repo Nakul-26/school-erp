@@ -1,3 +1,4 @@
+import './Layout.css';
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { Menu, X, ArrowDownToLine, Bell, BellOff, X as CloseIcon } from 'lucide-react';
@@ -101,8 +102,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main area */}
       <div className="layout-body">
         {/* Mobile topbar */}
-        <header className="mobile-topbar" style={{ justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+        <header className="mobile-topbar layout-mobile-topbar">
+          <div className="layout-row-2">
             <button
               className="mobile-menu-btn"
               onClick={() => setSidebarOpen(true)}
@@ -136,45 +137,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Global PWA Install & Push Notification Banner Area */}
         {(showInstallBanner || showPushBanner) && (
-          <div className="alert-banners-container" style={{ padding: '0.75rem 1rem 0 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div className="alert-banners-container layout-alert-banners-container">
             {showInstallBanner && (
-              <div className="install-banner" style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
-                color: 'white',
-                padding: '0.75rem 1rem',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-md)',
-                fontSize: '0.8rem',
-                fontWeight: 500,
-                animation: 'slideUp 0.3s ease-out'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="install-banner layout-install-banner">
+                <div className="layout-row-5">
                   <ArrowDownToLine size={16} />
                   <span>Install School ERP app on your phone for a native experience!</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <button
-                    onClick={handleInstallClick}
-                    style={{
-                      background: 'white',
-                      color: '#4f46e5',
-                      border: 'none',
-                      padding: '0.35rem 0.75rem',
-                      borderRadius: 'var(--radius-sm)',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontSize: '0.75rem'
-                    }}
-                  >
+                <div className="layout-row-6">
+                  <button onClick={handleInstallClick} className="layout-btn-7">
                     Install
                   </button>
-                  <button
-                    onClick={() => setShowInstallBanner(false)}
-                    style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}
-                  >
+                  <button onClick={() => setShowInstallBanner(false)} className="layout-row-8">
                     <CloseIcon size={16} />
                   </button>
                 </div>
@@ -182,44 +156,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
 
             {showPushBanner && (
-              <div className="push-banner" style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: 'var(--bg-card)',
-                borderLeft: '4px solid var(--primary)',
-                color: 'var(--text-main)',
-                padding: '0.75rem 1rem',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-md)',
-                fontSize: '0.8rem',
-                fontWeight: 500,
-                animation: 'slideUp 0.3s ease-out'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Bell size={16} style={{ color: 'var(--primary)' }} />
+              <div className="push-banner layout-push-banner">
+                <div className="layout-row-10">
+                  <Bell size={16} className="layout-Bell-11"  />
                   <span>Never miss homework, results or alerts. Enable push notifications!</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <button
-                    onClick={handleSubscribePush}
-                    style={{
-                      background: 'var(--primary)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.35rem 0.75rem',
-                      borderRadius: 'var(--radius-sm)',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontSize: '0.75rem'
-                    }}
-                  >
+                <div className="layout-row-12">
+                  <button onClick={handleSubscribePush} className="layout-btn-13">
                     Allow
                   </button>
-                  <button
-                    onClick={handleDismissPush}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}
-                  >
+                  <button onClick={handleDismissPush} className="layout-row-14">
                     <CloseIcon size={16} />
                   </button>
                 </div>

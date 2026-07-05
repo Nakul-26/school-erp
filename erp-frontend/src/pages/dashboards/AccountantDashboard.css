@@ -1,0 +1,122 @@
+/* Component stylesheet for AccountantDashboard.tsx */
+
+.accountant-dashboard-portal-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.accountant-dashboard-icon {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.accountant-dashboard-icon {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.accountant-dashboard-icon {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary);
+}
+
+.accountant-dashboard-icon {
+  background: rgba(245, 185, 11, 0.1);
+  color: var(--warning);
+}
+
+.accountant-dashboard-accountant-actions {
+  margin-top: 1rem;
+}
+
+.accountant-dashboard-quick-actions-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 1.25rem;
+}
+
+.accountant-dashboard-action-btn {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  display: flex;
+  font-weight: 600;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.accountant-dashboard-row-9 {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.accountant-dashboard-IndianRupee-10 {
+  color: var(--primary);
+}
+
+.accountant-dashboard-ArrowUpRight-11 {
+  color: var(--text-muted);
+}
+
+.accountant-dashboard-action-btn {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  display: flex;
+  font-weight: 600;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.accountant-dashboard-row-13 {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.accountant-dashboard-FileText-14 {
+  color: var(--success);
+}
+
+.accountant-dashboard-ArrowUpRight-15 {
+  color: var(--text-muted);
+}
+
+.accountant-dashboard-action-btn {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  display: flex;
+  font-weight: 600;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.accountant-dashboard-row-17 {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.accountant-dashboard-FileText-18 {
+  color: var(--warning);
+}
+
+.accountant-dashboard-ArrowUpRight-19 {
+  color: var(--text-muted);
+}

@@ -1,3 +1,4 @@
+import './Announcements.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -159,7 +160,7 @@ export default function Announcements() {
       <div className="page-header">
         <div>
           <h2>Notice Board & Circulars</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="announcements-text-1">
             Broadcasting important institution notices, official circulars, and holiday events
           </p>
         </div>
@@ -171,7 +172,7 @@ export default function Announcements() {
       </div>
 
       {/* Category Tabs */}
-      <div className="page-tabs" style={{ marginBottom: '1.5rem' }}>
+      <div className="page-tabs announcements-page-tabs">
         {CATEGORIES.map(cat => (
           <button
             key={cat}
@@ -183,34 +184,34 @@ export default function Announcements() {
         ))}
       </div>
 
-      <div className="announcements-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div className="announcements-container announcements-container">
         {loading ? <p>Loading notices...</p> : filteredAnnouncements.length === 0 ? (
-          <div className="card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-            <Megaphone size={40} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
-            <h3 style={{ color: 'var(--text-main)', marginBottom: '0.5rem' }}>No Notices Found</h3>
-            <p style={{ color: 'var(--text-muted)' }}>There are no recent announcements broadcasted in this category.</p>
+          <div className="card announcements-card">
+            <Megaphone size={40} className="announcements-Megaphone-5"  />
+            <h3 className="announcements-title-6">No Notices Found</h3>
+            <p className="announcements-text-7">There are no recent announcements broadcasted in this category.</p>
           </div>
         ) : (
           filteredAnnouncements.map((a) => {
             const parsed = getParsedContent(a.content);
             const badge = getCategoryBadge(parsed.category);
             return (
-              <div key={a.id} className="card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+              <div key={a.id} className="card announcements-card">
+                <div className="announcements-row-9">
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <div className="announcements-row-10">
                       <span className="badge" style={{ backgroundColor: badge.bg, color: badge.color, fontWeight: 700 }}>
                         {badge.label}
                       </span>
-                      <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>{a.title}</h3>
+                      <h3 className="announcements-title-11">{a.title}</h3>
                     </div>
-                    <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.5rem', alignItems: 'center' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <div className="announcements-row-12">
+                      <span className="announcements-row-13">
                         <Calendar size={14} />
                         {new Date(a.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}
                       </span>
                       {canPublish && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span className="announcements-row-14">
                           <Eye size={14} /> Visible to: 
                           {a.visible_to_students === 1 && <span className="badge badge-success">Students</span>}
                           {a.visible_to_teachers === 1 && <span className="badge badge-warning">Teachers</span>}
@@ -220,28 +221,18 @@ export default function Announcements() {
                     </div>
                   </div>
                   {canPublish && (
-                    <button 
-                      className="btn btn-outline" 
-                      style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.2)', padding: '0.5rem' }} 
-                      onClick={() => handleDelete(a.id)}
-                      title="Delete notice"
-                    >
+                    <button className="btn btn-outline announcements-btn" onClick={() => handleDelete(a.id)} title="Delete notice">
                       <Trash2 size={16} />
                     </button>
                   )}
                 </div>
-                <p style={{ whiteSpace: 'pre-wrap', color: '#334155', lineHeight: '1.6', fontSize: '0.95rem', margin: 0 }}>{parsed.text}</p>
+                <p className="announcements-text-16">{parsed.text}</p>
                 
                 {parsed.attachmentUrl && (
-                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <Paperclip size={14} style={{ color: 'var(--primary)' }} />
-                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Attachment:</span>
-                    <a 
-                      href={parsed.attachmentUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      style={{ fontSize: '0.825rem', color: 'var(--primary)', fontWeight: 600, textDecoration: 'underline' }}
-                    >
+                  <div className="announcements-row-17">
+                    <Paperclip size={14} className="announcements-Paperclip-18"  />
+                    <span className="announcements-span-19">Attachment:</span>
+                    <a href={parsed.attachmentUrl} target="_blank" rel="noopener noreferrer" className="announcements-a-20">
                       {parsed.attachmentName || 'View Circular File / PDF'}
                     </a>
                   </div>
@@ -254,7 +245,7 @@ export default function Announcements() {
 
       {showModal && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
+          <div className="modal-content announcements-modal-content">
             <h3>Create Official Circular Notice</h3>
             <form onSubmit={handleCreate}>
               <div className="form-group">
@@ -268,14 +259,10 @@ export default function Announcements() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="announcements-grid-22">
                 <div className="form-group">
                   <label>Circular Category</label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem' }}
-                  >
+                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="announcements-select-23">
                     <option value="General">General Notice</option>
                     <option value="Academic">Academic / Syllabus / Exams</option>
                     <option value="Holiday">Holidays & Closures</option>
@@ -287,17 +274,10 @@ export default function Announcements() {
 
               <div className="form-group">
                 <label>Content Description</label>
-                <textarea
-                  placeholder="Write the detailed circular announcement context here..."
-                  rows={5}
-                  value={form.content}
-                  onChange={(e) => setForm({ ...form, content: e.target.value })}
-                  required
-                  style={{ fontFamily: 'inherit', padding: '0.75rem', fontSize: '0.875rem' }}
-                />
+                <textarea placeholder="Write the detailed circular announcement context here..." rows={5} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} required className="announcements-textarea-24"  />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="announcements-grid-25">
                 <div className="form-group">
                   <label>Attachment URL (Optional)</label>
                   <input
@@ -318,40 +298,25 @@ export default function Announcements() {
                 </div>
               </div>
 
-              <div className="form-group" style={{ gap: '1rem', marginTop: '1rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={16} /> Target Audience</label>
-                <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-                  <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={form.visible_to_students}
-                      onChange={(e) => setForm({ ...form, visible_to_students: e.target.checked })}
-                      style={{ width: 'auto' }}
-                    />
+              <div className="form-group announcements-form-group">
+                <label className="announcements-row-27"><Users size={16} /> Target Audience</label>
+                <div className="announcements-row-28">
+                  <label className="announcements-row-29">
+                    <input type="checkbox" checked={form.visible_to_students} onChange={(e) => setForm({ ...form, visible_to_students: e.target.checked })} className="announcements-input-30"  />
                     Students
                   </label>
-                  <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={form.visible_to_teachers}
-                      onChange={(e) => setForm({ ...form, visible_to_teachers: e.target.checked })}
-                      style={{ width: 'auto' }}
-                    />
+                  <label className="announcements-row-31">
+                    <input type="checkbox" checked={form.visible_to_teachers} onChange={(e) => setForm({ ...form, visible_to_teachers: e.target.checked })} className="announcements-input-32"  />
                     Teachers
                   </label>
-                  <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={form.visible_to_parents}
-                      onChange={(e) => setForm({ ...form, visible_to_parents: e.target.checked })}
-                      style={{ width: 'auto' }}
-                    />
+                  <label className="announcements-row-33">
+                    <input type="checkbox" checked={form.visible_to_parents} onChange={(e) => setForm({ ...form, visible_to_parents: e.target.checked })} className="announcements-input-34"  />
                     Parents
                   </label>
                 </div>
               </div>
 
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <div className="modal-actions announcements-modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>

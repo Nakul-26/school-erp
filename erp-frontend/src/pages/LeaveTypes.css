@@ -1,0 +1,65 @@
+/* Component stylesheet for LeaveTypes.tsx */
+
+.leave-types-BookOpen-1 {
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+.leave-types-text-2 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.leave-types-row-3 {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.leave-types-RefreshCw-4 {
+  margin-right: 0.4rem;
+}
+
+.leave-types-Plus-5 {
+  margin-right: 0.4rem;
+}
+
+.leave-types-text-6 {
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+.leave-types-th-7 {
+  width: 120px;
+}
+
+.leave-types-badge {
+  background: var(--primary);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+}
+
+.leave-types-row-9 {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.leave-types-td-10 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.leave-types-BookOpen-11 {
+  display: block;
+  margin: 0 auto 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.leave-types-text-12 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}

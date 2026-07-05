@@ -1,0 +1,214 @@
+/* Component stylesheet for Announcements.tsx */
+
+.announcements-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.announcements-page-tabs {
+  margin-bottom: 1.5rem;
+}
+
+.announcements-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.announcements-card {
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.announcements-Megaphone-5 {
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.announcements-title-6 {
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.announcements-text-7 {
+  color: var(--text-muted);
+}
+
+.announcements-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+}
+
+.announcements-row-9 {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.announcements-row-10 {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.announcements-title-11 {
+  color: var(--text-main);
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: 0px;
+}
+
+.announcements-row-12 {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  font-size: 0.8rem;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.announcements-row-13 {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.announcements-row-14 {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.announcements-btn {
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+  padding: 0.5rem;
+}
+
+.announcements-text-16 {
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0px;
+  white-space: pre-wrap;
+}
+
+.announcements-row-17 {
+  align-items: center;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+}
+
+.announcements-Paperclip-18 {
+  color: var(--primary);
+}
+
+.announcements-span-19 {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.announcements-a-20 {
+  color: var(--primary);
+  font-size: 0.825rem;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.announcements-modal-content {
+  max-width: 600px;
+}
+
+.announcements-grid-22 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+  margin-bottom: 1rem;
+}
+
+.announcements-select-23 {
+  padding: 0.5rem;
+  width: 100%;
+}
+
+.announcements-textarea-24 {
+  font-family: inherit;
+  font-size: 0.875rem;
+  padding: 0.75rem;
+}
+
+.announcements-grid-25 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.announcements-form-group {
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.announcements-row-27 {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.announcements-row-28 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.announcements-row-29 {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+}
+
+.announcements-input-30 {
+  width: auto;
+}
+
+.announcements-row-31 {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+}
+
+.announcements-input-32 {
+  width: auto;
+}
+
+.announcements-row-33 {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+}
+
+.announcements-input-34 {
+  width: auto;
+}
+
+.announcements-modal-actions {
+  margin-top: 2rem;
+}

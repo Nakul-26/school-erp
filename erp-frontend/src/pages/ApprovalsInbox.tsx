@@ -1,3 +1,4 @@
+import './ApprovalsInbox.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import { useNavigate } from 'react-router-dom';
@@ -208,10 +209,10 @@ export default function ApprovalsInbox() {
         loading={loading && approvals.length === 0}
       >
         {/* Roster Layout */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="approvals-inbox-col-1">
           
           {/* Filters card */}
-          <div className="card filters" style={{ padding: '1rem', minHeight: 'fit-content' }}>
+          <div className="card filters approvals-inbox-card">
             <div className="search-container">
               <Search size={18} />
               <input 
@@ -222,13 +223,9 @@ export default function ApprovalsInbox() {
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Request Type</label>
-              <select 
-                style={{ padding: '0.45rem 1.5rem 0.45rem 0.75rem', width: 'auto' }}
-                value={selectedType}
-                onChange={e => setSelectedType(e.target.value)}
-              >
+            <div className="approvals-inbox-row-3">
+              <label className="approvals-inbox-label-4">Request Type</label>
+              <select className="approvals-inbox-select-5" value={selectedType} onChange={e => setSelectedType(e.target.value)}>
                 <option value="All">All Types</option>
                 <option value="LEAVE_REQUEST">Leave Requests</option>
                 <option value="ATTENDANCE_CORRECTION">Attendance Corrections</option>
@@ -240,9 +237,9 @@ export default function ApprovalsInbox() {
 
           {/* Request List */}
           {loading ? (
-            <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Refreshing inbox data...</p>
+            <p className="approvals-inbox-text-6">Refreshing inbox data...</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="approvals-inbox-col-7">
               {filteredApprovals.map(appr => {
                 const isPending = appr.status === 'Pending';
                 const isApproved = appr.status === 'Approved';
@@ -262,13 +259,13 @@ export default function ApprovalsInbox() {
                       gap: '1.5rem'
                     }}
                   >
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flex: 1 }}>
-                      <div style={{ background: '#f8fafc', padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="approvals-inbox-row-8">
+                      <div className="approvals-inbox-row-9">
                         <FileText className="text-secondary" size={20} />
                       </div>
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 800, fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--text-main)' }}>
+                        <div className="approvals-inbox-row-10">
+                          <span className="approvals-inbox-span-11">
                             {appr.approval_type.replace(/_/g, ' ')}
                           </span>
                           <span className={`badge ${isPending ? 'badge-warning' : isApproved ? 'badge-success' : 'badge-danger'}`}>
@@ -276,22 +273,22 @@ export default function ApprovalsInbox() {
                           </span>
                         </div>
                         
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+                        <p className="approvals-inbox-text-12">
                           Requested by: <strong>{appr.requester_name}</strong> ({appr.requester_email})
                         </p>
 
                         {appr.remarks && (
-                          <p style={{ fontSize: '0.8rem', background: '#f8fafc', padding: '0.4rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border)', marginTop: '0.5rem', fontStyle: 'italic', color: '#475569' }}>
+                          <p className="approvals-inbox-text-13">
                             &ldquo;{appr.remarks}&rdquo;
                           </p>
                         )}
 
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                        <div className="approvals-inbox-div-14">
                           Submitted: {new Date(appr.created_at).toLocaleString()}
                         </div>
 
                         {!isPending && (
-                          <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600, marginTop: '0.25rem' }}>
+                          <div className="approvals-inbox-div-15">
                             Reviewed by {appr.approver_name} on {new Date(appr.approved_rejected_at || appr.updated_at).toLocaleString()}
                           </div>
                         )}
@@ -300,12 +297,8 @@ export default function ApprovalsInbox() {
 
                     {/* Action Panel */}
                     {isPending && isAdminOrHOD && (
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button 
-                          className="btn btn-sm btn-success" 
-                          onClick={() => handleOpenActionModal(appr, 'Approved')}
-                          style={{ background: 'var(--success)', color: '#ffffff' }}
-                        >
+                      <div className="approvals-inbox-row-16">
+                        <button className="btn btn-sm btn-success approvals-inbox-btn" onClick={() => handleOpenActionModal(appr, 'Approved')}>
                           <ThumbsUp size={14} /> Approve
                         </button>
                         <button 
@@ -321,10 +314,10 @@ export default function ApprovalsInbox() {
               })}
 
               {filteredApprovals.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '4rem 1.5rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--bg-card)' }}>
-                  <CheckCircle2 className="text-success" size={36} style={{ margin: '0 auto 1rem' }} />
-                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)' }}>All caught up!</h4>
-                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                <div className="approvals-inbox-div-18">
+                  <CheckCircle2 className="text-success approvals-inbox-text-success" size={36}  />
+                  <h4 className="approvals-inbox-title-20">All caught up!</h4>
+                  <p className="approvals-inbox-text-21">
                     No pending approval requests matching your selection.
                   </p>
                 </div>
@@ -337,13 +330,13 @@ export default function ApprovalsInbox() {
       {/* Review Modal Form */}
       {showActionModal && targetApproval && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '440px' }}>
+          <div className="modal-content approvals-inbox-modal-content">
             <h3>Confirm {actionStatus === 'Approved' ? 'Approval' : 'Rejection'}</h3>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+            <p className="approvals-inbox-text-23">
               You are about to <strong>{actionStatus.toLowerCase()}</strong> the {targetApproval.approval_type.toLowerCase().replace(/_/g, ' ')} submitted by {targetApproval.requester_name}.
             </p>
 
-            <form onSubmit={handleProcessActionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleProcessActionSubmit} className="approvals-inbox-col-24">
               <div className="form-group">
                 <label>Review Notes / Remarks</label>
                 <textarea 
@@ -356,7 +349,7 @@ export default function ApprovalsInbox() {
               </div>
 
               {actionError && (
-                <div style={{ color: 'var(--danger)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div className="approvals-inbox-row-25">
                   <AlertCircle size={14} /> {actionError}
                 </div>
               )}

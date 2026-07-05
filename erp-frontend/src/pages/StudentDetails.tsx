@@ -1,3 +1,4 @@
+import './StudentDetails.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
@@ -466,8 +467,8 @@ export default function StudentDetails() {
         title="Student Profile"
         description="Use this page to inspect a student's personal information, attendance record, and exam grades."
         steps={["Read personal details, contact info, and parent profiles.","Check their attendance percentage and detailed daily record.","Review report cards and outstanding school fees."]}
-      /><p style={{ textAlign: 'center', padding: '3rem' }}>Loading student profile...</p></Layout>;
-  if (!student) return <Layout><p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Student profile not found.</p></Layout>;
+      /><p className="student-details-text-1">Loading student profile...</p></Layout>;
+  if (!student) return <Layout><p className="student-details-text-2">Student profile not found.</p></Layout>;
 
   // Calculate fees statistics
   const totalAssignedFees = ledger.reduce((sum, item) => sum + (item.total_amount || 0), 0);
@@ -524,66 +525,57 @@ export default function StudentDetails() {
   return (
     <Layout>
       {/* Back button */}
-      <div style={{ marginBottom: '1rem' }}>
-        <Link to="/students" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 600 }}>
+      <div className="student-details-div-3">
+        <Link to="/students" className="student-details-row-4">
           <ArrowLeft size={16} /> Back to Student Hub
         </Link>
       </div>
 
       {/* Redesigned Student Profile Header Banner (Premium Sidebar Columns Format) */}
-      <div className="card" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2.5rem', padding: '2.5rem', alignItems: 'center', background: 'linear-gradient(to right, #f8fafc, #ffffff)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', marginBottom: '2rem', boxShadow: 'var(--shadow-sm)', flexWrap: 'wrap' }}>
+      <div className="card student-details-card">
         {/* Left Column: Big Avatar */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ width: '96px', height: '96px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 'bold', boxShadow: '0 8px 16px rgba(79, 70, 229, 0.15)' }}>
+        <div className="student-details-col-6">
+          <div className="student-details-row-7">
             👤
           </div>
-          <span className={`badge badge-${student.status === 'ACTIVE' ? 'success' : student.status === 'GRADUATED' ? 'success' : 'secondary'}`} style={{ fontSize: '0.75rem', padding: '0.2rem 0.75rem' }}>
+          <span className={`badge badge-${student.status === 'ACTIVE' ? 'success' : student.status === 'GRADUATED' ? 'success' : 'secondary'} student-details-span-8`}>
             {student.status}
           </span>
         </div>
 
         {/* Right Column: Dynamic Profile Metadata Grid */}
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem', borderBottom: '2px solid #f1f5f9', paddingBottom: '0.5rem' }}>
+        <div className="student-details-div-9">
+          <h2 className="student-details-title-10">
             {student.first_name} {student.middle_name ? student.middle_name + ' ' : ''}{student.last_name}
           </h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+          <div className="student-details-grid-11">
             <div>
-              <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Admission No</span>
-              <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{student.admission_number}</strong>
+              <span className="student-details-span-12">Admission No</span>
+              <strong className="student-details-strong-13">{student.admission_number}</strong>
             </div>
             <div>
-              <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Roll No</span>
-              <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{student.roll_number || 'N/A'}</strong>
+              <span className="student-details-span-14">Roll No</span>
+              <strong className="student-details-strong-15">{student.roll_number || 'N/A'}</strong>
             </div>
             <div>
-              <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>{getProgramLabel()}</span>
-              <strong style={{ fontSize: '0.95rem', color: 'var(--primary)' }}>{student.program_name || 'Unassigned'}</strong>
+              <span className="student-details-span-16">{getProgramLabel()}</span>
+              <strong className="student-details-strong-17">{student.program_name || 'Unassigned'}</strong>
             </div>
             <div>
-              <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Section</span>
-              <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{student.section_name || 'Unassigned'}</strong>
+              <span className="student-details-span-18">Section</span>
+              <strong className="student-details-strong-19">{student.section_name || 'Unassigned'}</strong>
             </div>
             <div>
-              <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Academic Year</span>
-              <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{student.academic_year_name || 'N/A'}</strong>
+              <span className="student-details-span-20">Academic Year</span>
+              <strong className="student-details-strong-21">{student.academic_year_name || 'N/A'}</strong>
             </div>
           </div>
         </div>
       </div>
 
       {/* Redesigned Profile Tabs Header */}
-      <div className="tabs" style={{ 
-        display: 'flex', 
-        gap: '0.5rem', 
-        borderBottom: '1px solid #e2e8f0', 
-        marginBottom: '1.5rem', 
-        overflowX: 'auto', 
-        height: '52px',
-        flexShrink: 0,
-        scrollbarWidth: 'none' 
-      }}>
+      <div className="tabs student-details-tabs">
         {[
           { id: 'overview', label: 'Overview', icon: User },
           { id: 'academic', label: 'Academic', icon: GraduationCap },
@@ -629,54 +621,54 @@ export default function StudentDetails() {
       </div>
 
       {/* Tab Panels */}
-      <div className="card" style={{ padding: '2rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', minHeight: '350px' }}>
+      <div className="card student-details-card">
         
         {/* OVERVIEW PANEL */}
         {activeTab === 'overview' && (
           <div>
-            <h3 style={{ marginBottom: '1.5rem', fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)' }}>Personal Information</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '2rem' }}>
+            <h3 className="student-details-title-24">Personal Information</h3>
+            <div className="student-details-grid-25">
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>First Name</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{student.first_name}</span>
+                <label className="student-details-label-26">First Name</label>
+                <span className="student-details-span-27">{student.first_name}</span>
               </div>
               {student.middle_name && (
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Middle Name</label>
-                  <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{student.middle_name}</span>
+                  <label className="student-details-label-28">Middle Name</label>
+                  <span className="student-details-span-29">{student.middle_name}</span>
                 </div>
               )}
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Last Name</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{student.last_name}</span>
+                <label className="student-details-label-30">Last Name</label>
+                <span className="student-details-span-31">{student.last_name}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Admission No</label>
-                <span style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.95rem' }}>{student.admission_number}</span>
+                <label className="student-details-label-32">Admission No</label>
+                <span className="student-details-span-33">{student.admission_number}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Roll No</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{student.roll_number || '-'}</span>
+                <label className="student-details-label-34">Roll No</label>
+                <span className="student-details-span-35">{student.roll_number || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Email Address</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{student.email || '-'}</span>
+                <label className="student-details-label-36">Email Address</label>
+                <span className="student-details-span-37">{student.email || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Phone Number</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{student.phone || '-'}</span>
+                <label className="student-details-label-38">Phone Number</label>
+                <span className="student-details-span-39">{student.phone || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Gender</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{student.gender || '-'}</span>
+                <label className="student-details-label-40">Gender</label>
+                <span className="student-details-span-41">{student.gender || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Date of Birth</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{student.date_of_birth || '-'}</span>
+                <label className="student-details-label-42">Date of Birth</label>
+                <span className="student-details-span-43">{student.date_of_birth || '-'}</span>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Admission Date</label>
-                <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{student.admission_date || '-'}</span>
+                <label className="student-details-label-44">Admission Date</label>
+                <span className="student-details-span-45">{student.admission_date || '-'}</span>
               </div>
             </div>
           </div>
@@ -685,51 +677,40 @@ export default function StudentDetails() {
         {/* ACADEMIC HISTORY PANEL */}
         {activeTab === 'academic' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)' }}>Academic Enrollment Hub</h3>
+            <div className="student-details-row-46">
+              <h3 className="student-details-title-47">Academic Enrollment Hub</h3>
             </div>
 
             {/* Current Enrollment Status Card */}
             {enrollments.length > 0 ? (
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '1fr auto', 
-                gap: '1.5rem', 
-                padding: '1.5rem', 
-                background: 'linear-gradient(to right, #f8fafc, #ffffff)', 
-                border: '1px solid var(--border)', 
-                borderRadius: 'var(--radius-lg)', 
-                marginBottom: '2rem',
-                boxShadow: 'var(--shadow-sm)',
-                alignItems: 'center'
-              }}>
+              <div className="student-details-grid-48">
                 <div>
-                  <h4 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <GraduationCap size={18} style={{ color: 'var(--primary)' }} /> Current Enrollment Status
+                  <h4 className="student-details-row-49">
+                    <GraduationCap size={18} className="student-details-GraduationCap-50"  /> Current Enrollment Status
                   </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                  <div className="student-details-grid-51">
                     <div>
-                      <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Academic Year</span>
-                      <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                      <span className="student-details-span-52">Academic Year</span>
+                      <strong className="student-details-strong-53">
                         {academicYears.find(y => y.id === enrollments[0].academic_year_id)?.name || 'N/A'}
                       </strong>
                     </div>
                     <div>
-                      <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>{getProgramLabel()}</span>
-                      <strong style={{ fontSize: '0.95rem', color: 'var(--primary)' }}>
+                      <span className="student-details-span-54">{getProgramLabel()}</span>
+                      <strong className="student-details-strong-55">
                         {programs.find(p => p.id === enrollments[0].course_id)?.name || 'N/A'}
                       </strong>
                     </div>
                     <div>
-                      <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Section</span>
-                      <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                      <span className="student-details-span-56">Section</span>
+                      <strong className="student-details-strong-57">
                         {sections.find(s => s.id === enrollments[0].section_id)?.name || 'N/A'}
                       </strong>
                     </div>
                     {institutionType !== 'school' && (
                       <div>
-                        <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Semester</span>
-                        <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                        <span className="student-details-span-58">Semester</span>
+                        <strong className="student-details-strong-59">
                           Semester {enrollments[0].semester || 1}
                         </strong>
                       </div>
@@ -738,52 +719,21 @@ export default function StudentDetails() {
                 </div>
                 
                 {/* Actions group */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '180px' }}>
-                  <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => {
-                    const currentEnroll = enrollments[0];
-                    setTransferForm({
-                      academic_year_id: currentEnroll.academic_year_id || '',
-                      course_id: currentEnroll.course_id || '',
-                      section_id: currentEnroll.section_id || '',
-                      semester: currentEnroll.semester || 1
-                    });
-                    setShowTransferModal(true);
-                  }}>
+                <div className="student-details-col-60">
+                  <button className="btn btn-primary btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setTransferForm({ academic_year_id: currentEnroll.academic_year_id || '', course_id: currentEnroll.course_id || '', section_id: currentEnroll.section_id || '', semester: currentEnroll.semester || 1 }); setShowTransferModal(true); }}>
                     Transfer Student
                   </button>
-                  <button className="btn btn-outline btn-sm" style={{ width: '100%' }} onClick={() => {
-                    const currentEnroll = enrollments[0];
-                    setPromoteForm({
-                      academic_year_id: currentEnroll.academic_year_id || '',
-                      course_id: currentEnroll.course_id || '',
-                      section_id: currentEnroll.section_id || '',
-                      semester: (currentEnroll.semester || 1) + 1
-                    });
-                    setShowPromoteModal(true);
-                  }}>
+                  <button className="btn btn-outline btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setPromoteForm({ academic_year_id: currentEnroll.academic_year_id || '', course_id: currentEnroll.course_id || '', section_id: currentEnroll.section_id || '', semester: (currentEnroll.semester || 1) + 1 }); setShowPromoteModal(true); }}>
                     Promote Student
                   </button>
-                  <button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={() => {
-                    const currentEnroll = enrollments[0];
-                    setChangeSectionForm({
-                      section_id: currentEnroll.section_id || ''
-                    });
-                    setShowChangeSectionModal(true);
-                  }}>
+                  <button className="btn btn-secondary btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setChangeSectionForm({ section_id: currentEnroll.section_id || '' }); setShowChangeSectionModal(true); }}>
                     Change Section
                   </button>
                 </div>
               </div>
             ) : (
-              <div style={{ 
-                padding: '2rem', 
-                border: '1px dashed var(--border)', 
-                borderRadius: 'var(--radius-lg)', 
-                textAlign: 'center',
-                marginBottom: '2rem',
-                color: 'var(--text-muted)'
-              }}>
-                <p style={{ marginBottom: '1rem' }}>This student is not enrolled in any academic year/class.</p>
+              <div className="student-details-div-64">
+                <p className="student-details-text-65">This student is not enrolled in any academic year/class.</p>
                 <button className="btn btn-primary btn-sm" onClick={() => {
                   setTransferForm({
                     academic_year_id: academicYears[0]?.id || '',
@@ -800,10 +750,10 @@ export default function StudentDetails() {
 
             {/* History Table */}
             <div>
-              <h4 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', marginBottom: '1rem' }}>
+              <h4 className="student-details-title-66">
                 Enrollment Logs & History
               </h4>
-              <div style={{ overflowX: 'auto' }}>
+              <div className="student-details-div-67">
                 <table className="table">
                   <thead>
                     <tr>
@@ -832,7 +782,7 @@ export default function StudentDetails() {
                     ))}
                     {enrollments.length === 0 && (
                       <tr>
-                        <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                        <td colSpan={5} className="student-details-td-68">
                           No enrollment history has been recorded for this student.
                         </td>
                       </tr>
@@ -843,13 +793,13 @@ export default function StudentDetails() {
             </div>
 
             {/* Transport Route Section */}
-            <div style={{ marginTop: '2.5rem', borderTop: '1px solid var(--border)', paddingTop: '2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <div className="student-details-div-69">
+              <div className="student-details-row-70">
                 <div>
-                  <h4 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', margin: 0 }}>
+                  <h4 className="student-details-title-71">
                     🚌 Transport Route Assignment
                   </h4>
-                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  <p className="student-details-text-72">
                     Manage bus routing and pick-up/drop-off settings for this student profile.
                   </p>
                 </div>
@@ -862,41 +812,26 @@ export default function StudentDetails() {
               </div>
 
               {allocation ? (
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
-                  gap: '1.25rem',
-                  padding: '1.25rem', 
-                  background: '#f8fafc', 
-                  border: '1px solid var(--border)', 
-                  borderRadius: 'var(--radius-md)'
-                }}>
+                <div className="student-details-grid-73">
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Assigned Route</span>
-                    <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{allocation.route_name || 'Route Details'}</strong>
+                    <span className="student-details-span-74">Assigned Route</span>
+                    <strong className="student-details-strong-75">{allocation.route_name || 'Route Details'}</strong>
                   </div>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Vehicle Number</span>
-                    <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{allocation.vehicle_number || 'N/A'}</strong>
+                    <span className="student-details-span-76">Vehicle Number</span>
+                    <strong className="student-details-strong-77">{allocation.vehicle_number || 'N/A'}</strong>
                   </div>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Pickup / Drop point</span>
-                    <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{allocation.pickup_point || 'Not specified'}</strong>
+                    <span className="student-details-span-78">Pickup / Drop point</span>
+                    <strong className="student-details-strong-79">{allocation.pickup_point || 'Not specified'}</strong>
                   </div>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Monthly Fare</span>
-                    <strong style={{ fontSize: '0.9rem', color: 'var(--primary)' }}>₹{allocation.monthly_charge || 0}</strong>
+                    <span className="student-details-span-80">Monthly Fare</span>
+                    <strong className="student-details-strong-81">₹{allocation.monthly_charge || 0}</strong>
                   </div>
                 </div>
               ) : (
-                <div style={{ 
-                  padding: '1.5rem', 
-                  border: '1px dashed var(--border)', 
-                  borderRadius: 'var(--radius-md)', 
-                  textAlign: 'center',
-                  color: 'var(--text-muted)',
-                  fontSize: '0.85rem'
-                }}>
+                <div className="student-details-div-82">
                   This student is not currently assigned to any transport route.
                 </div>
               )}
@@ -907,35 +842,35 @@ export default function StudentDetails() {
         {/* ATTENDANCE PANEL */}
         {activeTab === 'attendance' && (
           <div>
-            <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '1.5rem' }}>Attendance Performance</h3>
+            <h3 className="student-details-title-83">Attendance Performance</h3>
             
             {attendanceInfo && attendanceInfo.total > 0 ? (
               <div>
                 {/* KPI Summary Block */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                  <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Attendance Rate</span>
+                <div className="student-details-grid-84">
+                  <div className="student-details-div-85">
+                    <span className="student-details-span-86">Attendance Rate</span>
                     <strong style={{ fontSize: '1.75rem', color: attendanceInfo.percentage >= 75 ? '#10b981' : '#f59e0b' }}>
                       {attendanceInfo.percentage}%
                     </strong>
                   </div>
-                  <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Classes Attended</span>
-                    <strong style={{ fontSize: '1.75rem', color: 'var(--text-main)' }}>
+                  <div className="student-details-div-87">
+                    <span className="student-details-span-88">Classes Attended</span>
+                    <strong className="student-details-strong-89">
                       {attendanceInfo.present}
                     </strong>
                   </div>
-                  <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Total Sessions</span>
-                    <strong style={{ fontSize: '1.75rem', color: 'var(--text-main)' }}>
+                  <div className="student-details-div-90">
+                    <span className="student-details-span-91">Total Sessions</span>
+                    <strong className="student-details-strong-92">
                       {attendanceInfo.total}
                     </strong>
                   </div>
                 </div>
 
                 {/* Detailed Logs Table */}
-                <h4 style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)', marginBottom: '1rem' }}>Detailed Session Records</h4>
-                <div style={{ overflowX: 'auto' }}>
+                <h4 className="student-details-title-93">Detailed Session Records</h4>
+                <div className="student-details-div-94">
                   <table className="table">
                     <thead>
                       <tr>
@@ -967,22 +902,22 @@ export default function StudentDetails() {
             ) : (
               <div>
                 {/* Clean Attendance KPI fallback when 0 sessions logged */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                  <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Attendance Rate</span>
-                    <strong style={{ fontSize: '1.75rem', color: 'var(--text-muted)' }}>--</strong>
+                <div className="student-details-grid-95">
+                  <div className="student-details-div-96">
+                    <span className="student-details-span-97">Attendance Rate</span>
+                    <strong className="student-details-strong-98">--</strong>
                   </div>
-                  <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Classes Attended</span>
-                    <strong style={{ fontSize: '1.75rem', color: 'var(--text-main)' }}>0</strong>
+                  <div className="student-details-div-99">
+                    <span className="student-details-span-100">Classes Attended</span>
+                    <strong className="student-details-strong-101">0</strong>
                   </div>
-                  <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Total Sessions</span>
-                    <strong style={{ fontSize: '1.75rem', color: 'var(--text-main)' }}>0</strong>
+                  <div className="student-details-div-102">
+                    <span className="student-details-span-103">Total Sessions</span>
+                    <strong className="student-details-strong-104">0</strong>
                   </div>
                 </div>
-                <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)' }}>
-                  <p style={{ color: 'var(--text-muted)' }}>No attendance data available yet.</p>
+                <div className="student-details-div-105">
+                  <p className="student-details-text-106">No attendance data available yet.</p>
                 </div>
               </div>
             )}
@@ -992,12 +927,12 @@ export default function StudentDetails() {
         {/* RESULTS PANEL */}
         {activeTab === 'results' && (
           <div>
-            <h3 style={{ marginBottom: '1.5rem', fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)' }}>Exam Performance</h3>
+            <h3 className="student-details-title-107">Exam Performance</h3>
             {studentExams.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No examinations recorded for this student.</p>
+              <p className="student-details-text-108">No examinations recorded for this student.</p>
             ) : (
               <div>
-                <div className="form-group" style={{ maxWidth: '320px', marginBottom: '1.5rem' }}>
+                <div className="form-group student-details-form-group">
                   <label>Select Examination</label>
                   <select value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)}>
                     {studentExams.map(ex => (
@@ -1010,21 +945,21 @@ export default function StudentDetails() {
                   <p>Fetching result card details...</p>
                 ) : detailedResult ? (
                   <div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem', padding: '1.25rem', backgroundColor: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                    <div className="student-details-grid-110">
                       <div>
-                        <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Total Marks Obtained</span>
-                        <strong style={{ fontSize: '1.25rem', color: 'var(--text-main)' }}>{detailedResult.total_obtained} / {detailedResult.total_max}</strong>
+                        <span className="student-details-span-111">Total Marks Obtained</span>
+                        <strong className="student-details-strong-112">{detailedResult.total_obtained} / {detailedResult.total_max}</strong>
                       </div>
                       <div>
-                        <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Aggregated Percentage</span>
-                        <strong style={{ fontSize: '1.25rem', color: 'var(--text-main)' }}>{detailedResult.percentage}%</strong>
+                        <span className="student-details-span-113">Aggregated Percentage</span>
+                        <strong className="student-details-strong-114">{detailedResult.percentage}%</strong>
                       </div>
                       <div>
-                        <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Grade</span>
-                        <strong style={{ fontSize: '1.25rem', color: 'var(--text-main)' }}>{detailedResult.grade}</strong>
+                        <span className="student-details-span-115">Grade</span>
+                        <strong className="student-details-strong-116">{detailedResult.grade}</strong>
                       </div>
                       <div>
-                        <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Result Status</span>
+                        <span className="student-details-span-117">Result Status</span>
                         <span className={`badge badge-${detailedResult.result === 'PASS' ? 'success' : 'danger'}`}>
                           {detailedResult.result}
                         </span>
@@ -1063,7 +998,7 @@ export default function StudentDetails() {
                     </table>
                   </div>
                 ) : (
-                  <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No evaluation records entered for this student in the selected exam.</p>
+                  <p className="student-details-text-118">No evaluation records entered for this student in the selected exam.</p>
                 )}
               </div>
             )}
@@ -1073,24 +1008,24 @@ export default function StudentDetails() {
         {/* FEES PANEL */}
         {activeTab === 'fees' && (
           <div>
-            <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '1.5rem' }}>Financial Fee Ledger</h3>
+            <h3 className="student-details-title-119">Financial Fee Ledger</h3>
             
             {/* KPI Summary Block */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-              <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Assigned Charges</span>
-                <strong style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>
+            <div className="student-details-grid-120">
+              <div className="student-details-div-121">
+                <span className="student-details-span-122">Assigned Charges</span>
+                <strong className="student-details-strong-123">
                   ₹{totalAssignedFees.toLocaleString('en-IN')}
                 </strong>
               </div>
-              <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Total Paid Amount</span>
-                <strong style={{ fontSize: '1.5rem', color: '#10b981' }}>
+              <div className="student-details-div-124">
+                <span className="student-details-span-125">Total Paid Amount</span>
+                <strong className="student-details-strong-126">
                   ₹{totalPaidFees.toLocaleString('en-IN')}
                 </strong>
               </div>
-              <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Pending Balance Due</span>
+              <div className="student-details-div-127">
+                <span className="student-details-span-128">Pending Balance Due</span>
                 <strong style={{ fontSize: '1.5rem', color: remainingFeeDue > 0 ? '#ef4444' : '#10b981' }}>
                   ₹{remainingFeeDue.toLocaleString('en-IN')}
                 </strong>
@@ -1098,8 +1033,8 @@ export default function StudentDetails() {
             </div>
 
             {/* Fee structure logs */}
-            <h4 style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-main)', marginBottom: '1rem' }}>Bill Ledger Items</h4>
-            <div style={{ overflowX: 'auto', marginBottom: '2rem' }}>
+            <h4 className="student-details-title-129">Bill Ledger Items</h4>
+            <div className="student-details-div-130">
               <table className="table">
                 <thead>
                   <tr>
@@ -1128,7 +1063,7 @@ export default function StudentDetails() {
                   ))}
                   {ledger.length === 0 && (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No ledger charges assigned.</td>
+                      <td colSpan={6} className="student-details-td-131">No ledger charges assigned.</td>
                     </tr>
                   )}
                 </tbody>
@@ -1136,8 +1071,8 @@ export default function StudentDetails() {
             </div>
 
             {/* Payment history */}
-            <h4 style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-main)', marginBottom: '1rem' }}>Payment Transactions</h4>
-            <div style={{ overflowX: 'auto' }}>
+            <h4 className="student-details-title-132">Payment Transactions</h4>
+            <div className="student-details-div-133">
               <table className="table">
                 <thead>
                   <tr>
@@ -1162,7 +1097,7 @@ export default function StudentDetails() {
                   ))}
                   {payments.length === 0 && (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No transaction records found.</td>
+                      <td colSpan={6} className="student-details-td-134">No transaction records found.</td>
                     </tr>
                   )}
                 </tbody>
@@ -1174,14 +1109,14 @@ export default function StudentDetails() {
         {/* TIMELINE PANEL (NEW) */}
         {activeTab === 'timeline' && (
           <div>
-            <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '1.5rem' }}>Student Milestones Timeline</h3>
+            <h3 className="student-details-title-135">Student Milestones Timeline</h3>
             
-            <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', paddingLeft: '2rem', gap: '2rem', marginTop: '1rem' }}>
+            <div className="student-details-col-136">
               {/* Vertical line indicator */}
-              <div style={{ position: 'absolute', left: '7px', top: '10px', bottom: '10px', width: '2px', backgroundColor: '#e2e8f0' }} />
+              <div className="student-details-div-137"  />
               
               {timelineItems.map((item, index) => (
-                <div key={index} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <div key={index} className="student-details-col-138">
                   {/* Dot */}
                   <div style={{ 
                     position: 'absolute', 
@@ -1197,19 +1132,19 @@ export default function StudentDetails() {
                     zIndex: 2
                   }} />
                   
-                  <h5 style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <h5 className="student-details-row-139">
                     {item.title}
                     {item.completed ? (
-                      <span style={{ fontSize: '0.7rem', color: '#10b981', backgroundColor: '#d1fae5', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Completed</span>
+                      <span className="student-details-span-140">Completed</span>
                     ) : (
-                      <span style={{ fontSize: '0.7rem', color: '#64748b', backgroundColor: '#f1f5f9', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Pending</span>
+                      <span className="student-details-span-141">Pending</span>
                     )}
                   </h5>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
+                  <p className="student-details-text-142">
                     {item.description}
                   </p>
                   {item.date && (
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)' }}>
+                    <span className="student-details-span-143">
                       Date: {item.date}
                     </span>
                   )}
@@ -1222,8 +1157,8 @@ export default function StudentDetails() {
         {/* HEALTH CARD PANEL (NEW) */}
         {activeTab === 'health' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)' }}>Student Health Profile</h3>
+            <div className="student-details-row-144">
+              <h3 className="student-details-title-145">Student Health Profile</h3>
               {!showHealthEdit && (
                 <button className="btn btn-sm btn-outline" onClick={() => setShowHealthEdit(true)}>
                   Edit Health Card
@@ -1232,7 +1167,7 @@ export default function StudentDetails() {
             </div>
 
             {showHealthEdit ? (
-              <form onSubmit={handleHealthSave} style={{ maxWidth: '480px' }}>
+              <form onSubmit={handleHealthSave} className="student-details-form-146">
                 <div className="form-group">
                   <label>Blood Group</label>
                   <select value={healthForm.blood_group} onChange={e => setHealthForm({...healthForm, blood_group: e.target.value})}>
@@ -1260,7 +1195,7 @@ export default function StudentDetails() {
                   <textarea value={healthForm.allergies} onChange={e => setHealthForm({...healthForm, allergies: e.target.value})} placeholder="e.g. Peanuts, Penicillin, none" rows={2} />
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem' }}>
+                <div className="student-details-row-147">
                   <button type="submit" className="btn btn-primary btn-sm" disabled={savingHealth}>
                     {savingHealth ? 'Saving...' : 'Save Health Card'}
                   </button>
@@ -1270,28 +1205,28 @@ export default function StudentDetails() {
                 </div>
               </form>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem' }}>
-                <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                  <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Blood Group</span>
+              <div className="student-details-grid-148">
+                <div className="student-details-div-149">
+                  <span className="student-details-span-150">Blood Group</span>
                   <strong style={{ fontSize: '1.1rem', color: student.blood_group ? '#ef4444' : 'var(--text-muted)' }}>
                     {student.blood_group || 'Not Specified'}
                   </strong>
                 </div>
-                <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                  <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Emergency Contact</span>
-                  <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>
+                <div className="student-details-div-151">
+                  <span className="student-details-span-152">Emergency Contact</span>
+                  <strong className="student-details-strong-153">
                     {student.emergency_contact || 'None registered'}
                   </strong>
                 </div>
-                <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', gridColumn: 'span 2' }}>
-                  <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Medical Conditions</span>
-                  <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                <div className="student-details-div-154">
+                  <span className="student-details-span-155">Medical Conditions</span>
+                  <p className="student-details-text-156">
                     {student.medical_conditions || 'No known chronic medical conditions.'}
                   </p>
                 </div>
-                <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', gridColumn: 'span 2' }}>
-                  <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.25rem' }}>Known Allergies</span>
-                  <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                <div className="student-details-div-157">
+                  <span className="student-details-span-158">Known Allergies</span>
+                  <p className="student-details-text-159">
                     {student.allergies || 'No known substance or food allergies reported.'}
                   </p>
                 </div>
@@ -1303,11 +1238,11 @@ export default function StudentDetails() {
         {/* NOTES PANEL (NEW) */}
         {activeTab === 'notes' && (
           <div>
-            <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '1.5rem' }}>Internal Student Notes</h3>
+            <h3 className="student-details-title-160">Internal Student Notes</h3>
             
             {/* Note creation form */}
-            <form onSubmit={handleAddNote} style={{ marginBottom: '2rem' }}>
-              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+            <form onSubmit={handleAddNote} className="student-details-form-161">
+              <div className="form-group student-details-form-group">
                 <textarea 
                   value={newNote} 
                   onChange={e => setNewNote(e.target.value)} 
@@ -1322,29 +1257,24 @@ export default function StudentDetails() {
             </form>
 
             {/* Notes list */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="student-details-col-163">
               {notes.map(note => (
-                <div key={note.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.25rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: '#f8fafc', position: 'relative' }}>
-                  <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-main)', whiteSpace: 'pre-line', paddingRight: '2rem' }}>
+                <div key={note.id} className="student-details-col-164">
+                  <p className="student-details-text-165">
                     {note.content}
                   </p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                  <div className="student-details-row-166">
                     <span>Author: <strong>{note.author_name}</strong></span>
                     <span>Posted: {note.created_at?.split('.')[0] || note.created_at}</span>
                   </div>
-                  <button 
-                    onClick={() => handleDeleteNote(note.id)} 
-                    style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: '0.2rem' }}
-                    onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
-                    onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
-                  >
+                  <button onClick={() => handleDeleteNote(note.id)} className="student-details-btn-167" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
                     <Trash2 size={16} />
                   </button>
                 </div>
               ))}
               {notes.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '2rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)' }}>
-                  <p style={{ color: 'var(--text-muted)', margin: 0 }}>No internal notes recorded for this student.</p>
+                <div className="student-details-div-168">
+                  <p className="student-details-text-169">No internal notes recorded for this student.</p>
                 </div>
               )}
             </div>
@@ -1354,45 +1284,40 @@ export default function StudentDetails() {
         {/* DOCUMENTS VAULT PANEL */}
         {activeTab === 'documents' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)' }}>Digital Documents Vault</h3>
+            <div className="student-details-row-170">
+              <h3 className="student-details-title-171">Digital Documents Vault</h3>
               <button className="btn btn-sm btn-primary" onClick={() => setShowUploadModal(true)}>
                 <Upload size={14} /> Upload Document
               </button>
             </div>
 
             {documents.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+              <div className="student-details-grid-172">
                 {documents.map(doc => (
-                  <div key={doc.id} style={{ display: 'flex', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: 'var(--radius-md)', gap: '1rem', backgroundColor: 'var(--bg-main)', position: 'relative' }}>
-                    <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#e2e8f0', color: '#475569', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => handleDownloadDoc(doc)}>
+                  <div key={doc.id} className="student-details-row-173">
+                    <div className="student-details-row-174" onClick={() => handleDownloadDoc(doc)}>
                       DOC
                     </div>
-                    <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => handleDownloadDoc(doc)}>
-                      <h5 style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '0 0 0.25rem' }} title={doc.name}>
+                    <div className="student-details-div-175" onClick={() => handleDownloadDoc(doc)}>
+                      <h5 className="student-details-title-176" title={doc.name}>
                         {doc.name}
                       </h5>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
+                      <p className="student-details-text-177">
                         {doc.document_type} • {(doc.file_size / 1024).toFixed(1)} KB
                       </p>
-                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>
+                      <p className="student-details-text-178">
                         Uploaded: {doc.uploaded_at?.split(' ')[0]}
                       </p>
                     </div>
-                    <button 
-                      onClick={() => handleDocDelete(doc.id)} 
-                      style={{ position: 'absolute', top: '1rem', right: '1rem', border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: '0.2rem' }}
-                      onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
-                      onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
-                    >
+                    <button onClick={() => handleDocDelete(doc.id)} className="student-details-btn-179" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
                       <Trash2 size={16} />
                     </button>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)' }}>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>No documents uploaded yet.</p>
+              <div className="student-details-div-180">
+                <p className="student-details-text-181">No documents uploaded yet.</p>
                 <button className="btn btn-outline btn-sm" onClick={() => setShowUploadModal(true)}>
                   <Upload size={14} /> Upload First Document
                 </button>
@@ -1404,42 +1329,42 @@ export default function StudentDetails() {
         {/* GUARDIANS PANEL (REDESIGNED CARD LAYOUT) */}
         {activeTab === 'guardians' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-main)' }}>Family and Guardians</h3>
+            <div className="student-details-row-182">
+              <h3 className="student-details-title-183">Family and Guardians</h3>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            <div className="student-details-grid-184">
               {guardians.map(g => (
-                <div key={g.id} className="card" style={{ padding: '1.5rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase' }}>Primary Guardian</span>
-                    <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>Active</span>
+                <div key={g.id} className="card student-details-card">
+                  <div className="student-details-row-186">
+                    <span className="student-details-span-187">Primary Guardian</span>
+                    <span className="badge badge-success student-details-badge">Active</span>
                   </div>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Name</span>
-                    <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{g.name}</strong>
+                    <span className="student-details-span-189">Name</span>
+                    <strong className="student-details-strong-190">{g.name}</strong>
                   </div>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Relationship</span>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{g.relationship}</span>
+                    <span className="student-details-span-191">Relationship</span>
+                    <span className="student-details-span-192">{g.relationship}</span>
                   </div>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Phone</span>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <Phone size={12} style={{ color: 'var(--primary)' }} /> {g.phone || '-'}
+                    <span className="student-details-span-193">Phone</span>
+                    <span className="student-details-row-194">
+                      <Phone size={12} className="student-details-Phone-195"  /> {g.phone || '-'}
                     </span>
                   </div>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Email</span>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      <Mail size={12} style={{ color: 'var(--primary)' }} /> {g.email || '-'}
+                    <span className="student-details-span-196">Email</span>
+                    <span className="student-details-row-197">
+                      <Mail size={12} className="student-details-Mail-198"  /> {g.email || '-'}
                     </span>
                   </div>
                 </div>
               ))}
               {guardians.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', gridColumn: '1 / -1' }}>
-                  <p style={{ color: 'var(--text-muted)', margin: 0 }}>No parents/guardians registered.</p>
+                <div className="student-details-div-199">
+                  <p className="student-details-text-200">No parents/guardians registered.</p>
                 </div>
               )}
             </div>
@@ -1450,9 +1375,9 @@ export default function StudentDetails() {
 
       {/* Real Upload Document Modal */}
       {showUploadModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '440px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-main)' }}>Upload Student Document</h3>
+        <div className="modal student-details-modal">
+          <div className="modal-content student-details-modal-content">
+            <h3 className="student-details-title-203">Upload Student Document</h3>
             <form onSubmit={handleDocUploadSubmit}>
               
               <div className="form-group">
@@ -1467,24 +1392,12 @@ export default function StudentDetails() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group student-details-form-group">
                 <label>Choose File *</label>
-                <input 
-                  required 
-                  type="file" 
-                  onChange={e => {
-                    const files = e.target.files;
-                    if (files && files[0]) {
-                      setSelectedFile(files[0]);
-                    } else {
-                      setSelectedFile(null);
-                    }
-                  }} 
-                  style={{ border: 'none', padding: 0 }}
-                />
+                <input required type="file" onChange={e => { const files = e.target.files; if (files && files[0]) { setSelectedFile(files[0]); } else { setSelectedFile(null); } }} className="student-details-input-205"  />
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
+              <div className="modal-actions student-details-modal-actions">
                 <button type="button" onClick={() => { setShowUploadModal(false); setSelectedFile(null); }} className="btn btn-secondary" disabled={uploadingDoc}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={uploadingDoc || !selectedFile}>
                   {uploadingDoc ? 'Uploading...' : 'Upload File'}
@@ -1497,9 +1410,9 @@ export default function StudentDetails() {
 
       {/* Transfer Student Modal */}
       {showTransferModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-main)' }}>Transfer Student</h3>
+        <div className="modal student-details-modal">
+          <div className="modal-content student-details-modal-content">
+            <h3 className="student-details-title-209">Transfer Student</h3>
             <form onSubmit={handleTransferSubmit}>
               
               <div className="form-group">
@@ -1516,7 +1429,7 @@ export default function StudentDetails() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group student-details-form-group">
                 <label>{getProgramLabel()} *</label>
                 <select 
                   value={transferForm.course_id} 
@@ -1530,7 +1443,7 @@ export default function StudentDetails() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group student-details-form-group">
                 <label>Section *</label>
                 <select 
                   value={transferForm.section_id} 
@@ -1545,14 +1458,14 @@ export default function StudentDetails() {
                     ))}
                 </select>
                 {sections.filter(s => s.academic_year_id === transferForm.academic_year_id && s.course_id === transferForm.course_id).length === 0 && (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '0.25rem', display: 'block' }}>
+                  <span className="student-details-span-212">
                     ⚠️ No sections available for this configuration. Please set up sections first.
                   </span>
                 )}
               </div>
 
               {institutionType !== 'school' && (
-                <div className="form-group" style={{ marginTop: '1rem' }}>
+                <div className="form-group student-details-form-group">
                   <label>Semester *</label>
                   <input 
                     type="number" 
@@ -1565,7 +1478,7 @@ export default function StudentDetails() {
                 </div>
               )}
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
+              <div className="modal-actions student-details-modal-actions">
                 <button type="button" onClick={() => setShowTransferModal(false)} className="btn btn-secondary">Cancel</button>
                 <button 
                   type="submit" 
@@ -1582,9 +1495,9 @@ export default function StudentDetails() {
 
       {/* Promote Student Modal */}
       {showPromoteModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-main)' }}>Promote Student</h3>
+        <div className="modal student-details-modal">
+          <div className="modal-content student-details-modal-content">
+            <h3 className="student-details-title-217">Promote Student</h3>
             <form onSubmit={handlePromoteSubmit}>
               
               <div className="form-group">
@@ -1601,7 +1514,7 @@ export default function StudentDetails() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group student-details-form-group">
                 <label>Target {getProgramLabel()} *</label>
                 <select 
                   value={promoteForm.course_id} 
@@ -1615,7 +1528,7 @@ export default function StudentDetails() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group student-details-form-group">
                 <label>Target Section *</label>
                 <select 
                   value={promoteForm.section_id} 
@@ -1630,14 +1543,14 @@ export default function StudentDetails() {
                     ))}
                 </select>
                 {sections.filter(s => s.academic_year_id === promoteForm.academic_year_id && s.course_id === promoteForm.course_id).length === 0 && (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '0.25rem', display: 'block' }}>
+                  <span className="student-details-span-220">
                     ⚠️ No sections available for this configuration. Please set up sections first.
                   </span>
                 )}
               </div>
 
               {institutionType !== 'school' && (
-                <div className="form-group" style={{ marginTop: '1rem' }}>
+                <div className="form-group student-details-form-group">
                   <label>Target Semester *</label>
                   <input 
                     type="number" 
@@ -1650,7 +1563,7 @@ export default function StudentDetails() {
                 </div>
               )}
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
+              <div className="modal-actions student-details-modal-actions">
                 <button type="button" onClick={() => setShowPromoteModal(false)} className="btn btn-secondary">Cancel</button>
                 <button 
                   type="submit" 
@@ -1667,14 +1580,14 @@ export default function StudentDetails() {
 
       {/* Change Section Modal */}
       {showChangeSectionModal && enrollments.length > 0 && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '440px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-main)' }}>Change Section</h3>
+        <div className="modal student-details-modal">
+          <div className="modal-content student-details-modal-content">
+            <h3 className="student-details-title-225">Change Section</h3>
             <form onSubmit={handleChangeSectionSubmit}>
               
-              <div style={{ marginBottom: '1.25rem', padding: '0.75rem 1rem', backgroundColor: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '0.875rem' }}>
-                <div style={{ color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Current {getProgramLabel()}</div>
-                <strong style={{ color: 'var(--text-main)' }}>
+              <div className="student-details-div-226">
+                <div className="student-details-div-227">Current {getProgramLabel()}</div>
+                <strong className="student-details-strong-228">
                   {programs.find(p => p.id === enrollments[0].course_id)?.name || 'Unknown'}
                 </strong>
               </div>
@@ -1694,13 +1607,13 @@ export default function StudentDetails() {
                     ))}
                 </select>
                 {sections.filter(s => s.academic_year_id === enrollments[0].academic_year_id && s.course_id === enrollments[0].course_id).length === 0 && (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '0.25rem', display: 'block' }}>
+                  <span className="student-details-span-229">
                     ⚠️ No other sections available for this class.
                   </span>
                 )}
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '2rem' }}>
+              <div className="modal-actions student-details-modal-actions">
                 <button type="button" onClick={() => setShowChangeSectionModal(false)} className="btn btn-secondary">Cancel</button>
                 <button 
                   type="submit" 
@@ -1717,9 +1630,9 @@ export default function StudentDetails() {
 
       {/* Assign Transport Route Modal */}
       {showTransportModal && (
-        <div className="modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 1000, padding: '1rem' }}>
-          <div className="modal-content" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-lg)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-main)' }}>
+        <div className="modal student-details-modal">
+          <div className="modal-content student-details-modal-content">
+            <h3 className="student-details-title-233">
               {allocation ? 'Change Transport Route' : 'Assign Transport Route'}
             </h3>
             <form onSubmit={handleTransportSubmit}>
@@ -1740,7 +1653,7 @@ export default function StudentDetails() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group student-details-form-group">
                 <label>Pickup / Drop Point Name (Optional)</label>
                 <input 
                   type="text" 
@@ -1750,20 +1663,14 @@ export default function StudentDetails() {
                 />
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+              <div className="modal-actions student-details-modal-actions">
                 {allocation ? (
-                  <button 
-                    type="button" 
-                    onClick={handleRemoveTransport} 
-                    className="btn btn-danger"
-                    disabled={submittingTransport}
-                    style={{ marginRight: 'auto' }}
-                  >
+                  <button type="button" onClick={handleRemoveTransport} className="btn btn-danger student-details-btn" disabled={submittingTransport}>
                     Remove Route
                   </button>
                 ) : <div />}
                 
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div className="student-details-row-237">
                   <button 
                     type="button" 
                     onClick={() => setShowTransportModal(false)} 

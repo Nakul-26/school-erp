@@ -1,3 +1,4 @@
+import './Certificates.css';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { PageGuidance } from '../components/PageGuidance';
@@ -106,21 +107,21 @@ export default function Certificates() {
       <div className="page-header no-print">
         <div>
           <h2>Official Certificates &amp; Credentials</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="certificates-text-1">
             Generate and print verified academic templates, ID badges, and leaving credentials
           </p>
         </div>
       </div>
 
       {/* Control panel */}
-      <div className="card no-print" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', alignItems: 'flex-start' }}>
+      <div className="card no-print certificates-card">
+        <div className="certificates-grid-3">
 
           {/* Student Picker */}
-          <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className="form-group certificates-form-group">
             <label>Search Student</label>
-            <div style={{ position: 'relative' }}>
-              <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none', zIndex: 1 }} />
+            <div className="certificates-div-5">
+              <Search size={14} className="certificates-Search-6"  />
               <input
                 type="text"
                 placeholder="Type student name or admission number..."
@@ -138,9 +139,9 @@ export default function Certificates() {
               />
             </div>
             {searchQuery.length >= 1 && (
-              <div style={{ maxHeight: '160px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', backgroundColor: '#fff', boxShadow: 'var(--shadow-md)' }}>
+              <div className="certificates-div-7">
                 {filteredStudents.length === 0 ? (
-                  <div style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>No students found</div>
+                  <div className="certificates-div-8">No students found</div>
                 ) : filteredStudents.map(s => (
                   <div
                     key={s.id}
@@ -157,32 +158,28 @@ export default function Certificates() {
                     onMouseLeave={e => { if (selectedStudentId !== s.id) (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
                   >
                     <span>{s.first_name} {s.last_name}</span>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{s.admission_number}</span>
+                    <span className="certificates-span-9">{s.admission_number}</span>
                   </div>
                 ))}
               </div>
             )}
             {selectedStudentId && student && (
-              <div style={{ marginTop: '0.375rem', fontSize: '0.775rem', color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <div className="certificates-row-10">
                 ✓ {student.first_name} {student.last_name} selected
               </div>
             )}
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className="form-group certificates-form-group">
             <label>Credential Type</label>
-            <select
-              value={selectedTemplate}
-              onChange={(e) => setSelectedTemplate(e.target.value as any)}
-              style={{ width: '100%', padding: '0.5rem' }}
-            >
+            <select value={selectedTemplate} onChange={(e) => setSelectedTemplate(e.target.value as any)} className="certificates-select-12">
               <option value="idcard">🪪 Student ID Badge</option>
               <option value="bonafide">📄 Bonafide Certificate</option>
               <option value="tc">📋 Transfer Certificate (TC)</option>
             </select>
           </div>
 
-          <button className="btn btn-primary" onClick={handlePrint} disabled={!selectedStudentId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', height: '40px', alignSelf: 'flex-end' }}>
+          <button className="btn btn-primary certificates-btn" onClick={handlePrint} disabled={!selectedStudentId}>
             <Printer size={16} /> Print Document
           </button>
         </div>
@@ -192,116 +189,66 @@ export default function Certificates() {
       {loading ? <p>Loading students list...</p> : !student ? (
         <p className="no-data">Select a student from the control panel to generate credential.</p>
       ) : (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem', background: '#e2e8f0', borderRadius: 'var(--radius-lg)' }} className="print-canvas-wrapper">
+        <div className="print-canvas-wrapper certificates-print-canvas-wrapper">
           
           {/* Template 1: Student ID Badge */}
           {selectedTemplate === 'idcard' && (
-            <div id="printable-idcard" style={{
-              width: '320px',
-              height: '480px',
-              backgroundColor: '#ffffff',
-              border: '2px solid #1e293b',
-              borderRadius: '16px',
-              boxShadow: 'var(--shadow-lg)',
-              fontFamily: 'Inter, sans-serif',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              color: '#1e293b',
-              padding: 0
-            }} className="idcard-box">
+            <div id="printable-idcard" className="idcard-box certificates-idcard-box">
               {/* Card Header */}
-              <div style={{
-                background: 'var(--primary-gradient)',
-                color: '#ffffff',
-                padding: '1.25rem 1rem',
-                textAlign: 'center',
-                borderBottom: '4px solid #f59e0b'
-              }}>
-                <h2 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div className="certificates-div-16">
+                <h2 className="certificates-title-17">
                   {institutionName}
                 </h2>
-                <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.85, letterSpacing: '0.08em', fontWeight: 600 }}>
+                <span className="certificates-span-18">
                   Student Identity Card
                 </span>
               </div>
 
               {/* Photo & Basic Details */}
-              <div style={{ textAlign: 'center', padding: '1rem 1.5rem', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="certificates-col-19">
                 {/* Photo frame */}
-                <div style={{
-                  width: '96px',
-                  height: '110px',
-                  border: '2px dashed var(--border-strong)',
-                  borderRadius: '8px',
-                  backgroundColor: '#f8fafc',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--text-subtle)',
-                  marginBottom: '1rem'
-                }}>
+                <div className="certificates-row-20">
                   <User size={36} />
                 </div>
 
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
+                <h3 className="certificates-title-21">
                   {student.first_name} {student.last_name}
                 </h3>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.02em', marginTop: '0.15rem', display: 'block' }}>
+                <span className="certificates-span-22">
                   {student.course_name || 'Class Section'} {student.section_name && ` - ${student.section_name}`}
                 </span>
 
                 {/* Grid attributes */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '0.5rem 1rem',
-                  width: '100%',
-                  marginTop: '1.5rem',
-                  fontSize: '0.75rem',
-                  textAlign: 'left',
-                  borderTop: '1px solid #e2e8f0',
-                  paddingTop: '0.75rem'
-                }}>
+                <div className="certificates-grid-23">
                   <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.625rem', textTransform: 'uppercase' }}>Admission ID</span>
+                    <span className="certificates-span-24">Admission ID</span>
                     <strong>{student.admission_number}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.625rem', textTransform: 'uppercase' }}>Roll Number</span>
+                    <span className="certificates-span-25">Roll Number</span>
                     <strong>{student.roll_number || 'N/A'}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.625rem', textTransform: 'uppercase' }}>Date of Birth</span>
+                    <span className="certificates-span-26">Date of Birth</span>
                     <strong>{getFormattedDate(student.date_of_birth)}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.625rem', textTransform: 'uppercase' }}>Blood Group</span>
+                    <span className="certificates-span-27">Blood Group</span>
                     <strong>{student.blood_group || 'O+'}</strong>
                   </div>
                 </div>
               </div>
 
               {/* Card Footer */}
-              <div style={{
-                backgroundColor: '#0f172a',
-                color: '#ffffff',
-                padding: '0.75rem 1rem',
-                fontSize: '0.7rem',
-                borderTop: '1px solid #1e293b',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}>
+              <div className="certificates-row-28">
                 <div>
-                  <span style={{ display: 'block', color: '#94a3b8' }}>Emergency Contact</span>
+                  <span className="certificates-span-29">Emergency Contact</span>
                   <strong>{student.phone || '98765-43210'}</strong>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ width: '80px', height: '18px', backgroundColor: '#fff', padding: '1px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="certificates-div-30">
+                  <div className="certificates-row-31">
                     {/* Simulated barcode */}
-                    <div style={{ width: '100%', height: '100%', backgroundImage: 'linear-gradient(90deg, #000 10%, transparent 10%, #000 20%, transparent 20%, #000 40%, transparent 40%, #000 50%, transparent 65%, #000 80%)' }} />
+                    <div className="certificates-div-32"  />
                   </div>
                 </div>
               </div>
@@ -310,37 +257,26 @@ export default function Certificates() {
 
           {/* Template 2: Bonafide Certificate */}
           {selectedTemplate === 'bonafide' && (
-            <div id="printable-bonafide" style={{
-              width: '100%',
-              maxWidth: '700px',
-              minHeight: '480px',
-              backgroundColor: '#ffffff',
-              border: '10px double #1e293b',
-              padding: '3rem',
-              boxShadow: 'var(--shadow-lg)',
-              fontFamily: 'Georgia, serif',
-              color: '#000000',
-              position: 'relative'
-            }} className="bonafide-box">
+            <div id="printable-bonafide" className="bonafide-box certificates-bonafide-box">
               {/* Header */}
-              <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '1rem', marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>
+              <div className="certificates-div-34">
+                <h1 className="certificates-title-35">
                   {institutionName}
                 </h1>
-                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', fontFamily: 'Inter, sans-serif', color: '#475569' }}>
+                <p className="certificates-text-36">
                   {institutionAddress}
                 </p>
               </div>
 
               {/* Title */}
-              <div style={{ textAlign: 'center', margin: '2rem 0' }}>
-                <h2 style={{ fontSize: '1.4rem', textDecoration: 'underline', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+              <div className="certificates-div-37">
+                <h2 className="certificates-title-38">
                   BONAFIDE CERTIFICATE
                 </h2>
               </div>
 
               {/* Certificate content */}
-              <div style={{ fontSize: '1.05rem', lineHeight: '2.0', textAlign: 'justify', textIndent: '2.5rem', marginBottom: '3rem' }}>
+              <div className="certificates-div-39">
                 This is to certify that <strong>{student.first_name} {student.last_name}</strong>, 
                 son/daughter of <strong>Mr./Mrs. Guardian</strong>, is a bonafide student of 
                 {` ${institutionName}`}. He/She is currently enrolled in 
@@ -349,21 +285,21 @@ export default function Certificates() {
                 registered under Admission Number <strong>{student.admission_number}</strong>.
               </div>
 
-              <div style={{ fontSize: '1.05rem', lineHeight: '2.0', textAlign: 'justify', marginBottom: '4rem' }}>
+              <div className="certificates-div-40">
                 According to the admission register, his/her date of birth is 
                 <strong> {getFormattedDate(student.date_of_birth)}</strong>. 
                 His/Her conduct and character during their study has been consistently satisfactory.
               </div>
 
               {/* Signature block */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontSize: '0.9rem', fontFamily: 'Inter, sans-serif' }}>
+              <div className="certificates-row-41">
                 <div>
                   <p>Date: {new Date().toLocaleDateString()}</p>
                   <p>Place: School Office</p>
                 </div>
-                <div style={{ textAlign: 'center', width: '180px', borderTop: '1px solid #000', paddingTop: '0.5rem' }}>
+                <div className="certificates-div-42">
                   <strong>Principal Signature</strong>
-                  <div style={{ fontSize: '0.75rem', color: '#555', marginTop: '0.15rem' }}>Greenwood High School</div>
+                  <div className="certificates-div-43">Greenwood High School</div>
                 </div>
               </div>
             </div>
@@ -371,113 +307,102 @@ export default function Certificates() {
 
           {/* Template 3: Transfer Certificate (TC) */}
           {selectedTemplate === 'tc' && (
-            <div id="printable-tc" style={{
-              width: '100%',
-              maxWidth: '750px',
-              backgroundColor: '#ffffff',
-              border: '2px solid #000000',
-              padding: '2.5rem',
-              boxShadow: 'var(--shadow-lg)',
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '0.85rem',
-              color: '#000000',
-              lineHeight: '1.5'
-            }} className="tc-box">
+            <div id="printable-tc" className="tc-box certificates-tc-box">
               {/* Header */}
-              <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '0.75rem', marginBottom: '1.5rem' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, textTransform: 'uppercase' }}>
+              <div className="certificates-div-45">
+                <h1 className="certificates-title-46">
                   {institutionName}
                 </h1>
-                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#475569' }}>
+                <p className="certificates-text-47">
                   {institutionAddress}
                 </p>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.75rem', textDecoration: 'underline' }}>
+                <h2 className="certificates-title-48">
                   School Leaving / Transfer Certificate
                 </h2>
               </div>
 
               {/* Meta details */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '0.8rem', borderBottom: '1px dashed #ccc', paddingBottom: '0.5rem' }}>
+              <div className="certificates-row-49">
                 <div><strong>TC Register Page No:</strong> TC-{Date.now().toString().slice(-4)}</div>
                 <div><strong>Admission ID:</strong> {student.admission_number}</div>
                 <div><strong>Date of Issue:</strong> {new Date().toLocaleDateString()}</div>
               </div>
 
               {/* Checklist details */}
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2.5rem' }} className="tc-table">
+              <table className="tc-table certificates-tc-table">
                 <tbody>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', width: '40%', fontWeight: 'bold' }}>1. Name of the Pupil</td>
-                    <td style={{ padding: '0.5rem 0' }}>: {student.first_name} {student.last_name}</td>
+                  <tr className="certificates-tr-51">
+                    <td className="certificates-td-52">1. Name of the Pupil</td>
+                    <td className="certificates-td-53">: {student.first_name} {student.last_name}</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>2. Father's / Guardian's Name</td>
-                    <td style={{ padding: '0.5rem 0' }}>: Parent Guardian</td>
+                  <tr className="certificates-tr-54">
+                    <td className="certificates-td-55">2. Father's / Guardian's Name</td>
+                    <td className="certificates-td-56">: Parent Guardian</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>3. Nationality</td>
-                    <td style={{ padding: '0.5rem 0' }}>: Indian</td>
+                  <tr className="certificates-tr-57">
+                    <td className="certificates-td-58">3. Nationality</td>
+                    <td className="certificates-td-59">: Indian</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>4. Date of first admission in School</td>
-                    <td style={{ padding: '0.5rem 0' }}>: {getFormattedDate(student.date_of_birth)}</td>
+                  <tr className="certificates-tr-60">
+                    <td className="certificates-td-61">4. Date of first admission in School</td>
+                    <td className="certificates-td-62">: {getFormattedDate(student.date_of_birth)}</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>5. Date of Birth (in Christian Era)</td>
-                    <td style={{ padding: '0.5rem 0' }}>: {getFormattedDate(student.date_of_birth)} (Year: {getYearInWords(student.date_of_birth)})</td>
+                  <tr className="certificates-tr-63">
+                    <td className="certificates-td-64">5. Date of Birth (in Christian Era)</td>
+                    <td className="certificates-td-65">: {getFormattedDate(student.date_of_birth)} (Year: {getYearInWords(student.date_of_birth)})</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>6. Class in which pupil last studied</td>
-                    <td style={{ padding: '0.5rem 0' }}>: {student.course_name || 'Standard Syllabus'}</td>
+                  <tr className="certificates-tr-66">
+                    <td className="certificates-td-67">6. Class in which pupil last studied</td>
+                    <td className="certificates-td-68">: {student.course_name || 'Standard Syllabus'}</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>7. School / Board Annual Exam last taken</td>
-                    <td style={{ padding: '0.5rem 0' }}>: Passed and Cleared</td>
+                  <tr className="certificates-tr-69">
+                    <td className="certificates-td-70">7. School / Board Annual Exam last taken</td>
+                    <td className="certificates-td-71">: Passed and Cleared</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>8. Whether failed, if so once/twice</td>
-                    <td style={{ padding: '0.5rem 0' }}>: No</td>
+                  <tr className="certificates-tr-72">
+                    <td className="certificates-td-73">8. Whether failed, if so once/twice</td>
+                    <td className="certificates-td-74">: No</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>9. Subjects Studied</td>
-                    <td style={{ padding: '0.5rem 0' }}>: English, Mathematics, Sciences, Social Studies</td>
+                  <tr className="certificates-tr-75">
+                    <td className="certificates-td-76">9. Subjects Studied</td>
+                    <td className="certificates-td-77">: English, Mathematics, Sciences, Social Studies</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>10. Whether qualified for promotion</td>
-                    <td style={{ padding: '0.5rem 0' }}>: Yes, promoted to next grade</td>
+                  <tr className="certificates-tr-78">
+                    <td className="certificates-td-79">10. Whether qualified for promotion</td>
+                    <td className="certificates-td-80">: Yes, promoted to next grade</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>11. Month up to which pupil has paid dues</td>
-                    <td style={{ padding: '0.5rem 0' }}>: Fully Cleared</td>
+                  <tr className="certificates-tr-81">
+                    <td className="certificates-td-82">11. Month up to which pupil has paid dues</td>
+                    <td className="certificates-td-83">: Fully Cleared</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>12. Any fee concession availed of</td>
-                    <td style={{ padding: '0.5rem 0' }}>: No</td>
+                  <tr className="certificates-tr-84">
+                    <td className="certificates-td-85">12. Any fee concession availed of</td>
+                    <td className="certificates-td-86">: No</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>13. Total No. of working days</td>
-                    <td style={{ padding: '0.5rem 0' }}>: 210 Days</td>
+                  <tr className="certificates-tr-87">
+                    <td className="certificates-td-88">13. Total No. of working days</td>
+                    <td className="certificates-td-89">: 210 Days</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>14. Total No. of working days present</td>
-                    <td style={{ padding: '0.5rem 0' }}>: 198 Days</td>
+                  <tr className="certificates-tr-90">
+                    <td className="certificates-td-91">14. Total No. of working days present</td>
+                    <td className="certificates-td-92">: 198 Days</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>15. Reason for leaving the School</td>
-                    <td style={{ padding: '0.5rem 0' }}>: Parent Relocation / Relocated to another city</td>
+                  <tr className="certificates-tr-93">
+                    <td className="certificates-td-94">15. Reason for leaving the School</td>
+                    <td className="certificates-td-95">: Parent Relocation / Relocated to another city</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>16. General Conduct</td>
-                    <td style={{ padding: '0.5rem 0' }}>: Exemplary</td>
+                  <tr className="certificates-tr-96">
+                    <td className="certificates-td-97">16. General Conduct</td>
+                    <td className="certificates-td-98">: Exemplary</td>
                   </tr>
                 </tbody>
               </table>
 
               {/* Signatures */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3.5rem', fontSize: '0.8rem' }}>
-                <div style={{ borderTop: '1px solid #000', width: '130px', textAlign: 'center', paddingTop: '0.25rem' }}>Class Teacher</div>
-                <div style={{ borderTop: '1px solid #000', width: '130px', textAlign: 'center', paddingTop: '0.25rem' }}>Checked by (Clerk)</div>
-                <div style={{ borderTop: '1px solid #000', width: '130px', textAlign: 'center', paddingTop: '0.25rem' }}>Principal Signature</div>
+              <div className="certificates-row-99">
+                <div className="certificates-div-100">Class Teacher</div>
+                <div className="certificates-div-101">Checked by (Clerk)</div>
+                <div className="certificates-div-102">Principal Signature</div>
               </div>
             </div>
           )}

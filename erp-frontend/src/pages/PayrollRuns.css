@@ -1,0 +1,69 @@
+/* Component stylesheet for PayrollRuns.tsx */
+
+.payroll-runs-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.payroll-runs-grid-2 {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr 2fr;
+}
+
+.payroll-runs-card {
+  height: fit-content;
+  padding: 1.5rem;
+}
+
+.payroll-runs-title-4 {
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.payroll-runs-btn {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.payroll-runs-Play-6 {
+  margin-right: 0.25rem;
+}
+
+.payroll-runs-card {
+  padding: 1.5rem;
+}
+
+.payroll-runs-title-8 {
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.payroll-runs-th-9 {
+  text-align: right;
+}
+
+.payroll-runs-row-10 {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.payroll-runs-Calendar-11 {
+  color: var(--primary);
+}
+
+.payroll-runs-td-12 {
+  text-align: right;
+}
+
+.payroll-runs-td-13 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.payroll-runs-Landmark-14 {
+  margin-bottom: 0.5rem;
+}

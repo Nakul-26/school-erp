@@ -1,0 +1,169 @@
+/* Component stylesheet for MyLeaveApplications.tsx */
+
+.my-leave-applications-CalendarDays-1 {
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+.my-leave-applications-text-2 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.my-leave-applications-row-3 {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.my-leave-applications-form-group {
+  margin: 0px;
+}
+
+.my-leave-applications-select-5 {
+  padding: 0.5rem 1rem;
+}
+
+.my-leave-applications-Plus-6 {
+  margin-right: 0.4rem;
+}
+
+.my-leave-applications-grid-7 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  margin-bottom: 1.5rem;
+}
+
+.my-leave-applications-card {
+  margin: 0px;
+  padding: 1rem;
+}
+
+.my-leave-applications-row-9 {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.my-leave-applications-span-10 {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.my-leave-applications-span-11 {
+  background: var(--primary);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+}
+
+.my-leave-applications-div-12 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.my-leave-applications-span-13 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.my-leave-applications-div-14 {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-bottom: 0.5rem;
+}
+
+.my-leave-applications-div-15 {
+  background: var(--border);
+  border-radius: 4px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.my-leave-applications-div-16 {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0px;
+  padding: 1rem 1rem 0;
+}
+
+.my-leave-applications-row-17 {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  margin: 0px;
+}
+
+.my-leave-applications-text-18 {
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+.my-leave-applications-span-19 {
+  font-weight: 600;
+}
+
+.my-leave-applications-span-20 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.my-leave-applications-td-21 {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-leave-applications-td-22 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.my-leave-applications-td-23 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.my-leave-applications-td-24 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.my-leave-applications-CalendarDays-25 {
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+
+.my-leave-applications-grid-26 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.my-leave-applications-div-27 {
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  padding: 0.6rem 1rem;
+}
+
+.my-leave-applications-strong-28 {
+  color: var(--text);
+}
+
+.my-leave-applications-textarea-29 {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem;
+  resize: vertical;
+  width: 100%;
+}

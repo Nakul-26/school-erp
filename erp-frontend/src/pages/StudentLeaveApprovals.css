@@ -1,0 +1,71 @@
+/* Component stylesheet for StudentLeaveApprovals.tsx */
+
+.student-leave-approvals-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.student-leave-approvals-row-2 {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.student-leave-approvals-card {
+  padding: 1.5rem;
+}
+
+.student-leave-approvals-th-4 {
+  text-align: right;
+}
+
+.student-leave-approvals-div-5 {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.student-leave-approvals-row-6 {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.student-leave-approvals-text-7 {
+  margin: 0px;
+}
+
+.student-leave-approvals-span-8 {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: capitalize;
+}
+
+.student-leave-approvals-div-9 {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+}
+
+.student-leave-approvals-td-10 {
+  text-align: right;
+}
+
+.student-leave-approvals-row-11 {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.student-leave-approvals-td-12 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.student-leave-approvals-textarea-13 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  width: 100%;
+}

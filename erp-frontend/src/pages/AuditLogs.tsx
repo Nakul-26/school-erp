@@ -1,3 +1,4 @@
+import './AuditLogs.css';
 import { PageGuidance } from '../components/PageGuidance';
 import { useEffect, useState, useCallback } from 'react';
 import Layout from '../components/Layout';
@@ -93,18 +94,18 @@ export default function AuditLogs() {
       <div className="page-header">
         <div>
           <h2>System Audit Logs</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="audit-logs-text-1">
             Track all administrative actions, data edits, and logins inside the institution.
-            {total > 0 && <span style={{ marginLeft: '0.5rem', fontWeight: 600, color: 'var(--primary)' }}>({total} total entries)</span>}
+            {total > 0 && <span className="audit-logs-span-2">({total} total entries)</span>}
           </p>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <form className="card filters" onSubmit={handleSearch} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end', padding: '1.25rem 1.5rem' }}>
-        <div style={{ flex: '2', minWidth: '200px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.35rem', display: 'block' }}>Search Action</label>
-          <div className="search-container" style={{ margin: 0 }}>
+      <form className="card filters audit-logs-card" onSubmit={handleSearch}>
+        <div className="audit-logs-div-4">
+          <label className="audit-logs-label-5">Search Action</label>
+          <div className="search-container audit-logs-search-container">
             <Search size={16} />
             <input
               type="text"
@@ -115,12 +116,12 @@ export default function AuditLogs() {
           </div>
         </div>
 
-        <div style={{ flex: '1', minWidth: '150px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.35rem', display: 'block' }}>
-            <Filter size={13} style={{ verticalAlign: 'middle', marginRight: '0.25rem' }} />
+        <div className="audit-logs-div-7">
+          <label className="audit-logs-label-8">
+            <Filter size={13} className="audit-logs-Filter-9"  />
             Module
           </label>
-          <select value={module} onChange={(e) => setModule(e.target.value)} style={{ width: '100%' }}>
+          <select value={module} onChange={(e) => setModule(e.target.value)} className="audit-logs-select-10">
             <option value="">All Modules</option>
             {modules.map(m => (
               <option key={m} value={m}>{m.replace(/_/g, ' ').toUpperCase()}</option>
@@ -128,69 +129,64 @@ export default function AuditLogs() {
           </select>
         </div>
 
-        <div style={{ minWidth: '140px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.35rem', display: 'block' }}>From Date</label>
+        <div className="audit-logs-div-11">
+          <label className="audit-logs-label-12">From Date</label>
           <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
         </div>
 
-        <div style={{ minWidth: '140px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.35rem', display: 'block' }}>To Date</label>
+        <div className="audit-logs-div-13">
+          <label className="audit-logs-label-14">To Date</label>
           <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
         </div>
 
-        <button type="submit" className="btn btn-primary" style={{ whiteSpace: 'nowrap', height: '38px' }}>
+        <button type="submit" className="btn btn-primary audit-logs-btn">
           Apply Filters
         </button>
-        <button
-          type="button"
-          className="btn btn-outline"
-          style={{ height: '38px', whiteSpace: 'nowrap' }}
-          onClick={() => { setSearch(''); setModule(''); setFromDate(''); setToDate(''); }}
-        >
+        <button type="button" className="btn btn-outline audit-logs-btn" onClick={() => { setSearch(''); setModule(''); setFromDate(''); setToDate(''); }}>
           Clear
         </button>
       </form>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card audit-logs-card">
         {loading ? (
-          <p style={{ padding: '2rem', color: 'var(--text-muted)', textAlign: 'center' }}>Loading audit logs...</p>
+          <p className="audit-logs-text-18">Loading audit logs...</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div className="audit-logs-div-19">
             <table className="table">
               <thead>
                 <tr>
-                  <th style={{ width: '170px' }}>Timestamp</th>
+                  <th className="audit-logs-th-20">Timestamp</th>
                   <th>User</th>
-                  <th style={{ width: '200px' }}>Action</th>
-                  <th style={{ width: '120px' }}>Module</th>
+                  <th className="audit-logs-th-21">Action</th>
+                  <th className="audit-logs-th-22">Module</th>
                   <th>Description</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map(log => (
                   <tr key={log.id}>
-                    <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                    <td className="audit-logs-td-23">
                       {new Date(log.timestamp).toLocaleString()}
                     </td>
                     <td>
-                      <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{log.user_name}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{log.user_email}</div>
+                      <div className="audit-logs-div-24">{log.user_name}</div>
+                      <div className="audit-logs-div-25">{log.user_email}</div>
                     </td>
                     <td>
-                      <span className={`badge ${getActionBadgeColor(log.action)}`} style={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                      <span className={`badge ${getActionBadgeColor(log.action)} audit-logs-span-26`}>
                         {log.action}
                       </span>
                     </td>
                     <td>
-                      <code style={{ background: '#f1f5f9', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                      <code className="audit-logs-code-27">
                         {log.module}
                       </code>
                     </td>
                     <td>
-                      <div style={{ fontSize: '0.875rem' }}>{log.description}</div>
+                      <div className="audit-logs-div-28">{log.description}</div>
                       {log.record_id && (
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
-                          ID: <code style={{ background: '#f1f5f9', padding: '0.1rem 0.25rem', borderRadius: '3px' }}>{log.record_id}</code>
+                        <div className="audit-logs-div-29">
+                          ID: <code className="audit-logs-code-30">{log.record_id}</code>
                         </div>
                       )}
                     </td>
@@ -198,9 +194,9 @@ export default function AuditLogs() {
                 ))}
                 {logs.length === 0 && (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '3rem' }}>
-                      <ClipboardList size={32} style={{ color: 'var(--text-muted)', opacity: 0.4, display: 'block', margin: '0 auto 0.75rem' }} />
-                      <p style={{ color: 'var(--text-muted)', margin: 0 }}>No audit logs found matching your filters.</p>
+                    <td colSpan={5} className="audit-logs-td-31">
+                      <ClipboardList size={32} className="audit-logs-ClipboardList-32"  />
+                      <p className="audit-logs-text-33">No audit logs found matching your filters.</p>
                     </td>
                   </tr>
                 )}
@@ -212,24 +208,14 @@ export default function AuditLogs() {
 
       {/* Pagination */}
       {!loading && totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
-          <button
-            className="btn btn-outline"
-            onClick={() => fetchLogs(page - 1)}
-            disabled={page <= 1}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.45rem 1rem' }}
-          >
+        <div className="audit-logs-row-34">
+          <button className="btn btn-outline audit-logs-btn" onClick={() => fetchLogs(page - 1)} disabled={page <= 1}>
             <ChevronLeft size={16} /> Prev
           </button>
-          <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+          <span className="audit-logs-span-36">
             Page {page} of {totalPages}
           </span>
-          <button
-            className="btn btn-outline"
-            onClick={() => fetchLogs(page + 1)}
-            disabled={page >= totalPages}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.45rem 1rem' }}
-          >
+          <button className="btn btn-outline audit-logs-btn" onClick={() => fetchLogs(page + 1)} disabled={page>= totalPages}>
             Next <ChevronRight size={16} />
           </button>
         </div>

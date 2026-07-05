@@ -1,3 +1,4 @@
+import './AcademicYears.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -378,7 +379,7 @@ export default function AcademicYears() {
         breadcrumbs={[{ label: 'Institution Admin', to: '/settings' }, { label: 'Academic Years' }]}
         statusBadge={{ label: currentYearObj?.status || 'Archived', type: currentYearObj?.status === 'Active' ? 'success' : 'secondary' }}
         actions={
-          <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => setShowAddModal(true)}>
+          <button className="btn btn-primary academic-years-btn" onClick={() => setShowAddModal(true)}>
             <Plus size={16} /> Add Academic Year
           </button>
         }
@@ -388,13 +389,13 @@ export default function AcademicYears() {
         onTabChange={(tabId) => setActiveTab(tabId as TabType)}
       >
         {activeTab === 'list' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="academic-years-col-2">
             <div className="card">
-              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, fontWeight: 700 }}>Registered Academic Years</h3>
-                <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Lifecycle management of terms</span>
+              <div className="card-header academic-years-card-header">
+                <h3 className="academic-years-title-4">Registered Academic Years</h3>
+                <span className="academic-years-span-5">Lifecycle management of terms</span>
               </div>
-              <div style={{ padding: '1rem' }}>
+              <div className="academic-years-div-6">
                 <div className="table-responsive">
                   <table className="table">
                   <thead>
@@ -403,14 +404,14 @@ export default function AcademicYears() {
                       <th>Start Date</th>
                       <th>End Date</th>
                       <th>Lifecycle Status</th>
-                      <th style={{ textAlign: 'right' }}>Actions</th>
+                      <th className="academic-years-th-7">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {years.map(year => (
-                      <tr key={year.id} style={{ verticalAlign: 'middle' }}>
-                        <td style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>
-                          {year.name} {year.is_current === 1 && <span className="badge badge-success" style={{ marginLeft: '0.5rem', fontSize: '0.75rem' }}>Current</span>}
+                      <tr key={year.id} className="academic-years-tr-8">
+                        <td className="academic-years-td-9">
+                          {year.name} {year.is_current === 1 && <span className="badge badge-success academic-years-badge">Current</span>}
                         </td>
                         <td>{year.start_date}</td>
                         <td>{year.end_date}</td>
@@ -423,30 +424,30 @@ export default function AcademicYears() {
                             {year.status}
                           </span>
                         </td>
-                        <td style={{ textAlign: 'right' }}>
-                          <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+                        <td className="academic-years-td-11">
+                          <div className="academic-years-row-12">
                             {year.status !== 'Active' && year.status !== 'Archived' && (
-                              <button className="btn btn-sm btn-outline" style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }} onClick={() => handleUpdateStatus(year.id, { is_current: 1, status: 'Active' })}>
+                              <button className="btn btn-sm btn-outline academic-years-btn" onClick={() => handleUpdateStatus(year.id, { is_current: 1, status: 'Active' })}>
                                 Make Current
                               </button>
                             )}
                             {year.status === 'Active' && (
-                              <button className="btn btn-sm btn-warning" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', padding: '0.25rem 0.5rem' }} onClick={() => handleUpdateStatus(year.id, { status: 'Locked' })}>
+                              <button className="btn btn-sm btn-warning academic-years-btn" onClick={() => handleUpdateStatus(year.id, { status: 'Locked' })}>
                                 <Lock size={12} /> Lock Year
                               </button>
                             )}
                             {year.status === 'Locked' && (
-                              <button className="btn btn-sm btn-success" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', padding: '0.25rem 0.5rem' }} onClick={() => handleUpdateStatus(year.id, { status: 'Active' })}>
+                              <button className="btn btn-sm btn-success academic-years-btn" onClick={() => handleUpdateStatus(year.id, { status: 'Active' })}>
                                 <Unlock size={12} /> Unlock
                               </button>
                             )}
                             {year.status !== 'Archived' && year.status !== 'Draft' && (
-                              <button className="btn btn-sm btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', padding: '0.25rem 0.5rem' }} onClick={() => handleUpdateStatus(year.id, { status: 'Archived', is_current: 0 })}>
+                              <button className="btn btn-sm btn-secondary academic-years-btn" onClick={() => handleUpdateStatus(year.id, { status: 'Archived', is_current: 0 })}>
                                 <Archive size={12} /> Archive
                               </button>
                             )}
                             {!year.is_current && (
-                              <button className="btn btn-sm btn-danger" style={{ padding: '0.25rem 0.4rem' }} onClick={() => handleDeleteYear(year.id)} title="Delete">
+                              <button className="btn btn-sm btn-danger academic-years-btn" onClick={() => handleDeleteYear(year.id)} title="Delete">
                                 <Trash2 size={14} />
                               </button>
                             )}
@@ -463,24 +464,24 @@ export default function AcademicYears() {
         )}
 
         {activeTab === 'rollover' && (
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Configuration Rollover Wizard</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+          <div className="card academic-years-card">
+            <h3 className="academic-years-title-19">Configuration Rollover Wizard</h3>
+            <p className="academic-years-text-20">
               Safely carry forward setup data (Sections, Subjects, Allocations) to a new year. Operational transaction records (Attendance, Grades, Payments) are <strong>never</strong> copied.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+            <div className="academic-years-grid-21">
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Source Academic Year (From)</label>
-                <select value={rolloverForm.source_year_id} onChange={e => setRolloverForm({...rolloverForm, source_year_id: e.target.value})} style={{ width: '100%', padding: '0.5rem' }}>
+                <label className="academic-years-label-22">Source Academic Year (From)</label>
+                <select value={rolloverForm.source_year_id} onChange={e => setRolloverForm({...rolloverForm, source_year_id: e.target.value})} className="academic-years-select-23">
                   {years.map(y => (
                     <option key={y.id} value={y.id}>{y.name} ({y.status})</option>
                   ))}
                 </select>
               </div>
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Target Academic Year (To)</label>
-                <select value={rolloverForm.target_year_id} onChange={e => setRolloverForm({...rolloverForm, target_year_id: e.target.value})} style={{ width: '100%', padding: '0.5rem' }}>
+                <label className="academic-years-label-24">Target Academic Year (To)</label>
+                <select value={rolloverForm.target_year_id} onChange={e => setRolloverForm({...rolloverForm, target_year_id: e.target.value})} className="academic-years-select-25">
                   <option value="">-- Select Year --</option>
                   {years.map(y => (
                     <option key={y.id} value={y.id}>{y.name} ({y.status})</option>
@@ -489,41 +490,41 @@ export default function AcademicYears() {
               </div>
             </div>
 
-            <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-              <h4 style={{ fontWeight: 600, fontSize: '0.95rem', margin: '0 0 0.75rem 0' }}>Select Configuration Scope to Copy</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <div className="academic-years-div-26">
+              <h4 className="academic-years-title-27">Select Configuration Scope to Copy</h4>
+              <div className="academic-years-grid-28">
+                <label className="academic-years-row-29">
                   <input type="checkbox" checked={rolloverForm.checklist.includes('sections')} onChange={() => handleRolloverChecklistChange('sections')} />
                   <div>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Sections & Year Levels</span>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Classrooms and division mapping structures</p>
+                    <span className="academic-years-span-30">Sections & Year Levels</span>
+                    <p className="academic-years-text-31">Classrooms and division mapping structures</p>
                   </div>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <label className="academic-years-row-32">
                   <input type="checkbox" checked={rolloverForm.checklist.includes('fees')} onChange={() => handleRolloverChecklistChange('fees')} />
                   <div>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Fee Structures</span>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Default rates per program and year number</p>
+                    <span className="academic-years-span-33">Fee Structures</span>
+                    <p className="academic-years-text-34">Default rates per program and year number</p>
                   </div>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <label className="academic-years-row-35">
                   <input type="checkbox" checked={rolloverForm.checklist.includes('allocations')} onChange={() => handleRolloverChecklistChange('allocations')} />
                   <div>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Teaching Allocations Template</span>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Teacher-subject maps (mapped to target sections)</p>
+                    <span className="academic-years-span-36">Teaching Allocations Template</span>
+                    <p className="academic-years-text-37">Teacher-subject maps (mapped to target sections)</p>
                   </div>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <label className="academic-years-row-38">
                   <input type="checkbox" checked={rolloverForm.checklist.includes('timetable')} onChange={() => handleRolloverChecklistChange('timetable')} />
                   <div>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Timetable Templates</span>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Duplicate slot structures and template sessions</p>
+                    <span className="academic-years-span-39">Timetable Templates</span>
+                    <p className="academic-years-text-40">Duplicate slot structures and template sessions</p>
                   </div>
                 </label>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="academic-years-row-41">
               <button className="btn btn-secondary" onClick={runRolloverSimulation} disabled={rolloverLoading || !rolloverForm.target_year_id}>
                 {rolloverLoading ? 'Simulating...' : 'Run Rollover Simulation'}
               </button>
@@ -535,35 +536,35 @@ export default function AcademicYears() {
             </div>
 
             {rolloverPreview && (
-              <div style={{ marginTop: '1.5rem' }}>
-                <h4 style={{ fontWeight: 700, marginBottom: '0.75rem' }}>Simulation Summary Results</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ border: '1px solid #e2e8f0', padding: '0.75rem', borderRadius: '6px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Sections to Recreate</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{rolloverPreview.sections_count}</div>
+              <div className="academic-years-div-42">
+                <h4 className="academic-years-title-43">Simulation Summary Results</h4>
+                <div className="academic-years-grid-44">
+                  <div className="academic-years-div-45">
+                    <div className="academic-years-div-46">Sections to Recreate</div>
+                    <div className="academic-years-div-47">{rolloverPreview.sections_count}</div>
                   </div>
-                  <div style={{ border: '1px solid #e2e8f0', padding: '0.75rem', borderRadius: '6px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Allocations to Remap</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{rolloverPreview.allocations_count}</div>
+                  <div className="academic-years-div-48">
+                    <div className="academic-years-div-49">Allocations to Remap</div>
+                    <div className="academic-years-div-50">{rolloverPreview.allocations_count}</div>
                   </div>
-                  <div style={{ border: '1px solid #e2e8f0', padding: '0.75rem', borderRadius: '6px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Timetable Slots Map</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{rolloverPreview.timetable_count}</div>
+                  <div className="academic-years-div-51">
+                    <div className="academic-years-div-52">Timetable Slots Map</div>
+                    <div className="academic-years-div-53">{rolloverPreview.timetable_count}</div>
                   </div>
-                  <div style={{ border: '1px solid #e2e8f0', padding: '0.75rem', borderRadius: '6px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Fee Rules</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{rolloverPreview.fees_count}</div>
+                  <div className="academic-years-div-54">
+                    <div className="academic-years-div-55">Fee Rules</div>
+                    <div className="academic-years-div-56">{rolloverPreview.fees_count}</div>
                   </div>
                 </div>
 
                 {rolloverPreview.warnings.length > 0 && (
-                  <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', padding: '1rem', borderRadius: '6px', color: '#b45309', marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                  <div className="academic-years-div-57">
+                    <div className="academic-years-row-58">
                       <AlertTriangle size={18} /> Simulation Warnings
                     </div>
-                    <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem' }}>
+                    <ul className="academic-years-ul-59">
                       {rolloverPreview.warnings.map((w: string, idx: number) => (
-                        <li key={idx} style={{ marginBottom: '0.25rem' }}>{w}</li>
+                        <li key={idx} className="academic-years-li-60">{w}</li>
                       ))}
                     </ul>
                   </div>
@@ -572,9 +573,9 @@ export default function AcademicYears() {
             )}
 
             {rolloverLogs && (
-              <div style={{ marginTop: '1rem' }}>
-                <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Rollover Process Logs</h4>
-                <pre style={{ background: '#1e293b', color: '#38bdf8', padding: '1rem', borderRadius: '6px', fontFamily: 'monospace', fontSize: '0.85rem', maxHeight: '200px', overflowY: 'auto' }}>
+              <div className="academic-years-div-61">
+                <h4 className="academic-years-title-62">Rollover Process Logs</h4>
+                <pre className="academic-years-pre-63">
                   {rolloverLogs}
                 </pre>
               </div>
@@ -583,76 +584,76 @@ export default function AcademicYears() {
         )}
 
         {activeTab === 'promote' && (
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Student Promotion Wizard</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+          <div className="card academic-years-card">
+            <h3 className="academic-years-title-65">Student Promotion Wizard</h3>
+            <p className="academic-years-text-66">
               Promote students between classes/semesters. Evaluates attendance threshold compliance, pending outstanding balances, and generates next-term records.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="academic-years-grid-67">
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Source Year</label>
-                <select value={promoForm.source_year_id} onChange={e => setPromoForm({...promoForm, source_year_id: e.target.value})} style={{ width: '100%', padding: '0.4rem' }}>
+                <label className="academic-years-label-68">Source Year</label>
+                <select value={promoForm.source_year_id} onChange={e => setPromoForm({...promoForm, source_year_id: e.target.value})} className="academic-years-select-69">
                   {years.map(y => <option key={y.id} value={y.id}>{y.name}</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Target Year</label>
-                <select value={promoForm.target_year_id} onChange={e => setPromoForm({...promoForm, target_year_id: e.target.value})} style={{ width: '100%', padding: '0.4rem' }}>
+                <label className="academic-years-label-70">Target Year</label>
+                <select value={promoForm.target_year_id} onChange={e => setPromoForm({...promoForm, target_year_id: e.target.value})} className="academic-years-select-71">
                   {years.map(y => <option key={y.id} value={y.id}>{y.name}</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Program / Class</label>
-                <select value={promoForm.source_course_id} onChange={e => setPromoForm({...promoForm, source_course_id: e.target.value, target_course_id: e.target.value})} style={{ width: '100%', padding: '0.4rem' }}>
+                <label className="academic-years-label-72">Program / Class</label>
+                <select value={promoForm.source_course_id} onChange={e => setPromoForm({...promoForm, source_course_id: e.target.value, target_course_id: e.target.value})} className="academic-years-select-73">
                   {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Source Section</label>
-                <select value={promoForm.source_section_id} onChange={e => setPromoForm({...promoForm, source_section_id: e.target.value})} style={{ width: '100%', padding: '0.4rem' }} disabled={sourceSections.length === 0}>
+                <label className="academic-years-label-74">Source Section</label>
+                <select value={promoForm.source_section_id} onChange={e => setPromoForm({...promoForm, source_section_id: e.target.value})} className="academic-years-select-75" disabled={sourceSections.length === 0}>
                   {sourceSections.length === 0 && <option value="">-- No Sections --</option>}
                   {sourceSections.map(s => <option key={s.id} value={s.id}>{s.name} (Year {s.year_number})</option>)}
                 </select>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+            <div className="academic-years-grid-76">
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Destination Program</label>
-                <select value={promoForm.target_course_id} onChange={e => setPromoForm({...promoForm, target_course_id: e.target.value})} style={{ width: '100%', padding: '0.4rem' }}>
+                <label className="academic-years-label-77">Destination Program</label>
+                <select value={promoForm.target_course_id} onChange={e => setPromoForm({...promoForm, target_course_id: e.target.value})} className="academic-years-select-78">
                   {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Destination Section</label>
-                <select value={promoForm.target_section_id} onChange={e => setPromoForm({...promoForm, target_section_id: e.target.value})} style={{ width: '100%', padding: '0.4rem' }} disabled={targetSections.length === 0}>
+                <label className="academic-years-label-79">Destination Section</label>
+                <select value={promoForm.target_section_id} onChange={e => setPromoForm({...promoForm, target_section_id: e.target.value})} className="academic-years-select-80" disabled={targetSections.length === 0}>
                   {targetSections.length === 0 && <option value="">-- No Sections --</option>}
                   {targetSections.map(s => <option key={s.id} value={s.id}>{s.name} (Year {s.year_number})</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Destination Semester</label>
-                <input type="number" min={1} max={8} value={promoForm.target_semester} onChange={e => setPromoForm({...promoForm, target_semester: Number(e.target.value)})} style={{ width: '100%', padding: '0.4rem' }} />
+                <label className="academic-years-label-81">Destination Semester</label>
+                <input type="number" min={1} max={8} value={promoForm.target_semester} onChange={e => setPromoForm({...promoForm, target_semester: Number(e.target.value)})} className="academic-years-input-82"  />
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div className="academic-years-row-83">
               <button className="btn btn-secondary" onClick={fetchPromotionRoster} disabled={fetchingPromoData || !promoForm.source_section_id}>
                 {fetchingPromoData ? 'Evaluating Eligibility...' : 'Load & Audit Student Roster'}
               </button>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', userSelect: 'none' }}>
+              <label className="academic-years-row-84">
                 <input type="checkbox" checked={promoForm.generate_fees} onChange={e => setPromoForm({...promoForm, generate_fees: e.target.checked})} />
                 Generate next-term balances and fee bills
               </label>
             </div>
 
             {students.length > 0 && (
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflowX: 'auto' }}>
-                <table className="table" style={{ margin: 0 }}>
+              <div className="academic-years-div-85">
+                <table className="table academic-years-table">
                   <thead>
-                    <tr style={{ background: '#f1f5f9' }}>
-                      <th style={{ width: '40px', textAlign: 'center' }}>
+                    <tr className="academic-years-tr-87">
+                      <th className="academic-years-th-88">
                         <input 
                           type="checkbox" 
                           checked={selectedStudents.length === students.length && students.length > 0} 
@@ -678,8 +679,8 @@ export default function AcademicYears() {
                       const status = prevInfo?.status || 'Eligible';
                       
                       return (
-                        <tr key={s.id} style={{ verticalAlign: 'middle' }}>
-                          <td style={{ textAlign: 'center' }}>
+                        <tr key={s.id} className="academic-years-tr-89">
+                          <td className="academic-years-td-90">
                             <input 
                               type="checkbox" 
                               checked={isSelected} 
@@ -687,8 +688,8 @@ export default function AcademicYears() {
                               onChange={() => handleSelectStudentToggle(s.id)}
                             />
                           </td>
-                          <td style={{ fontWeight: 600 }}>{s.first_name} {s.last_name}</td>
-                          <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                          <td className="academic-years-td-91">{s.first_name} {s.last_name}</td>
+                          <td className="academic-years-td-92">
                             {prevInfo?.details || 'All clear'}
                           </td>
                           <td>
@@ -705,8 +706,8 @@ export default function AcademicYears() {
                   </tbody>
                 </table>
 
-                <div style={{ padding: '1rem', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                <div className="academic-years-row-93">
+                  <span className="academic-years-span-94">
                     Selected: <strong>{selectedStudents.length}</strong> of <strong>{students.length}</strong> students
                   </span>
                   <button className="btn btn-primary" onClick={executePromotion} disabled={selectedStudents.length === 0 || executingPromotion}>
@@ -719,16 +720,16 @@ export default function AcademicYears() {
         )}
 
         {activeTab === 'close' && (
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Academic Year Closing Wizard</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+          <div className="card academic-years-card">
+            <h3 className="academic-years-title-96">Academic Year Closing Wizard</h3>
+            <p className="academic-years-text-97">
               Finalize and close an academic term. Performs structural audits to check for open gradebooks, pending approvals, or unsettled fee balances before archiving data.
             </p>
 
-            <div style={{ maxWidth: '400px', marginBottom: '1.5rem' }}>
+            <div className="academic-years-div-98">
               <div className="form-group">
-                <label style={{ fontWeight: 600 }}>Select Academic Year to Archive & Lock</label>
-                <select value={closingForm.academic_year_id} onChange={e => setClosingForm({ academic_year_id: e.target.value })} style={{ width: '100%', padding: '0.5rem' }}>
+                <label className="academic-years-label-99">Select Academic Year to Archive & Lock</label>
+                <select value={closingForm.academic_year_id} onChange={e => setClosingForm({ academic_year_id: e.target.value })} className="academic-years-select-100">
                   {years.filter(y => y.status === 'Active' || y.status === 'Locked').map(y => (
                     <option key={y.id} value={y.id}>{y.name} ({y.status})</option>
                   ))}
@@ -736,24 +737,24 @@ export default function AcademicYears() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="academic-years-row-101">
               <button className="btn btn-secondary" onClick={runClosingAudits} disabled={checkingClose || !closingForm.academic_year_id}>
                 {checkingClose ? 'Auditing Term Data...' : 'Run Pre-Closing Audits'}
               </button>
             </div>
 
             {closingPreview && (
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '1.25rem', borderRadius: '8px' }}>
-                <h4 style={{ fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="academic-years-div-102">
+                <h4 className="academic-years-row-103">
                   <SlidersHorizontal size={18} /> Audit Verification Report
                 </h4>
 
                 {closingPreview.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', background: '#dcfce7', padding: '1rem', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 600 }}>
+                  <div className="academic-years-row-104">
                     <CheckCircle2 size={20} /> All audits passed. This academic year satisfies all closing conditions.
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                  <div className="academic-years-col-105">
                     {closingPreview.map((c, idx) => (
                       <div key={idx} style={{ 
                         display: 'flex', 
@@ -765,17 +766,17 @@ export default function AcademicYears() {
                         border: `1px solid ${c.type === 'error' ? '#fee2e2' : '#fef3c7'}`,
                         color: c.type === 'error' ? '#991b1b' : '#92400e'
                       }}>
-                        {c.type === 'error' ? <XCircle size={18} style={{ marginTop: '0.1rem' }} /> : <AlertTriangle size={18} style={{ marginTop: '0.1rem' }} />}
+                        {c.type === 'error' ? <XCircle size={18} className="academic-years-XCircle-106"  /> : <AlertTriangle size={18} className="academic-years-AlertTriangle-107"  />}
                         <div>
-                          <strong style={{ display: 'block', fontSize: '0.9rem' }}>{c.type === 'error' ? 'Blocker Error' : 'Operational Warning'}</strong>
-                          <span style={{ fontSize: '0.85rem' }}>{c.message}</span>
+                          <strong className="academic-years-strong-108">{c.type === 'error' ? 'Blocker Error' : 'Operational Warning'}</strong>
+                          <span className="academic-years-span-109">{c.message}</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                <div className="academic-years-row-110">
                   <button className="btn btn-secondary" onClick={() => setClosingPreview(null)}>Cancel</button>
                   <button 
                     className="btn btn-danger" 
@@ -793,31 +794,31 @@ export default function AcademicYears() {
         {/* Modal Form for adding Academic Year */}
         {showAddModal && (
           <div className="modal">
-            <div className="modal-content" style={{ maxWidth: '450px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                <h3 style={{ margin: 0, fontWeight: 700 }}>Add Academic Year</h3>
-                <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer' }}>×</button>
+            <div className="modal-content academic-years-modal-content">
+              <div className="academic-years-row-112">
+                <h3 className="academic-years-title-113">Add Academic Year</h3>
+                <button onClick={() => setShowAddModal(false)} className="academic-years-btn-114">×</button>
               </div>
               <form onSubmit={handleAddYear}>
-                <div className="form-group" style={{ marginBottom: '1rem' }}>
-                  <label style={{ fontWeight: 600 }}>Name (e.g., 2026-27)</label>
-                  <input type="text" value={addForm.name} onChange={e => setAddForm({...addForm, name: e.target.value})} required style={{ width: '100%', padding: '0.5rem' }} />
+                <div className="form-group academic-years-form-group">
+                  <label className="academic-years-label-116">Name (e.g., 2026-27)</label>
+                  <input type="text" value={addForm.name} onChange={e => setAddForm({...addForm, name: e.target.value})} required className="academic-years-input-117"  />
                 </div>
-                <div className="form-group" style={{ marginBottom: '1rem' }}>
-                  <label style={{ fontWeight: 600 }}>Start Date</label>
-                  <input type="date" value={addForm.start_date} onChange={e => setAddForm({...addForm, start_date: e.target.value})} required style={{ width: '100%', padding: '0.5rem' }} />
+                <div className="form-group academic-years-form-group">
+                  <label className="academic-years-label-119">Start Date</label>
+                  <input type="date" value={addForm.start_date} onChange={e => setAddForm({...addForm, start_date: e.target.value})} required className="academic-years-input-120"  />
                 </div>
-                <div className="form-group" style={{ marginBottom: '1rem' }}>
-                  <label style={{ fontWeight: 600 }}>End Date</label>
-                  <input type="date" value={addForm.end_date} onChange={e => setAddForm({...addForm, end_date: e.target.value})} required style={{ width: '100%', padding: '0.5rem' }} />
+                <div className="form-group academic-years-form-group">
+                  <label className="academic-years-label-122">End Date</label>
+                  <input type="date" value={addForm.end_date} onChange={e => setAddForm({...addForm, end_date: e.target.value})} required className="academic-years-input-123"  />
                 </div>
-                <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <div className="form-group academic-years-form-group">
+                  <label className="academic-years-row-125">
                     <input type="checkbox" checked={!!addForm.is_current} onChange={e => setAddForm({...addForm, is_current: e.target.checked ? 1 : 0})} />
                     Set as current academic year
                   </label>
                 </div>
-                <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <div className="modal-actions academic-years-modal-actions">
                   <button type="button" onClick={() => setShowAddModal(false)} className="btn btn-secondary">Cancel</button>
                   <button type="submit" className="btn btn-primary">Save Academic Year</button>
                 </div>

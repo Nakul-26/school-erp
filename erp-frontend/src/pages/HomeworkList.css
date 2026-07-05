@@ -1,0 +1,111 @@
+/* Component stylesheet for HomeworkList.tsx */
+
+.homework-list-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.homework-list-card {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+}
+
+.homework-list-row-3 {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.homework-list-label-4 {
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.homework-list-select-5 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem;
+}
+
+.homework-list-row-6 {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.homework-list-label-7 {
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.homework-list-select-8 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem;
+}
+
+.homework-list-card {
+  padding: 1.5rem;
+}
+
+.homework-list-th-10 {
+  text-align: right;
+}
+
+.homework-list-div-11 {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.homework-list-strong-12 {
+  font-size: 0.95rem;
+}
+
+.homework-list-text-13 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0 0;
+}
+
+.homework-list-row-14 {
+  align-items: center;
+  color: var(--danger);
+  display: flex;
+  font-weight: bold;
+  gap: 0.25rem;
+}
+
+.homework-list-td-15 {
+  text-align: right;
+}
+
+.homework-list-td-16 {
+  color: var(--text-muted);
+  padding: 3rem;
+  text-align: center;
+}
+
+.homework-list-Clipboard-17 {
+  margin-bottom: 0.5rem;
+}
+
+.homework-list-modal {
+  max-width: 600px;
+  width: 90%;
+}
+
+.homework-list-grid-19 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.homework-list-textarea-20 {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  width: 100%;
+}

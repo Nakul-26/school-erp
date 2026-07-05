@@ -1,3 +1,4 @@
+import './StudentFees.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -463,15 +464,15 @@ export default function StudentFees() {
           <div className="page-header">
             <div>
               <h2>Student Fee Accounts</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+              <p className="student-fees-text-1">
                 Manage student ledger liabilities, collect payments, and generate printable receipts
               </p>
             </div>
           </div>
 
-          <div className="card" style={{ marginBottom: '1.5rem' }}>
-            <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
-              <div className="search-container" style={{ flex: 1 }}>
+          <div className="card student-fees-card">
+            <form onSubmit={handleSearchSubmit} className="student-fees-row-3">
+              <div className="search-container student-fees-search-container">
                 <Search size={18} />
                 <input
                   type="text"
@@ -486,7 +487,7 @@ export default function StudentFees() {
 
           <div className="card">
             {loading ? <p>Loading student fee summaries...</p> : students.length === 0 ? (
-              <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+              <p className="student-fees-text-5">
                 No student accounts found. Try modifying your search query.
               </p>
             ) : (
@@ -501,14 +502,14 @@ export default function StudentFees() {
                     <th>Paid</th>
                     <th>Outstanding</th>
                     <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th className="student-fees-th-6">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {students.map((student) => {
                     const outstanding = student.total_amount - student.paid_amount;
                     return (
-                      <tr key={student.student_id} style={{ cursor: 'pointer' }} onClick={() => handleOpenLedger(student)}>
+                      <tr key={student.student_id} className="student-fees-tr-7" onClick={() => handleOpenLedger(student)}>
                         <td><strong>{student.admission_number}</strong></td>
                         <td>{student.roll_number || '-'}</td>
                         <td><strong>{student.first_name} {student.last_name}</strong></td>
@@ -521,7 +522,7 @@ export default function StudentFees() {
                           </span>
                         </td>
                         <td>{getStatusBadge(student.status)}</td>
-                        <td style={{ textAlign: 'right' }} onClick={e => e.stopPropagation()}>
+                        <td className="student-fees-td-8" onClick={e => e.stopPropagation()}>
                           <button className="btn btn-sm btn-primary" onClick={() => handleOpenLedger(student)}>
                             Open Ledger
                           </button>
@@ -539,18 +540,18 @@ export default function StudentFees() {
       {view === 'ledger' && selectedStudent && (
         <>
           <div className="page-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => { setView('list'); fetchStudentRecords(); }}>
+            <div className="student-fees-row-9">
+              <button className="btn btn-secondary student-fees-btn" onClick={() => { setView('list'); fetchStudentRecords(); }}>
                 <ArrowLeft size={18} />
               </button>
               <div>
                 <h2>Fee Ledger: {selectedStudent.first_name} {selectedStudent.last_name}</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                <p className="student-fees-text-11">
                   Admission: {selectedStudent.admission_number} | Course: {selectedStudent.course_name}
                 </p>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="student-fees-row-12">
               {isFinanceAdmin && (
                 <>
                   <button className="btn btn-outline" onClick={handleGenerateLedger} disabled={ledgerLoading}>
@@ -564,17 +565,17 @@ export default function StudentFees() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+          <div className="student-fees-grid-13">
             {/* Outstanding Items Card */}
             <div className="card">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem', fontWeight: '800' }}>Outstanding Liabilities</h3>
+              <h3 className="student-fees-title-14">Outstanding Liabilities</h3>
               {ledgerLoading ? <p>Loading ledger...</p> : ledger.length === 0 ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  <IndianRupee size={24} style={{ marginBottom: '0.5rem' }} />
+                <div className="student-fees-div-15">
+                  <IndianRupee size={24} className="student-fees-IndianRupee-16"  />
                   <p>No billing records found in this student's ledger. Click "Generate Ledger" to apply current fee structures.</p>
                 </div>
               ) : (
-                <table className="table" style={{ minWidth: 'auto' }}>
+                <table className="table student-fees-table">
                   <thead>
                     <tr>
                       <th>Fee Category</th>
@@ -582,7 +583,7 @@ export default function StudentFees() {
                       <th>Paid</th>
                       <th>Due</th>
                       <th>Status</th>
-                      {isFinanceAdmin && <th style={{ textAlign: 'right' }}>Manage</th>}
+                      {isFinanceAdmin && <th className="student-fees-th-18">Manage</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -596,20 +597,12 @@ export default function StudentFees() {
                           <td><span style={{ fontWeight: 'bold', color: outstanding > 0 ? 'var(--danger)' : '' }}>₹{outstanding.toLocaleString('en-IN')}</span></td>
                           <td>{getStatusBadge(item.status)}</td>
                           {isFinanceAdmin && (
-                            <td style={{ textAlign: 'right' }}>
-                              <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
-                                <button
-                                  className="btn btn-sm btn-outline"
-                                  style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem' }}
-                                  onClick={() => handleOpenConcessions(item)}
-                                >
+                            <td className="student-fees-td-19">
+                              <div className="student-fees-row-20">
+                                <button className="btn btn-sm btn-outline student-fees-btn" onClick={() => handleOpenConcessions(item)}>
                                   🏷️ Concession
                                 </button>
-                                <button
-                                  className="btn btn-sm btn-outline"
-                                  style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem' }}
-                                  onClick={() => handleOpenInstallments(item)}
-                                >
+                                <button className="btn btn-sm btn-outline student-fees-btn" onClick={() => handleOpenInstallments(item)}>
                                   📅 Installments
                                 </button>
                               </div>
@@ -625,21 +618,21 @@ export default function StudentFees() {
 
             {/* Payment History Card */}
             <div className="card">
-              <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem', fontWeight: '800' }}>Transaction History</h3>
+              <h3 className="student-fees-title-23">Transaction History</h3>
               {ledgerLoading ? <p>Loading transaction logs...</p> : payments.length === 0 ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  <Receipt size={24} style={{ marginBottom: '0.5rem' }} />
+                <div className="student-fees-div-24">
+                  <Receipt size={24} className="student-fees-Receipt-25"  />
                   <p>No payments recorded for this student account yet.</p>
                 </div>
               ) : (
-                <table className="table" style={{ minWidth: 'auto' }}>
+                <table className="table student-fees-table">
                   <thead>
                     <tr>
                       <th>Date</th>
                       <th>Category</th>
                       <th>Paid Via</th>
                       <th>Amount</th>
-                      <th style={{ textAlign: 'right' }}>Receipt</th>
+                      <th className="student-fees-th-27">Receipt</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -649,11 +642,11 @@ export default function StudentFees() {
                         <td>{p.fee_type}</td>
                         <td>
                           <strong>{p.payment_method}</strong>
-                          {p.transaction_reference && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Ref: {p.transaction_reference}</div>}
+                          {p.transaction_reference && <div className="student-fees-div-28">Ref: {p.transaction_reference}</div>}
                         </td>
                         <td><strong>₹{p.amount.toLocaleString('en-IN')}</strong></td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button className="btn btn-sm btn-outline" style={{ padding: '0.25rem 0.5rem' }} onClick={() => handleOpenReceipt(p)}>
+                        <td className="student-fees-td-29">
+                          <button className="btn btn-sm btn-outline student-fees-btn" onClick={() => handleOpenReceipt(p)}>
                             <Printer size={12} /> Print
                           </button>
                         </td>
@@ -670,8 +663,8 @@ export default function StudentFees() {
       {view === 'receipt' && selectedReceipt && (
         <>
           <div className="page-header no-print">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => setView('ledger')}>
+            <div className="student-fees-row-31">
+              <button className="btn btn-secondary student-fees-btn" onClick={() => setView('ledger')}>
                 <ArrowLeft size={18} /> Back
               </button>
               <h2>Receipt Preview</h2>
@@ -682,23 +675,14 @@ export default function StudentFees() {
           </div>
 
           {/* PRINT FRIENDLY RECEIPT WRAPPER */}
-          <div className="receipt-print-container" style={{
-            background: 'white',
-            border: '2px solid #e2e8f0',
-            borderRadius: '12px',
-            padding: '3rem',
-            maxWidth: '750px',
-            margin: '0 auto',
-            fontFamily: 'Courier New, monospace',
-            boxShadow: 'var(--shadow-md)'
-          }}>
-            <div style={{ textAlign: 'center', borderBottom: '2px dashed #cbd5e1', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
-              <h1 style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>{selectedReceipt.institution_name}</h1>
-              <p style={{ margin: '0.5rem 0 0 0', color: '#475569', fontSize: '0.875rem' }}>{selectedReceipt.institution_address || 'Education Campus Road, IN'}</p>
-              <h2 style={{ fontSize: '1.25rem', letterSpacing: '0.1em', marginTop: '1rem', textDecoration: 'underline' }}>FEES PAYMENT RECEIPT</h2>
+          <div className="receipt-print-container student-fees-receipt-print-container">
+            <div className="student-fees-div-34">
+              <h1 className="student-fees-title-35">{selectedReceipt.institution_name}</h1>
+              <p className="student-fees-text-36">{selectedReceipt.institution_address || 'Education Campus Road, IN'}</p>
+              <h2 className="student-fees-title-37">FEES PAYMENT RECEIPT</h2>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem', fontSize: '0.9rem', lineHeight: '1.6' }}>
+            <div className="student-fees-grid-38">
               <div>
                 <div><strong>Receipt No:</strong> {selectedReceipt.receipt_number}</div>
                 <div><strong>Date:</strong> {new Date(selectedReceipt.receipt_date).toLocaleDateString(undefined, { dateStyle: 'long' })}</div>
@@ -712,31 +696,31 @@ export default function StudentFees() {
               </div>
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2.5rem', fontSize: '0.95rem' }}>
+            <table className="student-fees-table-39">
               <thead>
-                <tr style={{ borderBottom: '2px dashed #cbd5e1', borderTop: '2px dashed #cbd5e1' }}>
-                  <th style={{ textAlign: 'left', padding: '0.75rem 0' }}>FEE DESCRIPTION</th>
-                  <th style={{ textAlign: 'right', padding: '0.75rem 0' }}>TOTAL DUE</th>
-                  <th style={{ textAlign: 'right', padding: '0.75rem 0' }}>PAID AMOUNT</th>
+                <tr className="student-fees-tr-40">
+                  <th className="student-fees-th-41">FEE DESCRIPTION</th>
+                  <th className="student-fees-th-42">TOTAL DUE</th>
+                  <th className="student-fees-th-43">PAID AMOUNT</th>
                 </tr>
               </thead>
               <tbody>
-                <tr style={{ borderBottom: '2px dashed #e2e8f0' }}>
-                  <td style={{ padding: '1rem 0' }}>{selectedReceipt.fee_type} Payment ({selectedReceipt.payment_method})</td>
-                  <td style={{ textAlign: 'right', padding: '1rem 0' }}>₹{selectedReceipt.total_amount.toLocaleString('en-IN')}</td>
-                  <td style={{ textAlign: 'right', padding: '1rem 0', fontWeight: 'bold' }}>₹{selectedReceipt.paid_amount.toLocaleString('en-IN')}</td>
+                <tr className="student-fees-tr-44">
+                  <td className="student-fees-td-45">{selectedReceipt.fee_type} Payment ({selectedReceipt.payment_method})</td>
+                  <td className="student-fees-td-46">₹{selectedReceipt.total_amount.toLocaleString('en-IN')}</td>
+                  <td className="student-fees-td-47">₹{selectedReceipt.paid_amount.toLocaleString('en-IN')}</td>
                 </tr>
               </tbody>
             </table>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontSize: '0.9rem' }}>
+            <div className="student-fees-row-48">
               <div>
                 <div><strong>Payment Method:</strong> {selectedReceipt.payment_method}</div>
                 {selectedReceipt.transaction_reference && <div><strong>Txn Reference:</strong> {selectedReceipt.transaction_reference}</div>}
                 {selectedReceipt.remarks && <div><strong>Remarks:</strong> {selectedReceipt.remarks}</div>}
               </div>
-              <div style={{ textAlign: 'right', width: '250px' }}>
-                <div style={{ borderBottom: '1px solid #cbd5e1', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
+              <div className="student-fees-div-49">
+                <div className="student-fees-div-50">
                   <strong>Ledger Paid:</strong> ₹{selectedReceipt.total_paid.toLocaleString('en-IN')}
                 </div>
                 <div>
@@ -745,7 +729,7 @@ export default function StudentFees() {
               </div>
             </div>
 
-            <div style={{ borderTop: '2px dashed #cbd5e1', marginTop: '3rem', paddingTop: '2rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#475569' }}>
+            <div className="student-fees-row-51">
               <div>* This is a computer generated invoice and requires no physical signature.</div>
               <div>Authorized Signatory</div>
             </div>
@@ -756,7 +740,7 @@ export default function StudentFees() {
       {/* COLLECT PAYMENT MODAL */}
       {showPayModal && selectedStudent && (
         <div className="modal">
-          <div className="modal-content" style={{ maxWidth: '480px' }}>
+          <div className="modal-content student-fees-modal-content">
             <h3>Record Fee Payment</h3>
             <form onSubmit={handleCollectPayment}>
               <div className="form-group">
@@ -797,15 +781,9 @@ export default function StudentFees() {
 
               <div className="form-group">
                 <label>Amount to Collect (INR)</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>₹</span>
-                  <input
-                    type="number"
-                    value={payForm.amount}
-                    onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })}
-                    required
-                    style={{ paddingLeft: '2rem' }}
-                  />
+                <div className="student-fees-div-53">
+                  <span className="student-fees-span-54">₹</span>
+                  <input type="number" value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} required className="student-fees-input-55"  />
                 </div>
               </div>
 
@@ -843,7 +821,7 @@ export default function StudentFees() {
                 />
               </div>
 
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+              <div className="modal-actions student-fees-modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowPayModal(false)}>
                   Cancel
                 </button>
@@ -858,14 +836,14 @@ export default function StudentFees() {
 
       {showConcessionModal && selectedFeeRecord && (
         <div className="modal-overlay">
-          <div className="modal" style={{ maxWidth: '600px', width: '90%' }}>
+          <div className="modal student-fees-modal">
             <div className="modal-header">
               <h3>Manage Concessions — {selectedFeeRecord.fee_type}</h3>
               <button onClick={() => { setShowConcessionModal(false); setSelectedFeeRecord(null); }}>✕</button>
             </div>
             <div className="modal-body">
-              <form onSubmit={handleApplyConcession} style={{ marginBottom: '1.5rem', borderBottom: '1px dashed var(--border)', paddingBottom: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <form onSubmit={handleApplyConcession} className="student-fees-form-58">
+                <div className="student-fees-grid-59">
                   <div className="form-group">
                     <label>Concession Type</label>
                     <select
@@ -893,7 +871,7 @@ export default function StudentFees() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+                <div className="student-fees-grid-60">
                   <div className="form-group">
                     <label>Value</label>
                     <input
@@ -916,19 +894,19 @@ export default function StudentFees() {
                   </div>
                 </div>
 
-                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                <button type="submit" className="btn btn-primary student-fees-btn">
                   Apply Concession
                 </button>
               </form>
 
               <h4>Applied Concessions</h4>
-              <table className="table" style={{ marginTop: '0.5rem' }}>
+              <table className="table student-fees-table">
                 <thead>
                   <tr>
                     <th>Type</th>
                     <th>Discount</th>
                     <th>Reason</th>
-                    <th style={{ textAlign: 'right' }}>Action</th>
+                    <th className="student-fees-th-63">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -937,7 +915,7 @@ export default function StudentFees() {
                       <td><strong>{c.concession_type}</strong></td>
                       <td>{c.discount_type === 'percent' ? `${c.discount_value}%` : `₹${c.discount_value.toLocaleString('en-IN')}`} (₹{c.discount_amount.toLocaleString('en-IN')})</td>
                       <td>{c.reason || '—'}</td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td className="student-fees-td-64">
                         <button className="btn btn-sm btn-outline btn-danger" onClick={() => handleRemoveConcession(c.id)}>
                           Remove
                         </button>
@@ -946,7 +924,7 @@ export default function StudentFees() {
                   ))}
                   {concessions.length === 0 && (
                     <tr>
-                      <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1.5rem' }}>
+                      <td colSpan={4} className="student-fees-td-65">
                         No concessions applied to this record.
                       </td>
                     </tr>
@@ -963,7 +941,7 @@ export default function StudentFees() {
 
       {showInstallmentModal && selectedFeeRecord && (
         <div className="modal-overlay">
-          <div className="modal" style={{ maxWidth: '650px', width: '90%' }}>
+          <div className="modal student-fees-modal">
             <div className="modal-header">
               <h3>Manage Installments — {selectedFeeRecord.fee_type}</h3>
               <button onClick={() => { setShowInstallmentModal(false); setSelectedFeeRecord(null); }}>✕</button>
@@ -972,7 +950,7 @@ export default function StudentFees() {
               {installments.length > 0 ? (
                 <div>
                   <h4>Installment Schedule</h4>
-                  <table className="table" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+                  <table className="table student-fees-table">
                     <thead>
                       <tr>
                         <th>Term</th>
@@ -980,7 +958,7 @@ export default function StudentFees() {
                         <th>Amount</th>
                         <th>Paid</th>
                         <th>Status</th>
-                        <th style={{ textAlign: 'right' }}>Action</th>
+                        <th className="student-fees-th-68">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -995,7 +973,7 @@ export default function StudentFees() {
                               {inst.status}
                             </span>
                           </td>
-                          <td style={{ textAlign: 'right' }}>
+                          <td className="student-fees-td-69">
                             {inst.status !== 'Paid' && (
                               <button className="btn btn-sm btn-primary" onClick={() => handlePayInstallment(inst)}>
                                 Pay Term
@@ -1008,27 +986,23 @@ export default function StudentFees() {
                   </table>
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', border: '1px dashed var(--border)', borderRadius: '6px', marginBottom: '1.5rem' }}>
+                <div className="student-fees-div-70">
                   No installment plan created for this fee category. Total amount: <strong>₹{selectedFeeRecord.total_amount.toLocaleString('en-IN')}</strong>.
                 </div>
               )}
 
-              <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '1.5rem' }}>
+              <div className="student-fees-div-71">
                 <h4>Setup Installment Plan</h4>
-                <div className="form-group" style={{ marginTop: '0.5rem' }}>
+                <div className="form-group student-fees-form-group">
                   <label>Number of Installments</label>
-                  <select
-                    value={installmentCount}
-                    onChange={(e) => handleInstallmentCountChange(Number(e.target.value))}
-                    style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                  >
+                  <select value={installmentCount} onChange={(e) => handleInstallmentCountChange(Number(e.target.value))} className="student-fees-select-73">
                     {[2, 3, 4, 5, 6, 8, 10, 12].map(n => (
                       <option key={n} value={n}>{n} Installments</option>
                     ))}
                   </select>
                 </div>
 
-                <table className="table" style={{ marginTop: '0.5rem' }}>
+                <table className="table student-fees-table">
                   <thead>
                     <tr>
                       <th>Term</th>
@@ -1041,27 +1015,17 @@ export default function StudentFees() {
                       <tr key={idx}>
                         <td>Installment #{idx + 1}</td>
                         <td>
-                          <input
-                            type="date"
-                            value={item.due_date}
-                            onChange={(e) => handleDynamicInstallmentChange(idx, 'due_date', e.target.value)}
-                            style={{ padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px' }}
-                          />
+                          <input type="date" value={item.due_date} onChange={(e) => handleDynamicInstallmentChange(idx, 'due_date', e.target.value)} className="student-fees-input-75"  />
                         </td>
                         <td>
-                          <input
-                            type="number"
-                            value={item.amount}
-                            onChange={(e) => handleDynamicInstallmentChange(idx, 'amount', e.target.value)}
-                            style={{ padding: '0.3rem', border: '1px solid var(--border)', borderRadius: '4px', width: '120px' }}
-                          />
+                          <input type="number" value={item.amount} onChange={(e) => handleDynamicInstallmentChange(idx, 'amount', e.target.value)} className="student-fees-input-76"  />
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
 
-                <button className="btn btn-primary" onClick={handleSaveInstallmentPlan} style={{ marginTop: '1rem', width: '100%' }}>
+                <button className="btn btn-primary student-fees-btn" onClick={handleSaveInstallmentPlan}>
                   Create & Save Installment Plan
                 </button>
               </div>
@@ -1074,29 +1038,7 @@ export default function StudentFees() {
       )}
 
       {/* PRINT CUSTOM STYLING */}
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          .receipt-print-container, .receipt-print-container * {
-            visibility: visible;
-          }
-          .receipt-print-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100% !important;
-            max-width: 100% !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
-      `}</style>
+      
     </Layout>
   );
 }

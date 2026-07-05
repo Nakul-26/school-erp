@@ -1,3 +1,4 @@
+import './PayrollRuns.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
@@ -72,7 +73,7 @@ export default function PayrollRuns() {
       <div className="page-header">
         <div>
           <h2>Payroll Process Logs</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+          <p className="payroll-runs-text-1">
             Generate monthly salary ledgers and verify calculations with automated loss of pay (LOP) check.
           </p>
         </div>
@@ -80,10 +81,10 @@ export default function PayrollRuns() {
 
       
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
+      <div className="payroll-runs-grid-2">
         {/* Left Form card */}
-        <div className="card" style={{ padding: '1.5rem', height: 'fit-content' }}>
-          <h3 style={{ marginBottom: '1rem', fontWeight: '800' }}>Run New Payroll</h3>
+        <div className="card payroll-runs-card">
+          <h3 className="payroll-runs-title-4">Run New Payroll</h3>
           <form onSubmit={handleGenerate}>
             <div className="form-group">
               <label>Select Month</label>
@@ -111,15 +112,15 @@ export default function PayrollRuns() {
               </select>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={generating}>
-              <Play size={16} style={{ marginRight: '0.25rem' }} /> {generating ? 'Generating...' : 'Calculate Monthly Payroll'}
+            <button type="submit" className="btn btn-primary payroll-runs-btn" disabled={generating}>
+              <Play size={16} className="payroll-runs-Play-6"  /> {generating ? 'Generating...' : 'Calculate Monthly Payroll'}
             </button>
           </form>
         </div>
 
         {/* Right runs history card */}
-        <div className="card" style={{ padding: '1.5rem' }}>
-          <h3 style={{ marginBottom: '1rem', fontWeight: '800' }}>Run Logs History</h3>
+        <div className="card payroll-runs-card">
+          <h3 className="payroll-runs-title-8">Run Logs History</h3>
           {loading ? <p>Loading history...</p> : (
             <table className="table">
               <thead>
@@ -128,15 +129,15 @@ export default function PayrollRuns() {
                   <th>Total Gross</th>
                   <th>Total Net</th>
                   <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th className="payroll-runs-th-9">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {runs.map((r) => (
                   <tr key={r.id}>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Calendar size={16} style={{ color: 'var(--primary)' }} />
+                      <div className="payroll-runs-row-10">
+                        <Calendar size={16} className="payroll-runs-Calendar-11"  />
                         <strong>{getMonthName(r.month)} {r.year}</strong>
                       </div>
                     </td>
@@ -147,7 +148,7 @@ export default function PayrollRuns() {
                         {r.status}
                       </span>
                     </td>
-                    <td style={{ textAlign: 'right' }}>
+                    <td className="payroll-runs-td-12">
                       <button className="btn btn-sm btn-outline" onClick={() => navigate(`/payroll/runs/${r.id}`)}>
                         View Payslips
                       </button>
@@ -156,8 +157,8 @@ export default function PayrollRuns() {
                 ))}
                 {runs.length === 0 && (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                      <Landmark size={32} style={{ marginBottom: '0.5rem' }} />
+                    <td colSpan={5} className="payroll-runs-td-13">
+                      <Landmark size={32} className="payroll-runs-Landmark-14"  />
                       <p>No payroll runs found. Initiate your first run from the form on the left.</p>
                     </td>
                   </tr>

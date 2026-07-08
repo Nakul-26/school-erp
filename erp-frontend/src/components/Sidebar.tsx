@@ -193,7 +193,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
           </div>
           <div className="sidebar-brand-text">
             <span className="sidebar-brand-name">{user?.institution_name || 'School ERP'}</span>
-            <span className="sidebar-brand-tag">Management aaaa Portal</span>
+            <span className="sidebar-brand-tag">Management Portal</span>
           </div>
         </div>
 

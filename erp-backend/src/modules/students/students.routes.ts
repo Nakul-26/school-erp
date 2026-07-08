@@ -174,8 +174,15 @@ students.post('/', requireRole('admin', 'super_admin'), async (c) => {
   const input = await c.req.json();
   const repo = new StudentRepository(c.env.DB);
   const service = new StudentService(repo);
-  const id = await service.createStudent(user.institution_id, input, user.sub);
-  return c.json({ id }, 201);
+  try {
+    const id = await service.createStudent(user.institution_id, input, user.sub);
+    return c.json({ id }, 201);
+  } catch (err: any) {
+    if (err.message && (err.message.includes('UNIQUE constraint failed: students.admission_number') || err.message.includes('students.admission_number'))) {
+      return c.json({ error: 'Admission number already exists. Please choose a unique admission number.' }, 400);
+    }
+    throw err;
+  }
 });
 
 students.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
@@ -190,8 +197,15 @@ students.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
     return c.json({ error: 'Student not found' }, 404);
   }
   
-  await service.updateStudent(id, input, user.sub);
-  return c.json({ success: true });
+  try {
+    await service.updateStudent(id, input, user.sub);
+    return c.json({ success: true });
+  } catch (err: any) {
+    if (err.message && (err.message.includes('UNIQUE constraint failed: students.admission_number') || err.message.includes('students.admission_number'))) {
+      return c.json({ error: 'Admission number already exists. Please enter a unique admission number.' }, 400);
+    }
+    throw err;
+  }
 });
 
 students.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {

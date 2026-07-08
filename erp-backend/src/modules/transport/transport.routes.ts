@@ -126,7 +126,7 @@ transport.get('/allocations', authMiddleware, async (c) => {
   const { results } = await c.env.DB.prepare(`
     SELECT ta.*, tr.route_name, tr.vehicle_number, tr.monthly_charge,
            s.first_name || ' ' || s.last_name as student_name, s.admission_number,
-           c.name as course_name, se.section_name
+           c.name as course_name, se.name as section_name
     FROM transport_allocations ta
     JOIN transport_routes tr ON ta.route_id = tr.id
     JOIN students s ON ta.student_id = s.id

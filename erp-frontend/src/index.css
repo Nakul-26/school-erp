@@ -1648,3 +1648,41 @@ div:has(> table), div:has(> .table), div:has(> .data-table) {
   width: 100%;
   box-sizing: border-box;
 }
+
+/* Fix all icon and placeholder overlapping inside inputs */
+.search-container input,
+.search-container input[type="text"],
+.students-search-container input,
+.students-search-container input[type="text"],
+input.students-input-31,
+input.admissions-input-10,
+input.library-input-12,
+input.transport-input-7,
+input.messaging-input-5,
+input.section-workspace-input-108,
+input.classes-input-27,
+.certificates-div-5 input,
+.admissions-div-8 input,
+.classes-div-25 input,
+.library-div-10 input,
+.messaging-div-3 input,
+.section-workspace-div-106 input,
+.transport-div-5 input,
+div:has(> svg) > input[type="text"] {
+  padding-left: 2.75rem !important;
+}
+
+.admissions-div-8 svg,
+.classes-div-25 svg,
+.library-div-10 svg,
+.messaging-div-3 svg,
+.section-workspace-div-106 svg,
+.transport-div-5 svg,
+.certificates-div-5 svg {
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+}

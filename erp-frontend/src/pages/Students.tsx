@@ -327,7 +327,6 @@ export default function Students() {
     setStep(prev => prev - 1);
   };
 
-  // Submit Add Student (includes student + enrollment + guardian)
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -336,9 +335,9 @@ export default function Students() {
       setShowAddModal(false);
       resetAddForm();
       fetchStudents();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      showToast('Error creating student record.', 'error');
+      showToast(err instanceof Error ? err.message : 'Error creating student record.', 'error');
     }
   };
 
@@ -487,9 +486,9 @@ export default function Students() {
       });
       setShowEditModal(false);
       fetchStudents();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Error updating student.');
+      alert(err instanceof Error ? err.message : 'Error updating student.');
     }
   };
 
@@ -731,7 +730,7 @@ export default function Students() {
       </div>
 
       {/* Advanced Filters Section */}
-      <div className="card filters students-card">
+      <div className="card filters students-filters-card">
         {/* Search */}
         <div className="search-container students-search-container">
           <Search size={18} className="students-Search-30"  />

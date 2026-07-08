@@ -1,0 +1,90 @@
+Module	Feature	Priority	Status	Verified	Notes
+Institution Setup	Institution profile & branding	Essential	present	working	Institutions DB settings + InstitutionSetup & SchoolSetup views
+Institution Setup	Academic years	Essential	present	working	AcademicYears configuration & rollover wizard
+Institution Setup	Terms/Semesters	Essential	present	working	Integrated inside Course/Section configs & Class workspace views
+Institution Setup	Classes/Grades	Essential	present	working	Course / Program setup rosters
+Institution Setup	Sections	Essential	present	working	Sections rosters mapping class teachers
+Institution Setup	Subjects	Essential	present	working	Subjects rosters mapping credits & semesters
+Institution Setup	Timetables	Essential	present	working	Weekly slots mapping matrix scheduler
+Users & Roles	Role-based access	Essential	present	working	Role mapped permissions token middleware enforcement
+Users & Roles	Admin accounts	Essential	present	working	Admin role with access to setup modules
+Users & Roles	Teacher accounts	Essential	present	working	Teacher role with access to classrooms & marksheets
+Users & Roles	Staff accounts	Essential	present	working	Principal / HOD staff roles with management queues
+Users & Roles	Student accounts	Essential	present	working	Student portal with reports, fee ledgers & profiles
+Users & Roles	Parent accounts	Essential	present	working	Parent portal with children roster dashboards
+Students	Student admission	Essential	present	working	Admission inquiries to application workflow conversion pipeline
+Students	Edit student	Essential	present	working	Student record updates in StudentDetails
+Students	Student documents	Essential	present	working	Files upload repository stored in SQLite/R2
+Students	Guardian management	Essential	present	working	Linked parent profiles & emergency phone registry
+Students	Student search/filter	Essential	present	working	Section, course, status & keyword filters
+Students	Student profile (360)	Recommended	present	working	360 profile combining rosters, attendance, results & financial logs
+Students	Section transfer	Essential	present	working	Academic years and section mapping transfer updates
+Students	Promotion to next year	Essential	present	working	Year Rollover simulation and promotion setup panels
+Students	Student exit/TC	Essential	present	working	Print-ready Transfer Certificate (TC) generator
+Attendance	Daily attendance	Essential	present	working	Student daily session attendance grid
+Attendance	Attendance reports	Essential	present	working	Detailed section attendance analytics
+Attendance	Late arrivals	Recommended	present	working	Supports marking student status as 'late' with tracking metrics
+Teachers	Teacher profiles	Essential	present	working	Employee directories with qualifications
+Teachers	Teacher attendance	Essential	present	working	Daily teacher status log registry
+Teachers	Teacher timetable	Essential	present	working	Weekly schedules mapped on TeacherDetails
+Academics	Subject allocation	Essential	present	working	Teacher-subject-section assignment configs
+Academics	Homework/Assignments	Recommended	present	working	Simple assignments post/list panel for classes
+Academics	Lesson plans	Future	present	working	Topic-wise syllabus progress tracking sheets
+Examinations	Exam creation	Essential	present	working	Assessment term configurations with subject marks mappings
+Examinations	Marks entry	Essential	present	working	Subject-wise spreadsheets for teachers
+Examinations	Grade calculation	Essential	present	working	Indian K-12 grading scales calculation rules
+Examinations	Report cards	Essential	present	working	Print-ready report card with overall %, rank, and term results
+Examinations	Result publishing	Essential	present	working	Status toggle to release/notif results to student portfolios
+Fees	Fee structures	Essential	present	working	Tuition / Exam fee structure rules by course
+Fees	Student fee assignment	Essential	present	working	Student fee accounts billing records
+Fees	Fee collection	Essential	present	working	Payment gateway logs recording cash, UPI & transfers
+Fees	Receipt generation	Essential	present	working	Fiscal serialised print-ready receipts
+Fees	Outstanding dues	Essential	present	working	Unpaid fee balances tracked on accounts dashboards
+Fees	Discounts/Scholarships	Recommended	present	working	Fee concessions flat or percentage discount updates
+Finance	Income reports	Recommended	present	working	Fee payment summaries and income logs on Finance page
+Finance	Expense tracking	Recommended	present	working	Expense category tracking registry on Finance page
+Library	Book catalog	Recommended	present	working	Active book inventories with rack numbers
+Library	Issue books	Recommended	present	working	Book loan tracking mapped to student IDs
+Library	Return books	Recommended	present	working	Return check-in tracking logs
+Library	Fine calculation	Recommended	present	working	Automatic calculation of overdue fines (₹5/day)
+Transport	Routes	Recommended	present	working	Bus route setup mapping drivers and monthly fare rates
+Transport	Vehicle management	Recommended	present	working	Active vehicle plates tracking registry
+Transport	Student route assignment	Recommended	present	working	Student pickup point mappings & route lists
+Communication	Announcements	Essential	present	working	Targeted school announcements page
+Communication	SMS/Email notifications	Recommended	present	working	Email notifications integrated via Resend. SMS gateway is absent.
+Communication	Notice board	Essential	present	working	Announcement boards filtered by roles/sections
+Parent Portal	Attendance view	Recommended	present	working	Child's live attendance percentage dials
+Parent Portal	Fee status	Recommended	present	working	Outstanding invoices tracking and payments list
+Parent Portal	Results view	Recommended	present	working	Child's exam results marksheet card
+Reports	Student reports	Essential	present	working	Admission and general demographics lists on Reports
+Reports	Attendance reports	Essential	present	working	Daily attendance sheets on Reports page
+Reports	Fee reports	Essential	present	working	Collection and outstanding dues lists on Reports page
+Reports	Exam reports	Essential	present	working	Mark registries and exam stats on Reports page
+System	Audit logs	Recommended	present	working	Timestamped action log tracking all admin/finance operations
+System	Data backup/restore	Essential	present	working	Disaster recovery SQL file backup export/restore
+System	Import students CSV	Recommended	present	working	Bulk upload system spreadsheets in DataTools page
+System	Export data	Recommended	present	working	Exporting rosters, attendance, results & fees as CSV files
+System	Global search	Recommended	absent	n/a	No global search bar or API endpoint is implemented.
+System	Dashboard analytics	Essential	present	working	Role-specific interactive analytics count cards
+Security	Password reset	Essential	present	working	Token-verified password reset workflow
+Security	Session management	Essential	present	working	Role-verified JWT bearer authorization middleware
+Security	Tenant isolation	Essential	present	working	Every query filtered by user institution identity
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					

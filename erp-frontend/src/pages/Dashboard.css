@@ -110,15 +110,34 @@
 }
 
 .dashboard-welcome-section {
-  background: var(--primary-gradient);
-  color: white;
+  background: var(--primary-gradient) !important;
+  color: #ffffff !important;
   margin-bottom: 2rem;
   min-height: fit-content !important;
   flex-shrink: 0;
   overflow: visible !important;
+  padding: 1.75rem 2rem !important;
+  border-radius: var(--radius-md) !important;
+}
+
+.dashboard-welcome-section h2,
+.dashboard-welcome-section p,
+.dashboard-welcome-section strong,
+.dashboard-welcome-section span {
+  color: #ffffff !important;
+}
+
+.portal-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
 }
 
 .dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
   margin-top: 2.5rem;
 }
 

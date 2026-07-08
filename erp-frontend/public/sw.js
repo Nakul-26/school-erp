@@ -3,7 +3,7 @@
 // Handles: offline caching + Web Push notification display
 // ================================================================
 
-const CACHE_NAME = 'school-erp-v1';
+const CACHE_NAME = 'school-erp-v2';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -34,12 +34,18 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET and cross-origin requests
   if (event.request.method !== 'GET') return;
 
-  // Handle navigation requests (browser page refreshes/direct entry) by serving index.html
+  // Handle navigation requests (browser page refreshes/direct entry) with a
+  // network-first app shell so deployments and local rebuilds are not stale.
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      caches.match('/index.html').then(cached => {
-        // Fallback to caching '/' or fetching from network if not cached
-        return cached || caches.match('/') || fetch(event.request);
+      fetch(event.request).then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put('/index.html', clone));
+        return response;
+      }).catch(() => {
+        return caches.match('/index.html').then(cached => {
+          return cached || caches.match('/') || fetch(event.request);
+        });
       })
     );
     return;

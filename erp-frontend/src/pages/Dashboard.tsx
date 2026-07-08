@@ -284,20 +284,12 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <PageGuidance
-        title="Dashboard &&&&&&&&&&&& Overview"
-        description="Use this page to get a quick summary of the school's daily activities, student counts, and important alerts."
-        steps={["Check the total number of students and staff members in the school.","Look at today's attendance rate and pending tasks.","Read the latest announcements posted on the board."]}
-      />
       <div className="page-header">
         <h1>Dashboard Overview</h1>
-        hehe
         <button className="btn btn-outline" onClick={logout}>
-          <LogOut size={18} /> Logoutuuuu
+          <LogOut size={18} /> Logout
         </button>
       </div>
-
-      hi
 
       {loading ? (
         <div className="dashboard-col-1">
@@ -314,13 +306,6 @@ export default function Dashboard() {
           <div className="welcome-section card dashboard-welcome-section">
             <h2>Welcome back, {user?.name || user?.email}!</h2>
             <p>You are viewing the <strong>{getPortalRoleLabel()}</strong> panel. Here is your summary checklist for today.</p>
-          </div>
-
-          <div className="welcome-section card dashboard-welcome-section">
-            hi
-            hello
-            hey
-
           </div>
 
           {/* Render Portal Dashboard View */}

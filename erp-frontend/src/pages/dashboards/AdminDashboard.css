@@ -4,27 +4,27 @@
   margin-bottom: 1.5rem;
 }
 
-.admin-dashboard-icon {
-  background: rgba(79, 70, 229, 0.1);
-  color: var(--primary);
+.admin-dashboard-icon-students {
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: #6366f1 !important;
 }
 
-.admin-dashboard-icon {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success);
+.admin-dashboard-icon-teachers {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #8b5cf6 !important;
 }
 
-.admin-dashboard-icon {
-  background: rgba(245, 185, 11, 0.1);
-  color: var(--warning);
+.admin-dashboard-icon-attendance {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #f59e0b !important;
 }
 
-.admin-dashboard-icon {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success);
+.admin-dashboard-icon-fees {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
 }
 
-.admin-dashboard-icon {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger);
+.admin-dashboard-icon-exams {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #3b82f6 !important;
 }

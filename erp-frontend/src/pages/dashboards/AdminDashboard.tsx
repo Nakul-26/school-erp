@@ -14,13 +14,6 @@ const formatCurrency = (val: number) => {
 export default function AdminDashboard({ stats }: AdminDashboardProps) {
   return (
     <div className="portal-dashboard">
-
-      return (
-        <div style={{ background: "red", color: "white", padding: 50 }}>
-          ADMIN DASHBOARD TEST
-        </div>
-      );
-      
       {/* Setup Checklist */}
       {(!(stats?.totalStudents) || !(stats?.totalTeachers)) && (
         <div className="setup-checklist admin-dashboard-setup-checklist">
@@ -57,7 +50,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
       )}
       <div className="stats-grid">
         <div className="stat-card card">
-          <div className="icon admin-dashboard-icon">
+          <div className="icon admin-dashboard-icon-students">
             <Users size={24} />
           </div>
           <div className="info">
@@ -67,7 +60,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
         </div>
         
         <div className="stat-card card">
-          <div className="icon admin-dashboard-icon">
+          <div className="icon admin-dashboard-icon-teachers">
             <Users size={24} />
           </div>
           <div className="info">
@@ -77,7 +70,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
         </div>
         
         <div className="stat-card card">
-          <div className="icon admin-dashboard-icon">
+          <div className="icon admin-dashboard-icon-attendance">
             <Clock size={24} />
           </div>
           <div className="info">
@@ -87,7 +80,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
         </div>
         
         <div className="stat-card card">
-          <div className="icon admin-dashboard-icon">
+          <div className="icon admin-dashboard-icon-fees">
             <IndianRupee size={24} />
           </div>
           <div className="info">
@@ -97,7 +90,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
         </div>
 
         <div className="stat-card card">
-          <div className="icon admin-dashboard-icon">
+          <div className="icon admin-dashboard-icon-exams">
             <Award size={24} />
           </div>
           <div className="info">

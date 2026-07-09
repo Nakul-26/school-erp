@@ -31,3 +31,40 @@
   opacity: 0.6;
   padding: 0px;
 }
+
+.toast-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: toast-slide-in 0.3s ease-out forwards;
+  font-size: 0.85rem;
+  font-weight: 600;
+  position: relative;
+}
+
+.toast-item.toast-success {
+  border-left: 5px solid #319795;
+  background-color: #e6fffa;
+  color: #234e52;
+}
+
+.toast-item.toast-error {
+  border-left: 5px solid #e53e3e;
+  background-color: #fff5f5;
+  color: #742a2a;
+}
+
+.toast-item.toast-warning {
+  border-left: 5px solid #dd6b20;
+  background-color: #fffaf0;
+  color: #7b341e;
+}
+
+.toast-item.toast-info {
+  border-left: 5px solid #3182ce;
+  background-color: #ebf8ff;
+  color: #2b6cb0;
+}

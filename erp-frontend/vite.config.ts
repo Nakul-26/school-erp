@@ -3,77 +3,93 @@ import react from '@vitejs/plugin-react'
 
 const BACKEND = 'http://localhost:8787';
 
+// Helper to bypass proxy and serve index.html for client-side routing on page refresh
+const proxyConfig = () => ({
+  target: BACKEND,
+  bypass: (req: any) => {
+    if (req.headers.accept?.includes('html')) {
+      return '/index.html';
+    }
+  }
+});
+
 export default defineConfig({
   plugins: [react()],
+  build: {
+    assetsDir: 'static',
+  },
+  preview: {
+    port: 3000,
+  },
   server: {
     port: 3000,
     proxy: {
       // Core
-      '/auth': BACKEND,
-      '/dashboard': BACKEND,
-      '/institutions': BACKEND,
-      '/users': BACKEND,
-      '/roles': BACKEND,
-      '/audit-logs': BACKEND,
-      '/system': BACKEND,
-      '/system-settings': BACKEND,
-      '/approvals': BACKEND,
+      '/auth': proxyConfig(),
+      '/dashboard': proxyConfig(),
+      '/institutions': proxyConfig(),
+      '/users': proxyConfig(),
+      '/roles': proxyConfig(),
+      '/audit-logs': proxyConfig(),
+      '/system': proxyConfig(),
+      '/system-settings': proxyConfig(),
+      '/approvals': proxyConfig(),
 
       // People
-      '/students': BACKEND,
-      '/guardians': BACKEND,
-      '/teachers': BACKEND,
-      '/teacher-assignments': BACKEND,
-      '/enrollments': BACKEND,
-      '/alumni': BACKEND,
-      '/visitors': BACKEND,
+      '/students': proxyConfig(),
+      '/guardians': proxyConfig(),
+      '/teachers': proxyConfig(),
+      '/teacher-assignments': proxyConfig(),
+      '/enrollments': proxyConfig(),
+      '/alumni': proxyConfig(),
+      '/visitors': proxyConfig(),
 
       // Admissions
-      '/admissions': BACKEND,
+      '/admissions': proxyConfig(),
 
       // Academics
-      '/academic-years': BACKEND,
-      '/academic-calendar': BACKEND,
-      '/departments': BACKEND,
-      '/programs': BACKEND,
-      '/sections': BACKEND,
-      '/subjects': BACKEND,
-      '/teaching-allocations': BACKEND,
-      '/timetable-slots': BACKEND,
-      '/weekly-timetable': BACKEND,
+      '/academic-years': proxyConfig(),
+      '/academic-calendar': proxyConfig(),
+      '/departments': proxyConfig(),
+      '/programs': proxyConfig(),
+      '/sections': proxyConfig(),
+      '/subjects': proxyConfig(),
+      '/teaching-allocations': proxyConfig(),
+      '/timetable-slots': proxyConfig(),
+      '/weekly-timetable': proxyConfig(),
 
       // Attendance
-      '/attendance': BACKEND,
-      '/teacher-attendance': BACKEND,
+      '/attendance': proxyConfig(),
+      '/teacher-attendance': proxyConfig(),
 
       // Exams & Grades
-      '/exams': BACKEND,
-      '/grades': BACKEND,
+      '/exams': proxyConfig(),
+      '/grades': proxyConfig(),
 
       // Homework
-      '/homework': BACKEND,
+      '/homework': proxyConfig(),
 
       // Communication
-      '/announcements': BACKEND,
-      '/notifications': BACKEND,
-      '/messaging': BACKEND,
+      '/announcements': proxyConfig(),
+      '/notifications': proxyConfig(),
+      '/messaging': proxyConfig(),
 
       // Finance
-      '/fees': BACKEND,
-      '/payroll': BACKEND,
+      '/fees': proxyConfig(),
+      '/payroll': proxyConfig(),
 
       // Leave
-      '/leave': BACKEND,
-      '/student-leaves': BACKEND,
+      '/leave': proxyConfig(),
+      '/student-leaves': proxyConfig(),
 
       // Library, Transport, Assets
-      '/library': BACKEND,
-      '/transport': BACKEND,
-      '/assets': BACKEND,
+      '/library': proxyConfig(),
+      '/transport': proxyConfig(),
+      '/assets': proxyConfig(),
 
       // Legacy
-      '/comms': BACKEND,
-      '/api': BACKEND,
+      '/comms': proxyConfig(),
+      '/api': proxyConfig(),
     }
   }
 })

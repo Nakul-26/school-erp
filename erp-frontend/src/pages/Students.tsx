@@ -499,7 +499,7 @@ export default function Students() {
       {showAddModal ? (
         <>
           <div className="page-header students-page-header">
-            <button className="btn btn-secondary students-btn" onClick={() => { setShowAddModal(false); resetAddForm(); }}>
+            <button className="btn btn-secondary students-btn-back" onClick={() => { setShowAddModal(false); resetAddForm(); }}>
               <ArrowLeft size={18} />
             </button>
             <div>
@@ -508,7 +508,7 @@ export default function Students() {
             </div>
           </div>
 
-          <div className="card students-card">
+          <div className="card students-walkthrough-card">
             {/* Stepper Progress bar */}
             <div className="students-row-6">
               {[
@@ -874,18 +874,18 @@ export default function Students() {
 
                   {/* Dynamic Action Buttons */}
                   <div className="students-grid-58">
-                    <Link to={`/students/${s.id}?tab=overview`} className="btn btn-sm btn-outline students-btn" title="View Profile">View</Link>
-                    <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline students-btn" title="Edit Record">Edit</button>
-                    <Link to={`/students/${s.id}?tab=attendance`} className="btn btn-sm btn-secondary students-btn" title="Attendance Details">Att.</Link>
-                    <Link to={`/students/${s.id}?tab=results`} className="btn btn-sm btn-secondary students-btn" title="Exam Results">Results</Link>
-                    <Link to={`/students/${s.id}?tab=fees`} className="btn btn-sm btn-secondary students-btn" title="Fee Ledger">Fees</Link>
+                    <Link to={`/students/${s.id}?tab=overview`} className="btn btn-sm btn-outline students-btn-view" title="View Profile">View</Link>
+                    <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline students-btn-edit" title="Edit Record">Edit</button>
+                    <Link to={`/students/${s.id}?tab=attendance`} className="btn btn-sm btn-secondary students-btn-att" title="Attendance Details">Att.</Link>
+                    <Link to={`/students/${s.id}?tab=results`} className="btn btn-sm btn-secondary students-btn-results" title="Exam Results">Results</Link>
+                    <Link to={`/students/${s.id}?tab=fees`} className="btn btn-sm btn-secondary students-btn-fees" title="Fee Ledger">Fees</Link>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             /* Traditional Table View with Checkbox selection */
-            <div className="card students-card">
+            <div className="card students-table-card">
               <table className="table">
                 <thead>
                   <tr>
@@ -942,8 +942,8 @@ export default function Students() {
                       </td>
                       <td>
                         <div className="students-row-67">
-                          <Link to={`/students/${s.id}`} className="btn btn-sm btn-outline students-btn">View</Link>
-                          <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline students-btn"><Edit2 size={12} /></button>
+                          <Link to={`/students/${s.id}`} className="btn btn-sm btn-outline students-btn-table-action">View</Link>
+                          <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline students-btn-table-action"><Edit2 size={12} /></button>
                         </div>
                       </td>
                     </tr>
@@ -955,7 +955,7 @@ export default function Students() {
 
           {/* Empty state */}
           {students.length === 0 && (
-            <div className="card students-card">
+            <div className="card students-empty-card">
               <p className="students-text-71">No student records found.</p>
               <p className="students-text-72">Try clearing filters or refining your search parameters.</p>
             </div>
@@ -1001,16 +1001,16 @@ export default function Students() {
           </span>
           <div className="students-div-82"  />
           <div className="students-row-83">
-            <button className="btn btn-sm btn-secondary students-btn" onClick={() => setShowBulkSectionModal(true)}>
+            <button className="btn btn-sm btn-secondary students-btn-bulk-action" onClick={() => setShowBulkSectionModal(true)}>
               Assign Section
             </button>
-            <button className="btn btn-sm btn-secondary students-btn" onClick={() => handleBulkAction('promote_semester')}>
+            <button className="btn btn-sm btn-secondary students-btn-bulk-action" onClick={() => handleBulkAction('promote_semester')}>
               {institutionType === 'school' ? 'Promote Class' : 'Promote Semester'}
             </button>
-            <button className="btn btn-sm btn-secondary students-btn" onClick={handleBulkExport}>
+            <button className="btn btn-sm btn-secondary students-btn-bulk-action" onClick={handleBulkExport}>
               Export CSV
             </button>
-            <button className="btn btn-sm btn-danger students-btn" onClick={() => handleBulkAction('deactivate')}>
+            <button className="btn btn-sm btn-danger students-btn-bulk-action" onClick={() => handleBulkAction('deactivate')}>
               Deactivate
             </button>
           </div>
@@ -1020,7 +1020,7 @@ export default function Students() {
       {/* Bulk Section Modal Overlay */}
       {showBulkSectionModal && (
         <div className="modal students-modal">
-          <div className="modal-content students-modal-content">
+          <div className="modal-content students-modal-content size-sm">
             <h3 className="students-title-90">Bulk Section Assignment</h3>
             <div className="form-group">
               <label>Select Target Section</label>
@@ -1047,7 +1047,7 @@ export default function Students() {
       {/* Edit Student Modal */}
       {showEditModal && editForm && (
         <div className="modal students-modal">
-          <div className="modal-content students-modal-content">
+          <div className="modal-content students-modal-content size-md">
             <h3 className="students-title-94">Edit Student Record</h3>
             
             {/* Edit Modal Tabs */}

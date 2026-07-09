@@ -20,18 +20,13 @@
   margin-top: 0.25rem;
 }
 
-.classes-btn {
-  align-items: center;
-  display: flex;
-  font-weight: 600;
-  gap: 0.5rem;
-}
-
+/* Consolidated base for all action buttons in Classes page */
 .classes-btn {
   align-items: center;
   display: inline-flex;
   font-weight: 600;
   gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
 }
 
 .classes-row-6 {
@@ -262,11 +257,6 @@
   padding: 0.5rem;
 }
 
-.classes-btn {
-  align-items: center;
-  display: inline-flex;
-  gap: 0.5rem;
-}
 
 .classes-card {
   overflow: hidden;
@@ -466,27 +456,6 @@
   gap: 0.35rem;
 }
 
-.classes-btn {
-  align-items: center;
-  display: inline-flex;
-  gap: 0.25rem;
-}
-
-.classes-btn {
-  padding: 0.35rem;
-}
-
-.classes-btn {
-  padding: 0.35rem;
-}
-
-.classes-btn {
-  padding: 0.35rem;
-}
-
-.classes-btn {
-  padding: 0.35rem;
-}
 
 .classes-td-74 {
   padding: 4rem;
@@ -656,11 +625,6 @@
   padding: 0.5rem 1rem;
 }
 
-.classes-btn {
-  align-items: center;
-  display: inline-flex;
-  gap: 0.5rem;
-}
 
 .classes-card {
   overflow: hidden;
@@ -795,63 +759,22 @@
   justify-content: flex-end;
 }
 
-.classes-btn {
-  align-items: center;
-  display: inline-flex;
-  gap: 0.25rem;
-}
-
-.classes-btn {
-  align-items: center;
-  display: inline-flex;
-  gap: 0.25rem;
-}
-
-.classes-btn {
-  align-items: center;
+/* Semantic variant classes for action buttons in Classes modals */
+.classes-btn-danger {
   border-color: var(--danger);
   color: var(--danger);
-  display: inline-flex;
-  gap: 0.25rem;
 }
 
-.classes-btn {
-  align-items: center;
+.classes-btn-success {
   border-color: var(--success);
   color: var(--success);
-  display: inline-flex;
-  gap: 0.25rem;
 }
 
-.classes-td-130 {
-  padding: 3rem;
-  text-align: center;
-}
-
-.classes-col-131 {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.classes-title-132 {
-  color: var(--text-main);
-  font-weight: 700;
-  margin: 0px;
-}
-
-.classes-text-133 {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  margin: 0px;
-}
-
-.classes-btn {
+.classes-btn-mt {
   margin-top: 0.5rem;
 }
 
-.classes-modal-overlay {
+.classes-modal, .classes-modal-overlay {
   align-items: center;
   background-color: rgba(15, 23, 42, 0.45);
   bottom: 0px;
@@ -862,6 +785,7 @@
   right: 0px;
   top: 0px;
   z-index: 1000;
+  padding: 1rem;
 }
 
 .classes-modal-content {
@@ -869,10 +793,23 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   max-height: 90vh;
-  max-width: 480px;
   overflow-y: auto;
   padding: 2rem;
   width: 100%;
+  animation: slideUp 0.3s ease-out;
+}
+
+.classes-modal-content.size-sm {
+  max-width: 480px;
+}
+
+.classes-modal-content.size-md {
+  max-width: 640px;
+}
+
+.classes-modal-content.size-lg {
+  max-width: 720px;
+  padding: 2.5rem;
 }
 
 .classes-title-137 {
@@ -950,29 +887,7 @@
   margin-top: 1.5rem;
 }
 
-.classes-modal-overlay {
-  align-items: center;
-  background-color: rgba(15, 23, 42, 0.45);
-  bottom: 0px;
-  display: flex;
-  justify-content: center;
-  left: 0px;
-  position: fixed;
-  right: 0px;
-  top: 0px;
-  z-index: 1000;
-}
 
-.classes-modal-content {
-  background-color: #ffffff;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-height: 90vh;
-  max-width: 640px;
-  overflow-y: auto;
-  padding: 2rem;
-  width: 100%;
-}
 
 .classes-row-150 {
   align-items: flex-start;
@@ -1367,29 +1282,7 @@
   text-align: center;
 }
 
-.classes-modal {
-  align-items: center;
-  background-color: rgba(15, 23, 42, 0.45);
-  bottom: 0px;
-  display: flex;
-  justify-content: center;
-  left: 0px;
-  overflow-y: auto;
-  padding: 1rem;
-  position: fixed;
-  right: 0px;
-  top: 0px;
-  z-index: 1000;
-}
 
-.classes-modal-content {
-  background-color: #ffffff;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-width: 520px;
-  padding: 2rem;
-  width: 100%;
-}
 
 .classes-title-215 {
   color: var(--text-main);
@@ -1512,29 +1405,7 @@
   margin-top: 1.75rem;
 }
 
-.classes-modal {
-  align-items: center;
-  background-color: rgba(15, 23, 42, 0.45);
-  bottom: 0px;
-  display: flex;
-  justify-content: center;
-  left: 0px;
-  overflow-y: auto;
-  padding: 1rem;
-  position: fixed;
-  right: 0px;
-  top: 0px;
-  z-index: 1000;
-}
 
-.classes-modal-content {
-  background-color: #ffffff;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-width: 520px;
-  padding: 2rem;
-  width: 100%;
-}
 
 .classes-title-237 {
   color: var(--text-main);
@@ -1657,29 +1528,7 @@
   margin-top: 1.75rem;
 }
 
-.classes-modal {
-  align-items: center;
-  background-color: rgba(15, 23, 42, 0.45);
-  bottom: 0px;
-  display: flex;
-  justify-content: center;
-  left: 0px;
-  overflow-y: auto;
-  padding: 1rem;
-  position: fixed;
-  right: 0px;
-  top: 0px;
-  z-index: 1000;
-}
 
-.classes-modal-content {
-  background-color: #ffffff;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-width: 720px;
-  padding: 2.5rem;
-  width: 100%;
-}
 
 .classes-row-259 {
   align-items: center;

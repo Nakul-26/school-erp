@@ -46,6 +46,21 @@ const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', cors());
 
+app.use('*', async (c, next) => {
+  const method = c.req.method;
+  const pathname = new URL(c.req.url).pathname;
+  const looksLikeStaticFile = /\.[a-z0-9]+$/i.test(pathname);
+
+  if (c.env.ASSETS && (method === 'GET' || method === 'HEAD') && looksLikeStaticFile) {
+    const response = await c.env.ASSETS.fetch(c.req.raw);
+    if (response.status !== 404) {
+      return response;
+    }
+  }
+
+  await next();
+});
+
 app.get('/', (c) => c.json({ status: 'ok', service: 'erp-backend', version: '2.0.0' }));
 
 // Dashboard stats (Using role array checks)
@@ -361,5 +376,15 @@ app.route('/messaging', messaging);
 app.route('/visitors', visitors);
 app.route('/assets', assets);
 app.route('/alumni', alumni);
+
+app.get('*', async (c) => {
+  const accept = c.req.header('Accept') || '';
+
+  if (c.env.ASSETS && accept.includes('text/html')) {
+    return c.env.ASSETS.fetch(c.req.raw);
+  }
+
+  return c.json({ error: 'Not found' }, 404);
+});
 
 export default app;

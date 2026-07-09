@@ -8,6 +8,7 @@
 
 .announcements-page-tabs {
   margin-bottom: 1.5rem;
+  min-height: fit-content;
 }
 
 .announcements-container {

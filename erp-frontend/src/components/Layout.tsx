@@ -55,8 +55,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       if (Notification.permission === 'granted') {
         setPushEnabled(true);
       } else if (Notification.permission === 'default' && user) {
-        // Only show push notification subscription prompt if they are logged in
-        setShowPushBanner(true);
+        // Only show push notification subscription prompt if they are logged in and haven't dismissed it
+        const isDismissed = localStorage.getItem('erp_dismissed_push_banner') === 'true';
+        if (!isDismissed) {
+          setShowPushBanner(true);
+        }
       }
     }
   }, [user]);
@@ -81,6 +84,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const handleDismissPush = () => {
+    localStorage.setItem('erp_dismissed_push_banner', 'true');
     setShowPushBanner(false);
   };
 
@@ -118,16 +122,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {user && 'Notification' in window && (
             <button
               onClick={pushEnabled ? unsubscribeFromPushNotifications : handleSubscribePush}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: pushEnabled ? 'var(--primary)' : 'var(--text-muted)',
-                cursor: 'pointer',
-                padding: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+              className={`layout-push-toggle-btn ${pushEnabled ? 'active' : ''}`}
               title={pushEnabled ? 'Push notifications enabled' : 'Enable push notifications'}
             >
               {pushEnabled ? <Bell size={18} /> : <BellOff size={18} />}

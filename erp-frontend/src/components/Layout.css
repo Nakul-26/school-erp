@@ -26,6 +26,7 @@
   display: flex;
   font-size: 0.8rem;
   font-weight: 500;
+  gap: 0.75rem;
   justify-content: space-between;
   padding: 0.75rem 1rem;
 }
@@ -34,6 +35,13 @@
   align-items: center;
   display: flex;
   gap: 0.5rem;
+  min-width: 0;
+}
+
+.layout-row-5 span,
+.layout-row-10 span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .layout-row-6 {
@@ -72,6 +80,7 @@
   display: flex;
   font-size: 0.8rem;
   font-weight: 500;
+  gap: 0.75rem;
   justify-content: space-between;
   padding: 0.75rem 1rem;
 }
@@ -80,6 +89,15 @@
   align-items: center;
   display: flex;
   gap: 0.5rem;
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .layout-install-banner,
+  .layout-push-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 .layout-Bell-11 {
@@ -109,4 +127,19 @@
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
+}
+
+.layout-push-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.layout-push-toggle-btn.active {
+  color: var(--primary);
 }

@@ -1,20 +1,68 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+const BACKEND = 'http://localhost:8787';
+const proxyConfig = () => ({
+    target: BACKEND,
+    bypass: (req) => {
+        if (req.headers.accept?.includes('html')) {
+            return '/index.html';
+        }
+    }
+});
 export default defineConfig({
     plugins: [react()],
+    build: {
+        assetsDir: 'static',
+    },
+    preview: {
+        port: 3000,
+    },
     server: {
         port: 3000,
         proxy: {
-            '/auth': 'http://localhost:8787',
-            '/students': 'http://localhost:8787',
-            '/attendance': 'http://localhost:8787',
-            '/timetable': 'http://localhost:8787',
-            '/exams': 'http://localhost:8787',
-            '/fees': 'http://localhost:8787',
-            '/comms': 'http://localhost:8787',
-            '/dashboard': 'http://localhost:8787',
-            '/subjects': 'http://localhost:8787',
-            '/api': 'http://localhost:8787'
+            '/auth': proxyConfig(),
+            '/dashboard': proxyConfig(),
+            '/institutions': proxyConfig(),
+            '/users': proxyConfig(),
+            '/roles': proxyConfig(),
+            '/audit-logs': proxyConfig(),
+            '/system': proxyConfig(),
+            '/system-settings': proxyConfig(),
+            '/approvals': proxyConfig(),
+            '/students': proxyConfig(),
+            '/guardians': proxyConfig(),
+            '/teachers': proxyConfig(),
+            '/teacher-assignments': proxyConfig(),
+            '/enrollments': proxyConfig(),
+            '/alumni': proxyConfig(),
+            '/visitors': proxyConfig(),
+            '/admissions': proxyConfig(),
+            '/academic-years': proxyConfig(),
+            '/academic-calendar': proxyConfig(),
+            '/departments': proxyConfig(),
+            '/programs': proxyConfig(),
+            '/sections': proxyConfig(),
+            '/subjects': proxyConfig(),
+            '/teaching-allocations': proxyConfig(),
+            '/timetable-slots': proxyConfig(),
+            '/weekly-timetable': proxyConfig(),
+            '/attendance': proxyConfig(),
+            '/teacher-attendance': proxyConfig(),
+            '/exams': proxyConfig(),
+            '/grades': proxyConfig(),
+            '/homework': proxyConfig(),
+            '/announcements': proxyConfig(),
+            '/notifications': proxyConfig(),
+            '/messaging': proxyConfig(),
+            '/fees': proxyConfig(),
+            '/payroll': proxyConfig(),
+            '/leave': proxyConfig(),
+            '/student-leaves': proxyConfig(),
+            '/library': proxyConfig(),
+            '/transport': proxyConfig(),
+            '/assets': proxyConfig(),
+            '/comms': proxyConfig(),
+            '/api': proxyConfig()
         }
     }
 });

@@ -52,7 +52,8 @@ messaging.get('/contacts', authMiddleware, async (c) => {
         SELECT u.id, u.name, 'Parent' as role
         FROM guardians g
         JOIN users u ON g.user_id = u.id
-        WHERE g.institution_id = ? AND g.is_active = 1
+        JOIN students s ON g.student_id = s.id
+        WHERE s.institution_id = ? AND g.is_active = 1
         UNION
         SELECT user_id as id, first_name || ' ' || last_name as name, 'Teacher' as role 
         FROM teachers 

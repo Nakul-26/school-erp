@@ -954,7 +954,7 @@ export default function Classes() {
       {/* Modal A: Add / Edit Section */}
       {showSectionFormModal && (
         <div className="modal-overlay classes-modal-overlay">
-          <div className="modal-content classes-modal-content">
+          <div className="modal-content classes-modal-content size-sm">
             <h3 className="classes-title-137">
               {editingSection ? `Edit Class/Section: ${editingSection.name}` : `Add New ${institutionType === 'school' ? 'Section' : 'Class/Section'}`}
             </h3>
@@ -1045,7 +1045,7 @@ export default function Classes() {
       {/* Modal B: Section Details Dossier Modal */}
       {showSectionDetailModal && selectedSection && (
         <div className="modal-overlay classes-modal-overlay">
-          <div className="modal-content classes-modal-content">
+          <div className="modal-content classes-modal-content size-md">
             <div className="classes-row-150">
               <div>
                 <h3 className="classes-title-151">Section Dossier: {selectedSection.name}</h3>
@@ -1262,7 +1262,7 @@ export default function Classes() {
       {/* Modal C: Add Program */}
       {showAddProgramModal && (
         <div className="modal classes-modal">
-          <div className="modal-content classes-modal-content">
+          <div className="modal-content classes-modal-content size-sm">
             <h3 className="classes-title-215">Add New {getProgramLabel()}</h3>
             <form onSubmit={handleAddProgramSubmit}>
               <div className="form-group">
@@ -1347,7 +1347,7 @@ export default function Classes() {
       {/* Modal D: Edit Program */}
       {showEditProgramModal && (
         <div className="modal classes-modal">
-          <div className="modal-content classes-modal-content">
+          <div className="modal-content classes-modal-content size-sm">
             <h3 className="classes-title-237">Edit {getProgramLabel()}</h3>
             <form onSubmit={handleEditProgramSubmit}>
               <div className="form-group">
@@ -1430,7 +1430,7 @@ export default function Classes() {
       {/* Modal E: Program Details Hub Modal */}
       {showProgramDetailModal && selectedProgram && (
         <div className="modal classes-modal">
-          <div className="modal-content classes-modal-content">
+          <div className="modal-content classes-modal-content size-lg">
             
             {/* Modal Hero Header */}
             <div className="classes-row-259">

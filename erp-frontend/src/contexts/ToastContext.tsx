@@ -113,21 +113,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return (
             <div
               key={toast.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                borderLeft: `5px solid ${config.border}`,
-                backgroundColor: config.bg,
-                color: config.color,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                animation: 'toast-slide-in 0.3s ease-out forwards',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                position: 'relative'
-              }}
+              className={`toast-item toast-${toast.type}`}
             >
               <IconComponent size={18} className="toast-context-IconComponent-2"  />
               <div className="toast-context-div-3">{toast.message}</div>

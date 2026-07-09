@@ -344,7 +344,7 @@ export default function Dashboard() {
             {/* Announcements Card */}
             <div className="card dashboard-card-full">
               <div className="card-header-icon">
-                <Megaphone className="header-icon dashboard-header-icon"  />
+                <Megaphone className="header-icon dashboard-announcement-icon"  />
                 <h3>Latest Announcements</h3>
               </div>
               {announcements.length === 0 ? (
@@ -372,7 +372,7 @@ export default function Dashboard() {
             {/* Notifications Card */}
             <div className="card dashboard-card-full">
               <div className="card-header-icon">
-                <Bell className="header-icon dashboard-header-icon"  />
+                <Bell className="header-icon dashboard-notification-icon"  />
                 <h3>Notifications</h3>
               </div>
               {notifications.length === 0 ? (

@@ -120,7 +120,7 @@
         }
         .input-icon {
           position: absolute;
-          left: 12px;
+          left: 32px;
           top: 50%;
           transform: translateY(-50%);
           color: #8c8c8c;
@@ -128,7 +128,7 @@
         }
         .input-with-icon input, .input-with-icon select {
           width: 100%;
-          padding: 0.6rem 0.6rem 0.6rem 2.5rem;
+          padding: 0.6rem 0.6rem 0.6rem 3rem;
           border: 1px solid #d9d9d9;
           border-radius: 6px;
           outline: none;

@@ -15,11 +15,6 @@
   margin-bottom: 1.5rem;
 }
 
-.transport-card {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-}
-
 .transport-div-5 {
   position: relative;
 }
@@ -44,12 +39,6 @@
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
 }
 
-.transport-card {
-  grid-column: 1 / -1;
-  padding: 4rem 2rem;
-  text-align: center;
-}
-
 .transport-Bus-10 {
   color: var(--text-muted);
   margin-bottom: 1rem;
@@ -62,14 +51,6 @@
 
 .transport-text-12 {
   color: var(--text-muted);
-}
-
-.transport-card {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  justify-content: space-between;
-  padding: 1.5rem;
 }
 
 .transport-row-14 {
@@ -193,28 +174,6 @@
   padding-top: 0.75rem;
 }
 
-.transport-btn {
-  align-items: center;
-  display: flex;
-  font-size: 0.8rem;
-  gap: 0.25rem;
-  padding: 0.4rem 0.75rem;
-}
-
-.transport-btn {
-  align-items: center;
-  border-color: rgba(239,68,68,0.2);
-  color: var(--danger);
-  display: flex;
-  font-size: 0.8rem;
-  gap: 0.25rem;
-  padding: 0.4rem 0.75rem;
-}
-
-.transport-card {
-  padding: 1rem;
-}
-
 .transport-title-36 {
   font-size: 1.05rem;
   font-weight: 800;
@@ -259,20 +218,20 @@
   text-align: center;
 }
 
-.transport-btn {
-  border-color: rgba(239,68,68,0.2);
-  color: var(--danger);
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-}
-
 .transport-div-46 {
   margin: 0 auto;
   max-width: 600px;
 }
 
 .transport-card {
+  margin-bottom: 1.5rem;
   padding: 2rem;
+  grid-column: 1 / -1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: space-between;
 }
 
 .transport-row-48 {
@@ -309,14 +268,14 @@
 .transport-btn {
   align-items: center;
   display: flex;
+  font-size: 0.75rem;
   gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-color: rgba(239,68,68,0.2);
+  color: var(--danger);
   justify-content: center;
   margin-top: 2.5rem;
   width: 100%;
-}
-
-.transport-modal-content {
-  max-width: 550px;
 }
 
 .transport-grid-55 {
@@ -337,10 +296,6 @@
   grid-template-columns: 1fr 1fr;
 }
 
-.transport-modal-actions {
-  margin-top: 2rem;
-}
-
 .transport-modal-content {
   max-width: 500px;
 }
@@ -348,3 +303,4 @@
 .transport-modal-actions {
   margin-top: 2rem;
 }
+

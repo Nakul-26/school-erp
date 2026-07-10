@@ -12,14 +12,6 @@
   margin-left: 0.5rem;
 }
 
-.audit-logs-card {
-  align-items: flex-end;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-}
-
 .audit-logs-div-4 {
   flex: 2;
   min-width: 200px;
@@ -83,19 +75,13 @@
   margin-bottom: 0.35rem;
 }
 
-.audit-logs-btn {
-  height: 38px;
-  white-space: nowrap;
-}
-
-.audit-logs-btn {
-  height: 38px;
-  white-space: nowrap;
-}
-
 .audit-logs-card {
-  overflow: hidden;
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   padding: 0px;
+  overflow: hidden;
 }
 
 .audit-logs-text-18 {
@@ -191,13 +177,6 @@
   margin-top: 1.5rem;
 }
 
-.audit-logs-btn {
-  align-items: center;
-  display: flex;
-  gap: 0.35rem;
-  padding: 0.45rem 1rem;
-}
-
 .audit-logs-span-36 {
   color: var(--text-muted);
   font-size: 0.875rem;
@@ -205,8 +184,11 @@
 }
 
 .audit-logs-btn {
+  height: 38px;
+  white-space: nowrap;
   align-items: center;
   display: flex;
   gap: 0.35rem;
   padding: 0.45rem 1rem;
 }
+

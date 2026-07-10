@@ -216,10 +216,6 @@
   padding: 0.5rem 1rem;
 }
 
-.leaves-modal-content {
-  max-width: 500px;
-}
-
 .leaves-grid-40 {
   display: grid;
   gap: 1rem;
@@ -235,18 +231,6 @@
 }
 
 .leaves-modal-content {
-  max-width: 420px;
-}
-
-.leaves-modal-content {
-  max-width: 420px;
-}
-
-.leaves-modal-content {
-  max-width: 480px;
-}
-
-.leaves-modal-content {
   max-width: 480px;
 }
 
@@ -255,3 +239,4 @@
   font-size: 0.85rem;
   margin-bottom: 1rem;
 }
+

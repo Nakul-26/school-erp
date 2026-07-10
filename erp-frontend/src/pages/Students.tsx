@@ -99,6 +99,8 @@ export default function Students() {
     phone: '',
     gender: 'Male',
     date_of_birth: '',
+    address: '',
+    photo: '',
     academic_year_id: '',
     course_id: '',
     section_id: '',
@@ -114,6 +116,19 @@ export default function Students() {
 
   // Edit form state
   const [editForm, setEditForm] = useState<any>(null);
+  const [canSubmit, setCanSubmit] = useState(false);
+
+  useEffect(() => {
+    if (step === 4) {
+      setCanSubmit(false);
+      const timer = setTimeout(() => {
+        setCanSubmit(true);
+      }, 500); // 500ms delay to prevent ghost clicks
+      return () => clearTimeout(timer);
+    } else {
+      setCanSubmit(false);
+    }
+  }, [step]);
 
   // Auto-select section if only one is available for the selected program
   useEffect(() => {
@@ -264,8 +279,8 @@ export default function Students() {
   // Stepper handlers
   const handleNextStep = () => {
     if (step === 1) {
-      if (!addForm.first_name || !addForm.last_name || !addForm.admission_number) {
-        showToast('Please fill in all required fields (First Name, Last Name, Admission Number)', 'error'); return;
+      if (!addForm.first_name || !addForm.admission_number || !addForm.date_of_birth || !addForm.gender || !addForm.address || !addForm.photo || !addForm.roll_number) {
+        showToast('Please fill in all required fields (First Name, Admission Number, Roll Number, Date of Birth, Gender, Address, Photo)', 'error'); return;
       }
       
       const nameRegex = /^[a-zA-Z\s.]+$/;
@@ -282,8 +297,8 @@ export default function Students() {
       if (middleName && !nameRegex.test(middleName)) {
         showToast('Middle Name must contain only letters.', 'error'); return;
       }
-      if (lastName.length < 1 || !nameRegex.test(lastName)) {
-        showToast('Last Name must be at least 1 character and contain only letters.', 'error'); return;
+      if (lastName && !nameRegex.test(lastName)) {
+        showToast('Last Name must contain only letters.', 'error'); return;
       }
       if (admissionNumber.length < 3) {
         showToast('Admission Number must be at least 3 characters.', 'error'); return;
@@ -310,13 +325,16 @@ export default function Students() {
       const guardianEmail = addForm.guardian_email.trim();
       const nameRegex = /^[a-zA-Z\s.]+$/;
 
-      if (guardianName && !nameRegex.test(guardianName)) {
+      if (!guardianName || !addForm.guardian_relationship || !guardianPhone) {
+        showToast('Guardian Name, Relationship, and Phone Number are required.', 'error'); return;
+      }
+      if (!nameRegex.test(guardianName)) {
         showToast('Guardian Name must contain only letters.', 'error'); return;
       }
       if (guardianEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guardianEmail)) {
         showToast('Please enter a valid guardian email address.', 'error'); return;
       }
-      if (guardianPhone && !/^[0-9+\s-]{8,15}$/.test(guardianPhone)) {
+      if (!/^[0-9+\s-]{8,15}$/.test(guardianPhone)) {
         showToast('Please enter a valid guardian phone number (8-15 digits).', 'error'); return;
       }
     }
@@ -329,9 +347,16 @@ export default function Students() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (step < 4) {
+      handleNextStep();
+      return;
+    }
+    if (!canSubmit) {
+      return;
+    }
     try {
       await api.post('/students', addForm);
-      showToast(`${addForm.first_name} ${addForm.last_name} added successfully!`);
+      showToast(`${addForm.first_name} ${addForm.last_name || ''} added successfully!`);
       setShowAddModal(false);
       resetAddForm();
       fetchStudents();
@@ -353,6 +378,8 @@ export default function Students() {
       phone: '',
       gender: 'Male',
       date_of_birth: '',
+      address: '',
+      photo: '',
       academic_year_id: '',
       course_id: '',
       section_id: '',
@@ -380,6 +407,8 @@ export default function Students() {
       phone: student.phone || '',
       gender: student.gender || 'Male',
       date_of_birth: student.date_of_birth || '',
+      address: student.address || '',
+      photo: student.photo || '',
       status: student.status || 'ACTIVE',
       // Academic Details
       academic_year_id: student.academic_year_id || '',
@@ -427,9 +456,9 @@ export default function Students() {
       alert('Middle Name must contain only letters.');
       return;
     }
-    if (lastName.length < 1 || !nameRegex.test(lastName)) {
+    if (lastName && !nameRegex.test(lastName)) {
       setEditTab('personal');
-      alert('Last Name must be at least 1 character and contain only letters.');
+      alert('Last Name must contain only letters.');
       return;
     }
     if (admissionNumber.length < 3) {
@@ -441,6 +470,31 @@ export default function Students() {
     if (!admRegex.test(admissionNumber)) {
       setEditTab('personal');
       alert('Admission Number must contain only alphanumeric characters, dashes, underscores, or slashes.');
+      return;
+    }
+    if (!editForm.date_of_birth) {
+      setEditTab('personal');
+      alert('Date of Birth is required.');
+      return;
+    }
+    if (!editForm.gender) {
+      setEditTab('personal');
+      alert('Gender is required.');
+      return;
+    }
+    if (!editForm.address || !editForm.address.trim()) {
+      setEditTab('personal');
+      alert('Address is required.');
+      return;
+    }
+    if (!editForm.photo) {
+      setEditTab('personal');
+      alert('Student photo for ID Card is required.');
+      return;
+    }
+    if (!editForm.roll_number || !editForm.roll_number.trim()) {
+      setEditTab('personal');
+      alert('Roll Number is required.');
       return;
     }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -455,7 +509,12 @@ export default function Students() {
     }
 
     // Validate guardian info
-    if (guardianName && !nameRegex.test(guardianName)) {
+    if (!guardianName || !editForm.guardian_relationship || !guardianPhone) {
+      setEditTab('guardian');
+      alert('Guardian Name, Relationship, and Phone Number are required.');
+      return;
+    }
+    if (!nameRegex.test(guardianName)) {
       setEditTab('guardian');
       alert('Guardian Name must contain only letters.');
       return;
@@ -465,7 +524,7 @@ export default function Students() {
       alert('Please enter a valid guardian email address.');
       return;
     }
-    if (guardianPhone && !/^[0-9+\s-]{8,15}$/.test(guardianPhone)) {
+    if (!/^[0-9+\s-]{8,15}$/.test(guardianPhone)) {
       setEditTab('guardian');
       alert('Please enter a valid guardian phone number (8-15 digits).');
       return;
@@ -498,13 +557,13 @@ export default function Students() {
     <Layout>
       {showAddModal ? (
         <>
-          <div className="page-header students-page-header">
-            <button className="btn btn-secondary students-btn-back" onClick={() => { setShowAddModal(false); resetAddForm(); }}>
+          <div className="page-header students-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', width: '100%', maxWidth: '720px', margin: '0 auto 1.5rem auto' }}>
+            <button className="btn btn-secondary students-btn-back" onClick={() => { setShowAddModal(false); resetAddForm(); }} style={{ position: 'absolute', left: 0 }}>
               <ArrowLeft size={18} />
             </button>
-            <div>
-              <h2 className="students-title-3">Student Admission Walkthrough</h2>
-              <p className="students-text-4">Follow the steps to register and enroll a new student profile.</p>
+            <div style={{ textAlign: 'center' }}>
+              <h2 className="students-title-3" style={{ margin: 0 }}>Student Admission Walkthrough</h2>
+              <p className="students-text-4" style={{ margin: '4px 0 0 0' }}>Follow the steps to register and enroll a new student profile.</p>
             </div>
           </div>
 
@@ -526,7 +585,8 @@ export default function Students() {
               ))}
             </div>
 
-            <form onSubmit={handleAddSubmit}>
+            <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between', minHeight: 0 }}>
+              <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem', paddingRight: '6px' }}>
               {/* STEP 1: Personal Info */}
               {step === 1 && (
                 <div>
@@ -538,11 +598,11 @@ export default function Students() {
                     </div>
                     <div className="form-group">
                       <label>Middle Name (Optional)</label>
-                      <input type="text" value={addForm.middle_name} onChange={e => setAddForm({...addForm, middle_name: e.target.value})} placeholder="e.g. Marie" />
+                      <input type="text" value={addForm.middle_name || ''} onChange={e => setAddForm({...addForm, middle_name: e.target.value})} placeholder="e.g. Marie" />
                     </div>
                     <div className="form-group">
-                      <label>Last Name *</label>
-                      <input required type="text" value={addForm.last_name} onChange={e => setAddForm({...addForm, last_name: e.target.value})} placeholder="e.g. Wonder" />
+                      <label>Last Name (Optional)</label>
+                      <input type="text" value={addForm.last_name || ''} onChange={e => setAddForm({...addForm, last_name: e.target.value})} placeholder="e.g. Wonder" />
                     </div>
                   </div>
                   <div className="students-grid-10">
@@ -551,8 +611,8 @@ export default function Students() {
                       <input required type="text" value={addForm.admission_number} onChange={e => setAddForm({...addForm, admission_number: e.target.value})} placeholder="e.g. ADM-2001" />
                     </div>
                     <div className="form-group">
-                      <label>Roll Number (Optional)</label>
-                      <input type="text" value={addForm.roll_number} onChange={e => setAddForm({...addForm, roll_number: e.target.value})} placeholder="e.g. CSE-A-12" />
+                      <label>Roll Number *</label>
+                      <input required type="text" value={addForm.roll_number} onChange={e => setAddForm({...addForm, roll_number: e.target.value})} placeholder="e.g. CSE-A-12" />
                     </div>
                   </div>
                   <div className="form-group">
@@ -565,17 +625,39 @@ export default function Students() {
                   </div>
                   <div className="students-grid-11">
                     <div className="form-group">
-                      <label>Gender</label>
-                      <select value={addForm.gender} onChange={e => setAddForm({...addForm, gender: e.target.value})}>
+                      <label>Gender *</label>
+                      <select required value={addForm.gender} onChange={e => setAddForm({...addForm, gender: e.target.value})}>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Other">Other</option>
                       </select>
                     </div>
                     <div className="form-group">
-                      <label>Date of Birth</label>
-                      <input type="date" value={addForm.date_of_birth} onChange={e => setAddForm({...addForm, date_of_birth: e.target.value})} />
+                      <label>Date of Birth *</label>
+                      <input required type="date" value={addForm.date_of_birth} onChange={e => setAddForm({...addForm, date_of_birth: e.target.value})} />
                     </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Address *</label>
+                    <textarea required value={addForm.address} onChange={e => setAddForm({...addForm, address: e.target.value})} placeholder="Full address of the student" rows={2} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.9rem' }} />
+                  </div>
+                  <div className="form-group">
+                    <label>Student Photo for ID Card *</label>
+                    <input required type="file" accept="image/*" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setAddForm((prev: any) => ({ ...prev, photo: reader.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }} style={{ width: '100%' }} />
+                    {addForm.photo && (
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <img src={addForm.photo} alt="Preview" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -625,13 +707,13 @@ export default function Students() {
                   <h4 className="students-title-13">Step 3: Guardian Details</h4>
                   
                   <div className="form-group">
-                    <label>Guardian Name</label>
-                    <input type="text" value={addForm.guardian_name} onChange={e => setAddForm({...addForm, guardian_name: e.target.value})} placeholder="Full name of Father/Mother/Guardian" />
+                    <label>Guardian Name *</label>
+                    <input required type="text" value={addForm.guardian_name} onChange={e => setAddForm({...addForm, guardian_name: e.target.value})} placeholder="Full name of Father/Mother/Guardian" />
                   </div>
 
                   <div className="form-group">
-                    <label>Relationship</label>
-                    <select value={addForm.guardian_relationship} onChange={e => setAddForm({...addForm, guardian_relationship: e.target.value})}>
+                    <label>Relationship *</label>
+                    <select required value={addForm.guardian_relationship} onChange={e => setAddForm({...addForm, guardian_relationship: e.target.value})}>
                       <option value="Father">Father</option>
                       <option value="Mother">Mother</option>
                       <option value="Guardian">Guardian</option>
@@ -640,8 +722,8 @@ export default function Students() {
                   </div>
 
                   <div className="form-group">
-                    <label>Guardian Phone</label>
-                    <input type="text" value={addForm.guardian_phone} onChange={e => setAddForm({...addForm, guardian_phone: e.target.value})} placeholder="Phone number" />
+                    <label>Guardian Phone *</label>
+                    <input required type="text" value={addForm.guardian_phone} onChange={e => setAddForm({...addForm, guardian_phone: e.target.value})} placeholder="Phone number" />
                   </div>
 
                   <div className="form-group">
@@ -657,12 +739,20 @@ export default function Students() {
                   <h4 className="students-title-14">Step 4: Review and Verify</h4>
                   
                   <div className="students-col-15">
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+                      {addForm.photo && (
+                        <img src={addForm.photo} alt="Student Preview" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                      )}
+                      <div>
+                        <strong className="students-strong-16">Personal</strong>
+                        <div>Name: <strong>{addForm.first_name} {addForm.middle_name ? addForm.middle_name + ' ' : ''}{addForm.last_name}</strong></div>
+                        <div>Admission No: <strong>{addForm.admission_number}</strong> | Roll No: <strong>{addForm.roll_number || '-'}</strong></div>
+                      </div>
+                    </div>
                     <div>
-                      <strong className="students-strong-16">Personal</strong>
-                      <div>Name: <strong>{addForm.first_name} {addForm.middle_name ? addForm.middle_name + ' ' : ''}{addForm.last_name}</strong></div>
-                      <div>Admission No: <strong>{addForm.admission_number}</strong> | Roll No: <strong>{addForm.roll_number || '-'}</strong></div>
                       <div>Gender: {addForm.gender} | DOB: {addForm.date_of_birth || '-'}</div>
                       <div>Phone: {addForm.phone || '-'} | Email: {addForm.email || '-'}</div>
+                      <div>Address: <strong>{addForm.address || '-'}</strong></div>
                     </div>
 
                     <div className="students-div-17">
@@ -685,17 +775,39 @@ export default function Students() {
                 </div>
               )}
 
+              </div>
+
               {/* Stepper Buttons */}
-              <div className="modal-actions students-modal-actions">
-                <button type="button" onClick={() => { setShowAddModal(false); resetAddForm(); }} className="btn btn-secondary">Cancel</button>
-                {step > 1 && (
-                  <button type="button" onClick={handlePrevStep} className="btn btn-outline">Back</button>
-                )}
-                {step < 4 ? (
-                  <button type="button" onClick={handleNextStep} className="btn btn-primary">Next</button>
-                ) : (
-                  <button type="submit" className="btn btn-primary">Admit Student</button>
-                )}
+              <div className="modal-actions students-modal-actions" style={{ 
+                marginTop: 'auto', 
+                paddingTop: '1rem', 
+                borderTop: '1px solid var(--border)',
+                display: 'grid',
+                gridTemplateColumns: '1fr auto 1fr',
+                alignItems: 'center',
+                width: '100%'
+              }}>
+                {/* Left Side: Cancel */}
+                <div style={{ textAlign: 'left' }}>
+                  <button type="button" onClick={() => { setShowAddModal(false); resetAddForm(); }} className="btn btn-secondary">Cancel</button>
+                </div>
+                
+                {/* Center Side: Prev and Next */}
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                  {step > 1 && (
+                    <button type="button" onClick={handlePrevStep} className="btn btn-outline">Back</button>
+                  )}
+                  {step < 4 && (
+                    <button type="button" onClick={handleNextStep} className="btn btn-primary">Next</button>
+                  )}
+                </div>
+                
+                {/* Right Side: Submit */}
+                <div style={{ textAlign: 'right' }}>
+                  {step === 4 && (
+                    <button type="submit" className="btn btn-primary" disabled={!canSubmit}>Admit Student</button>
+                  )}
+                </div>
               </div>
             </form>
           </div>
@@ -829,8 +941,18 @@ export default function Students() {
 
                   {/* Top block */}
                   <div className="students-row-41">
-                    <div className="students-row-42">
-                      👤
+                    <div className="students-row-42" style={{ padding: 0, overflow: 'hidden' }}>
+                      {s.photo ? (
+                        <img 
+                          src={s.photo.startsWith('data:image') || s.photo.startsWith('/api') || s.photo.startsWith('http')
+                            ? s.photo 
+                            : `/api/students/photo/${s.id}`} 
+                          alt="" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} 
+                        />
+                      ) : (
+                        '👤'
+                      )}
                     </div>
                     <div className="students-div-43">
                       <h4 className="students-title-44">
@@ -920,7 +1042,31 @@ export default function Students() {
                       <td>{s.roll_number || '-'}</td>
                       <td>
                         <div className="students-row-66">
-                          <span>👤</span>
+                          <div style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            backgroundColor: 'var(--primary-soft)',
+                            color: 'var(--primary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                            fontSize: '0.85rem',
+                            flexShrink: 0
+                          }}>
+                            {s.photo ? (
+                              <img 
+                                src={s.photo.startsWith('data:image') || s.photo.startsWith('/api') || s.photo.startsWith('http')
+                                  ? s.photo 
+                                  : `/api/students/photo/${s.id}`} 
+                                alt="" 
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                              />
+                            ) : (
+                              '👤'
+                            )}
+                          </div>
                           <span>{s.first_name} {s.middle_name ? s.middle_name + ' ' : ''}{s.last_name}</span>
                         </div>
                       </td>
@@ -1047,7 +1193,7 @@ export default function Students() {
       {/* Edit Student Modal */}
       {showEditModal && editForm && (
         <div className="modal students-modal">
-          <div className="modal-content students-modal-content size-md">
+          <div className="modal-content students-modal-content size-md" style={{ height: '700px', display: 'flex', flexDirection: 'column' }}>
             <h3 className="students-title-94">Edit Student Record</h3>
             
             {/* Edit Modal Tabs */}
@@ -1074,7 +1220,8 @@ export default function Students() {
               ))}
             </div>
 
-            <form onSubmit={handleEditSubmit}>
+            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between', minHeight: 0 }}>
+              <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem', paddingRight: '6px' }}>
               {/* TAB 1: Personal Info */}
               {editTab === 'personal' && (
                 <div>
@@ -1088,8 +1235,8 @@ export default function Students() {
                       <input type="text" value={editForm.middle_name || ''} onChange={e => setEditForm({...editForm, middle_name: e.target.value})} />
                     </div>
                     <div className="form-group">
-                      <label>Last Name *</label>
-                      <input required type="text" value={editForm.last_name} onChange={e => setEditForm({...editForm, last_name: e.target.value})} />
+                      <label>Last Name (Optional)</label>
+                      <input type="text" value={editForm.last_name || ''} onChange={e => setEditForm({...editForm, last_name: e.target.value})} />
                     </div>
                   </div>
                   <div className="students-grid-97">
@@ -1098,8 +1245,8 @@ export default function Students() {
                       <input required type="text" value={editForm.admission_number} onChange={e => setEditForm({...editForm, admission_number: e.target.value})} />
                     </div>
                     <div className="form-group">
-                      <label>Roll No</label>
-                      <input type="text" value={editForm.roll_number} onChange={e => setEditForm({...editForm, roll_number: e.target.value})} />
+                      <label>Roll No *</label>
+                      <input required type="text" value={editForm.roll_number} onChange={e => setEditForm({...editForm, roll_number: e.target.value})} />
                     </div>
                   </div>
                   <div className="form-group">
@@ -1112,8 +1259,8 @@ export default function Students() {
                   </div>
                   <div className="students-grid-98">
                     <div className="form-group">
-                      <label>Gender</label>
-                      <select value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value})}>
+                      <label>Gender *</label>
+                      <select required value={editForm.gender} onChange={e => setEditForm({...editForm, gender: e.target.value})}>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Other">Other</option>
@@ -1133,8 +1280,36 @@ export default function Students() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label>Date of Birth</label>
-                    <input type="date" value={editForm.date_of_birth} onChange={e => setEditForm({...editForm, date_of_birth: e.target.value})} />
+                    <label>Date of Birth *</label>
+                    <input required type="date" value={editForm.date_of_birth} onChange={e => setEditForm({...editForm, date_of_birth: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Address *</label>
+                    <textarea required value={editForm.address || ''} onChange={e => setEditForm({...editForm, address: e.target.value})} placeholder="Full address of the student" rows={2} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.9rem' }} />
+                  </div>
+                  <div className="form-group">
+                    <label>Student Photo for ID Card *</label>
+                    <input type="file" accept="image/*" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setEditForm((prev: any) => ({ ...prev, photo: reader.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }} style={{ width: '100%' }} />
+                    {editForm.photo && (
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <img 
+                          src={editForm.photo.startsWith('data:image') || editForm.photo.startsWith('/api') || editForm.photo.startsWith('http')
+                            ? editForm.photo 
+                            : `/api/students/photo/${editForm.id}`} 
+                          alt="Preview" 
+                          style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)' }} 
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1184,12 +1359,12 @@ export default function Students() {
               {editTab === 'guardian' && (
                 <div>
                   <div className="form-group">
-                    <label>Guardian Name</label>
-                    <input type="text" value={editForm.guardian_name} onChange={e => setEditForm({...editForm, guardian_name: e.target.value})} placeholder="Full name of Father/Mother/Guardian" />
+                    <label>Guardian Name *</label>
+                    <input required type="text" value={editForm.guardian_name} onChange={e => setEditForm({...editForm, guardian_name: e.target.value})} placeholder="Full name of Father/Mother/Guardian" />
                   </div>
                   <div className="form-group">
-                    <label>Relationship</label>
-                    <select value={editForm.guardian_relationship} onChange={e => setEditForm({...editForm, guardian_relationship: e.target.value})}>
+                    <label>Relationship *</label>
+                    <select required value={editForm.guardian_relationship} onChange={e => setEditForm({...editForm, guardian_relationship: e.target.value})}>
                       <option value="Father">Father</option>
                       <option value="Mother">Mother</option>
                       <option value="Guardian">Guardian</option>
@@ -1197,8 +1372,8 @@ export default function Students() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Guardian Phone</label>
-                    <input type="text" value={editForm.guardian_phone} onChange={e => setEditForm({...editForm, guardian_phone: e.target.value})} placeholder="Phone number" />
+                    <label>Guardian Phone *</label>
+                    <input required type="text" value={editForm.guardian_phone} onChange={e => setEditForm({...editForm, guardian_phone: e.target.value})} placeholder="Phone number" />
                   </div>
                   <div className="form-group">
                     <label>Guardian Email</label>
@@ -1239,7 +1414,9 @@ export default function Students() {
                 </div>
               )}
 
-              <div className="modal-actions students-modal-actions">
+              </div>
+
+              <div className="modal-actions students-modal-actions" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
                 <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
               </div>

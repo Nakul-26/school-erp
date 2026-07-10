@@ -535,8 +535,18 @@ export default function StudentDetails() {
       <div className="card student-details-card">
         {/* Left Column: Big Avatar */}
         <div className="student-details-col-6">
-          <div className="student-details-row-7">
-            👤
+          <div className="student-details-row-7" style={{ padding: 0, overflow: 'hidden' }}>
+            {student.photo ? (
+              <img 
+                src={student.photo.startsWith('data:image') || student.photo.startsWith('/api') || student.photo.startsWith('http')
+                  ? student.photo 
+                  : `/api/students/photo/${student.id}`} 
+                alt="Student Photo" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} 
+              />
+            ) : (
+              '👤'
+            )}
           </div>
           <span className={`badge badge-${student.status === 'ACTIVE' ? 'success' : student.status === 'GRADUATED' ? 'success' : 'secondary'} student-details-span-8`}>
             {student.status}
@@ -669,6 +679,10 @@ export default function StudentDetails() {
               <div>
                 <label className="student-details-label-44">Admission Date</label>
                 <span className="student-details-span-45">{student.admission_date || '-'}</span>
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label className="student-details-label-44">Address</label>
+                <span className="student-details-span-45" style={{ fontWeight: '500' }}>{student.address || '-'}</span>
               </div>
             </div>
           </div>

@@ -12,11 +12,6 @@
   grid-template-columns: 1fr 2fr;
 }
 
-.payroll-runs-card {
-  height: fit-content;
-  padding: 1.5rem;
-}
-
 .payroll-runs-title-4 {
   font-weight: 800;
   margin-bottom: 1rem;
@@ -32,6 +27,7 @@
 }
 
 .payroll-runs-card {
+  height: fit-content;
   padding: 1.5rem;
 }
 
@@ -67,3 +63,4 @@
 .payroll-runs-Landmark-14 {
   margin-bottom: 0.5rem;
 }
+

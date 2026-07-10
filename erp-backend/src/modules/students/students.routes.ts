@@ -6,6 +6,44 @@ import { authMiddleware, requireRole } from '../../middleware/auth';
 
 const students = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
+// GET photo (Public route so <img> can load it directly without Authorization headers)
+students.get('/photo/:id', async (c) => {
+  const id = c.req.param('id')!;
+  try {
+    const student = await c.env.DB.prepare('SELECT photo FROM students WHERE id = ? AND is_active = 1').bind(id).first<{ photo: string }>();
+    if (!student || !student.photo) {
+      return c.json({ error: 'Photo not found' }, 404);
+    }
+    
+    if (student.photo.startsWith('data:image')) {
+      const match = student.photo.match(/^data:([^;]+);base64,(.*)$/);
+      if (match) {
+        const contentType = match[1];
+        const base64Data = match[2];
+        const binaryString = atob(base64Data);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return new Response(bytes, {
+          headers: { 'Content-Type': contentType }
+        });
+      }
+    }
+
+    const file = await c.env.FILES.get(student.photo);
+    if (!file) {
+      return c.json({ error: 'Photo not found in storage' }, 404);
+    }
+    const headers = new Headers();
+    headers.set('Content-Type', file.httpMetadata?.contentType || 'image/jpeg');
+    return new Response(file.body, { headers });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
 students.use('*', authMiddleware);
 
 students.get('/', async (c) => {
@@ -444,6 +482,37 @@ students.delete('/:id/documents/:docId', async (c) => {
   }
 
   return c.json({ success: true });
+});
+
+// POST upload photo to R2
+students.post('/:id/photo', async (c) => {
+  const user = c.get('user');
+  const studentId = c.req.param('id')!;
+
+  const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
+  if (!student) return c.json({ error: 'Student not found' }, 404);
+
+  const body = await c.req.parseBody();
+  const file = body['file'];
+
+  if (!file || !(file instanceof File)) {
+    return c.json({ error: 'No photo file uploaded' }, 400);
+  }
+
+  try {
+    const bytes = await file.arrayBuffer();
+    const fileKey = `student_photos/${studentId}_${Date.now()}_${file.name}`;
+    
+    await c.env.FILES.put(fileKey, bytes, {
+      httpMetadata: { contentType: file.type || 'image/jpeg' }
+    });
+
+    await c.env.DB.prepare('UPDATE students SET photo = ? WHERE id = ?').bind(fileKey, studentId).run();
+
+    return c.json({ success: true, photoUrl: `/students/photo/${studentId}` });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
 });
 
 export default students;

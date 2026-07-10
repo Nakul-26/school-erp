@@ -6,13 +6,6 @@
   margin-top: 0.25rem;
 }
 
-.homework-list-card {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-}
-
 .homework-list-row-3 {
   align-items: center;
   display: flex;
@@ -48,6 +41,9 @@
 }
 
 .homework-list-card {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
   padding: 1.5rem;
 }
 
@@ -109,3 +105,4 @@
   padding: 0.5rem;
   width: 100%;
 }
+

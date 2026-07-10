@@ -5,12 +5,6 @@
   font-size: 0.85rem;
 }
 
-.assets-btn {
-  align-items: center;
-  display: flex;
-  gap: 0.5rem;
-}
-
 .assets-th-3 {
   text-align: right;
 }
@@ -46,12 +40,6 @@
   gap: 0.2rem;
 }
 
-.assets-btn {
-  align-items: center;
-  display: flex;
-  gap: 0.2rem;
-}
-
 .assets-modal {
   max-width: 520px;
 }
@@ -66,24 +54,3 @@
   grid-column: 1 / -1;
 }
 
-.assets-form-group {
-  grid-column: 1 / -1;
-}
-
-.assets-modal {
-  max-width: 520px;
-}
-
-.assets-modal-body {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr 1fr;
-}
-
-.assets-form-group {
-  grid-column: 1 / -1;
-}
-
-.assets-form-group {
-  grid-column: 1 / -1;
-}

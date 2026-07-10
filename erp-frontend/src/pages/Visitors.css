@@ -5,12 +5,6 @@
   font-size: 0.85rem;
 }
 
-.visitors-btn {
-  align-items: center;
-  display: flex;
-  gap: 0.5rem;
-}
-
 .visitors-th-3 {
   text-align: right;
 }
@@ -35,10 +29,10 @@
 
 .visitors-btn {
   align-items: center;
-  border-color: #c2410c;
-  color: #c2410c;
   display: inline-flex;
   gap: 0.25rem;
+  border-color: #c2410c;
+  color: #c2410c;
 }
 
 .visitors-span-9 {
@@ -55,3 +49,4 @@
   flex-direction: column;
   gap: 1rem;
 }
+

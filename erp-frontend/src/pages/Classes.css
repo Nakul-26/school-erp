@@ -257,12 +257,6 @@
   padding: 0.5rem;
 }
 
-
-.classes-card {
-  overflow: hidden;
-  padding: 0px;
-}
-
 .classes-col-34 {
   align-items: center;
   display: flex;
@@ -272,10 +266,6 @@
   padding: 4rem;
 }
 
-.classes-spinner {
-  color: var(--primary);
-}
-
 .classes-span-36 {
   color: var(--text-muted);
   font-size: 0.9rem;
@@ -283,11 +273,6 @@
 
 .classes-div-37 {
   overflow-x: auto;
-}
-
-.classes-table {
-  border-collapse: collapse;
-  width: 100%;
 }
 
 .classes-tr-39 {
@@ -456,7 +441,6 @@
   gap: 0.35rem;
 }
 
-
 .classes-td-74 {
   padding: 4rem;
   text-align: center;
@@ -490,14 +474,6 @@
   margin-bottom: 1.5rem;
 }
 
-.classes-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  min-height: 110px;
-  padding: 1.5rem;
-}
-
 .classes-div-81 {
   background-color: #e0e7ff;
   border-radius: var(--radius-md);
@@ -517,14 +493,6 @@
   color: var(--text-main);
   font-size: 1.5rem;
   font-weight: 800;
-}
-
-.classes-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  min-height: 110px;
-  padding: 1.5rem;
 }
 
 .classes-div-85 {
@@ -548,14 +516,6 @@
   font-weight: 800;
 }
 
-.classes-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  min-height: 110px;
-  padding: 1.5rem;
-}
-
 .classes-div-89 {
   background-color: #fffbeb;
   border-radius: var(--radius-md);
@@ -575,15 +535,6 @@
   color: var(--text-main);
   font-size: 1.5rem;
   font-weight: 800;
-}
-
-.classes-card {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
 }
 
 .classes-search-container {
@@ -625,10 +576,16 @@
   padding: 0.5rem 1rem;
 }
 
-
 .classes-card {
   overflow: hidden;
   padding: 0px;
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  min-height: 110px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
 }
 
 .classes-div-100 {
@@ -639,11 +596,6 @@
 
 .classes-div-101 {
   overflow-x: auto;
-}
-
-.classes-table {
-  border-collapse: collapse;
-  width: 100%;
 }
 
 .classes-th-103 {
@@ -880,15 +832,6 @@
   margin-bottom: 0.35rem;
 }
 
-.classes-modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-}
-
-
-
 .classes-row-150 {
   align-items: flex-start;
   display: flex;
@@ -1092,11 +1035,6 @@
   overflow-y: auto;
 }
 
-.classes-table {
-  font-size: 0.85rem;
-  width: 100%;
-}
-
 .classes-tr-181 {
   background-color: var(--bg-main);
   border-bottom: 1px solid var(--border);
@@ -1166,11 +1104,6 @@
   border-radius: var(--radius-md);
   max-height: 300px;
   overflow-y: auto;
-}
-
-.classes-table {
-  font-size: 0.85rem;
-  width: 100%;
 }
 
 .classes-tr-195 {
@@ -1282,8 +1215,6 @@
   text-align: center;
 }
 
-
-
 .classes-title-215 {
   color: var(--text-main);
   font-size: 1.2rem;
@@ -1293,10 +1224,6 @@
 
 .classes-label-216 {
   font-weight: 600;
-}
-
-.classes-form-group {
-  margin-top: 1rem;
 }
 
 .classes-label-218 {
@@ -1381,31 +1308,9 @@
   accent-color: var(--primary);
 }
 
-.classes-form-group {
-  margin-top: 1rem;
-}
-
 .classes-label-232 {
   font-weight: 600;
 }
-
-.classes-form-control {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  min-height: 80px;
-  outline: none;
-  padding: 0.5rem;
-  width: 100%;
-}
-
-.classes-modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  margin-top: 1.75rem;
-}
-
-
 
 .classes-title-237 {
   color: var(--text-main);
@@ -1416,10 +1321,6 @@
 
 .classes-label-238 {
   font-weight: 600;
-}
-
-.classes-form-group {
-  margin-top: 1rem;
 }
 
 .classes-label-240 {
@@ -1520,15 +1421,6 @@
   padding: 0.5rem;
   width: 100%;
 }
-
-.classes-modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  margin-top: 1.75rem;
-}
-
-
 
 .classes-row-259 {
   align-items: center;
@@ -1781,8 +1673,9 @@
 }
 
 .classes-table {
-  font-size: 0.85rem;
+  border-collapse: collapse;
   width: 100%;
+  font-size: 0.85rem;
 }
 
 .classes-th-299 {
@@ -1910,9 +1803,11 @@
 }
 
 .classes-modal-actions {
-  border-top: 1px solid var(--border);
   display: flex;
+  gap: 0.75rem;
   justify-content: flex-end;
   margin-top: 2rem;
+  border-top: 1px solid var(--border);
   padding-top: 1rem;
 }
+

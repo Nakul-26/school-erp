@@ -1,22 +1,26 @@
 /* Component stylesheet for PayrollRunDetail.tsx */
 
 @media print {
-          body * {
+  body * {
             visibility: hidden;
-          }
-          #printable-payslip, #printable-payslip * {
-            visibility: visible;
-          }
-          #printable-payslip {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
+}
+
+#printable-payslip, #printable-payslip * {
+  visibility: visible;
+}
+
+#printable-payslip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+
+.no-print {
+  display: none !important;
+}
+
+}
 
 .payroll-run-detail-row-1 {
   align-items: center;
@@ -244,3 +248,4 @@
   text-align: center;
   width: 150px;
 }
+

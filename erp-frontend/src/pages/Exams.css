@@ -1,22 +1,26 @@
 /* Component stylesheet for Exams.tsx */
 
 @media print {
-          body * {
+  body * {
             visibility: hidden;
-          }
-          #printable-report-card, #printable-report-card * {
-            visibility: visible;
-          }
-          #printable-report-card {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
+}
+
+#printable-report-card, #printable-report-card * {
+  visibility: visible;
+}
+
+#printable-report-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+
+.no-print {
+  display: none !important;
+}
+
+}
 
 .exams-text-1 {
   color: var(--text-muted);
@@ -71,10 +75,6 @@
   gap: 1rem;
 }
 
-.exams-btn {
-  padding: 0.5rem;
-}
-
 .exams-text-12 {
   color: var(--text-muted);
   font-size: 0.875rem;
@@ -119,10 +119,6 @@
   align-items: center;
   display: flex;
   gap: 1rem;
-}
-
-.exams-btn {
-  padding: 0.5rem;
 }
 
 .exams-text-22 {
@@ -435,3 +431,4 @@
   text-align: center;
   width: 150px;
 }
+

@@ -21,12 +21,6 @@
   gap: 0.5rem;
 }
 
-.notifications-btn {
-  align-items: center;
-  display: flex;
-  gap: 0.5rem;
-}
-
 .notifications-container {
   display: flex;
   flex-direction: column;
@@ -117,3 +111,4 @@
   justify-content: flex-end;
   margin-top: 1.5rem;
 }
+

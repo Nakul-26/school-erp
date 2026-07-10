@@ -6,11 +6,13 @@ export interface Student {
   roll_number?: string;
   first_name: string;
   middle_name?: string;
-  last_name: string;
+  last_name?: string;
   gender?: string;
   date_of_birth?: string;
   email?: string;
   phone?: string;
+  address?: string;
+  photo?: string;
   admission_date?: string;
   status: 'APPLIED' | 'ADMITTED' | 'ACTIVE' | 'TRANSFERRED' | 'GRADUATED' | 'DROPPED' | 'ALUMNI';
   blood_group?: string;

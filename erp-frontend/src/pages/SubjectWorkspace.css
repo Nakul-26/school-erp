@@ -7,19 +7,6 @@
   padding: 1rem;
 }
 
-.subject-workspace-animate-pulse {
-  background-color: #e2e8f0;
-  border-radius: 4px;
-  height: 40px;
-  width: 300px;
-}
-
-.subject-workspace-animate-pulse {
-  background-color: #e2e8f0;
-  border-radius: 8px;
-  height: 100px;
-}
-
 .subject-workspace-grid-4 {
   display: grid;
   gap: 1rem;
@@ -30,6 +17,7 @@
   background-color: #e2e8f0;
   border-radius: 8px;
   height: 120px;
+  width: 300px;
 }
 
 .subject-workspace-div-6 {
@@ -44,10 +32,6 @@
 
 .subject-workspace-text-8 {
   color: var(--text-muted);
-}
-
-.subject-workspace-btn {
-  margin-top: 1rem;
 }
 
 .subject-workspace-col-10 {
@@ -86,11 +70,6 @@
   font-weight: 800;
   gap: 0.75rem;
   margin: 0px;
-}
-
-.subject-workspace-badge {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
 }
 
 .subject-workspace-text-17 {
@@ -168,13 +147,6 @@
   margin-bottom: 1.5rem;
 }
 
-.subject-workspace-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  padding: 1.25rem;
-}
-
 .subject-workspace-div-30 {
   background-color: #eef2ff;
   border-radius: var(--radius-sm);
@@ -193,13 +165,6 @@
 .subject-workspace-span-32 {
   font-size: 1.5rem;
   font-weight: 800;
-}
-
-.subject-workspace-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  padding: 1.25rem;
 }
 
 .subject-workspace-div-34 {
@@ -222,13 +187,6 @@
   font-weight: 800;
 }
 
-.subject-workspace-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  padding: 1.25rem;
-}
-
 .subject-workspace-div-38 {
   background-color: #fef8e7;
   border-radius: var(--radius-sm);
@@ -247,13 +205,6 @@
 .subject-workspace-span-40 {
   font-size: 1.5rem;
   font-weight: 800;
-}
-
-.subject-workspace-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  padding: 1.25rem;
 }
 
 .subject-workspace-div-42 {
@@ -300,10 +251,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.subject-workspace-card {
-  padding: 1.5rem;
 }
 
 .subject-workspace-row-51 {
@@ -383,10 +330,6 @@
   padding: 0.75rem 0;
 }
 
-.subject-workspace-card {
-  padding: 1.5rem;
-}
-
 .subject-workspace-row-66 {
   align-items: center;
   display: flex;
@@ -434,10 +377,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.subject-workspace-card {
-  padding: 1.5rem;
 }
 
 .subject-workspace-title-74 {
@@ -505,14 +444,6 @@
   font-size: 0.85rem;
 }
 
-.subject-workspace-badge {
-  font-weight: 600;
-}
-
-.subject-workspace-card {
-  padding: 1.5rem;
-}
-
 .subject-workspace-title-86 {
   font-size: 1.1rem;
   font-weight: 700;
@@ -535,10 +466,6 @@
 .subject-workspace-td-89 {
   color: var(--text-muted);
   text-align: center;
-}
-
-.subject-workspace-card {
-  padding: 1.5rem;
 }
 
 .subject-workspace-row-91 {
@@ -588,17 +515,9 @@
   font-size: 0.7rem;
 }
 
-.subject-workspace-badge {
-  margin-right: 0.25rem;
-}
-
 .subject-workspace-td-100 {
   color: var(--text-muted);
   text-align: center;
-}
-
-.subject-workspace-card {
-  padding: 1.5rem;
 }
 
 .subject-workspace-row-102 {
@@ -636,25 +555,9 @@
   gap: 0.35rem;
 }
 
-.subject-workspace-btn {
-  padding: 0.25rem 0.5rem;
-}
-
-.subject-workspace-btn {
-  padding: 0.25rem 0.5rem;
-}
-
-.subject-workspace-btn {
-  padding: 0.25rem;
-}
-
 .subject-workspace-td-111 {
   color: var(--text-muted);
   text-align: center;
-}
-
-.subject-workspace-card {
-  padding: 1.5rem;
 }
 
 .subject-workspace-row-113 {
@@ -680,17 +583,9 @@
   text-transform: capitalize;
 }
 
-.subject-workspace-btn {
-  padding: 0.25rem;
-}
-
 .subject-workspace-td-118 {
   color: var(--text-muted);
   text-align: center;
-}
-
-.subject-workspace-card {
-  padding: 1.5rem;
 }
 
 .subject-workspace-row-120 {
@@ -724,10 +619,7 @@
 }
 
 .subject-workspace-btn {
-  padding: 0.25rem 0.5rem;
-}
-
-.subject-workspace-btn {
+  margin-top: 1rem;
   padding: 0.25rem;
 }
 
@@ -740,10 +632,6 @@
   display: grid;
   gap: 1.5rem;
   grid-template-columns: 1fr 1fr;
-}
-
-.subject-workspace-card {
-  padding: 1.5rem;
 }
 
 .subject-workspace-row-130 {
@@ -785,10 +673,6 @@
   color: #16a34a;
   font-size: 0.9rem;
   font-weight: 600;
-}
-
-.subject-workspace-card {
-  padding: 1.5rem;
 }
 
 .subject-workspace-row-137 {
@@ -833,6 +717,9 @@
 }
 
 .subject-workspace-card {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
   padding: 1.5rem;
 }
 
@@ -875,6 +762,9 @@
 
 .subject-workspace-badge {
   font-size: 0.65rem;
+  padding: 0.25rem 0.5rem;
+  font-weight: 600;
+  margin-right: 0.25rem;
 }
 
 .subject-workspace-text-151 {
@@ -892,3 +782,4 @@
   display: flex;
   gap: 0.5rem;
 }
+

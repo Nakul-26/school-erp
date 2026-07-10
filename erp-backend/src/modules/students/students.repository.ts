@@ -3,7 +3,7 @@ import { getUpdateFields } from '../../utils/repository';
 
 const UPDATE_FIELDS = [
   'user_id', 'admission_number', 'roll_number', 'first_name', 'middle_name', 'last_name',
-  'gender', 'date_of_birth', 'email', 'phone', 'admission_date', 'status',
+  'gender', 'date_of_birth', 'email', 'phone', 'address', 'photo', 'admission_date', 'status',
   'blood_group', 'emergency_contact', 'medical_conditions', 'allergies',
 ] as const;
 
@@ -16,13 +16,13 @@ export class StudentRepository {
       INSERT INTO students (
         id, institution_id, user_id, admission_number, roll_number, 
         first_name, middle_name, last_name, gender, date_of_birth, 
-        email, phone, admission_date, status, created_by, updated_by,
+        email, phone, address, photo, admission_date, status, created_by, updated_by,
         blood_group, emergency_contact, medical_conditions, allergies
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id, institutionId, input.user_id || null, input.admission_number, input.roll_number || null,
-      input.first_name, input.middle_name || null, input.last_name, input.gender || null, input.date_of_birth || null,
-      input.email || null, input.phone || null, input.admission_date || null, input.status || 'ACTIVE', userId || null, userId || null,
+      input.first_name, input.middle_name || null, input.last_name || '', input.gender || null, input.date_of_birth || null,
+      input.email || null, input.phone || null, input.address || null, input.photo || null, input.admission_date || null, input.status || 'ACTIVE', userId || null, userId || null,
       input.blood_group || null, input.emergency_contact || null, input.medical_conditions || null, input.allergies || null
     ).run();
 

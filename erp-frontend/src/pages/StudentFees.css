@@ -1,26 +1,30 @@
 /* Component stylesheet for StudentFees.tsx */
 
 @media print {
-          body * {
+  body * {
             visibility: hidden;
-          }
-          .receipt-print-container, .receipt-print-container * {
-            visibility: visible;
-          }
-          .receipt-print-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100% !important;
-            max-width: 100% !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
+}
+
+.receipt-print-container, .receipt-print-container * {
+  visibility: visible;
+}
+
+.receipt-print-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.no-print {
+  display: none !important;
+}
+
+}
 
 .student-fees-text-1 {
   color: var(--text-muted);
@@ -65,10 +69,6 @@
   gap: 1rem;
 }
 
-.student-fees-btn {
-  padding: 0.5rem;
-}
-
 .student-fees-text-11 {
   color: var(--text-muted);
   font-size: 0.875rem;
@@ -102,10 +102,6 @@
   margin-bottom: 0.5rem;
 }
 
-.student-fees-table {
-  min-width: auto;
-}
-
 .student-fees-th-18 {
   text-align: right;
 }
@@ -118,16 +114,6 @@
   display: flex;
   gap: 0.25rem;
   justify-content: flex-end;
-}
-
-.student-fees-btn {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.4rem;
-}
-
-.student-fees-btn {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.4rem;
 }
 
 .student-fees-title-23 {
@@ -146,10 +132,6 @@
   margin-bottom: 0.5rem;
 }
 
-.student-fees-table {
-  min-width: auto;
-}
-
 .student-fees-th-27 {
   text-align: right;
 }
@@ -163,18 +145,10 @@
   text-align: right;
 }
 
-.student-fees-btn {
-  padding: 0.25rem 0.5rem;
-}
-
 .student-fees-row-31 {
   align-items: center;
   display: flex;
   gap: 1rem;
-}
-
-.student-fees-btn {
-  padding: 0.5rem;
 }
 
 .student-fees-receipt-print-container {
@@ -323,11 +297,6 @@
   margin-top: 2rem;
 }
 
-.student-fees-modal {
-  max-width: 600px;
-  width: 90%;
-}
-
 .student-fees-form-58 {
   border-bottom: 1px dashed var(--border);
   margin-bottom: 1.5rem;
@@ -344,14 +313,6 @@
   display: grid;
   gap: 1rem;
   grid-template-columns: 1fr 2fr;
-}
-
-.student-fees-btn {
-  width: 100%;
-}
-
-.student-fees-table {
-  margin-top: 0.5rem;
 }
 
 .student-fees-th-63 {
@@ -371,11 +332,6 @@
 .student-fees-modal {
   max-width: 650px;
   width: 90%;
-}
-
-.student-fees-table {
-  margin-bottom: 1.5rem;
-  margin-top: 0.5rem;
 }
 
 .student-fees-th-68 {
@@ -411,7 +367,9 @@
 }
 
 .student-fees-table {
+  min-width: auto;
   margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .student-fees-input-75 {
@@ -428,6 +386,9 @@
 }
 
 .student-fees-btn {
-  margin-top: 1rem;
+  padding: 0.5rem;
+  font-size: 0.75rem;
   width: 100%;
+  margin-top: 1rem;
 }
+

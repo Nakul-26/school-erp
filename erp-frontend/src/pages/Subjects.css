@@ -10,10 +10,6 @@
   margin-bottom: 1.5rem;
 }
 
-.subjects-card {
-  overflow-x: auto;
-}
-
 .subjects-td-4 {
   font-family: monospace;
 }
@@ -30,14 +26,6 @@
   gap: 0.35rem;
 }
 
-.subjects-btn {
-  padding: 0.35rem;
-}
-
-.subjects-btn {
-  padding: 0.35rem;
-}
-
 .subjects-td-9 {
   text-align: center;
 }
@@ -46,11 +34,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-}
-
-.subjects-card {
-  min-height: fit-content;
-  padding: 1rem;
 }
 
 .subjects-row-12 {
@@ -127,10 +110,6 @@
 .subjects-select-24 {
   padding: 0.45rem 1.5rem 0.45rem 0.75rem;
   width: auto;
-}
-
-.subjects-card {
-  padding: 0px;
 }
 
 .subjects-div-26 {
@@ -210,22 +189,10 @@
   gap: 0.35rem;
 }
 
-.subjects-btn {
-  padding: 0.35rem;
-}
-
-.subjects-btn {
-  padding: 0.35rem;
-}
-
 .subjects-td-43 {
   color: var(--text-muted);
   padding: 3rem;
   text-align: center;
-}
-
-.subjects-card {
-  padding: 1.5rem;
 }
 
 .subjects-row-45 {
@@ -246,12 +213,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.subjects-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  padding: 1.25rem;
 }
 
 .subjects-row-49 {
@@ -308,10 +269,6 @@
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 0.2rem 0.5rem;
-}
-
-.subjects-card {
-  padding: 1.5rem;
 }
 
 .subjects-row-58 {
@@ -382,11 +339,6 @@
 .subjects-text-69 {
   color: var(--text-muted);
   font-size: 0.8rem;
-}
-
-.subjects-card {
-  overflow: visible;
-  padding: 1.5rem;
 }
 
 .subjects-row-71 {
@@ -498,10 +450,6 @@
   text-align: center;
 }
 
-.subjects-btn {
-  padding: 0.35rem;
-}
-
 .subjects-col-92 {
   display: flex;
   flex-direction: column;
@@ -516,6 +464,7 @@
 }
 
 .subjects-btn {
+  padding: 0.35rem;
   background: var(--success);
   color: #ffffff;
 }
@@ -571,7 +520,12 @@
 }
 
 .subjects-card {
+  overflow-x: auto;
+  min-height: fit-content;
   padding: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  overflow: visible;
 }
 
 .subjects-row-104 {
@@ -598,10 +552,6 @@
   color: var(--text-muted);
   padding: 2rem;
   text-align: center;
-}
-
-.subjects-modal-content {
-  max-width: 440px;
 }
 
 .subjects-form-109 {
@@ -656,3 +606,4 @@
   font-size: 0.85rem;
   gap: 0.25rem;
 }
+

@@ -23,45 +23,10 @@
   width: auto;
 }
 
-.reports-stats-grid {
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  margin-bottom: 2rem;
-}
-
-.reports-icon {
-  align-items: center;
-  background: #e6f7ff;
-  border-radius: 12px;
-  color: #1890ff;
-  display: flex;
-  height: 50px;
-  justify-content: center;
-  width: 50px;
-}
-
 .reports-title-7 {
   color: var(--text-muted);
   font-size: 0.875rem;
   margin: 0px;
-}
-
-.reports-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-top: 0.25rem;
-}
-
-.reports-icon {
-  align-items: center;
-  background: #f6ffed;
-  border-radius: 12px;
-  color: #52c41a;
-  display: flex;
-  height: 50px;
-  justify-content: center;
-  width: 50px;
 }
 
 .reports-title-10 {
@@ -70,34 +35,10 @@
   margin: 0px;
 }
 
-.reports-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-top: 0.25rem;
-}
-
-.reports-icon {
-  align-items: center;
-  background: #fff1f0;
-  border-radius: 12px;
-  color: #f5222d;
-  display: flex;
-  height: 50px;
-  justify-content: center;
-  width: 50px;
-}
-
 .reports-title-13 {
   color: var(--text-muted);
   font-size: 0.875rem;
   margin: 0px;
-}
-
-.reports-value {
-  color: #f5222d;
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-top: 0.25rem;
 }
 
 .reports-text-15 {
@@ -126,59 +67,10 @@
   width: 80px;
 }
 
-.reports-stats-grid {
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  margin-bottom: 2rem;
-}
-
-.reports-stat-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  padding: 1.25rem;
-}
-
-.reports-icon {
-  align-items: center;
-  background: #e6f7ff;
-  border-radius: 12px;
-  color: #1890ff;
-  display: flex;
-  height: 48px;
-  justify-content: center;
-  width: 48px;
-}
-
 .reports-title-22 {
   color: var(--text-muted);
   font-size: 0.875rem;
   margin: 0px;
-}
-
-.reports-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-top: 0.25rem;
-}
-
-.reports-stat-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  padding: 1.25rem;
-}
-
-.reports-icon {
-  align-items: center;
-  background: #f6ffed;
-  border-radius: 12px;
-  color: #52c41a;
-  display: flex;
-  height: 48px;
-  justify-content: center;
-  width: 48px;
 }
 
 .reports-title-26 {
@@ -187,40 +79,10 @@
   margin: 0px;
 }
 
-.reports-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-top: 0.25rem;
-}
-
-.reports-stat-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  padding: 1.25rem;
-}
-
-.reports-icon {
-  align-items: center;
-  background: #fff7e6;
-  border-radius: 12px;
-  color: #fa8c16;
-  display: flex;
-  height: 48px;
-  justify-content: center;
-  width: 48px;
-}
-
 .reports-title-30 {
   color: var(--text-muted);
   font-size: 0.875rem;
   margin: 0px;
-}
-
-.reports-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-top: 0.25rem;
 }
 
 .reports-text-32 {
@@ -250,66 +112,16 @@
   margin-bottom: 2rem;
 }
 
-.reports-stat-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  padding: 1.25rem;
-}
-
-.reports-icon {
-  align-items: center;
-  background: #f6ffed;
-  border-radius: 12px;
-  color: #52c41a;
-  display: flex;
-  height: 48px;
-  justify-content: center;
-  width: 48px;
-}
-
 .reports-title-38 {
   color: var(--text-muted);
   font-size: 0.875rem;
   margin: 0px;
 }
 
-.reports-value {
-  color: var(--success);
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-top: 0.25rem;
-}
-
-.reports-stat-card {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  padding: 1.25rem;
-}
-
-.reports-icon {
-  align-items: center;
-  background: #fff7e6;
-  border-radius: 12px;
-  color: #fa8c16;
-  display: flex;
-  height: 48px;
-  justify-content: center;
-  width: 48px;
-}
-
 .reports-title-42 {
   color: var(--text-muted);
   font-size: 0.875rem;
   margin: 0px;
-}
-
-.reports-value {
-  color: var(--warning);
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-top: 0.25rem;
 }
 
 .reports-stat-card {
@@ -337,10 +149,10 @@
 }
 
 .reports-value {
-  color: #f5222d;
   font-size: 1.5rem;
   font-weight: bold;
   margin-top: 0.25rem;
+  color: #f5222d;
 }
 
 .reports-grid-48 {
@@ -363,10 +175,6 @@
   color: var(--text-muted);
   padding: 2rem;
   text-align: center;
-}
-
-.reports-table {
-  min-width: auto;
 }
 
 .reports-th-52 {
@@ -433,3 +241,4 @@
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
+

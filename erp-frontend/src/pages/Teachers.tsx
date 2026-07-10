@@ -709,7 +709,7 @@ export default function Teachers() {
         </button>
       </div>
 
-      <div className="card filters teachers-card">
+      <div className="card filters" style={{ marginBottom: '1rem' }}>
         <div className="search-container">
           <Search size={18} />
           <input 

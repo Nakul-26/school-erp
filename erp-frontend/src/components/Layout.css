@@ -1,145 +1,73 @@
-/* Component stylesheet for Layout.tsx */
+/* SchoolERP v2.0 — Layout Component */
 
-.layout-mobile-topbar {
-  justify-content: space-between;
-}
+.layout-mobile-topbar { justify-content: space-between; }
 
-.layout-row-2 {
-  align-items: center;
-  display: flex;
-}
+.layout-row-2 { display: flex; align-items: center; gap: 8px; }
 
-.layout-alert-banners-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem 0 1rem;
-}
-
+/* Banner buttons */
 .layout-install-banner {
-  align-items: center;
-  animation: slideUp 0.3s ease-out;
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  color: white;
-  display: flex;
-  font-size: 0.8rem;
-  font-weight: 500;
-  gap: 0.75rem;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; animation: slideUp 0.25s ease-out;
+}
+.layout-push-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; animation: slideUp 0.25s ease-out;
 }
 
-.layout-row-5 {
-  align-items: center;
-  display: flex;
-  gap: 0.5rem;
-  min-width: 0;
-}
+.layout-row-5  { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.layout-row-6  { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.layout-row-10 { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.layout-row-12 { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
-.layout-row-5 span,
-.layout-row-10 span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.layout-row-6 {
-  align-items: center;
-  display: flex;
-  gap: 0.5rem;
-}
+.layout-row-5 span, .layout-row-10 span { min-width: 0; overflow-wrap: anywhere; }
 
 .layout-btn-7 {
-  background: white;
-  border: none;
+  background: rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.3);
   border-radius: var(--radius-sm);
-  color: #4f46e5;
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.35rem 0.75rem;
-}
-
-.layout-row-8 {
-  background: none;
-  border: none;
   color: white;
   cursor: pointer;
-  display: flex;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.layout-btn-7:hover { background: rgba(255,255,255,0.35); }
+
+.layout-btn-13 {
+  background: var(--brand);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  font-family: inherit;
 }
 
-.layout-push-banner {
-  align-items: center;
-  animation: slideUp 0.3s ease-out;
-  background: var(--bg-card);
-  border-left: 4px solid var(--primary);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  color: var(--text-main);
-  display: flex;
-  font-size: 0.8rem;
-  font-weight: 500;
-  gap: 0.75rem;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-}
+.layout-row-8 { background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; display: flex; padding: 2px; border-radius: 4px; }
+.layout-row-14 { background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; padding: 2px; border-radius: 4px; }
+.layout-row-8:hover  { color: white; }
+.layout-row-14:hover { color: var(--text-main); }
 
-.layout-row-10 {
-  align-items: center;
-  display: flex;
-  gap: 0.5rem;
-  min-width: 0;
+.layout-Bell-11 { color: var(--brand); }
+
+.layout-push-toggle-btn {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; padding: 6px; display: flex; align-items: center;
+  justify-content: center; border-radius: var(--radius-sm); transition: all 0.12s;
+}
+.layout-push-toggle-btn:hover  { background: var(--bg-subtle); color: var(--text-main); }
+.layout-push-toggle-btn.active { color: var(--brand); }
+
+.layout-alert-banners-container {
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 14px 0;
 }
 
 @media (max-width: 520px) {
-  .layout-install-banner,
-  .layout-push-banner {
-    align-items: flex-start;
-    flex-direction: column;
+  .layout-install-banner, .layout-push-banner {
+    align-items: flex-start; flex-direction: column;
   }
-}
-
-.layout-Bell-11 {
-  color: var(--primary);
-}
-
-.layout-row-12 {
-  align-items: center;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.layout-btn-13 {
-  background: var(--primary);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: white;
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.35rem 0.75rem;
-}
-
-.layout-row-14 {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-}
-
-.layout-push-toggle-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.layout-push-toggle-btn.active {
-  color: var(--primary);
 }

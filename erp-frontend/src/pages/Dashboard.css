@@ -89,7 +89,7 @@
 .child-selector {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.75rem;
 }
@@ -115,7 +115,7 @@
 .dashboard-col-1 {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .dashboard-alert {
@@ -125,35 +125,43 @@
 }
 
 .dashboard-welcome-section {
-  background: var(--primary-gradient) !important;
-  color: #ffffff !important;
-  margin-bottom: 2rem;
+  background: #ffffff !important;
+  color: var(--text-main) !important;
   min-height: auto !important;
   flex-shrink: 0;
   overflow: visible !important;
-  padding: 1.75rem 2rem !important;
-  border-radius: var(--radius-md) !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--border) !important;
+  border-left: 4px solid var(--primary) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
-.dashboard-welcome-section h2,
+.dashboard-welcome-section h2 {
+  color: var(--text-main) !important;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.25rem !important;
+}
+
 .dashboard-welcome-section p,
 .dashboard-welcome-section strong,
 .dashboard-welcome-section span {
-  color: #ffffff !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem !important;
 }
 
 .portal-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
 }
 
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
-  margin-top: 2.5rem;
+  gap: 1rem;
+  margin-top: 1.25rem;
 }
 
 .dashboard-announcement-icon {

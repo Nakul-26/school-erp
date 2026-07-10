@@ -221,19 +221,18 @@
 }
 
 .teachers-div-34 {
-  background-color: #f8fafc;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .teachers-title-35 {
-  color: var(--primary);
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
+  color: var(--text-main) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  margin-bottom: 0.5rem !important;
+  text-transform: capitalize !important;
 }
 
 .teachers-grid-36 {
@@ -256,19 +255,18 @@
 }
 
 .teachers-div-40 {
-  background-color: #f8fafc;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .teachers-title-41 {
-  color: var(--primary);
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
+  color: var(--text-main) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  margin-bottom: 0.5rem !important;
+  text-transform: capitalize !important;
 }
 
 .teachers-grid-42 {
@@ -303,19 +301,18 @@
 }
 
 .teachers-div-49 {
-  background-color: #f8fafc;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .teachers-title-50 {
-  color: var(--primary);
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
+  color: var(--text-main) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  margin-bottom: 0.5rem !important;
+  text-transform: capitalize !important;
 }
 
 .teachers-grid-51 {

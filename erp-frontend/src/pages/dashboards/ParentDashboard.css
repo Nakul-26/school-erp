@@ -13,17 +13,17 @@
 .parent-dashboard-portal-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .parent-dashboard-child-selector {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
 }
 
 .parent-dashboard-selected-child-overview {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .parent-dashboard-welcome-section {
@@ -52,14 +52,14 @@
 }
 
 .parent-dashboard-card {
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
 }
 
 .parent-dashboard-row-11 {
   align-items: center;
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .parent-dashboard-div-12 {
@@ -163,20 +163,20 @@
 
 .parent-dashboard-dashboard-content-grid {
   display: grid;
-  gap: 2rem;
+  gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr));
 }
 
 .parent-dashboard-col-27 {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .parent-dashboard-title-28 {
   font-size: 1.05rem;
   font-weight: 800;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .parent-dashboard-no-data {
@@ -191,7 +191,7 @@
 .parent-dashboard-title-31 {
   font-size: 1.05rem;
   font-weight: 800;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .parent-dashboard-no-data {
@@ -220,13 +220,13 @@
 .parent-dashboard-col-37 {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .parent-dashboard-title-38 {
   font-size: 1.05rem;
   font-weight: 800;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .parent-dashboard-no-data {
@@ -279,7 +279,7 @@
 .parent-dashboard-title-49 {
   font-size: 1.05rem;
   font-weight: 800;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .parent-dashboard-no-data {

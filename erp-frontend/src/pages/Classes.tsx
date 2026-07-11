@@ -666,7 +666,7 @@ export default function Classes() {
           </div>
 
           {/* Table Listing */}
-          <div className="card classes-card">
+          <div className="card classes-section-table-card">
             {loading ? (
               <div className="classes-col-34">
                 <RefreshCw className="spinner classes-spinner" size={32}  />
@@ -802,7 +802,7 @@ export default function Classes() {
         <>
           {/* KPI Cards */}
           <div className="classes-grid-79">
-            <div className="card classes-card">
+            <div className="card classes-program-kpi-card">
               <div className="classes-div-81">
                 <Shield size={24} />
               </div>
@@ -812,7 +812,7 @@ export default function Classes() {
               </div>
             </div>
 
-            <div className="card classes-card">
+            <div className="card classes-program-kpi-card">
               <div className="classes-div-85">
                 <Calendar size={24} />
               </div>
@@ -822,7 +822,7 @@ export default function Classes() {
               </div>
             </div>
 
-            <div className="card classes-card">
+            <div className="card classes-program-kpi-card">
               <div className="classes-div-89">
                 <BookOpen size={24} />
               </div>
@@ -834,7 +834,7 @@ export default function Classes() {
           </div>
 
           {/* Search & Filters */}
-          <div className="card filters classes-card">
+          <div className="card filters classes-program-filters-card">
             <div className="search-container classes-search-container">
               <Search size={18} color="var(--text-muted)" />
               <input type="text" placeholder={`Search by ${getProgramLabel().toLowerCase()} name or code...`} value={programSearchQuery} onChange={(e) => setProgramSearchQuery(e.target.value)} className="classes-input-94"  />
@@ -860,7 +860,7 @@ export default function Classes() {
           </div>
 
           {/* Main Grid Table */}
-          <div className="card classes-card">
+          <div className="card classes-program-table-card">
             {loading ? (
               <div className="classes-div-100">Loading...</div>
             ) : (

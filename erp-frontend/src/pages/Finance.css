@@ -326,7 +326,10 @@
   text-align: center;
 }
 
-.finance-table {
+.finance-ledger-table,
+.finance-payments-table,
+.finance-summary-table,
+.finance-plans-table {
   min-width: auto;
 }
 

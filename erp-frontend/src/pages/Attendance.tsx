@@ -291,7 +291,7 @@ export default function Attendance() {
     if (stdView === 'list') {
       return (
         <>
-          <div className="page-header attendance-page-header">
+          <div className="page-header attendance-session-list-header">
             <div>
               <h3>Daily Class Registers</h3>
               <p className="attendance-text-2">Track and manage active class registers</p>
@@ -359,7 +359,7 @@ export default function Attendance() {
     if (stdView === 'new') {
       return (
         <>
-          <div className="page-header attendance-page-header">
+          <div className="page-header attendance-session-form-header">
             <div className="attendance-row-8">
               <button className="btn btn-secondary attendance-btn" onClick={() => setStdView('list')}>
                 <ArrowLeft size={18} />
@@ -444,7 +444,7 @@ export default function Attendance() {
     if (stdView === 'mark' && selectedSession) {
       return (
         <>
-          <div className="page-header attendance-page-header">
+          <div className="page-header attendance-marking-header">
             <div className="attendance-row-14">
               <button className="btn btn-secondary attendance-btn" onClick={() => { setStdView('list'); setSelectedSession(null); }}>
                 <ArrowLeft size={18} />
@@ -540,7 +540,7 @@ export default function Attendance() {
 
                 <div className="attendance-mobile-cards">
                   {studentRecords.map((rec) => (
-                    <div key={rec.student_id} className="attendance-mobile-card card attendance-mobile-card">
+                    <div key={rec.student_id} className="card attendance-mobile-card">
                       <div className="attendance-row-22">
                         <div>
                           <span className="attendance-span-23">Roll No: {rec.roll_number || '-'}</span>
@@ -613,7 +613,7 @@ export default function Attendance() {
   const renderTeacherAttendance = () => {
     return (
       <>
-        <div className="page-header attendance-page-header">
+        <div className="page-header teacher-attendance-header">
           <div>
             <h3>Staff Attendance Registers</h3>
             <p className="attendance-text-30">Mark and verify institutional staff attendance logs</p>
@@ -712,7 +712,7 @@ export default function Attendance() {
 
               <div className="attendance-mobile-cards">
                 {tchrRecords.map((t) => (
-                  <div key={t.teacher_id} className="attendance-mobile-card card attendance-mobile-card">
+                  <div key={t.teacher_id} className="card attendance-mobile-card">
                     <div className="attendance-row-40">
                       <div>
                         <span className="attendance-span-41">ID: {t.employee_id}</span>
@@ -794,7 +794,7 @@ export default function Attendance() {
         ]}
       />
 
-      <div className="page-header attendance-page-header">
+      <div className="page-header attendance-root-header">
         <div>
           <h2>Attendance Register</h2>
           <p className="attendance-text-49">

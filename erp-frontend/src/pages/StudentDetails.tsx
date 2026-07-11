@@ -532,7 +532,7 @@ export default function StudentDetails() {
       </div>
 
       {/* Redesigned Student Profile Header Banner (Premium Sidebar Columns Format) */}
-      <div className="card student-details-card">
+      <div className="card student-profile-card">
         {/* Left Column: Big Avatar */}
         <div className="student-details-col-6">
           <div className="student-details-row-7" style={{ padding: 0, overflow: 'hidden' }}>
@@ -631,7 +631,7 @@ export default function StudentDetails() {
       </div>
 
       {/* Tab Panels */}
-      <div className="card student-details-card">
+      <div className="card student-tab-content-card">
         
         {/* OVERVIEW PANEL */}
         {activeTab === 'overview' && (
@@ -1349,7 +1349,7 @@ export default function StudentDetails() {
             
             <div className="student-details-grid-184">
               {guardians.map(g => (
-                <div key={g.id} className="card student-details-card">
+                <div key={g.id} className="card student-guardian-card">
                   <div className="student-details-row-186">
                     <span className="student-details-span-187">Primary Guardian</span>
                     <span className="badge badge-success student-details-badge">Active</span>

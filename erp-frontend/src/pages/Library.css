@@ -164,17 +164,54 @@
   gap: 0.25rem;
 }
 
-.library-card {
-  align-items: center;
+.library-toolbar-card {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+  align-items: center;
+  padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
-  padding: 1rem;
-  grid-column: 1 / -1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+
+.library-empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  padding: 3rem 1.5rem;
+  grid-column: 1 / -1;
+  margin-bottom: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+
+.library-book-card {
+  display: flex;
   flex-direction: column;
   justify-content: space-between;
+  padding: 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.library-book-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.library-transactions-card {
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  display: block;
 }
 
 .library-title-37 {

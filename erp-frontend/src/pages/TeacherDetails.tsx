@@ -475,7 +475,7 @@ export default function TeacherDetails() {
       )}
 
       {/* LinkedIn Style Profile Banner Card */}
-      <div className="card teacher-details-card">
+      <div className="card teacher-profile-card">
         {/* Decorative Top Banner Stripe */}
         <div className="teacher-details-div-12"></div>
 
@@ -527,7 +527,7 @@ export default function TeacherDetails() {
       </div>
 
       {/* Onboarding Setup Progress Card */}
-      <div className="card teacher-details-card">
+      <div className="card teacher-onboarding-card">
         <div className="teacher-details-row-31">
           {/* Progress Circle & Text */}
           <div className="teacher-details-row-32">
@@ -607,7 +607,7 @@ export default function TeacherDetails() {
       </div>
 
       {/* Quick Actions Row */}
-      <div className="card teacher-details-card">
+      <div className="card teacher-quick-actions-card">
         <strong className="teacher-details-strong-40">Quick Actions:</strong>
         <button className="btn btn-sm btn-outline" onClick={handleEditClick}>Edit Profile</button>
         <button className="btn btn-sm btn-outline" onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }}>Assign Subject</button>
@@ -625,7 +625,7 @@ export default function TeacherDetails() {
       <div className="teacher-details-grid-42">
         
         {/* Assigned Subjects */}
-        <div onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }} className="card teacher-details-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
+        <div onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }} className="card teacher-kpi-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
           <div>
             <span className="teacher-details-span-44">Assigned Subjects</span>
             <strong className="teacher-details-strong-45">
@@ -638,7 +638,7 @@ export default function TeacherDetails() {
         </div>
 
         {/* Assigned Sections */}
-        <div onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }} className="card teacher-details-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
+        <div onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }} className="card teacher-kpi-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
           <div>
             <span className="teacher-details-span-48">Assigned Sections</span>
             <strong className="teacher-details-strong-49">
@@ -651,7 +651,7 @@ export default function TeacherDetails() {
         </div>
 
         {/* Classes Scheduled/Week */}
-        <div onClick={() => setActiveTab('timetable')} className="card teacher-details-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
+        <div onClick={() => setActiveTab('timetable')} className="card teacher-kpi-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
           <div>
             <span className="teacher-details-span-52">Classes Scheduled/Week</span>
             <strong className="teacher-details-strong-53">
@@ -664,7 +664,7 @@ export default function TeacherDetails() {
         </div>
 
         {/* Total Students Taught */}
-        <div onClick={() => setActiveTab('assignments')} className="card teacher-details-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
+        <div onClick={() => setActiveTab('assignments')} className="card teacher-kpi-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
           <div>
             <span className="teacher-details-span-56">Students Taught</span>
             <strong className="teacher-details-strong-57">
@@ -677,7 +677,7 @@ export default function TeacherDetails() {
         </div>
 
         {/* Attendance Rate */}
-        <div onClick={() => setActiveTab('timeline')} className="card teacher-details-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
+        <div onClick={() => setActiveTab('timeline')} className="card teacher-kpi-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
           <div>
             <span className="teacher-details-span-60">Attendance Rate</span>
             {workload && workload.total_attendance_days > 0 ? (
@@ -738,7 +738,7 @@ export default function TeacherDetails() {
       </div>
 
       {/* Tab Panels */}
-      <div className="card teacher-details-card">
+      <div className="card teacher-tab-panel-card">
         
         {/* OVERVIEW PANEL */}
         {activeTab === 'overview' && (

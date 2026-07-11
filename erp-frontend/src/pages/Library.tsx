@@ -263,7 +263,7 @@ export default function Library() {
       </div>
 
       {/* Toolbar / Search */}
-      <div className="card library-card">
+      <div className="card library-toolbar-card">
         <div className="library-div-10">
           <Search size={16} className="library-Search-11"  />
           <input type="text" placeholder={activeTab === 'catalog' ? "Search by title, author, isbn or rack location..." : "Search by student name, roll or book title..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="library-input-12"  />
@@ -293,14 +293,14 @@ export default function Library() {
         // Catalog View
         <div className="library-grid-19">
           {filteredBooks.length === 0 ? (
-            <div className="card library-card">
+            <div className="card library-empty-card">
               <Book size={48} className="library-Book-21"  />
               <h3 className="library-title-22">No Books Found</h3>
               <p className="library-text-23">We couldn't find any books matching your query.</p>
             </div>
           ) : (
             filteredBooks.map(book => (
-              <div key={book.id} className="card library-card">
+              <div key={book.id} className="card library-book-card">
                 <div>
                   <div className="library-row-25">
                     <span className="badge library-badge">
@@ -350,7 +350,7 @@ export default function Library() {
         </div>
       ) : (
         // Transactions Table View
-        <div className="card library-card">
+        <div className="card library-transactions-card">
           <h3 className="library-title-37">Borrowing Records</h3>
           {filteredTransactions.length === 0 ? (
             <p className="no-data library-no-data">

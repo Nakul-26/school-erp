@@ -576,16 +576,43 @@
   padding: 0.5rem 1rem;
 }
 
-.classes-card {
+.classes-section-table-card {
   overflow: hidden;
   padding: 0px;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.classes-program-kpi-card {
+  overflow: hidden;
+  padding: 1.25rem;
   align-items: center;
   display: flex;
   gap: 1rem;
   min-height: 110px;
-  flex-wrap: wrap;
-  justify-content: space-between;
   margin-bottom: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+
+.classes-program-filters-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--bg-card);
+}
+
+.classes-program-table-card {
+  overflow: hidden;
+  padding: 0px;
+  margin-bottom: 1.5rem;
+  display: block;
 }
 
 .classes-div-100 {

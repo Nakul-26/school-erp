@@ -708,7 +708,7 @@ export default function Subjects() {
       </div>
 
       {mainTab === 'subjects-list' ? (
-        <div className="card subjects-card">
+        <div className="card subjects-overview-card">
           {loading ? <p>Loading...</p> : (
             <table className="table">
               <thead>
@@ -784,7 +784,7 @@ export default function Subjects() {
         >
           {activeAssignmentTab === 'overview' && (
             <div className="subjects-col-10">
-              <div className="card filters subjects-card">
+              <div className="card filters subjects-filters-card">
                 <div className="search-container">
                   <Search size={18} />
                   <input 
@@ -836,7 +836,7 @@ export default function Subjects() {
                 </div>
               </div>
 
-              <div className="card subjects-card">
+              <div className="card subjects-allocation-table-card">
                 {loadingData ? (
                   <div className="subjects-div-26">
                     Loading allocations list...
@@ -927,7 +927,7 @@ export default function Subjects() {
           )}
 
           {activeAssignmentTab === 'load' && (
-            <div className="card subjects-card">
+            <div className="card subjects-overview-card">
               <h3 className="subjects-row-45">
                 <TrendingUp size={20} className="text-primary" /> Teacher Hours Load Distribution
               </h3>
@@ -963,7 +963,7 @@ export default function Subjects() {
                     const progressPercent = Math.min((total / 24) * 100, 100);
 
                     return (
-                      <div key={teacher.id} className="card kpi-clickable subjects-card" onClick={() => navigate(`/teachers/${teacher.id}`)}>
+                      <div key={teacher.id} className="card kpi-clickable subjects-teacher-kpi-card" onClick={() => navigate(`/teachers/${teacher.id}`)}>
                         <div className="subjects-row-49">
                           <div>
                             <h4 className="subjects-title-50">{teacher.name}</h4>
@@ -1005,7 +1005,7 @@ export default function Subjects() {
           )}
 
           {activeAssignmentTab === 'conflicts' && (
-            <div className="card subjects-card">
+            <div className="card subjects-overview-card">
               <h3 className="subjects-row-58">
                 <AlertTriangle size={20} className="text-warning" /> Conflict Center & Validation Rules
               </h3>
@@ -1122,7 +1122,7 @@ export default function Subjects() {
           )}
 
           {activeAssignmentTab === 'wizard' && isAdminOrHOD && (
-            <div className="card subjects-card">
+            <div className="card subjects-wizard-card">
               <div className="subjects-row-71">
                 <div>
                   <h3 className="subjects-row-72">
@@ -1321,7 +1321,7 @@ export default function Subjects() {
           )}
 
           {activeAssignmentTab === 'timeline' && (
-            <div className="card subjects-card">
+            <div className="card subjects-overview-card">
               <h3 className="subjects-row-104">
                 <History size={20} className="text-primary" /> Teaching Allocations Audit Trail
               </h3>

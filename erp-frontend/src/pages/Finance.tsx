@@ -720,7 +720,7 @@ export default function Finance() {
                   <p>No billing records found. Click "Re-Sync Ledger" to apply current fee configs.</p>
                 </div>
               ) : (
-                <table className="table finance-table">
+                <table className="table finance-ledger-table">
                   <thead>
                     <tr>
                       <th>Fee Category</th>
@@ -770,7 +770,7 @@ export default function Finance() {
                   <p>No payments recorded for this student account yet.</p>
                 </div>
               ) : (
-                <table className="table finance-table">
+                <table className="table finance-payments-table">
                   <thead>
                     <tr>
                       <th>Date</th>
@@ -984,7 +984,7 @@ export default function Finance() {
                   <p className="finance-text-67">No payments logged yet.</p>
                 ) : (
                   <div className="table-responsive">
-                    <table className="table finance-table">
+                    <table className="table finance-summary-table">
                       <thead>
                         <tr>
                           <th>Month</th>
@@ -1015,7 +1015,7 @@ export default function Finance() {
                   <p className="finance-text-73">No pending dues found.</p>
                 ) : (
                   <div className="table-responsive">
-                    <table className="table finance-table">
+                    <table className="table finance-plans-table">
                       <thead>
                         <tr>
                           <th>Admission No</th>

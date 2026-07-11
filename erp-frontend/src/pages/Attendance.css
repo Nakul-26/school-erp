@@ -1,7 +1,11 @@
 /* Component stylesheet for Attendance.tsx */
 
-.attendance-page-header {
-  margin-bottom: 1.25rem;
+.attendance-session-list-header,
+.attendance-session-form-header,
+.attendance-marking-header,
+.teacher-attendance-header {
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .attendance-text-2 {
@@ -233,7 +237,7 @@
   text-align: center;
 }
 
-.attendance-page-header {
+.attendance-root-header {
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }

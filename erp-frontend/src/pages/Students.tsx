@@ -557,7 +557,7 @@ export default function Students() {
     <Layout>
       {showAddModal ? (
         <>
-          <div className="page-header students-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', width: '100%', maxWidth: '720px', margin: '0 auto 1.5rem auto' }}>
+          <div className="page-header students-admission-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', width: '100%', maxWidth: '720px', margin: '0 auto 1.5rem auto' }}>
             <button className="btn btn-secondary students-btn-back" onClick={() => { setShowAddModal(false); resetAddForm(); }} style={{ position: 'absolute', left: 0 }}>
               <ArrowLeft size={18} />
             </button>
@@ -778,7 +778,7 @@ export default function Students() {
               </div>
 
               {/* Stepper Buttons */}
-              <div className="modal-actions students-modal-actions" style={{ 
+              <div className="modal-actions students-stepper-actions" style={{ 
                 marginTop: 'auto', 
                 paddingTop: '1rem', 
                 borderTop: '1px solid var(--border)',
@@ -814,32 +814,32 @@ export default function Students() {
         </>
       ) : (
         <>
-          <div className="page-header students-page-header">
-        <div>
-          <h2 className="students-title-24">Student Hub</h2>
-          <p className="students-text-25">Manage student admissions, enrollments, profiles, and fee ledgers.</p>
-        </div>
-        <div className="students-row-26">
-          {/* View Toggles */}
-          <div className="students-row-27">
-            <button 
-              onClick={() => setViewMode('grid')}
-              style={{ border: 'none', background: viewMode === 'grid' ? '#ffffff' : 'transparent', color: viewMode === 'grid' ? 'var(--primary)' : '#64748b', cursor: 'pointer', padding: '0.4rem 0.6rem', borderRadius: '4px', display: 'flex', alignItems: 'center' }}
-            >
-              <Grid size={16} />
-            </button>
-            <button 
-              onClick={() => setViewMode('table')}
-              style={{ border: 'none', background: viewMode === 'table' ? '#ffffff' : 'transparent', color: viewMode === 'table' ? 'var(--primary)' : '#64748b', cursor: 'pointer', padding: '0.4rem 0.6rem', borderRadius: '4px', display: 'flex', alignItems: 'center' }}
-            >
-              <List size={16} />
-            </button>
+          <div className="page-header students-hub-header">
+            <div>
+              <h2 className="students-title-24">Student Hub</h2>
+              <p className="students-text-25">Manage student admissions, enrollments, profiles, and fee ledgers.</p>
+            </div>
+            <div className="students-row-26">
+              {/* View Toggles */}
+              <div className="students-row-27">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  style={{ border: 'none', background: viewMode === 'grid' ? 'var(--bg-card)' : 'transparent', color: viewMode === 'grid' ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer', padding: '0.375rem 0.5rem', borderRadius: '4px', display: 'flex', alignItems: 'center', boxShadow: viewMode === 'grid' ? 'var(--shadow-xs)' : 'none', transition: 'all 0.15s' }}
+                >
+                  <Grid size={16} />
+                </button>
+                <button
+                  onClick={() => setViewMode('table')}
+                  style={{ border: 'none', background: viewMode === 'table' ? 'var(--bg-card)' : 'transparent', color: viewMode === 'table' ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer', padding: '0.375rem 0.5rem', borderRadius: '4px', display: 'flex', alignItems: 'center', boxShadow: viewMode === 'table' ? 'var(--shadow-xs)' : 'none', transition: 'all 0.15s' }}
+                >
+                  <List size={16} />
+                </button>
+              </div>
+              <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                <Plus size={18} /> Admit Student
+              </button>
+            </div>
           </div>
-          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-            <Plus size={18} /> Admit Student
-          </button>
-        </div>
-      </div>
 
       {/* Advanced Filters Section */}
       <div className="card filters students-filters-card">
@@ -1177,7 +1177,7 @@ export default function Students() {
                 ))}
               </select>
             </div>
-            <div className="modal-actions students-modal-actions">
+            <div className="modal-actions students-bulk-modal-actions">
               <button type="button" onClick={() => setShowBulkSectionModal(false)} className="btn btn-secondary">Cancel</button>
               <button type="button" className="btn btn-primary" onClick={() => handleBulkAction('assign_section', { section_id: bulkSectionId })} disabled={!bulkSectionId}>
                 Assign Section
@@ -1416,7 +1416,7 @@ export default function Students() {
 
               </div>
 
-              <div className="modal-actions students-modal-actions" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+              <div className="modal-actions students-edit-modal-actions" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
                 <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
               </div>

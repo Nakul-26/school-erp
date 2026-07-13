@@ -93,15 +93,30 @@ export default function Subjects() {
   const [institutionType, setInstitutionType] = useState<string>('college');
   const [institutionTypeLoaded, setInstitutionTypeLoaded] = useState<boolean>(false);
 
-  // Tab 1: Subjects List Modal and Form States
   const [showSubjectModal, setShowSubjectModal] = useState(false);
+  const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null);
   const [subjectForm, setSubjectForm] = useState({ 
     subject_name: '', 
     subject_code: '', 
     credits: 3, 
     semester: 1, 
-    course_id: '' 
+    course_id: '',
+    is_elective: 0,
+    status: 'ACTIVE',
+    description: '',
+    theory_lab: 'Theory',
+    department: '',
+    weekly_hours: 4
   });
+
+  // Tab 1: Subjects List Filters
+  const [subjectSearchText, setSubjectSearchText] = useState<string>('');
+  const [subjectSelectedProgId, setSubjectSelectedProgId] = useState<string>('All');
+  const [subjectSelectedDept, setSubjectSelectedDept] = useState<string>('All');
+  const [subjectSelectedStatus, setSubjectSelectedStatus] = useState<string>('All');
+  const [subjectSelectedType, setSubjectSelectedType] = useState<string>('All');
+  const [subjectSelectedElective, setSubjectSelectedElective] = useState<string>('All');
+  const [showMoreFilters, setShowMoreFilters] = useState<boolean>(false);
 
   // Tab 2: Subject Assignments Filters and Tab States
   const [selectedYearId, setSelectedYearId] = useState<string>('');
@@ -393,21 +408,58 @@ export default function Subjects() {
           : subjectForm.subject_code,
         semester: institutionType === 'school' ? 1 : subjectForm.semester,
         credits: institutionType === 'school' ? 0 : subjectForm.credits,
-        course_id: subjectForm.course_id
+        course_id: subjectForm.course_id,
+        is_elective: subjectForm.is_elective,
+        status: subjectForm.status,
+        description: subjectForm.description,
+        theory_lab: subjectForm.theory_lab,
+        department: subjectForm.department,
+        weekly_hours: subjectForm.weekly_hours
       };
-      await api.post('/subjects', payload);
+      
+      if (editingSubjectId) {
+        await api.put(`/subjects/${editingSubjectId}`, payload);
+      } else {
+        await api.post('/subjects', payload);
+      }
+      
       setShowSubjectModal(false);
+      setEditingSubjectId(null);
       setSubjectForm({ 
         subject_name: '', 
         subject_code: '', 
         credits: 3, 
         semester: 1, 
-        course_id: programs[0]?.id || '' 
+        course_id: programs[0]?.id || '',
+        is_elective: 0,
+        status: 'ACTIVE',
+        description: '',
+        theory_lab: 'Theory',
+        department: '',
+        weekly_hours: 4
       });
       fetchSubjectsOnly();
     } catch (err) {
-      alert('Error creating subject');
+      alert(editingSubjectId ? 'Error updating subject' : 'Error creating subject');
     }
+  };
+
+  const handleSubjectEditClick = (subject: any) => {
+    setEditingSubjectId(subject.id);
+    setSubjectForm({
+      subject_name: subject.subject_name,
+      subject_code: subject.subject_code || '',
+      credits: subject.credits ?? 3,
+      semester: subject.semester ?? 1,
+      course_id: subject.course_id || '',
+      is_elective: subject.is_elective ?? 0,
+      status: subject.status || 'ACTIVE',
+      description: subject.description || '',
+      theory_lab: subject.theory_lab || 'Theory',
+      department: subject.department || '',
+      weekly_hours: subject.weekly_hours ?? 4
+    });
+    setShowSubjectModal(true);
   };
 
   const handleSubjectDelete = async (id: string) => {
@@ -653,6 +705,56 @@ export default function Subjects() {
     return subjects.filter(s => s.course_id === sec.course_id);
   };
 
+  const uniqueSubjectDepts = Array.from(
+    new Set(subjects.map(s => s.department).filter(Boolean))
+  ) as string[];
+
+  const filteredSubjects = subjects.filter(subject => {
+    const matchesSearch = 
+      subject.subject_name.toLowerCase().includes(subjectSearchText.toLowerCase()) ||
+      (subject.subject_code && subject.subject_code.toLowerCase().includes(subjectSearchText.toLowerCase()));
+      
+    const matchesProgram = 
+      subjectSelectedProgId === 'All' || subject.course_id === subjectSelectedProgId;
+      
+    const matchesDept = 
+      subjectSelectedDept === 'All' || subject.department === subjectSelectedDept;
+      
+    const matchesStatus = 
+      subjectSelectedStatus === 'All' || 
+      (subjectSelectedStatus === 'ACTIVE' && (subject.status === 'ACTIVE' || !subject.status)) ||
+      (subjectSelectedStatus === 'INACTIVE' && subject.status === 'INACTIVE');
+      
+    const matchesType = 
+      subjectSelectedType === 'All' || 
+      (subjectSelectedType === 'Theory' && (subject.theory_lab === 'Theory' || !subject.theory_lab)) ||
+      (subjectSelectedType === 'Lab' && subject.theory_lab === 'Lab');
+      
+    const matchesElective = 
+      subjectSelectedElective === 'All' ||
+      (subjectSelectedElective === 'Elective' && subject.is_elective === 1) ||
+      (subjectSelectedElective === 'Core' && subject.is_elective !== 1);
+      
+    return matchesSearch && matchesProgram && matchesDept && matchesStatus && matchesType && matchesElective;
+  });
+
+  const handleClearAllFilters = () => {
+    setSubjectSearchText('');
+    setSubjectSelectedProgId('All');
+    setSubjectSelectedDept('All');
+    setSubjectSelectedStatus('All');
+    setSubjectSelectedType('All');
+    setSubjectSelectedElective('All');
+  };
+
+  const hasActiveFilters = 
+    subjectSearchText !== '' || 
+    subjectSelectedProgId !== 'All' || 
+    subjectSelectedDept !== 'All' || 
+    subjectSelectedStatus !== 'All' || 
+    subjectSelectedType !== 'All' || 
+    subjectSelectedElective !== 'All';
+
   return (
     <Layout>
       {mainTab === 'subjects-list' ? (
@@ -686,7 +788,19 @@ export default function Subjects() {
         </div>
         {mainTab === 'subjects-list' && (
           <button className="btn btn-primary" onClick={() => {
-            setSubjectForm({ subject_name: '', subject_code: '', credits: 3, semester: 1, course_id: programs[0]?.id || '' });
+            setSubjectForm({ 
+              subject_name: '', 
+              subject_code: '', 
+              credits: 3, 
+              semester: 1, 
+              course_id: programs[0]?.id || '',
+              is_elective: 0,
+              status: 'ACTIVE',
+              description: '',
+              theory_lab: 'Theory',
+              department: '',
+              weekly_hours: 4
+            });
             setShowSubjectModal(true);
           }}>Add Subject</button>
         )}
@@ -708,52 +822,229 @@ export default function Subjects() {
       </div>
 
       {mainTab === 'subjects-list' ? (
-        <div className="card subjects-overview-card">
-          {loading ? <p>Loading...</p> : (
-            <table className="table">
-              <thead>
-                <tr>
-                  {institutionType !== 'school' && <th>Code</th>}
-                  <th>Name</th>
-                  {institutionType !== 'school' && <th>Semester</th>}
-                  {institutionType !== 'school' && <th>Credits</th>}
-                  <th>{getProgramLabel()}</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subjects.map(subject => (
-                  <tr key={subject.id}>
-                    {institutionType !== 'school' && <td className="subjects-td-4">{subject.subject_code}</td>}
-                    <td>
-                      <span onClick={() => navigate(`/subjects/${subject.id}`)} className="subjects-span-5">
-                        {subject.subject_name}
-                      </span>
-                    </td>
-                    {institutionType !== 'school' && <td>{subject.semester}</td>}
-                    {institutionType !== 'school' && <td>{subject.credits}</td>}
-                    <td>{programs.find(p => p.id === subject.course_id)?.name || 'Unknown'}</td>
-                    <td>
-                      <div className="subjects-row-6">
-                        <button className="btn btn-sm btn-secondary subjects-btn" onClick={() => navigate(`/subjects/${subject.id}`)} title="Open Subject Workspace">
-                          <Eye size={14} />
-                        </button>
-                        <button className="btn btn-sm btn-danger subjects-btn" onClick={() => handleSubjectDelete(subject.id)} title="Delete Subject">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {subjects.length === 0 && (
-                  <tr>
-                    <td colSpan={institutionType === 'school' ? 3 : 6} className="subjects-td-9">No subjects found.</td>
-                  </tr>
+        <>
+          <div className="subjects-toolbar">
+            {/* Row 1: Primary Search Control */}
+            <div className="subjects-toolbar-row-main">
+              <div className="subjects-search-wrapper">
+                <Search size={16} className="subjects-search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="Search by subject name or code..." 
+                  value={subjectSearchText}
+                  onChange={e => setSubjectSearchText(e.target.value)}
+                  className="subjects-search-input"
+                  aria-label="Search by subject name or code"
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Secondary Dropdown Filters Grid */}
+            <div className="subjects-toolbar-row-filters">
+              {/* Program Selector */}
+              <div className="subjects-filter-item">
+                <span className="subjects-filter-icon">🏫</span>
+                <select 
+                  value={subjectSelectedProgId} 
+                  onChange={e => setSubjectSelectedProgId(e.target.value)}
+                  className="subjects-filter-select"
+                  aria-label="Filter by Program"
+                >
+                  <option value="All">All Programs</option>
+                  {programs.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Department Selector */}
+              <div className="subjects-filter-item">
+                <span className="subjects-filter-icon">🏢</span>
+                <select 
+                  value={subjectSelectedDept} 
+                  onChange={e => setSubjectSelectedDept(e.target.value)}
+                  className="subjects-filter-select"
+                  aria-label="Filter by Department"
+                >
+                  <option value="All">All Departments</option>
+                  {uniqueSubjectDepts.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Type Selector (Theory/Lab) */}
+              <div className="subjects-filter-item">
+                <span className="subjects-filter-icon">📚</span>
+                <select 
+                  value={subjectSelectedType} 
+                  onChange={e => setSubjectSelectedType(e.target.value)}
+                  className="subjects-filter-select"
+                  aria-label="Filter by Type"
+                >
+                  <option value="All">All Types</option>
+                  <option value="Theory">Theory</option>
+                  <option value="Lab">Lab</option>
+                </select>
+              </div>
+
+              {/* Status Selector */}
+              <div className="subjects-filter-item">
+                <span className="subjects-filter-icon">✔</span>
+                <select 
+                  value={subjectSelectedStatus} 
+                  onChange={e => setSubjectSelectedStatus(e.target.value)}
+                  className="subjects-filter-select"
+                  aria-label="Filter by Status"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                </select>
+              </div>
+
+              {/* More Filters Toggle */}
+              <button 
+                type="button"
+                className={`btn btn-sm btn-outline subjects-more-filters-btn ${showMoreFilters ? 'is-active' : ''}`}
+                onClick={() => setShowMoreFilters(!showMoreFilters)}
+              >
+                {showMoreFilters ? 'Less Filters ▲' : 'More Filters ▼'}
+              </button>
+            </div>
+
+            {/* Row 3: Collapsible Extra Filters */}
+            {showMoreFilters && (
+              <div className="subjects-toolbar-row-extra animate-slide-down">
+                <div className="subjects-filter-item">
+                  <span className="subjects-filter-icon">💡</span>
+                  <select 
+                    value={subjectSelectedElective} 
+                    onChange={e => setSubjectSelectedElective(e.target.value)}
+                    className="subjects-filter-select"
+                    aria-label="Filter by Elective"
+                  >
+                    <option value="All">All Electives</option>
+                    <option value="Core">Core</option>
+                    <option value="Elective">Elective</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Row 4: Active Filter Chips */}
+            {hasActiveFilters && (
+              <div className="subjects-filter-chips">
+                {subjectSearchText && (
+                  <span className="subjects-chip">
+                    Search: "{subjectSearchText}"
+                    <button type="button" onClick={() => setSubjectSearchText('')} className="subjects-chip-close" aria-label="Clear Search">✕</button>
+                  </span>
                 )}
-              </tbody>
-            </table>
-          )}
-        </div>
+                {subjectSelectedProgId !== 'All' && (
+                  <span className="subjects-chip">
+                    {programs.find(p => p.id === subjectSelectedProgId)?.name || subjectSelectedProgId}
+                    <button type="button" onClick={() => setSubjectSelectedProgId('All')} className="subjects-chip-close" aria-label="Clear Program Filter">✕</button>
+                  </span>
+                )}
+                {subjectSelectedDept !== 'All' && (
+                  <span className="subjects-chip">
+                    Dept: {subjectSelectedDept}
+                    <button type="button" onClick={() => setSubjectSelectedDept('All')} className="subjects-chip-close" aria-label="Clear Department Filter">✕</button>
+                  </span>
+                )}
+                {subjectSelectedType !== 'All' && (
+                  <span className="subjects-chip">
+                    Type: {subjectSelectedType}
+                    <button type="button" onClick={() => setSubjectSelectedType('All')} className="subjects-chip-close" aria-label="Clear Type Filter">✕</button>
+                  </span>
+                )}
+                {subjectSelectedStatus !== 'All' && (
+                  <span className="subjects-chip">
+                    Status: {subjectSelectedStatus}
+                    <button type="button" onClick={() => setSubjectSelectedStatus('All')} className="subjects-chip-close" aria-label="Clear Status Filter">✕</button>
+                  </span>
+                )}
+                {subjectSelectedElective !== 'All' && (
+                  <span className="subjects-chip">
+                    {subjectSelectedElective}
+                    <button type="button" onClick={() => setSubjectSelectedElective('All')} className="subjects-chip-close" aria-label="Clear Elective Filter">✕</button>
+                  </span>
+                )}
+
+                <button 
+                  type="button"
+                  className="btn btn-link btn-sm subjects-clear-all-link"
+                  onClick={handleClearAllFilters}
+                >
+                  Clear All
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="card subjects-overview-card">
+            {loading ? <p>Loading...</p> : (
+              <table className="table">
+                <thead>
+                  <tr>
+                    {institutionType !== 'school' && <th>Code</th>}
+                    <th>Name</th>
+                    {institutionType !== 'school' && <th>Semester</th>}
+                    {institutionType !== 'school' && <th>Credits</th>}
+                    <th>Type</th>
+                    <th>Weekly Hours</th>
+                    <th>Elective</th>
+                    <th>Status</th>
+                    <th>{getProgramLabel()}</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSubjects.map(subject => (
+                    <tr key={subject.id}>
+                      {institutionType !== 'school' && <td className="subjects-td-4">{subject.subject_code}</td>}
+                      <td>
+                        <span onClick={() => navigate(`/subjects/${subject.id}`)} className="subjects-span-5">
+                          {subject.subject_name}
+                        </span>
+                      </td>
+                      {institutionType !== 'school' && <td>{subject.semester}</td>}
+                      {institutionType !== 'school' && <td>{subject.credits}</td>}
+                      <td>{subject.theory_lab || 'Theory'}</td>
+                      <td>{subject.weekly_hours ?? 4} hrs</td>
+                      <td>{subject.is_elective === 1 ? 'Yes' : 'No'}</td>
+                      <td>
+                        <span className={`badge badge-${subject.status === 'INACTIVE' ? 'secondary' : 'success'}`}>
+                          {subject.status || 'ACTIVE'}
+                        </span>
+                      </td>
+                      <td>{programs.find(p => p.id === subject.course_id)?.name || 'Unknown'}</td>
+                      <td>
+                        <div className="subjects-row-6">
+                          <button className="btn btn-sm btn-secondary subjects-btn" onClick={() => navigate(`/subjects/${subject.id}`)} title="Open Subject Workspace">
+                            <Eye size={14} />
+                          </button>
+                          <button className="btn btn-sm btn-outline subjects-btn" onClick={() => handleSubjectEditClick(subject)} title="Edit Subject">
+                            <Edit2 size={14} />
+                          </button>
+                          <button className="btn btn-sm btn-danger subjects-btn" onClick={() => handleSubjectDelete(subject.id)} title="Delete Subject">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredSubjects.length === 0 && (
+                    <tr>
+                      <td colSpan={12} className="subjects-td-9">No subjects found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </>
       ) : (
         <WorkspaceShell
           title="Academic Allocation Hub"
@@ -1359,7 +1650,7 @@ export default function Subjects() {
       {showSubjectModal && (
         <div className="modal">
           <div className="modal-content subjects-modal-content">
-            <h3>Add Subject</h3>
+            <h3>{editingSubjectId ? 'Edit Subject' : 'Add Subject'}</h3>
             <form onSubmit={handleSubjectSubmit} className="subjects-form-109">
               {institutionType !== 'school' && (
                 <div className="form-group">
@@ -1389,8 +1680,41 @@ export default function Subjects() {
                   {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
+              <div className="form-group">
+                <label>Type (Theory/Lab)</label>
+                <select value={subjectForm.theory_lab} onChange={e => setSubjectForm({...subjectForm, theory_lab: e.target.value})} required>
+                  <option value="Theory">Theory</option>
+                  <option value="Lab">Lab</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Elective Subject</label>
+                <select value={subjectForm.is_elective} onChange={e => setSubjectForm({...subjectForm, is_elective: parseInt(e.target.value) || 0})} required>
+                  <option value={0}>No</option>
+                  <option value={1}>Yes</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Weekly Hours</label>
+                <input type="number" min="0" value={subjectForm.weekly_hours} onChange={e => setSubjectForm({...subjectForm, weekly_hours: parseInt(e.target.value) || 0})} required />
+              </div>
+              <div className="form-group">
+                <label>Status</label>
+                <select value={subjectForm.status} onChange={e => setSubjectForm({...subjectForm, status: e.target.value})} required>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Department</label>
+                <input type="text" value={subjectForm.department} onChange={e => setSubjectForm({...subjectForm, department: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea value={subjectForm.description} onChange={e => setSubjectForm({...subjectForm, description: e.target.value})} rows={3} />
+              </div>
               <div className="modal-actions">
-                <button type="button" onClick={() => setShowSubjectModal(false)} className="btn btn-secondary">Cancel</button>
+                <button type="button" onClick={() => { setShowSubjectModal(false); setEditingSubjectId(null); }} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save</button>
               </div>
             </form>

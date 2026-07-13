@@ -658,3 +658,54 @@
   gap: 0.25rem;
 }
 
+/* ── Subjects Roster Filters ────────────────────────── */
+.subjects-filter-bar {
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--bg-card);
+}
+
+.subjects-filter-search-group {
+  margin: 0;
+  flex: 1 1 200px;
+}
+
+.subjects-filter-search-wrapper {
+  position: relative;
+}
+
+.subjects-filter-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.subjects-filter-search-input {
+  padding-left: 32px !important;
+  width: 100%;
+}
+
+.subjects-filter-select-group {
+  margin: 0;
+  width: 150px;
+}
+
+.subjects-filter-select-group-sm {
+  margin: 0;
+  width: 120px;
+}
+
+.subjects-filter-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+

@@ -118,7 +118,13 @@ export default function SubjectWorkspace() {
     subject_code: '',
     credits: 3,
     semester: 1,
-    course_id: ''
+    course_id: '',
+    is_elective: 0,
+    status: 'ACTIVE',
+    description: '',
+    theory_lab: 'Theory',
+    department: '',
+    weekly_hours: 4
   });
 
   // Client-Side Search / Filters
@@ -154,7 +160,13 @@ export default function SubjectWorkspace() {
         subject_code: subjectData.subject_code || '',
         credits: subjectData.credits ?? 3,
         semester: subjectData.semester ?? 1,
-        course_id: subjectData.course_id || ''
+        course_id: subjectData.course_id || '',
+        is_elective: subjectData.is_elective ?? 0,
+        status: subjectData.status || 'ACTIVE',
+        description: subjectData.description || '',
+        theory_lab: subjectData.theory_lab || 'Theory',
+        department: subjectData.department || '',
+        weekly_hours: subjectData.weekly_hours ?? 4
       });
 
       if (user?.institution_id) {
@@ -432,7 +444,7 @@ export default function SubjectWorkspace() {
               <span className="badge badge-secondary subject-workspace-badge">{subject.subject_code}</span>
             </h2>
             <p className="subject-workspace-text-17">
-              {getProgramLabel()}: <strong>{subject.course_name || 'Not Mapped'}</strong> &bull; Semester {subject.semester} &bull; Credits: {subject.credits} &bull; Department: {subject.department_name || 'N/A'}
+              {getProgramLabel()}: <strong>{subject.course_name || 'Not Mapped'}</strong> &bull; Semester {subject.semester} &bull; Credits: {subject.credits} &bull; Department: {subject.department || subject.department_name || 'N/A'} &bull; Type: {subject.theory_lab || 'Theory'} &bull; Elective: {subject.is_elective === 1 ? 'Yes' : 'No'} &bull; Weekly Hours: {subject.weekly_hours ?? 4} &bull; Status: {subject.status || 'ACTIVE'}
             </p>
           </div>
           <div className="subject-workspace-row-18">
@@ -1156,6 +1168,39 @@ export default function SubjectWorkspace() {
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
+              </div>
+              <div className="form-group">
+                <label>Type (Theory/Lab)</label>
+                <select value={settingsForm.theory_lab} onChange={e => setSettingsForm({...settingsForm, theory_lab: e.target.value})} required>
+                  <option value="Theory">Theory</option>
+                  <option value="Lab">Lab</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Elective Subject</label>
+                <select value={settingsForm.is_elective} onChange={e => setSettingsForm({...settingsForm, is_elective: parseInt(e.target.value) || 0})} required>
+                  <option value={0}>No</option>
+                  <option value={1}>Yes</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Weekly Hours</label>
+                <input type="number" min="0" value={settingsForm.weekly_hours} onChange={e => setSettingsForm({...settingsForm, weekly_hours: parseInt(e.target.value) || 0})} required />
+              </div>
+              <div className="form-group">
+                <label>Status</label>
+                <select value={settingsForm.status} onChange={e => setSettingsForm({...settingsForm, status: e.target.value})} required>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Department</label>
+                <input type="text" value={settingsForm.department} onChange={e => setSettingsForm({...settingsForm, department: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea value={settingsForm.description} onChange={e => setSettingsForm({...settingsForm, description: e.target.value})} rows={3} />
               </div>
               <div className="subject-workspace-row-152">
                 <button type="button" className="btn btn-danger" onClick={handleDeleteSubject}>Delete Subject</button>

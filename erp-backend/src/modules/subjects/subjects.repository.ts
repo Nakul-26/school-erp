@@ -1,7 +1,19 @@
 import { Subject, CreateSubjectInput, UpdateSubjectInput } from './subjects.types';
 import { getUpdateFields } from '../../utils/repository';
 
-const UPDATE_FIELDS = ['course_id', 'subject_code', 'subject_name', 'credits', 'semester'] as const;
+const UPDATE_FIELDS = [
+  'course_id', 
+  'subject_code', 
+  'subject_name', 
+  'credits', 
+  'semester',
+  'is_elective',
+  'status',
+  'description',
+  'theory_lab',
+  'department',
+  'weekly_hours'
+] as const;
 
 export class SubjectRepository {
   constructor(private db: D1Database) {}
@@ -9,8 +21,9 @@ export class SubjectRepository {
   async create(id: string, institutionId: string, input: CreateSubjectInput, userId?: string): Promise<void> {
     await this.db.prepare(`
       INSERT INTO subjects (
-        id, institution_id, course_id, subject_code, subject_name, credits, semester, created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, institution_id, course_id, subject_code, subject_name, credits, semester,
+        is_elective, status, description, theory_lab, department, weekly_hours, created_by, updated_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
       institutionId,
@@ -19,6 +32,12 @@ export class SubjectRepository {
       input.subject_name,
       input.credits ?? null,
       input.semester ?? null,
+      input.is_elective ?? 0,
+      input.status ?? 'ACTIVE',
+      input.description ?? null,
+      input.theory_lab ?? 'Theory',
+      input.department ?? null,
+      input.weekly_hours ?? null,
       userId || null,
       userId || null
     ).run();

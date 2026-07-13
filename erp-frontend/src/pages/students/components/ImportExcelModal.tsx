@@ -63,10 +63,9 @@ export const ImportExcelModal: React.FC<ImportExcelModalProps> = ({
     XLSX.writeFile(workbook, 'Student_Import_Template.xlsx');
   };
 
-  const handleExcelImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const [isDragging, setIsDragging] = React.useState(false);
 
+  const processFile = async (file: File) => {
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
@@ -283,6 +282,43 @@ export const ImportExcelModal: React.FC<ImportExcelModalProps> = ({
     reader.readAsBinaryString(file);
   };
 
+  const handleExcelImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    if (importing) return;
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (ext !== 'xlsx' && ext !== 'xls') {
+        alert('Please upload an Excel file (.xlsx or .xls).');
+        return;
+      }
+      processFile(file);
+    }
+  };
+
   return (
     <div className="modal students-modal students-modal-overlay-import">
       <div className="modal-content students-modal-content size-md students-modal-content-import">
@@ -297,15 +333,24 @@ export const ImportExcelModal: React.FC<ImportExcelModalProps> = ({
           </button>
         </div>
 
-        <div className="students-import-dragdrop">
+        <div 
+          className={`students-import-dragdrop ${isDragging ? 'is-dragging' : ''}`}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           <span className="students-import-icon">📊</span>
-          <span className="students-import-title">Upload Excel File (.xlsx, .xls)</span>
+          <span className="students-import-title">
+            {isDragging ? 'Drop file here' : 'Drag & Drop or click to upload Excel File (.xlsx, .xls)'}
+          </span>
           <input 
             type="file" 
             accept=".xlsx, .xls" 
             onChange={handleExcelImport} 
             disabled={importing} 
             className="students-import-input" 
+            aria-label="Upload Excel File for Student Import"
           />
         </div>
 

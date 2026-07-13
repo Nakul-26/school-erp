@@ -1,22 +1,32 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Edit2, Calendar, Mail, Phone, Trash2 } from 'lucide-react';
+import { Edit2, Calendar, Mail, Phone, Trash2, Check, Archive } from 'lucide-react';
 
 interface TeacherCardProps {
   teacher: any;
+  selectedTeacherIds: string[];
+  handleSelectOne: (id: string, checked: boolean) => void;
   activeMenuId: string | null;
   setActiveMenuId: (id: string | null) => void;
   handleEditClick: (teacher: any) => void;
   handleDeleteTeacher: (id: string, name: string) => void;
+  handleDeactivateTeacher: (id: string, name: string) => void;
+  handleReactivateTeacher: (id: string, name: string) => void;
 }
 
 export const TeacherCard: React.FC<TeacherCardProps> = ({
   teacher,
+  selectedTeacherIds,
+  handleSelectOne,
   activeMenuId,
   setActiveMenuId,
   handleEditClick,
   handleDeleteTeacher,
+  handleDeactivateTeacher,
+  handleReactivateTeacher,
 }) => {
+  const isSelected = selectedTeacherIds.includes(teacher.id);
+
   const getInitials = (firstName: string, lastName: string) => {
     const first = firstName ? firstName.charAt(0) : '';
     const last = lastName ? lastName.charAt(0) : '';
@@ -28,7 +38,27 @@ export const TeacherCard: React.FC<TeacherCardProps> = ({
   };
 
   return (
-    <div className="card teachers-card-new">
+    <div 
+      className={`card teachers-card-new ${isSelected ? 'is-selected' : ''}`}
+      onClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('button') || target.closest('a') || target.closest('input[type="checkbox"]') || target.closest('.dropdown-menu')) {
+          return;
+        }
+        handleSelectOne(teacher.id, !isSelected);
+      }}
+    >
+      {/* Select Checkbox */}
+      <div className="teachers-div-checkbox" onClick={(e) => e.stopPropagation()}>
+        <input 
+          type="checkbox" 
+          checked={isSelected} 
+          onChange={e => handleSelectOne(teacher.id, e.target.checked)} 
+          className="teachers-input-checkbox"  
+          aria-label={`Select teacher ${getFullName()}`}
+        />
+      </div>
+
       {/* Header: Avatar + Status */}
       <div className="teachers-card-header">
         <div className="teachers-card-avatar">
@@ -117,7 +147,7 @@ export const TeacherCard: React.FC<TeacherCardProps> = ({
           View Profile
         </Link>
         
-        <div className="student-menu-container">
+        <div className="teacher-menu-container">
           <button 
             onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === teacher.id ? null : teacher.id); }} 
             className="teachers-card-more-btn"
@@ -133,6 +163,25 @@ export const TeacherCard: React.FC<TeacherCardProps> = ({
               >
                 <Edit2 size={14} /> Edit Profile
               </button>
+              
+              <div className="teachers-dropdown-divider" />
+              
+              {teacher.status === 'INACTIVE' ? (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleReactivateTeacher(teacher.id, getFullName()); }} 
+                  className="dropdown-item teachers-dropdown-item text-success" 
+                >
+                  <Check size={14} /> Reactivate Profile
+                </button>
+              ) : (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleDeactivateTeacher(teacher.id, getFullName()); }} 
+                  className="dropdown-item teachers-dropdown-item text-warning" 
+                >
+                  <Archive size={14} /> Deactivate Profile
+                </button>
+              )}
+              
               <button 
                 onClick={(e) => { e.stopPropagation(); handleDeleteTeacher(teacher.id, getFullName()); }} 
                 className="dropdown-item teachers-dropdown-item text-danger"

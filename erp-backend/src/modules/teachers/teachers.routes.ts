@@ -125,6 +125,9 @@ teachers.post('/', requireRole('admin', 'super_admin'), async (c) => {
         console.error('Failed to rollback/delete user account after teacher creation error:', err);
       }
     }
+    if (e.message?.includes('UNIQUE constraint failed: teachers.employee_id') || e.message?.includes('teachers.employee_id')) {
+      return c.json({ error: 'A teacher with this Employee ID already exists. Please use a different ID.' }, 409);
+    }
     return c.json({ error: `Failed to create teacher: ${e.message}` }, 400);
   }
 });
@@ -141,8 +144,15 @@ teachers.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
     return c.json({ error: 'Teacher not found' }, 404);
   }
   
-  await service.updateTeacher(id, input, user.sub);
-  return c.json({ success: true });
+  try {
+    await service.updateTeacher(id, input, user.sub);
+    return c.json({ success: true });
+  } catch (e: any) {
+    if (e.message?.includes('UNIQUE constraint failed: teachers.employee_id') || e.message?.includes('teachers.employee_id')) {
+      return c.json({ error: 'A teacher with this Employee ID already exists. Please use a different ID.' }, 409);
+    }
+    return c.json({ error: `Failed to update teacher: ${e.message}` }, 400);
+  }
 });
 
 teachers.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
@@ -158,6 +168,60 @@ teachers.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
   
   await service.deleteTeacher(id, user.sub);
   return c.json({ success: true });
+});
+
+// --- BULK TEACHER ACTIONS ---
+teachers.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => {
+  const user = c.get('user');
+  const { teacher_ids, action, payload } = await c.req.json();
+
+  if (!teacher_ids || !Array.isArray(teacher_ids) || teacher_ids.length === 0) {
+    return c.json({ error: 'No teacher_ids provided' }, 400);
+  }
+
+  const db = c.env.DB;
+  
+  if (action === 'assign_department') {
+    const { department } = payload || {};
+    if (!department) return c.json({ error: 'department is required' }, 400);
+
+    for (const tId of teacher_ids) {
+      await db.prepare("UPDATE teachers SET department = ?, updated_at = datetime('now'), updated_by = ? WHERE id = ? AND institution_id = ? AND is_active = 1")
+        .bind(department, user.sub, tId, user.institution_id).run();
+    }
+    return c.json({ success: true, message: `Successfully updated department for ${teacher_ids.length} teachers.` });
+  }
+
+  if (action === 'deactivate') {
+    for (const tId of teacher_ids) {
+      await db.prepare("UPDATE teachers SET status = 'INACTIVE', updated_at = datetime('now'), updated_by = ? WHERE id = ? AND institution_id = ? AND is_active = 1")
+        .bind(user.sub, tId, user.institution_id).run();
+    }
+    return c.json({ success: true, message: `Successfully deactivated ${teacher_ids.length} teachers.` });
+  }
+
+  if (action === 'reactivate') {
+    for (const tId of teacher_ids) {
+      await db.prepare("UPDATE teachers SET status = 'ACTIVE', updated_at = datetime('now'), updated_by = ? WHERE id = ? AND institution_id = ? AND is_active = 1")
+        .bind(user.sub, tId, user.institution_id).run();
+    }
+    return c.json({ success: true, message: `Successfully reactivated ${teacher_ids.length} teachers.` });
+  }
+
+  if (action === 'delete') {
+    const repo = new TeacherRepository(db);
+    const service = new TeacherService(repo);
+    for (const tId of teacher_ids) {
+      const existing = await service.getTeacher(tId);
+      if (!existing || existing.institution_id !== user.institution_id) {
+        continue;
+      }
+      await service.deleteTeacher(tId, user.sub);
+    }
+    return c.json({ success: true, message: `Successfully deleted ${teacher_ids.length} teachers.` });
+  }
+
+  return c.json({ error: 'Invalid action' }, 400);
 });
 
 // --- TEACHER NOTES ENDPOINTS ---

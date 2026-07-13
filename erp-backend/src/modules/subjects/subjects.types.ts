@@ -6,6 +6,12 @@ export interface Subject {
   subject_name: string;
   credits?: number;
   semester?: number;
+  is_elective?: number;
+  status?: string;
+  description?: string;
+  theory_lab?: string;
+  department?: string;
+  weekly_hours?: number;
   is_active: number;
   created_at: string;
   updated_at: string;

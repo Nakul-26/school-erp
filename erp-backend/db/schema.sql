@@ -180,6 +180,12 @@ CREATE TABLE IF NOT EXISTS subjects (
   subject_name TEXT NOT NULL,
   credits INTEGER,
   semester INTEGER,
+  is_elective INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'ACTIVE',
+  description TEXT,
+  theory_lab TEXT DEFAULT 'Theory',
+  department TEXT,
+  weekly_hours INTEGER,
   
   -- Audit fields
   is_active INTEGER DEFAULT 1,

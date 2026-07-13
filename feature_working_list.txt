@@ -12,21 +12,33 @@ User-facing features.
 8. Student Status (Active/Inactive) - working
 9. Import Students (later) - working
 10. Export Students (later) - working 
-Add Guardian
-Edit Guardian
-Remove Guardian
+Add Guardian - working
+Edit Guardian - working
+Remove Guardian - working
 
 ### Teacher Management Features
 
-1. Add Teacher
-2. View Teachers
-3. View Teacher Profile
-4. Edit Teacher
-5. Delete Teacher
-6. Search Teachers
-7. Filter Teachers
-8. Teacher Status (Active/Inactive)
-9. Import Teachers (later)
-10. Export Teachers (later)
+1. Add Teacher - working
+2. View Teachers - working
+3. View Teacher Profile - working
+4. Edit Teacher - working
+5. Delete Teacher - working
+6. Search Teachers - working
+7. Filter Teachers - working
+8. Teacher Status (Active/Inactive) - working
+9. Import Teachers (later) - working
+10. Export Teachers (later) - working
 
+### Subject Management Features
+
+1. Add Subject - working
+2. View Subjects - working
+3. View Subject Profile - working
+4. Edit Subject - working
+5. Delete Subject - working
+6. Search Subjects - working
+7. Filter Subjects - working
+8. Subject Status (Active/Inactive) - working
+9. Assign Subject to Teacher - working
+10. View Teacher's Assigned Subjects
 

@@ -531,20 +531,10 @@ export default function TeacherDetails() {
         <div className="teacher-details-row-31">
           {/* Progress Circle & Text */}
           <div className="teacher-details-row-32">
-            <div style={{ 
-              width: '56px', 
-              height: '56px', 
-              borderRadius: '50%', 
-              background: `conic-gradient(var(--primary) ${completionPercentage}%, #f1f5f9 ${completionPercentage}%)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: 'inset 0 0 0 6px #ffffff',
-              fontSize: '0.9rem',
-              fontWeight: 800,
-              color: 'var(--text-main)',
-              position: 'relative'
-            }}>
+            <div 
+              className="teacher-checklist-circle"
+              style={{ background: `conic-gradient(var(--primary) ${completionPercentage}%, #f1f5f9 ${completionPercentage}%)` }}
+            >
               <span className="teacher-details-span-33">{completionPercentage}%</span>
             </div>
             <div>
@@ -558,14 +548,7 @@ export default function TeacherDetails() {
             {checklistItems.map((item, idx) => (
               <div 
                 key={idx} 
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.4rem', 
-                  fontSize: '0.85rem',
-                  color: item.done ? 'var(--text-main)' : 'var(--text-muted)',
-                  cursor: item.done ? 'default' : 'pointer'
-                }}
+                className={`teacher-checklist-item ${item.done ? 'is-done' : 'is-pending'}`}
                 onClick={() => {
                   if (!item.done) {
                     if (item.label === 'Department') {
@@ -593,11 +576,7 @@ export default function TeacherDetails() {
                 ) : (
                   <span className="teacher-details-span-38">○</span>
                 )}
-                <span style={{ 
-                  fontWeight: item.done ? 600 : 500,
-                  textDecoration: item.done ? 'none' : 'underline',
-                  textDecorationStyle: 'dotted'
-                }} title={item.done ? '' : `Click to configure ${item.label}`}>
+                <span className="teacher-checklist-item-label" title={item.done ? '' : `Click to configure ${item.label}`}>
                   {item.label}
                 </span>
               </div>
@@ -710,24 +689,7 @@ export default function TeacherDetails() {
           return (
             <button 
               key={t.id}
-              style={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                minHeight: '48px',
-                height: '48px',
-                padding: '12px 20px', 
-                border: 'none', 
-                background: 'none', 
-                cursor: 'pointer', 
-                borderBottom: isSelected ? '3px solid var(--primary)' : '3px solid transparent', 
-                color: isSelected ? 'var(--primary)' : '#64748b', 
-                fontWeight: isSelected ? '700' : '500',
-                fontSize: '0.875rem',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                transition: 'all 0.15s ease-in-out'
-              }} 
+              className={`teacher-details-tab-btn ${isSelected ? 'is-active' : ''}`} 
               onClick={() => setActiveTab(t.id)}
             >
               <Icon size={15} />
@@ -862,13 +824,7 @@ export default function TeacherDetails() {
                             return (
                               <td 
                                 key={day} 
-                                style={{ 
-                                  border: '1px solid var(--border)', 
-                                  padding: '0.75rem', 
-                                  textAlign: 'center', 
-                                  backgroundColor: entry ? '#f0fdf4' : 'transparent',
-                                  verticalAlign: 'middle'
-                                }}
+                                className={`teacher-timetable-cell ${entry ? 'has-entry' : ''}`}
                               >
                                 {entry ? (
                                   <div className="teacher-details-div-103">
@@ -1208,17 +1164,7 @@ export default function TeacherDetails() {
                   key={t}
                   type="button"
                   onClick={() => setEditTab(t as any)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    border: 'none',
-                    background: 'none',
-                    borderBottom: editTab === t ? '2px solid var(--primary)' : '2px solid transparent',
-                    color: editTab === t ? 'var(--primary)' : '#64748b',
-                    fontWeight: editTab === t ? 700 : 500,
-                    cursor: 'pointer',
-                    textTransform: 'capitalize',
-                    whiteSpace: 'nowrap'
-                  }}
+                  className={`teacher-edit-tab-btn ${editTab === t ? 'is-active' : ''}`}
                 >
                   {t}
                 </button>

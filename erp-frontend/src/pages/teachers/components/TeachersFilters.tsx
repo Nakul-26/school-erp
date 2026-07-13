@@ -36,12 +36,13 @@ export const TeachersFilters: React.FC<TeachersFiltersProps> = ({
           placeholder="Search by name, ID, or department..." 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search teachers"
         />
       </div>
 
       {/* Department Filter */}
       <div>
-        <select value={selectedDepartment} onChange={e => setSelectedDepartment(e.target.value)}>
+        <select value={selectedDepartment} onChange={e => setSelectedDepartment(e.target.value)} aria-label="Filter by department">
           <option value="">All Departments</option>
           {departments.map(d => (
             <option key={d.id} value={d.name}>{d.name}</option>
@@ -51,7 +52,7 @@ export const TeachersFilters: React.FC<TeachersFiltersProps> = ({
 
       {/* Designation Filter */}
       <div>
-        <select value={selectedDesignation} onChange={e => setSelectedDesignation(e.target.value)}>
+        <select value={selectedDesignation} onChange={e => setSelectedDesignation(e.target.value)} aria-label="Filter by designation">
           <option value="">All Designations</option>
           {designations.map(d => (
             <option key={d} value={d}>{d}</option>
@@ -61,7 +62,7 @@ export const TeachersFilters: React.FC<TeachersFiltersProps> = ({
 
       {/* Status Filter */}
       <div>
-        <select value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)}>
+        <select value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)} aria-label="Filter by status">
           <option value="">All Statuses</option>
           <option value="ACTIVE">ACTIVE</option>
           <option value="INACTIVE">INACTIVE</option>

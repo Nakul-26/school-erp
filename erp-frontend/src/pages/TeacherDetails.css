@@ -1168,3 +1168,98 @@
   padding-top: 1rem;
 }
 
+/* Custom additions for refactored inline styles */
+.teacher-checklist-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 6px #ffffff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-main);
+  position: relative;
+}
+
+.teacher-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+.teacher-checklist-item.is-done {
+  color: var(--text-main);
+  cursor: default;
+}
+.teacher-checklist-item.is-pending {
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.teacher-checklist-item-label {
+  text-decoration-style: dotted;
+}
+.teacher-checklist-item.is-done .teacher-checklist-item-label {
+  font-weight: 600;
+  text-decoration: none;
+}
+.teacher-checklist-item.is-pending .teacher-checklist-item-label {
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.teacher-details-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  height: 48px;
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease-in-out;
+}
+.teacher-details-tab-btn.is-active {
+  border-bottom: 3px solid var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.teacher-timetable-cell {
+  border: 1px solid var(--border);
+  padding: 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+  background-color: transparent;
+}
+.teacher-timetable-cell.has-entry {
+  background-color: #f0fdf4;
+}
+
+.teacher-edit-tab-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.teacher-edit-tab-btn.is-active {
+  border-bottom: 2px solid var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+

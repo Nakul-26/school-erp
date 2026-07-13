@@ -833,7 +833,7 @@
 .students-import-dragdrop {
   border: 2px dashed var(--border);
   border-radius: var(--radius-md);
-  padding: 2rem 1.5rem;
+  padding: 3.5rem 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -841,6 +841,15 @@
   gap: 1rem;
   background-color: var(--bg-subtle);
   margin-bottom: 1.5rem;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.students-import-dragdrop.is-dragging {
+  border-color: var(--primary);
+  background-color: rgba(79, 70, 229, 0.04);
+  transform: scale(1.01);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.05);
 }
 
 .students-import-icon {
@@ -854,7 +863,13 @@
 }
 
 .students-import-input {
-  font-size: 0.85rem;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 5;
 }
 
 .students-import-progress-box {

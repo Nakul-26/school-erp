@@ -45,12 +45,13 @@ export const StudentsFilters: React.FC<StudentsFiltersProps> = ({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="students-input-31"
+          aria-label="Search students"
         />
       </div>
 
       {/* Program Filter */}
       <div className="students-div-32">
-        <select value={selectedProgram} onChange={e => setSelectedProgram(e.target.value)}>
+        <select value={selectedProgram} onChange={e => setSelectedProgram(e.target.value)} aria-label={`Filter by ${getProgramsLabel()}`}>
           <option value="">All {getProgramsLabel()}</option>
           {programs.map(p => (
             <option key={p.id} value={p.id}>{p.name}</option>
@@ -60,7 +61,7 @@ export const StudentsFilters: React.FC<StudentsFiltersProps> = ({
 
       {/* Section Filter */}
       <div className="students-div-33">
-        <select value={selectedSection} onChange={e => setSelectedSection(e.target.value)}>
+        <select value={selectedSection} onChange={e => setSelectedSection(e.target.value)} aria-label="Filter by section">
           <option value="">All Sections</option>
           {sections.map(s => (
             <option key={s.id} value={s.id}>{s.name}</option>
@@ -70,7 +71,7 @@ export const StudentsFilters: React.FC<StudentsFiltersProps> = ({
 
       {/* Academic Year Filter */}
       <div className="students-div-34">
-        <select value={selectedAcademicYear} onChange={e => setSelectedAcademicYear(e.target.value)}>
+        <select value={selectedAcademicYear} onChange={e => setSelectedAcademicYear(e.target.value)} aria-label="Filter by academic year">
           <option value="">All Academic Years</option>
           {academicYears.map(y => (
             <option key={y.id} value={y.id}>{y.name}</option>
@@ -80,7 +81,7 @@ export const StudentsFilters: React.FC<StudentsFiltersProps> = ({
 
       {/* Status Filter */}
       <div className="students-div-35">
-        <select value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)}>
+        <select value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)} aria-label="Filter by status">
           <option value="">All Statuses</option>
           <option value="ACTIVE">ACTIVE</option>
           <option value="APPLIED">APPLIED</option>

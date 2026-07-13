@@ -551,11 +551,11 @@ export default function Students() {
               {/* Bulk Actions Panel */}
               {selectedStudentIds.length > 0 && (
                 <div className="card bulk-actions-bar students-bulk-bar animate-slide-in">
-                  <div className="students-row-49">
-                    <span className="students-span-50">
+                  <div className="students-row-80">
+                    <span className="students-span-81">
                       <strong className="students-strong-51">{selectedStudentIds.length}</strong> {selectedStudentIds.length === 1 ? 'student' : 'students'} selected
                     </span>
-                    <div className="students-row-52">
+                    <div className="students-row-83">
                       <button onClick={() => setShowBulkSectionModal(true)} className="btn btn-sm btn-outline">
                         Assign Section
                       </button>
@@ -576,7 +576,7 @@ export default function Students() {
                         <Trash2 size={14} /> Delete
                       </button>
                       
-                      <div className="students-divider-vertical" />
+                      <div className="students-div-82" />
                       
                       <button onClick={() => handleBulkExport('xlsx')} className="btn btn-sm btn-outline">
                         Export Excel

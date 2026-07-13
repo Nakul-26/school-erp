@@ -47,5 +47,13 @@ export const teacherService = {
 
   deleteAssignment: async (assignId: string) => {
     return await api.delete(`/teacher-assignments/${assignId}`);
+  },
+
+  bulkAction: async (teacherIds: string[], action: string, payload?: any) => {
+    return await api.post('/teachers/bulk-action', {
+      teacher_ids: teacherIds,
+      action,
+      payload
+    });
   }
 };

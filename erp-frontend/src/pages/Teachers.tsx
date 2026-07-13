@@ -1,7 +1,9 @@
 import './Teachers.css';
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { Plus, Grid, List, Eye } from 'lucide-react';
+import { Plus, Grid, List, Trash2, Archive, Check } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 // Modular Imports
 import { teacherService } from './teachers/teacherService';
@@ -11,6 +13,9 @@ import { TeacherCard } from './teachers/components/TeacherCard';
 import { TeachersTable } from './teachers/components/TeachersTable';
 import { AddTeacherWizard } from './teachers/components/AddTeacherWizard';
 import { EditTeacherModal } from './teachers/components/EditTeacherModal';
+import { BulkDepartmentModal } from './teachers/components/BulkDepartmentModal';
+import { ImportExcelModal } from './teachers/components/ImportExcelModal';
+import { exportHelpers } from './teachers/utils/exportHelpers';
 
 export default function Teachers() {
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -20,16 +25,42 @@ export default function Teachers() {
   const [sections, setSections] = useState<any[]>([]);
   const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Search and Advanced Filters
-  const [search, setSearch] = useState('');
-  const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [selectedDesignation, setSelectedDesignation] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const toast = useToast();
+
+  // F-2: Filter state persisted in URL search params (mirrors Students.tsx pattern)
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const search = searchParams.get('search') || '';
+  const selectedDepartment = searchParams.get('department') || '';
+  const selectedDesignation = searchParams.get('designation') || '';
+  const selectedStatus = searchParams.get('status') || '';
+
+  const updateSearchParam = (key: string, value: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (value) { next.set(key, value); } else { next.delete(key); }
+      return next;
+    }, { replace: true });
+  };
+
+  const setSearch = (value: string) => updateSearchParam('search', value);
+  const setSelectedDepartment = (value: string) => updateSearchParam('department', value);
+  const setSelectedDesignation = (value: string) => updateSearchParam('designation', value);
+  const setSelectedStatus = (value: string) => updateSearchParam('status', value);
 
   // Layout View State
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  // Selection state for Bulk Actions
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState<string[]>([]);
+  const [showBulkDeptModal, setShowBulkDeptModal] = useState(false);
+  const [bulkDeptName, setBulkDeptName] = useState('');
+
+  // Bulk Import Excel state
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number; successCount: number; errors: string[] } | null>(null);
+  const [importing, setImporting] = useState(false);
 
   // Creation Modal & Onboarding Wizard State
   const [showModal, setShowModal] = useState(false);
@@ -74,11 +105,11 @@ export default function Teachers() {
     fetchMetadata();
   }, []);
 
-  // Close menus when clicking outside
+  // F-4: Close menus when clicking outside the teacher menu container
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest('.student-menu-container')) {
+      if (!target.closest('.teacher-menu-container')) {
         setActiveMenuId(null);
       }
     };
@@ -91,6 +122,7 @@ export default function Teachers() {
       setLoading(true);
       const data = await teacherService.getTeachers();
       setTeachers(data || []);
+      setSelectedTeacherIds([]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -158,7 +190,7 @@ export default function Teachers() {
   const nextStep = () => {
     const error = teacherValidation.validateStep(createStep, form);
     if (error) {
-      alert(error);
+      toast.error(error);
       return;
     }
 
@@ -188,7 +220,7 @@ export default function Teachers() {
 
     const error = teacherValidation.validateStep(createStep, form);
     if (error) {
-      alert(error);
+      toast.error(error);
       return;
     }
 
@@ -244,7 +276,7 @@ export default function Teachers() {
       setShowSuccessDialog(true);
       fetchTeachers();
     } catch (err: any) {
-      alert(err.message || 'Error adding teacher');
+      toast.error(err.message || 'Error adding teacher');
     }
   };
 
@@ -288,7 +320,7 @@ export default function Teachers() {
     e.preventDefault();
     const error = teacherValidation.validateEdit(editForm);
     if (error) {
-      alert(error);
+      toast.error(error);
       return;
     }
 
@@ -308,14 +340,14 @@ export default function Teachers() {
       fetchTeachers();
     } catch (err: any) {
       console.error(err);
-      alert(err.message || 'Error updating teacher profile');
+      toast.error(err.message || 'Error updating teacher profile');
     }
   };
 
   const handleAddAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAssignment.academic_year_id || !newAssignment.course_id || !newAssignment.section_id || !newAssignment.subject_id) {
-      alert('Please select all assignment details');
+      toast.error('Please select all assignment details');
       return;
     }
 
@@ -333,32 +365,114 @@ export default function Teachers() {
       setNewAssignment(prev => ({ ...prev, subject_id: '' }));
     } catch (err) {
       console.error(err);
-      alert('Failed to add subject assignment.');
+      toast.error('Failed to add subject assignment.');
     }
   };
 
   const handleRemoveAssignment = async (assignId: string) => {
-    if (!confirm('Are you sure you want to remove this assignment?')) return;
+    if (!window.confirm('Are you sure you want to remove this assignment?')) return;
     try {
       await teacherService.deleteAssignment(assignId);
       const data = await teacherService.getAssignmentsByTeacher(editForm.id);
       setEditAssignments(data || []);
     } catch (err) {
       console.error(err);
-      alert('Failed to remove assignment.');
+      toast.error('Failed to remove assignment.');
     }
   };
 
   const handleDeleteTeacher = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to permanently delete teacher "${name}"? This action is irreversible.`)) return;
+    if (!window.confirm(`Are you sure you want to permanently delete teacher "${name}"? This action is irreversible.`)) return;
     try {
       setLoading(true);
       await teacherService.deleteTeacher(id);
       fetchTeachers();
     } catch (err: any) {
       console.error(err);
-      alert(err.message || 'Delete failed.');
+      toast.error(err.message || 'Delete failed.');
       setLoading(false);
+    }
+  };
+
+  const handleDeactivateTeacher = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to deactivate teacher "${name}"?`)) {
+      return;
+    }
+    try {
+      setLoading(true);
+      await teacherService.updateTeacher(id, { status: 'INACTIVE' });
+      toast.success(`Teacher "${name}" deactivated successfully.`);
+      fetchTeachers();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Deactivation failed: ${err.message || err}`);
+      setLoading(false);
+    }
+  };
+
+  const handleReactivateTeacher = async (id: string, name: string) => {
+    try {
+      setLoading(true);
+      await teacherService.updateTeacher(id, { status: 'ACTIVE' });
+      toast.success(`Teacher "${name}" reactivated successfully.`);
+      fetchTeachers();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Reactivation failed: ${err.message || err}`);
+      setLoading(false);
+    }
+  };
+
+  // Bulk selection helpers
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedTeacherIds(filteredTeachers.map(t => t.id));
+    } else {
+      setSelectedTeacherIds([]);
+    }
+  };
+
+  const handleSelectOne = (teacherId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTeacherIds([...selectedTeacherIds, teacherId]);
+    } else {
+      setSelectedTeacherIds(selectedTeacherIds.filter(id => id !== teacherId));
+    }
+  };
+
+  const handleBulkAction = async (action: 'assign_department' | 'deactivate' | 'reactivate' | 'delete', payload?: any) => {
+    if (selectedTeacherIds.length === 0) return;
+    if (action === 'deactivate' && !window.confirm(`Are you sure you want to deactivate ${selectedTeacherIds.length} teachers?`)) return;
+    if (action === 'reactivate' && !window.confirm(`Are you sure you want to reactivate ${selectedTeacherIds.length} teachers?`)) return;
+    if (action === 'delete') {
+      const confirmInput = window.prompt(`You are about to PERMANENTLY delete ${selectedTeacherIds.length} teachers. This action is irreversible and will delete all their teaching assignments, timetable records, and user login credentials.\n\nType DELETE to confirm:`);
+      if (confirmInput !== 'DELETE') {
+        toast.error('Bulk delete cancelled. Confirmation word did not match.');
+        return;
+      }
+    }
+
+    try {
+      setLoading(true);
+      await teacherService.bulkAction(selectedTeacherIds, action, payload);
+      setSelectedTeacherIds([]);
+      setShowBulkDeptModal(false);
+      fetchTeachers();
+      toast.success('Bulk action completed successfully.');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Bulk action failed: ${err.message || err}`);
+      setLoading(false);
+    }
+  };
+
+  const handleBulkExport = (format: 'csv' | 'xlsx') => {
+    if (selectedTeacherIds.length === 0) return;
+    const selectedTeachers = teachers.filter(t => selectedTeacherIds.includes(t.id));
+    if (format === 'xlsx') {
+      exportHelpers.exportTeachersExcel(selectedTeachers);
+    } else {
+      exportHelpers.exportTeachersCSV(selectedTeachers);
     }
   };
 
@@ -380,6 +494,10 @@ export default function Teachers() {
   const uniqueDesignations = Array.from(
     new Set(teachers.map(t => t.designation).filter(Boolean))
   ) as string[];
+
+  const selectedTeachers = teachers.filter(t => selectedTeacherIds.includes(t.id));
+  const showDeactivateBtn = selectedTeachers.some(t => t.status !== 'INACTIVE');
+  const showReactivateBtn = selectedTeachers.some(t => t.status === 'INACTIVE');
 
   return (
     <Layout>
@@ -427,6 +545,9 @@ export default function Teachers() {
                 </button>
               </div>
 
+              <button className="btn btn-outline" onClick={() => setShowImportModal(true)}>
+                Import Excel
+              </button>
               <button className="btn btn-primary" onClick={handleAddTeacherClick}>
                 <Plus size={18} /> Add Teacher
               </button>
@@ -447,36 +568,81 @@ export default function Teachers() {
           />
 
           {loading ? (
-            <div className="students-div-36">
-              <p className="students-text-37">Loading teachers list...</p>
+            <div className="teachers-loading-container">
+              <p className="teachers-loading-text">Loading teachers list...</p>
             </div>
           ) : (
             <>
+              {/* Bulk Actions Panel */}
+              {selectedTeacherIds.length > 0 && (
+                <div className="teachers-bulk-bar animate-slide-in">
+                  <span className="teachers-bulk-info">
+                    <strong>{selectedTeacherIds.length}</strong> {selectedTeacherIds.length === 1 ? 'teacher' : 'teachers'} selected
+                  </span>
+                  <div className="teachers-bulk-actions">
+                    <button onClick={() => setShowBulkDeptModal(true)} className="btn btn-sm btn-outline">
+                      Assign Department
+                    </button>
+                    {showDeactivateBtn && (
+                      <button onClick={() => handleBulkAction('deactivate')} className="btn btn-sm btn-outline text-warning">
+                        <Archive size={14} /> Deactivate
+                      </button>
+                    )}
+                    {showReactivateBtn && (
+                      <button onClick={() => handleBulkAction('reactivate')} className="btn btn-sm btn-outline text-success">
+                        <Check size={14} /> Reactivate
+                      </button>
+                    )}
+                    <button onClick={() => handleBulkAction('delete')} className="btn btn-sm btn-danger">
+                      <Trash2 size={14} /> Delete
+                    </button>
+                    
+                    <div className="teachers-bulk-divider" />
+                    
+                    <button onClick={() => handleBulkExport('xlsx')} className="btn btn-sm btn-outline">
+                      Export Excel
+                    </button>
+                    <button onClick={() => handleBulkExport('csv')} className="btn btn-sm btn-outline">
+                      Export CSV
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {viewMode === 'grid' ? (
                 <div className="teachers-grid-container">
                   {filteredTeachers.map(t => (
                     <TeacherCard
                       key={t.id}
                       teacher={t}
+                      selectedTeacherIds={selectedTeacherIds}
+                      handleSelectOne={handleSelectOne}
                       activeMenuId={activeMenuId}
                       setActiveMenuId={setActiveMenuId}
                       handleEditClick={handleEditClick}
                       handleDeleteTeacher={handleDeleteTeacher}
+                      handleDeactivateTeacher={handleDeactivateTeacher}
+                      handleReactivateTeacher={handleReactivateTeacher}
                     />
                   ))}
                 </div>
               ) : (
                 <TeachersTable
                   teachers={filteredTeachers}
+                  selectedTeacherIds={selectedTeacherIds}
+                  handleSelectAll={handleSelectAll}
+                  handleSelectOne={handleSelectOne}
                   handleEditClick={handleEditClick}
                   handleDeleteTeacher={handleDeleteTeacher}
+                  handleDeactivateTeacher={handleDeactivateTeacher}
+                  handleReactivateTeacher={handleReactivateTeacher}
                 />
               )}
 
               {filteredTeachers.length === 0 && (
-                <div className="card students-empty-card">
-                  <p className="students-text-71">No teacher records found.</p>
-                  <p className="students-text-72">Try clearing filters or refining your search parameters.</p>
+                <div className="card teachers-empty-card">
+                  <p className="teachers-empty-title">No teacher records found.</p>
+                  <p className="teachers-empty-subtitle">Try clearing filters or refining your search parameters.</p>
                 </div>
               )}
             </>
@@ -502,7 +668,7 @@ export default function Teachers() {
                     <span className="teachers-span-73">Username</span>
                     <div className="teachers-row-74">
                       <code className="teachers-code-75">{createdCredentials.username}</code>
-                      <button type="button" onClick={() => { navigator.clipboard.writeText(createdCredentials.username); alert('Username copied to clipboard!'); }} className="teachers-btn-76">
+                      <button type="button" onClick={() => { navigator.clipboard.writeText(createdCredentials.username); toast.success('Username copied to clipboard!'); }} className="teachers-btn-76">
                         Copy
                       </button>
                     </div>
@@ -511,7 +677,7 @@ export default function Teachers() {
                     <span className="teachers-span-78">Temporary Password</span>
                     <div className="teachers-row-79">
                       <code className="teachers-code-80">{createdCredentials.password}</code>
-                      <button type="button" onClick={() => { navigator.clipboard.writeText(createdCredentials.password); alert('Password copied to clipboard!'); }} className="teachers-btn-81">
+                      <button type="button" onClick={() => { navigator.clipboard.writeText(createdCredentials.password); toast.success('Password copied to clipboard!'); }} className="teachers-btn-81">
                         Copy
                       </button>
                     </div>
@@ -525,7 +691,7 @@ export default function Teachers() {
             )}
 
             <div className="teachers-row-83">
-              <button type="button" onClick={() => { const text = `Teacher Credentials\nName: ${createdCredentials.name}\nUsername: ${createdCredentials.username || 'N/A'}\nTemporary Password: ${createdCredentials.password || 'N/A'}`; navigator.clipboard.writeText(text); alert('Credentials copied to clipboard!'); }} className="btn btn-primary teachers-btn" disabled={!createdCredentials.login_created}>
+              <button type="button" onClick={() => { const text = `Teacher Credentials\nName: ${createdCredentials.name}\nUsername: ${createdCredentials.username || 'N/A'}\nTemporary Password: ${createdCredentials.password || 'N/A'}`; navigator.clipboard.writeText(text); toast.success('Credentials copied to clipboard!'); }} className="btn btn-primary teachers-btn" disabled={!createdCredentials.login_created}>
                 Copy All Details
               </button>
               <button type="button" onClick={() => { window.print(); }} className="btn btn-secondary teachers-btn">
@@ -559,6 +725,30 @@ export default function Teachers() {
           setShowEditModal={setShowEditModal}
         />
       )}
+
+      <BulkDepartmentModal
+        showBulkDeptModal={showBulkDeptModal}
+        setShowBulkDeptModal={setShowBulkDeptModal}
+        bulkDeptName={bulkDeptName}
+        setBulkDeptName={setBulkDeptName}
+        departments={departments}
+        handleBulkAction={handleBulkAction}
+      />
+
+      <ImportExcelModal
+        showImportModal={showImportModal}
+        setShowImportModal={setShowImportModal}
+        importing={importing}
+        setImporting={setImporting}
+        importProgress={importProgress}
+        setImportProgress={setImportProgress}
+        departments={departments}
+        fetchTeachers={fetchTeachers}
+        showToast={(msg, type) => {
+          if (type === 'error') toast.error(msg);
+          else toast.success(msg);
+        }}
+      />
     </Layout>
   );
 }

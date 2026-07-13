@@ -849,7 +849,13 @@
   transition: all 0.15s ease;
 }
 
-.teachers-card-new:hover {
+.teachers-card-new.is-selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12);
+  background-color: rgba(79, 70, 229, 0.02);
+}
+
+.teachers-card-new:hover:not(.is-selected) {
   border-color: var(--primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
@@ -859,6 +865,21 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  padding-left: 1.25rem;
+}
+
+.teachers-div-checkbox {
+  position: absolute;
+  top: 0.875rem;
+  left: 0.875rem;
+  z-index: 10;
+}
+
+.teachers-input-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
 }
 
 .teachers-card-avatar {
@@ -1085,4 +1106,269 @@
   border-bottom-color: var(--primary);
   color: var(--primary);
   font-weight: 700;
+}
+
+/* ── Loading State ────────────────────────────────────── */
+.teachers-loading-container {
+  padding: 3rem;
+  text-align: center;
+}
+
+.teachers-loading-text {
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+/* ── Empty State ──────────────────────────────────────── */
+.teachers-empty-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: var(--bg-card);
+}
+
+.teachers-empty-title {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.teachers-empty-subtitle {
+  color: var(--text-subtle);
+  font-size: 0.8125rem;
+}
+
+/* ── Table Avatar Cell ────────────────────────────────── */
+.teachers-table-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-weight: 600;
+}
+
+.teachers-table-avatar-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.teachers-table-avatar-circle-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Card Menu Dropdown Anchor ────────────────────────── */
+.teacher-menu-container {
+  position: relative;
+}
+
+.teachers-table-card tr.is-selected {
+  background-color: #f8fafc;
+}
+
+/* Teachers Bulk Actions Bar */
+.teachers-bulk-bar {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width, 240px);
+  right: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1rem 2rem;
+  background: var(--bg-card, #ffffff);
+  border-top: 1px solid var(--border, #e2e8f0);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.teachers-bulk-info {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+}
+
+.teachers-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.teachers-bulk-divider {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--border, #e2e8f0);
+  flex-shrink: 0;
+  margin: 0 0.5rem;
+}
+
+.teachers-th-checkbox {
+  width: 40px;
+}
+
+/* ── Bulk Import Excel Modal ─────────────────────────── */
+.teachers-modal-overlay-import {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.teachers-modal-content-import {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.teachers-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text-main, #0f172a);
+}
+
+.teachers-modal-desc {
+  font-size: 0.875rem;
+  color: var(--text-muted, #64748b);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.teachers-modal-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+.teachers-modal-btn-template {
+  font-size: 0.875rem;
+}
+
+.teachers-import-dragdrop {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 3.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background-color: var(--bg-subtle);
+  margin-bottom: 1.5rem;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.teachers-import-dragdrop.is-dragging {
+  border-color: var(--primary);
+  background-color: rgba(79, 70, 229, 0.04);
+  transform: scale(1.01);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.05);
+}
+
+.teachers-import-icon {
+  font-size: 2rem;
+}
+
+.teachers-import-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.teachers-import-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.teachers-import-progress-box {
+  padding: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 120px;
+  margin-bottom: 1.5rem;
+}
+
+.teachers-import-progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.teachers-import-progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.teachers-import-progress-bar-fill {
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.15s ease;
+  width: var(--progress-width, 0%);
+}
+
+.teachers-import-success-text {
+  color: #10b981;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.teachers-import-errors-container {
+  font-size: 0.8rem;
+  color: #ef4444;
+}
+
+.teachers-import-errors-title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.teachers-import-errors-list {
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.teachers-modal-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  gap: 0.5rem;
 }

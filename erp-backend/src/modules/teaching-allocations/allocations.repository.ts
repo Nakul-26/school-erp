@@ -220,7 +220,7 @@ export class TeachingAllocationRepository {
 
   async validateTeacherStatus(teacherId: string, institutionId: string): Promise<boolean> {
     const res = await this.db.prepare(
-      'SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1 AND status = "Active"'
+      'SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1 AND status = "ACTIVE"'
     ).bind(teacherId, institutionId).first();
     return Boolean(res);
   }

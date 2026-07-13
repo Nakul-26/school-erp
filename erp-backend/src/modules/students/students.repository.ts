@@ -361,7 +361,9 @@ export class StudentRepository {
       this.db.prepare(`UPDATE student_enrollments SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id),
       this.db.prepare(`UPDATE student_fee_records SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id),
       this.db.prepare(`UPDATE guardians SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id),
-      this.db.prepare(`UPDATE student_attendance SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id)
+      this.db.prepare(`UPDATE student_attendance SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id),
+      // Deactivate the linked portal user account (if any)
+      this.db.prepare(`UPDATE users SET is_active = 0, updated_at = datetime('now') WHERE id = (SELECT user_id FROM students WHERE id = ?)`).bind(id),
     ];
     await this.db.batch(stmts);
   }

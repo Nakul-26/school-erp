@@ -159,3 +159,62 @@ A feature is complete only when:
 7. No regressions are introduced.
 
 Each page should have its own CSS file. Small reusable components should either have their own CSS file or reuse an existing shared stylesheet where appropriate.
+
+---
+
+## Codebase-Specific Patterns (Simple ERP)
+
+### CSS Naming & Module Isolation
+1. Each page module must use its own CSS class prefix matching the page name
+   (e.g., `teachers-`, `students-`, `dashboard-`).
+2. Never reference another page's prefixed classes from a different page's
+   components. Do not use `students-*` classes inside Teachers components or vice versa.
+3. Components nested under a page folder (e.g., `teachers/components/`) inherit the
+   parent page's CSS file unless they have their own dedicated CSS file.
+4. When renaming or adding CSS classes to match a module prefix, always define
+   them in that module's CSS file — do not duplicate across files.
+
+### Filter State (List Pages)
+1. All list-page filter state (search query, dropdowns) must be stored in URL
+   search params via `useSearchParams` from React Router, **not** `useState`.
+2. Updating any filter must reset the page param to `1`.
+3. Always use `{ replace: true }` when calling `setSearchParams` to avoid
+   polluting browser history with every keystroke.
+
+### Notifications & Confirmations
+1. Never use browser `alert()`, `confirm()`, or `prompt()`.
+2. Use the `useToast` hook from `../contexts/ToastContext` for all
+   success, error, and info notifications.
+3. Destructive actions (delete, deactivate) must use a proper in-page
+   confirmation guard (`window.confirm` is acceptable as a minimal interim
+   if a modal is not yet available, but prefer a modal).
+
+### Soft Delete (Backend)
+1. Soft-deleting a **teacher** must also atomically deactivate:
+   - The linked portal user account (`users` table).
+   - Subject assignments (`teacher_subject_assignments`).
+   - Timetable entries (`weekly_timetable`).
+   - Teaching allocations (`teaching_allocations`).
+   - HOD reference in `departments.head_teacher_id`.
+   - Class teacher reference in `sections.class_teacher_id`.
+2. Soft-deleting a **student** must also deactivate the linked user account
+   (`users` table via `students.user_id`).
+3. All soft-delete operations must use `this.db.batch([...])` for atomicity.
+
+### Unique Constraint Errors (Backend)
+1. Routes must intercept SQLite UNIQUE constraint failures and return a
+   user-friendly HTTP **409** response, never exposing raw DB error strings.
+2. Pattern:
+   ```ts
+   if (e.message?.includes('UNIQUE constraint failed: table.column')) {
+     return c.json({ error: 'Human-readable duplicate message.' }, 409);
+   }
+   ```
+3. The UNIQUE check must happen **before** rolling back any side-effects
+   (e.g., orphaned user accounts created during teacher registration).
+
+### Accessibility
+1. Every `<input>`, `<select>`, and `<textarea>` must have an `aria-label`
+   attribute **or** a visible `<label>` element with a matching `htmlFor`.
+2. Filter controls on list pages must always carry descriptive `aria-label`
+   values (e.g., `"Filter by department"`, `"Search teachers"`).

@@ -80,7 +80,7 @@ allocations.get('/dashboard', async (c) => {
   
   // Count active teachers
   const { results: allTeachers } = await c.env.DB.prepare(`
-    SELECT id FROM teachers WHERE institution_id = ? AND is_active = 1 AND status = 'Active'
+    SELECT id FROM teachers WHERE institution_id = ? AND is_active = 1 AND status = 'ACTIVE'
   `).bind(user.institution_id).all<any>();
 
   const allTeacherIds = allTeachers?.map(t => t.id) || [];
@@ -221,7 +221,7 @@ allocations.get('/conflicts', async (c) => {
     JOIN sections s ON s.id = a.section_id
     JOIN subjects sub ON sub.id = a.subject_id
     WHERE a.institution_id = ? AND a.academic_year_id = ? AND a.is_active = 1
-      AND (t.status != 'Active' OR t.is_active = 0 OR s.is_active = 0 OR sub.is_active = 0)
+      AND (t.status != 'ACTIVE' OR t.is_active = 0 OR s.is_active = 0 OR sub.is_active = 0)
   `).bind(user.institution_id, academicYearId).all<any>();
 
   inactiveRefs.results?.forEach((ref: any) => {
@@ -423,7 +423,7 @@ allocations.post('/bulk', requirePermission('academic.manage'), async (c) => {
     if (!teacher) {
       errors.push(`Error: Teacher ${teacherName} does not exist or is inactive.`);
       continue;
-    } else if (teacher.status !== 'Active') {
+    } else if (teacher.status !== 'ACTIVE') {
       errors.push(`Error: Teacher ${teacherName} has inactive status: '${teacher.status}'.`);
       continue;
     }

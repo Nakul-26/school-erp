@@ -49,11 +49,23 @@ export class TeacherRepository {
   }
 
   async softDelete(id: string, userId?: string): Promise<void> {
-    await this.db.prepare(`
-      UPDATE teachers 
-      SET is_active = 0, deleted_at = datetime('now'), updated_by = ? 
-      WHERE id = ?
-    `).bind(userId || null, id).run();
+    const stmts = [
+      // 1. Deactivate the teacher record
+      this.db.prepare(`UPDATE teachers SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE id = ?`).bind(userId || null, id),
+      // 2. Deactivate the linked portal user account (if any)
+      this.db.prepare(`UPDATE users SET is_active = 0, updated_at = datetime('now') WHERE id = (SELECT user_id FROM teachers WHERE id = ?)`).bind(id),
+      // 3. Deactivate subject assignments
+      this.db.prepare(`UPDATE teacher_subject_assignments SET is_active = 0, updated_at = datetime('now') WHERE teacher_id = ?`).bind(id),
+      // 4. Deactivate timetable slots
+      this.db.prepare(`UPDATE weekly_timetable SET is_active = 0, updated_at = datetime('now') WHERE teacher_id = ?`).bind(id),
+      // 5. Deactivate teaching allocations
+      this.db.prepare(`UPDATE teaching_allocations SET is_active = 0, updated_at = datetime('now') WHERE teacher_id = ?`).bind(id),
+      // 6. Clear HOD reference in departments
+      this.db.prepare(`UPDATE departments SET head_teacher_id = NULL, updated_at = datetime('now') WHERE head_teacher_id = ?`).bind(id),
+      // 7. Clear class teacher reference in sections
+      this.db.prepare(`UPDATE sections SET class_teacher_id = NULL, updated_at = datetime('now') WHERE class_teacher_id = ?`).bind(id),
+    ];
+    await this.db.batch(stmts);
   }
 
   async getTeacherWorkloadReport(institutionId: string): Promise<any[]> {

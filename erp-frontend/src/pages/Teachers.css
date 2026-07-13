@@ -686,3 +686,403 @@
   padding-top: 1rem;
 }
 
+.teachers-modal-actions {
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1rem;
+}
+
+/* ── Custom Filters & Stepper Styles for Teachers ────────────────────── */
+.teachers-center-align {
+  text-align: center;
+  flex-grow: 1;
+}
+
+.teachers-btn-back {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.teachers-btn-back:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.teachers-walkthrough-card {
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  max-width: 720px;
+  margin: 0 auto 2rem;
+}
+
+.teachers-stepper-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  border: 2px solid var(--border);
+  background-color: var(--bg-card);
+  color: var(--text-muted);
+}
+
+.teachers-stepper-badge.is-current {
+  border-color: var(--primary);
+  background-color: var(--primary-soft);
+  color: var(--primary);
+}
+
+.teachers-stepper-badge.is-completed {
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.teachers-stepper-badge.is-upcoming {
+  border-color: var(--border);
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+}
+
+.teachers-stepper-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.teachers-walkthrough-form-scroll {
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.teachers-view-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.teachers-btn-view-toggle {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.teachers-btn-view-toggle.is-active {
+  background-color: var(--primary-soft);
+  color: var(--primary);
+}
+
+.teachers-filters-card {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+  padding: 1rem 1.25rem;
+}
+
+.teachers-search-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.75rem;
+  background-color: var(--bg-card);
+}
+
+.teachers-search-container input {
+  border: none;
+  background: none;
+  outline: none;
+  width: 100%;
+  color: var(--text-main);
+}
+
+.teachers-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+/* ── New Teacher Card (SaaS Style) ────────────────────── */
+.teachers-card-new {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  background-color: var(--bg-card);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.teachers-card-new:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.teachers-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.teachers-card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.teachers-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teachers-card-avatar-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.teachers-card-status {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.teachers-card-status.is-active {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.teachers-card-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.teachers-card-name {
+  margin: 0;
+  font-size: 0.975rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teachers-card-employee-id {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.teachers-card-department {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.teachers-card-divider {
+  height: 1px;
+  background-color: var(--border);
+  margin: 2px 0;
+}
+
+.teachers-card-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.teachers-card-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.teachers-card-metrics {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.teachers-card-metric-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.teachers-card-metric-col.align-right {
+  align-items: flex-end;
+}
+
+.teachers-card-metric-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.teachers-card-metric-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.teachers-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.teachers-card-view-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.teachers-card-view-link:hover {
+  opacity: 0.8;
+}
+
+.teachers-card-more-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.teachers-card-more-btn:hover {
+  background-color: var(--bg-subtle);
+}
+
+.teachers-dropdown-menu {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+  min-width: 140px;
+  padding: 0.25rem 0;
+}
+
+.teachers-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-main);
+}
+
+.teachers-dropdown-item:hover {
+  background-color: var(--bg-subtle);
+}
+
+.teachers-dropdown-divider {
+  height: 1px;
+  background-color: var(--border);
+  margin: 0.25rem 0;
+}
+
+.teachers-modal-tabs-header {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.teachers-modal-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.teachers-modal-tab-btn.is-active {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}

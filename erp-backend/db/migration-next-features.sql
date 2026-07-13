@@ -4,8 +4,7 @@
 -- In SQLite, we can add them one by one.
 ALTER TABLE students ADD COLUMN blood_group TEXT;
 ALTER TABLE students ADD COLUMN emergency_contact TEXT;
-ALTER TABLE students ADD COLUMN medical_conditions TEXT;
-ALTER TABLE students ADD COLUMN allergies TEXT;
+ALTER TABLE students ADD COLUMN medical_notes TEXT;
 
 -- 2. Create student notes table
 CREATE TABLE IF NOT EXISTS student_notes (

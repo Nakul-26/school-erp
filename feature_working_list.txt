@@ -1,0 +1,32 @@
+User-facing features.
+
+### Student Management Features
+
+1. Add Student - working
+2. View Students - working
+3. View Student Profile - working
+4. Edit Student - working
+5. Delete Student - working
+6. Search Students - working
+7. Filter Students - working
+8. Student Status (Active/Inactive) - working
+9. Import Students (later) - working
+10. Export Students (later) - working 
+Add Guardian
+Edit Guardian
+Remove Guardian
+
+### Teacher Management Features
+
+1. Add Teacher
+2. View Teachers
+3. View Teacher Profile
+4. Edit Teacher
+5. Delete Teacher
+6. Search Teachers
+7. Filter Teachers
+8. Teacher Status (Active/Inactive)
+9. Import Teachers (later)
+10. Export Teachers (later)
+
+

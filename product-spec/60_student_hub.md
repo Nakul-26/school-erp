@@ -27,7 +27,7 @@ Organized with standard layout headers and tabs:
 *   **Fees Tab**: Outstanding fee invoice list, paid receipts history, and invoice generation CTA.
 *   **Results Tab**: Grade summaries, term exam scores, GPA charts, and report card download triggers.
 *   **Documents Tab**: Image upload triggers for ID card photos, birth certificates, and academic records.
-*   **Health Card Tab**: Allergies, regular medications, emergency contacts, blood group, and medical notes.
+*   **Health Card Tab**: Emergency contacts, blood group, and medical notes.
 
 ### 2. Student Promotion Workflow
 *   **Step 1**: Choose Source and Target Academic Years.

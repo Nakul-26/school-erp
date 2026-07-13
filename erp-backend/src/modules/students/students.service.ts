@@ -34,6 +34,6 @@ export class StudentService {
   }
 
   async deleteStudent(id: string, userId?: string): Promise<void> {
-    await this.repo.softDelete(id, userId);
+    await this.repo.hardDelete(id);
   }
 }

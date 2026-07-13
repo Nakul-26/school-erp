@@ -17,8 +17,7 @@ export interface Student {
   status: 'APPLIED' | 'ADMITTED' | 'ACTIVE' | 'TRANSFERRED' | 'GRADUATED' | 'DROPPED' | 'ALUMNI';
   blood_group?: string;
   emergency_contact?: string;
-  medical_conditions?: string;
-  allergies?: string;
+  medical_notes?: string;
   is_active: number;
   created_at: string;
   updated_at: string;

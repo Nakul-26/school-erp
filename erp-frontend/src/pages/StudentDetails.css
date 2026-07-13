@@ -44,6 +44,8 @@
   height: 96px;
   justify-content: center;
   width: 96px;
+  padding: 0;
+  overflow: hidden;
 }
 
 .student-details-span-8 {
@@ -1535,4 +1537,97 @@
   display: flex;
   gap: 0.5rem;
 }
+
+.student-details-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.student-details-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  height: 48px;
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.student-details-tab-btn.is-selected {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.student-details-address-col {
+  grid-column: span 2;
+}
+
+.student-details-address-val {
+  font-weight: 500;
+}
+
+.student-details-attendance-pct {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.student-details-attendance-pct.is-good {
+  color: #10b981;
+}
+
+.student-details-attendance-pct.is-warning {
+  color: #f59e0b;
+}
+
+.student-details-feedue-val {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.student-details-feedue-val.is-due {
+  color: #ef4444;
+}
+
+.student-details-feedue-val.is-none {
+  color: #10b981;
+}
+
+.student-details-timeline-dot {
+  position: absolute;
+  left: -2rem;
+  margin-left: -3px;
+  top: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #cbd5e1;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 1px #e2e8f0;
+  z-index: 2;
+}
+
+.student-details-timeline-dot.is-completed {
+  background-color: #10b981;
+}
+
+.student-details-blood-val {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
+.student-details-blood-val.has-value {
+  color: #ef4444;
+}
+
 

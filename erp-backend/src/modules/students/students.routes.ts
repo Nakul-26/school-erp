@@ -325,6 +325,23 @@ students.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
     return c.json({ success: true, message: `Successfully deactivated ${student_ids.length} students.` });
   }
 
+  if (action === 'reactivate') {
+    for (const sId of student_ids) {
+      await db.prepare('UPDATE students SET status = \'ACTIVE\', updated_at = datetime(\'now\'), updated_by = ? WHERE id = ? AND institution_id = ?')
+        .bind(user.sub, sId, user.institution_id).run();
+    }
+    return c.json({ success: true, message: `Successfully reactivated ${student_ids.length} students.` });
+  }
+
+  if (action === 'delete') {
+    const repo = new StudentRepository(db);
+    const service = new StudentService(repo);
+    for (const sId of student_ids) {
+      await service.deleteStudent(sId, user.sub);
+    }
+    return c.json({ success: true, message: `Successfully deleted ${student_ids.length} students.` });
+  }
+
   return c.json({ error: 'Invalid action' }, 400);
 });
 

@@ -4,7 +4,7 @@ import { getUpdateFields } from '../../utils/repository';
 const UPDATE_FIELDS = [
   'user_id', 'admission_number', 'roll_number', 'first_name', 'middle_name', 'last_name',
   'gender', 'date_of_birth', 'email', 'phone', 'address', 'photo', 'admission_date', 'status',
-  'blood_group', 'emergency_contact', 'medical_conditions', 'allergies',
+  'blood_group', 'emergency_contact', 'medical_notes',
 ] as const;
 
 export class StudentRepository {
@@ -17,13 +17,13 @@ export class StudentRepository {
         id, institution_id, user_id, admission_number, roll_number, 
         first_name, middle_name, last_name, gender, date_of_birth, 
         email, phone, address, photo, admission_date, status, created_by, updated_by,
-        blood_group, emergency_contact, medical_conditions, allergies
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        blood_group, emergency_contact, medical_notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id, institutionId, input.user_id || null, input.admission_number, input.roll_number || null,
       input.first_name, input.middle_name || null, input.last_name || '', input.gender || null, input.date_of_birth || null,
       input.email || null, input.phone || null, input.address || null, input.photo || null, input.admission_date || null, input.status || 'ACTIVE', userId || null, userId || null,
-      input.blood_group || null, input.emergency_contact || null, input.medical_conditions || null, input.allergies || null
+      input.blood_group || null, input.emergency_contact || null, input.medical_notes || null
     ).run();
 
     // 2. Insert enrollment if academic info is provided
@@ -63,8 +63,21 @@ export class StudentRepository {
       }
     }
 
-    // 3. Insert guardian if guardian info is provided
-    if (input.guardian_name) {
+    // 3. Insert guardians
+    if (input.guardians && Array.isArray(input.guardians) && input.guardians.length > 0) {
+      for (const g of input.guardians) {
+        if (!g.name) continue;
+        const guardianId = crypto.randomUUID();
+        await this.db.prepare(`
+          INSERT INTO guardians (
+            id, student_id, name, relationship, phone, email, is_active, created_by, updated_by
+          ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+        `).bind(
+          guardianId, id, g.name, g.relationship || 'Parent', 
+          g.phone || null, g.email || null, userId || null, userId || null
+        ).run();
+      }
+    } else if (input.guardian_name) {
       const guardianId = crypto.randomUUID();
       await this.db.prepare(`
         INSERT INTO guardians (
@@ -78,7 +91,7 @@ export class StudentRepository {
   }
 
   async findById(id: string): Promise<any | null> {
-    return await this.db.prepare(`
+    const student = await this.db.prepare(`
       SELECT 
         s.*,
         se.academic_year_id,
@@ -101,11 +114,7 @@ export class StudentRepository {
           SELECT COALESCE(SUM(total_amount - paid_amount), 0) 
           FROM student_fee_records 
           WHERE student_id = s.id AND is_active = 1
-        ) AS fee_due,
-        g.name AS guardian_name,
-        g.relationship AS guardian_relationship,
-        g.phone AS guardian_phone,
-        g.email AS guardian_email
+        ) AS fee_due
       FROM students s
       LEFT JOIN student_enrollments se ON se.id = (
         SELECT id FROM student_enrollments 
@@ -115,13 +124,33 @@ export class StudentRepository {
       LEFT JOIN courses c ON c.id = se.course_id AND c.is_active = 1
       LEFT JOIN sections sec ON sec.id = se.section_id AND sec.is_active = 1
       LEFT JOIN academic_years ay ON ay.id = se.academic_year_id AND ay.is_active = 1
-      LEFT JOIN guardians g ON g.id = (
-        SELECT id FROM guardians 
-        WHERE student_id = s.id AND is_active = 1 
-        ORDER BY created_at DESC LIMIT 1
-      )
       WHERE s.id = ? AND s.is_active = 1
     `).bind(id).first<any>();
+
+    if (student) {
+      const { results: guardians } = await this.db.prepare(`
+        SELECT id, name, relationship, phone, email, occupation
+        FROM guardians
+        WHERE student_id = ? AND is_active = 1
+        ORDER BY created_at ASC
+      `).bind(id).all<any>();
+      student.guardians = guardians || [];
+
+      // Backward compatibility fields
+      if (guardians && guardians.length > 0) {
+        student.guardian_name = guardians[0].name;
+        student.guardian_relationship = guardians[0].relationship;
+        student.guardian_phone = guardians[0].phone;
+        student.guardian_email = guardians[0].email;
+      } else {
+        student.guardian_name = null;
+        student.guardian_relationship = null;
+        student.guardian_phone = null;
+        student.guardian_email = null;
+      }
+    }
+
+    return student;
   }
 
   async listByInstitution(
@@ -256,7 +285,21 @@ export class StudentRepository {
     }
 
     // 2. Update guardian details
-    if (input.guardian_name) {
+    if (input.guardians && Array.isArray(input.guardians)) {
+      await this.db.prepare('DELETE FROM guardians WHERE student_id = ?').bind(id).run();
+      for (const g of input.guardians) {
+        if (!g.name) continue;
+        const guardianId = crypto.randomUUID();
+        await this.db.prepare(`
+          INSERT INTO guardians (
+            id, student_id, name, relationship, phone, email, is_active, created_by, updated_by
+          ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+        `).bind(
+          guardianId, id, g.name, g.relationship || 'Parent', 
+          g.phone || null, g.email || null, userId || null, userId || null
+        ).run();
+      }
+    } else if (input.guardian_name) {
       const hasGuardian = await this.db.prepare('SELECT id FROM guardians WHERE student_id = ? AND is_active = 1').bind(id).first<{ id: string }>();
       if (hasGuardian) {
         await this.db.prepare(`
@@ -319,6 +362,22 @@ export class StudentRepository {
       this.db.prepare(`UPDATE student_fee_records SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id),
       this.db.prepare(`UPDATE guardians SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id),
       this.db.prepare(`UPDATE student_attendance SET is_active = 0, deleted_at = datetime('now'), updated_by = ? WHERE student_id = ?`).bind(userId || null, id)
+    ];
+    await this.db.batch(stmts);
+  }
+
+  async hardDelete(id: string): Promise<void> {
+    const stmts = [
+      this.db.prepare(`DELETE FROM fee_receipts WHERE payment_id IN (SELECT id FROM fee_payments WHERE student_id = ?)`).bind(id),
+      this.db.prepare(`DELETE FROM fee_payments WHERE student_id = ?`).bind(id),
+      this.db.prepare(`DELETE FROM student_fee_records WHERE student_id = ?`).bind(id),
+      this.db.prepare(`DELETE FROM student_marks WHERE student_id = ?`).bind(id),
+      this.db.prepare(`DELETE FROM student_attendance WHERE student_id = ?`).bind(id),
+      this.db.prepare(`DELETE FROM student_enrollments WHERE student_id = ?`).bind(id),
+      this.db.prepare(`DELETE FROM guardians WHERE student_id = ?`).bind(id),
+      this.db.prepare(`DELETE FROM alumni WHERE student_id = ?`).bind(id),
+      this.db.prepare(`DELETE FROM notes WHERE entity_type = 'student' AND entity_id = ?`).bind(id),
+      this.db.prepare(`DELETE FROM students WHERE id = ?`).bind(id)
     ];
     await this.db.batch(stmts);
   }

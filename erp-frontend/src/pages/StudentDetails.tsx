@@ -61,8 +61,7 @@ export default function StudentDetails() {
   const [healthForm, setHealthForm] = useState({
     blood_group: '',
     emergency_contact: '',
-    medical_conditions: '',
-    allergies: ''
+    medical_notes: ''
   });
 
   // Enrollment Management modal states
@@ -184,8 +183,7 @@ export default function StudentDetails() {
       setHealthForm({
         blood_group: studentData.blood_group || '',
         emergency_contact: studentData.emergency_contact || '',
-        medical_conditions: studentData.medical_conditions || '',
-        allergies: studentData.allergies || ''
+        medical_notes: studentData.medical_notes || ''
       });
 
       const currentEnroll = sortedEnrollments[0];
@@ -535,14 +533,14 @@ export default function StudentDetails() {
       <div className="card student-profile-card">
         {/* Left Column: Big Avatar */}
         <div className="student-details-col-6">
-          <div className="student-details-row-7" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="student-details-row-7">
             {student.photo ? (
               <img 
                 src={student.photo.startsWith('data:image') || student.photo.startsWith('/api') || student.photo.startsWith('http')
                   ? student.photo 
                   : `/api/students/photo/${student.id}`} 
                 alt="Student Photo" 
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} 
+                className="student-details-avatar-img" 
               />
             ) : (
               '👤'
@@ -603,24 +601,7 @@ export default function StudentDetails() {
           return (
             <button 
               key={t.id}
-              style={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                minHeight: '48px',
-                height: '48px',
-                padding: '12px 20px', 
-                border: 'none', 
-                background: 'none', 
-                cursor: 'pointer', 
-                borderBottom: isSelected ? '3px solid var(--primary)' : '3px solid transparent', 
-                color: isSelected ? 'var(--primary)' : '#64748b', 
-                fontWeight: isSelected ? '700' : '500',
-                fontSize: '0.875rem',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                transition: 'all 0.15s ease-in-out'
-              }} 
+              className={`student-details-tab-btn ${isSelected ? 'is-selected' : ''}`}
               onClick={() => setActiveTab(t.id)}
             >
               <Icon size={15} />
@@ -680,9 +661,9 @@ export default function StudentDetails() {
                 <label className="student-details-label-44">Admission Date</label>
                 <span className="student-details-span-45">{student.admission_date || '-'}</span>
               </div>
-              <div style={{ gridColumn: 'span 2' }}>
+              <div className="student-details-address-col">
                 <label className="student-details-label-44">Address</label>
-                <span className="student-details-span-45" style={{ fontWeight: '500' }}>{student.address || '-'}</span>
+                <span className="student-details-span-45 student-details-address-val">{student.address || '-'}</span>
               </div>
             </div>
           </div>
@@ -864,7 +845,7 @@ export default function StudentDetails() {
                 <div className="student-details-grid-84">
                   <div className="student-details-div-85">
                     <span className="student-details-span-86">Attendance Rate</span>
-                    <strong style={{ fontSize: '1.75rem', color: attendanceInfo.percentage >= 75 ? '#10b981' : '#f59e0b' }}>
+                    <strong className={`student-details-attendance-pct ${attendanceInfo.percentage >= 75 ? 'is-good' : 'is-warning'}`}>
                       {attendanceInfo.percentage}%
                     </strong>
                   </div>
@@ -1040,7 +1021,7 @@ export default function StudentDetails() {
               </div>
               <div className="student-details-div-127">
                 <span className="student-details-span-128">Pending Balance Due</span>
-                <strong style={{ fontSize: '1.5rem', color: remainingFeeDue > 0 ? '#ef4444' : '#10b981' }}>
+                <strong className={`student-details-feedue-val ${remainingFeeDue > 0 ? 'is-due' : 'is-none'}`}>
                   ₹{remainingFeeDue.toLocaleString('en-IN')}
                 </strong>
               </div>
@@ -1132,19 +1113,7 @@ export default function StudentDetails() {
               {timelineItems.map((item, index) => (
                 <div key={index} className="student-details-col-138">
                   {/* Dot */}
-                  <div style={{ 
-                    position: 'absolute', 
-                    left: '-2rem', 
-                    marginLeft: '-3px',
-                    top: '4px',
-                    width: '16px', 
-                    height: '16px', 
-                    borderRadius: '50%', 
-                    backgroundColor: item.completed ? '#10b981' : '#cbd5e1', 
-                    border: '3px solid #ffffff',
-                    boxShadow: '0 0 0 1px #e2e8f0',
-                    zIndex: 2
-                  }} />
+                  <div className={`student-details-timeline-dot ${item.completed ? 'is-completed' : ''}`} />
                   
                   <h5 className="student-details-row-139">
                     {item.title}
@@ -1201,12 +1170,8 @@ export default function StudentDetails() {
                   <input type="text" value={healthForm.emergency_contact} onChange={e => setHealthForm({...healthForm, emergency_contact: e.target.value})} placeholder="e.g. +91 98765 43210 (Father)" />
                 </div>
                 <div className="form-group">
-                  <label>Medical Conditions</label>
-                  <textarea value={healthForm.medical_conditions} onChange={e => setHealthForm({...healthForm, medical_conditions: e.target.value})} placeholder="e.g. Asthma, none" rows={2} />
-                </div>
-                <div className="form-group">
-                  <label>Allergies</label>
-                  <textarea value={healthForm.allergies} onChange={e => setHealthForm({...healthForm, allergies: e.target.value})} placeholder="e.g. Peanuts, Penicillin, none" rows={2} />
+                  <label>Medical Notes</label>
+                  <textarea value={healthForm.medical_notes} onChange={e => setHealthForm({...healthForm, medical_notes: e.target.value})} placeholder="e.g. Asthma, special instructions, etc." rows={2} />
                 </div>
 
                 <div className="student-details-row-147">
@@ -1222,7 +1187,7 @@ export default function StudentDetails() {
               <div className="student-details-grid-148">
                 <div className="student-details-div-149">
                   <span className="student-details-span-150">Blood Group</span>
-                  <strong style={{ fontSize: '1.1rem', color: student.blood_group ? '#ef4444' : 'var(--text-muted)' }}>
+                  <strong className={`student-details-blood-val ${student.blood_group ? 'has-value' : ''}`}>
                     {student.blood_group || 'Not Specified'}
                   </strong>
                 </div>
@@ -1233,15 +1198,9 @@ export default function StudentDetails() {
                   </strong>
                 </div>
                 <div className="student-details-div-154">
-                  <span className="student-details-span-155">Medical Conditions</span>
+                  <span className="student-details-span-155">Medical Notes</span>
                   <p className="student-details-text-156">
-                    {student.medical_conditions || 'No known chronic medical conditions.'}
-                  </p>
-                </div>
-                <div className="student-details-div-157">
-                  <span className="student-details-span-158">Known Allergies</span>
-                  <p className="student-details-text-159">
-                    {student.allergies || 'No known substance or food allergies reported.'}
+                    {student.medical_notes || 'No medical notes registered.'}
                   </p>
                 </div>
               </div>
@@ -1348,10 +1307,10 @@ export default function StudentDetails() {
             </div>
             
             <div className="student-details-grid-184">
-              {guardians.map(g => (
+              {guardians.map((g, idx) => (
                 <div key={g.id} className="card student-guardian-card">
                   <div className="student-details-row-186">
-                    <span className="student-details-span-187">Primary Guardian</span>
+                    <span className="student-details-span-187">{idx === 0 ? 'Primary Contact' : 'Secondary Contact'}</span>
                     <span className="badge badge-success student-details-badge">Active</span>
                   </div>
                   <div>

@@ -157,6 +157,10 @@ export default function Teachers() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (createStep < 4) {
+      nextStep();
+      return;
+    }
     
     const firstName = form.first_name.trim();
     const middleName = form.middle_name ? form.middle_name.trim() : '';
@@ -687,11 +691,11 @@ export default function Teachers() {
                     </button>
                   )}
                   {createStep < 4 ? (
-                    <button type="button" onClick={nextStep} className="btn btn-primary">
+                    <button key="btn-next" type="button" onClick={nextStep} className="btn btn-primary">
                       Next
                     </button>
                   ) : (
-                    <button type="submit" className="btn btn-primary">
+                    <button key="btn-submit" type="submit" className="btn btn-primary">
                       Create Teacher
                     </button>
                   )}

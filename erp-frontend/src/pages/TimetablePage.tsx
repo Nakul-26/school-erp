@@ -315,17 +315,7 @@ export default function TimetablePage() {
                             <td
                               key={slot.id}
                               onClick={() => !entry && handleCellClick(day, slot.id)}
-                              style={{
-                                border: '1px solid var(--border)',
-                                verticalAlign: 'top',
-                                padding: '0.5rem',
-                                height: '110px',
-                                cursor: entry ? 'default' : 'pointer',
-                                backgroundColor: entry ? (slot.slot_type === 'break' ? '#f1f5f9' : '#e0e7ff') : '#ffffff',
-                                transition: 'background-color 0.2s',
-                              }}
-                              onMouseEnter={(e) => { if (!entry) e.currentTarget.style.backgroundColor = '#f5f3ff'; }}
-                              onMouseLeave={(e) => { if (!entry) e.currentTarget.style.backgroundColor = '#ffffff'; }}
+                              className={`timetable-grid-cell${entry ? ' has-entry' : ''}${entry ? (slot.slot_type === 'break' ? ' slot-break' : ' slot-period') : ''}`}
                             >
                               {entry ? (
                                 <div className="timetable-page-col-12">
@@ -368,18 +358,7 @@ export default function TimetablePage() {
                       key={day}
                       type="button"
                       onClick={() => setSelectedDayMobile(day)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        borderRadius: '20px',
-                        border: '1px solid var(--border)',
-                        background: selectedDayMobile === day ? 'var(--primary)' : 'white',
-                        color: selectedDayMobile === day ? 'white' : 'var(--text-main)',
-                        fontWeight: 600,
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        boxShadow: selectedDayMobile === day ? '0 2px 6px rgba(99,102,241,0.2)' : 'none'
-                      }}
+                      className={`timetable-mobile-day-btn${selectedDayMobile === day ? ' is-active' : ''}`}
                     >
                       {day}
                     </button>
@@ -392,15 +371,7 @@ export default function TimetablePage() {
                     return (
                       <div
                         key={slot.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '1rem',
-                          padding: '1rem',
-                          border: '1px solid var(--border)',
-                          borderRadius: 'var(--radius-sm)',
-                          background: entry ? (slot.slot_type === 'break' ? '#f8fafc' : '#f0f4ff') : 'white'
-                        }}
+                        className={`timetable-mobile-timeline-slot${entry ? (slot.slot_type === 'break' ? ' slot-break' : ' slot-period') : ''}`}
                       >
                         <div className="timetable-page-div-21">
                           <span className="timetable-page-span-22">{slot.name}</span>
@@ -601,8 +572,8 @@ export default function TimetablePage() {
   if (redirecting) {
     return (
       <Layout>
-        <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-          <RefreshCw size={24} className="spin" style={{ marginBottom: '1rem' }} />
+        <div className="timetable-loading-container">
+          <RefreshCw size={24} className="spin timetable-loading-spinner" />
           <p>Redirecting to your timetable workspace...</p>
         </div>
       </Layout>

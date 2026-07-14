@@ -1097,11 +1097,10 @@ export default function TeacherDetails() {
         {/* 8. TIMELINE TAB */}
         {activeTab === 'timeline' && (
           <div className="card teacher-tab-panel-card">
-            <div className="teacher-details-header-layout" style={{ marginBottom: '1.25rem' }}>
-              <h4 className="teacher-details-title-66" style={{ margin: 0 }}>Action Audit Timeline</h4>
+            <div className="teacher-details-timeline-header-row">
+              <h4 className="teacher-details-title-66 teacher-details-timeline-title">Action Audit Timeline</h4>
               <button 
                 className="btn btn-secondary btn-sm" 
-                style={{ height: 'auto', padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}
                 onClick={() => {
                   setTimelineForm({ title: '', desc: '' });
                   setShowTimelineModal(true);
@@ -1115,13 +1114,13 @@ export default function TeacherDetails() {
               {timelineEvents.map(evt => (
                 <div key={evt.id} className="teacher-details-timeline-item-container">
                   <div className="teacher-details-timeline-bullet-node" />
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>{evt.date}</div>
-                  <h5 style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', margin: '0.15rem 0' }}>{evt.title}</h5>
-                  <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', margin: 0 }}>{evt.desc}</p>
+                  <div className="teacher-details-timeline-date">{evt.date}</div>
+                  <h5 className="teacher-details-timeline-event-title">{evt.title}</h5>
+                  <p className="teacher-details-timeline-event-desc">{evt.desc}</p>
                 </div>
               ))}
               {timelineEvents.length === 0 && (
-                <div style={{ color: 'var(--text-secondary)', padding: '1.5rem 0' }}>No timeline logs present.</div>
+                <div className="teacher-details-timeline-empty">No timeline logs present.</div>
               )}
             </div>
           </div>
@@ -1130,12 +1129,12 @@ export default function TeacherDetails() {
 
       {/* --- APPLY LEAVE MODAL --- */}
       {showLeaveModal && (
-        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="card modal-content" style={{ width: '400px', padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>Apply for Leave</h3>
-            <form onSubmit={handleApplyLeave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Leave Type *</label>
+        <div className="teacher-details-modal-overlay">
+          <div className="card modal-content teacher-details-modal-card">
+            <h3 className="teacher-details-modal-title">Apply for Leave</h3>
+            <form onSubmit={handleApplyLeave} className="teacher-details-modal-form">
+              <div className="teacher-details-form-group-col">
+                <label className="teacher-details-form-label-styled">Leave Type *</label>
                 <select 
                   value={leaveForm.leave_type_id} 
                   onChange={e => setLeaveForm({ ...leaveForm, leave_type_id: e.target.value })}
@@ -1148,9 +1147,9 @@ export default function TeacherDetails() {
                 </select>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>From Date *</label>
+              <div className="teacher-details-form-row-2col">
+                <div className="teacher-details-form-group-col">
+                  <label className="teacher-details-form-label-styled">From Date *</label>
                   <input 
                     type="date" 
                     value={leaveForm.from_date} 
@@ -1160,8 +1159,8 @@ export default function TeacherDetails() {
                   />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>To Date *</label>
+                <div className="teacher-details-form-group-col">
+                  <label className="teacher-details-form-label-styled">To Date *</label>
                   <input 
                     type="date" 
                     value={leaveForm.to_date} 
@@ -1172,8 +1171,8 @@ export default function TeacherDetails() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Days Count *</label>
+              <div className="teacher-details-form-group-col">
+                <label className="teacher-details-form-label-styled">Days Count *</label>
                 <input 
                   type="number" 
                   value={leaveForm.days_count} 
@@ -1184,8 +1183,8 @@ export default function TeacherDetails() {
                 />
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Reason *</label>
+              <div className="teacher-details-form-group-col">
+                <label className="teacher-details-form-label-styled">Reason *</label>
                 <textarea 
                   value={leaveForm.reason} 
                   onChange={e => setLeaveForm({ ...leaveForm, reason: e.target.value })}
@@ -1196,7 +1195,7 @@ export default function TeacherDetails() {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <div className="teacher-details-modal-actions-row">
                 <button type="button" onClick={() => setShowLeaveModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={submittingLeave}>
                   {submittingLeave ? 'Submitting...' : 'Apply'}
@@ -1209,45 +1208,57 @@ export default function TeacherDetails() {
 
       {/* --- EDIT PROFILE MODAL --- */}
       {showEditModal && (
-        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="card modal-content" style={{ width: '520px', padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>Edit Teacher Profile</h3>
+        <div className="teacher-details-modal-overlay">
+          <div className="card modal-content teacher-details-modal-card-wide">
+            <h3 className="teacher-details-modal-title">Edit Teacher Profile</h3>
             
-            <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border)', marginBottom: '1.25rem' }}>
-              <button type="button" className={`btn-tab ${editTab === 'personal' ? 'active' : ''}`} onClick={() => setEditTab('personal')} style={{ padding: '0.5rem', background: 'none', border: 'none', borderBottom: editTab === 'personal' ? '2px solid var(--primary)' : 'none', cursor: 'pointer', fontWeight: editTab === 'personal' ? '700' : '400' }}>Personal Details</button>
-              <button type="button" className={`btn-tab ${editTab === 'professional' ? 'active' : ''}`} onClick={() => setEditTab('professional')} style={{ padding: '0.5rem', background: 'none', border: 'none', borderBottom: editTab === 'professional' ? '2px solid var(--primary)' : 'none', cursor: 'pointer', fontWeight: editTab === 'professional' ? '700' : '400' }}>Professional Details</button>
+            <div className="teacher-details-edit-tabs-nav">
+              <button 
+                type="button" 
+                className={`teacher-details-edit-tab-btn${editTab === 'personal' ? ' is-active' : ''}`} 
+                onClick={() => setEditTab('personal')}
+              >
+                Personal Details
+              </button>
+              <button 
+                type="button" 
+                className={`teacher-details-edit-tab-btn${editTab === 'professional' ? ' is-active' : ''}`} 
+                onClick={() => setEditTab('professional')}
+              >
+                Professional Details
+              </button>
             </div>
 
-            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleEditSubmit} className="teacher-details-modal-form">
               {editTab === 'personal' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <label style={{ fontSize: '0.85rem' }}>First Name</label>
+                <div className="teacher-details-form-row-2col">
+                  <div className="teacher-details-form-group-col">
+                    <label className="teacher-details-form-label-styled">First Name</label>
                     <input type="text" value={editForm.first_name} onChange={e => setEditForm({ ...editForm, first_name: e.target.value })} className="input" required />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <label style={{ fontSize: '0.85rem' }}>Last Name</label>
+                  <div className="teacher-details-form-group-col">
+                    <label className="teacher-details-form-label-styled">Last Name</label>
                     <input type="text" value={editForm.last_name} onChange={e => setEditForm({ ...editForm, last_name: e.target.value })} className="input" required />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <label style={{ fontSize: '0.85rem' }}>Email</label>
+                  <div className="teacher-details-form-group-col">
+                    <label className="teacher-details-form-label-styled">Email</label>
                     <input type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="input" />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <label style={{ fontSize: '0.85rem' }}>Phone</label>
+                  <div className="teacher-details-form-group-col">
+                    <label className="teacher-details-form-label-styled">Phone</label>
                     <input type="text" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} className="input" />
                   </div>
                 </div>
               )}
 
               {editTab === 'professional' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <label style={{ fontSize: '0.85rem' }}>Employee ID</label>
+                <div className="teacher-details-form-row-2col">
+                  <div className="teacher-details-form-group-col">
+                    <label className="teacher-details-form-label-styled">Employee ID</label>
                     <input type="text" value={editForm.employee_id} onChange={e => setEditForm({ ...editForm, employee_id: e.target.value })} className="input" />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <label style={{ fontSize: '0.85rem' }}>Department</label>
+                  <div className="teacher-details-form-group-col">
+                    <label className="teacher-details-form-label-styled">Department</label>
                     <select value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })} className="input">
                       <option value="">Select Department</option>
                       {departments.map(d => (
@@ -1255,18 +1266,18 @@ export default function TeacherDetails() {
                       ))}
                     </select>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <label style={{ fontSize: '0.85rem' }}>Designation</label>
+                  <div className="teacher-details-form-group-col">
+                    <label className="teacher-details-form-label-styled">Designation</label>
                     <input type="text" value={editForm.designation} onChange={e => setEditForm({ ...editForm, designation: e.target.value })} className="input" />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <label style={{ fontSize: '0.85rem' }}>Joining Date</label>
+                  <div className="teacher-details-form-group-col">
+                    <label className="teacher-details-form-label-styled">Joining Date</label>
                     <input type="date" value={editForm.joining_date} onChange={e => setEditForm({ ...editForm, joining_date: e.target.value })} className="input" />
                   </div>
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <div className="teacher-details-modal-actions-row-large">
                 <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
               </div>
@@ -1277,24 +1288,24 @@ export default function TeacherDetails() {
 
       {/* --- CREATE LOGIN ACCOUNT MODAL --- */}
       {showLoginModal && (
-        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="card modal-content" style={{ width: '400px', padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>Link Login Credentials</h3>
-            <form onSubmit={handleCreateLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label style={{ fontSize: '0.85rem' }}>Username *</label>
+        <div className="teacher-details-modal-overlay">
+          <div className="card modal-content teacher-details-modal-card">
+            <h3 className="teacher-details-modal-title">Link Login Credentials</h3>
+            <form onSubmit={handleCreateLogin} className="teacher-details-modal-form">
+              <div className="teacher-details-form-group-col">
+                <label className="teacher-details-form-label-styled">Username *</label>
                 <input type="text" value={loginUsername} onChange={e => setLoginUsername(e.target.value)} className="input" required />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label style={{ fontSize: '0.85rem' }}>Email *</label>
+              <div className="teacher-details-form-group-col">
+                <label className="teacher-details-form-label-styled">Email *</label>
                 <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} className="input" required />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label style={{ fontSize: '0.85rem' }}>Password *</label>
+              <div className="teacher-details-form-group-col">
+                <label className="teacher-details-form-label-styled">Password *</label>
                 <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className="input" required />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <div className="teacher-details-modal-actions-row">
                 <button type="button" onClick={() => setShowLoginModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={creatingLogin}>
                   {creatingLogin ? 'Creating...' : 'Provision Login'}
@@ -1307,12 +1318,12 @@ export default function TeacherDetails() {
 
       {/* --- ADD TIMELINE EVENT MODAL --- */}
       {showTimelineModal && (
-        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="card modal-content" style={{ width: '400px', padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>Add Timeline Audit Log</h3>
-            <form onSubmit={handleTimelineSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label htmlFor="timeline-title-input" style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Event Title *</label>
+        <div className="teacher-details-modal-overlay">
+          <div className="card modal-content teacher-details-modal-card">
+            <h3 className="teacher-details-modal-title">Add Timeline Audit Log</h3>
+            <form onSubmit={handleTimelineSubmit} className="teacher-details-modal-form">
+              <div className="teacher-details-form-group-col">
+                <label htmlFor="timeline-title-input" className="teacher-details-form-label-styled">Event Title *</label>
                 <input 
                   id="timeline-title-input"
                   type="text" 
@@ -1323,8 +1334,8 @@ export default function TeacherDetails() {
                   required 
                 />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label htmlFor="timeline-desc-textarea" style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Event Description *</label>
+              <div className="teacher-details-form-group-col">
+                <label htmlFor="timeline-desc-textarea" className="teacher-details-form-label-styled">Event Description *</label>
                 <textarea 
                   id="timeline-desc-textarea"
                   value={timelineForm.desc} 
@@ -1336,7 +1347,7 @@ export default function TeacherDetails() {
                 />
               </div>
  
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <div className="teacher-details-modal-actions-row">
                 <button type="button" onClick={() => setShowTimelineModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Add Log</button>
               </div>

@@ -1465,4 +1465,134 @@
   border: 2px solid var(--bg-card);
 }
 
+/* Modal and Form Styles added for RULES.md compliance */
+.teacher-details-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.40);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.teacher-details-modal-card {
+  width: 400px;
+  padding: 1.5rem;
+}
+
+.teacher-details-modal-card-wide {
+  width: 520px;
+  padding: 1.5rem;
+}
+
+.teacher-details-modal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+}
+
+.teacher-details-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.teacher-details-form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.teacher-details-form-group-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.teacher-details-form-label-styled {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.teacher-details-modal-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.teacher-details-modal-actions-row-large {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Timeline Audit Log elements */
+.teacher-details-timeline-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+}
+
+.teacher-details-timeline-title {
+  margin: 0;
+}
+
+.teacher-details-timeline-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.teacher-details-timeline-event-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0.15rem 0;
+}
+
+.teacher-details-timeline-event-desc {
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.teacher-details-timeline-empty {
+  color: var(--text-secondary);
+  padding: 1.5rem 0;
+  text-align: center;
+}
+
+/* Edit Tab headers */
+.teacher-details-edit-tabs-nav {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+}
+
+.teacher-details-edit-tab-btn {
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.teacher-details-edit-tab-btn.is-active {
+  border-bottom: 2px solid var(--primary);
+  font-weight: 700;
+}
+
+
 

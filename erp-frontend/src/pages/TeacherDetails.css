@@ -1596,6 +1596,7 @@
 
 /* Workspace main tabs styles */
 .teacher-workspace-tabs {
+  min-height: fit-content;
   display: flex;
   gap: 1.5rem;
   border-bottom: 1px solid var(--border);

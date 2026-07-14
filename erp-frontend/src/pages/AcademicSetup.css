@@ -1,68 +1,332 @@
-/* AcademicSetup Styles */
+/* AcademicSetup.css - Modern workspace-driven styles */
+
 .academic-setup-page {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 
-.setup-tabs {
-  background: var(--bg-card);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+.academic-setup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
-.setup-tab-btn {
-  flex: 1;
+.academic-setup-header h2 {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.academic-setup-header p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0.2rem 0 0 0;
+}
+
+.academic-setup-year-filter {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.academic-setup-year-filter label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.academic-setup-year-select {
+  width: 160px;
+  padding: 0.4rem 0.6rem;
+  height: auto;
+  font-size: 0.9rem;
+}
+
+/* Tabs Navigation Bar (matching Teacher workspace) */
+.academic-setup-tabs {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+}
+
+.academic-setup-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.academic-setup-tab-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-  padding: 0.65rem 1rem;
+  padding: 0.75rem 0.25rem;
+  border: none;
+  background: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-secondary);
+  font-weight: 400;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.academic-setup-tab-btn:hover {
+  color: var(--primary);
+}
+
+.academic-setup-tab-btn.is-active {
+  border-bottom: 3px solid var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Common tab block section header */
+.academic-setup-section-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.academic-setup-section-header-left h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.academic-setup-section-header-left p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0.15rem 0 0 0;
+}
+
+/* Curriculum Accordion (Borderless elegant list rows) */
+.academic-setup-list-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.academic-setup-course-accordion {
+  border-bottom: 1px solid var(--border);
+  background: none;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.academic-setup-course-accordion:last-child {
+  border-bottom: none;
+}
+
+.academic-setup-accordion-header {
+  padding: 1.25rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: none;
+  transition: all 0.2s ease;
+}
+
+.academic-setup-accordion-header:hover {
+  opacity: 0.8;
+}
+
+.academic-setup-accordion-title-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.academic-setup-accordion-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.academic-setup-accordion-title {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 0.975rem;
+}
+
+.academic-setup-accordion-subtitle {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.academic-setup-accordion-badge {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.academic-setup-accordion-content {
+  padding: 0 0 1.5rem 0;
+}
+
+.academic-setup-empty-container {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-secondary);
+}
+
+.academic-setup-empty-container p {
+  font-size: 0.9rem;
+}
+
+.academic-setup-empty-action-btn {
+  margin-top: 0.75rem;
+}
+
+/* Table overrides to look clean and neat */
+.academic-setup-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.academic-setup-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.academic-setup-table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.academic-setup-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Input Periods adjuster in cell */
+.academic-setup-periods-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-subtle);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.academic-setup-periods-btn {
   border: none;
   background: none;
   cursor: pointer;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-secondary);
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
+  border-radius: 50%;
+  transition: all 0.2s;
 }
 
-.setup-tab-btn:hover {
-  color: var(--primary);
-  background: var(--bg-subtle);
-}
-
-.setup-tab-btn.active {
-  color: #ffffff;
-  background: var(--primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.course-accordion {
-  transition: all 0.2s ease;
-  border: 1px solid var(--border);
-}
-
-.course-accordion:hover {
-  border-color: var(--primary-soft);
-  box-shadow: var(--shadow-sm);
-}
-
-.teacher-load-card {
-  padding: 1.25rem;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+.academic-setup-periods-btn:hover {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  color: var(--primary);
 }
 
-.modal-overlay {
+.academic-setup-periods-val {
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+  color: var(--text-main);
+}
+
+.academic-setup-actions-row {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.academic-setup-footer-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 1.25rem;
+}
+
+/* Modals Overlay (RULES.md compliant) */
+.academic-setup-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.40);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
   animation: fadeIn 0.2s ease;
 }
 
-.modal-content {
+.academic-setup-modal-card {
+  width: 420px;
+  padding: 1.5rem;
   animation: scaleUp 0.2s ease;
+}
+
+.academic-setup-modal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 1.25rem;
+}
+
+.academic-setup-modal-form-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.academic-setup-form-group-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.academic-setup-form-label-styled {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.academic-setup-modal-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Checklist specific styles */
+.academic-checklist-completed-badge {
+  padding: 0.25rem 0.5rem;
+  background-color: var(--success-soft);
+  color: var(--success);
+  font-weight: 600;
+  font-size: 0.8rem;
+  border-radius: var(--radius-sm);
+  display: inline-block;
 }
 
 @keyframes fadeIn {

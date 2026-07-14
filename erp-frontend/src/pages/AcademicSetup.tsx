@@ -374,20 +374,17 @@ export default function AcademicSetup() {
     <Layout>
       <div className="academic-setup-page">
         {/* Banner with filters */}
-        <div className="setup-banner card" style={{ padding: '1.25rem 1.5rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderLeft: '4px solid var(--primary)' }}>
+        <div className="academic-setup-header">
           <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--text-main)' }}>Academic Setup</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              Academic core configuration workflow step-by-step
-            </p>
+            <h2>Academic Setup</h2>
+            <p>Academic core configuration workflow step-by-step</p>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>School Year:</label>
+          <div className="academic-setup-year-filter">
+            <label>School Year:</label>
             <select
               value={selectedYearId}
               onChange={(e) => handleYearChange(e.target.value)}
-              className="input"
-              style={{ width: '160px', padding: '0.4rem 0.6rem', height: 'auto', fontSize: '0.9rem' }}
+              className="input academic-setup-year-select"
             >
               <option value="">-- Select Year --</option>
               {academicYears.map(y => (
@@ -398,24 +395,24 @@ export default function AcademicSetup() {
         </div>
 
         {/* Tab Controls */}
-        <div className="setup-tabs card" style={{ padding: '0.25rem 0.5rem', marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', border: '1px solid var(--border)' }}>
+        <div className="academic-setup-tabs">
           <button
             onClick={() => handleTabChange('curriculum')}
-            className={`setup-tab-btn ${activeTab === 'curriculum' ? 'active' : ''}`}
+            className={`academic-setup-tab-btn${activeTab === 'curriculum' ? ' is-active' : ''}`}
           >
             <Layers size={15} />
             <span>1. Curriculum & Periods</span>
           </button>
           <button
             onClick={() => handleTabChange('assignments')}
-            className={`setup-tab-btn ${activeTab === 'assignments' ? 'active' : ''}`}
+            className={`academic-setup-tab-btn${activeTab === 'assignments' ? ' is-active' : ''}`}
           >
             <ClipboardList size={15} />
             <span>2. Subject Assignments</span>
           </button>
           <button
             onClick={() => handleTabChange('timetable')}
-            className={`setup-tab-btn ${activeTab === 'timetable' ? 'active' : ''}`}
+            className={`academic-setup-tab-btn${activeTab === 'timetable' ? ' is-active' : ''}`}
           >
             <CalendarDays size={15} />
             <span>3. Timetable Generator</span>
@@ -424,8 +421,8 @@ export default function AcademicSetup() {
 
         {/* Render Tab Contents */}
         {loading ? (
-          <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <RefreshCw size={24} className="spin" style={{ marginBottom: '1rem' }} />
+          <div className="academic-setup-loading-container">
+            <RefreshCw size={24} className="spin academic-setup-loading-spinner" />
             <p>Loading academic details...</p>
           </div>
         ) : (
@@ -433,41 +430,32 @@ export default function AcademicSetup() {
             {/* ──── TAB 1: CURRICULUM & PERIODS ──── */}
             {activeTab === 'curriculum' && (
               <div className="curriculum-container">
-                <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)' }}>Curriculum Definition</h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+                <div className="academic-setup-section-header">
+                  <div className="academic-setup-section-header-left">
+                    <h3>Curriculum Definition</h3>
+                    <p>
                       Configure standard classes (Grades) and set how many periods/week each subject runs.
                     </p>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="academic-setup-list-layout">
                   {courses.map(course => {
                     const courseSubjects = subjects.filter(s => s.course_id === course.id);
                     const isExpanded = !!expandedCourses[course.id];
 
                     return (
-                      <div key={course.id} className="card course-accordion" style={{ padding: '0', overflow: 'hidden' }}>
+                      <div key={course.id} className="academic-setup-course-accordion">
                         <div
                           onClick={() => handleToggleCourse(course.id)}
-                          className="accordion-header"
-                          style={{
-                            padding: '1rem 1.25rem',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            cursor: 'pointer',
-                            background: 'var(--bg-subtle)',
-                            borderBottom: isExpanded ? '1px solid var(--border)' : 'none'
-                          }}
+                          className="academic-setup-accordion-header"
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)' }}></div>
-                            <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>
-                              {course.name} <span style={{ color: 'var(--text-muted)', fontWeight: '400', fontSize: '0.85rem' }}>({course.course_code})</span>
+                          <div className="academic-setup-accordion-title-container">
+                            <div className="academic-setup-accordion-dot"></div>
+                            <span className="academic-setup-accordion-title">
+                              {course.name} <span className="academic-setup-accordion-subtitle">({course.course_code})</span>
                             </span>
-                            <span className="badge" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
+                            <span className="badge badge-secondary academic-setup-accordion-badge">
                               {courseSubjects.length} subjects
                             </span>
                           </div>
@@ -475,37 +463,36 @@ export default function AcademicSetup() {
                         </div>
 
                         {isExpanded && (
-                          <div className="accordion-content" style={{ padding: '1.25rem' }}>
+                          <div className="academic-setup-accordion-content">
                             {courseSubjects.length === 0 ? (
-                              <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-secondary)' }}>
-                                <p style={{ fontSize: '0.9rem' }}>No subjects added to this grade yet.</p>
+                              <div className="academic-setup-empty-container">
+                                <p>No subjects added to this grade yet.</p>
                                 <button
                                   type="button"
                                   onClick={() => handleAddSubjectClick(course.id)}
-                                  className="btn btn-secondary"
-                                  style={{ marginTop: '0.75rem', padding: '0.35rem 0.75rem', fontSize: '0.85rem' }}
+                                  className="btn btn-secondary academic-setup-empty-action-btn"
                                 >
                                   <Plus size={14} /> Add First Subject
                                 </button>
                               </div>
                             ) : (
                               <div>
-                                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                                <table className="academic-setup-table">
                                   <thead>
                                     <tr>
-                                      <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', borderBottom: '1px solid var(--border)' }}>Subject</th>
-                                      <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', borderBottom: '1px solid var(--border)' }}>Code</th>
-                                      <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', borderBottom: '1px solid var(--border)', width: '150px' }}>Weekly Periods</th>
-                                      <th style={{ textAlign: 'right', padding: '0.5rem 0.75rem', borderBottom: '1px solid var(--border)', width: '120px' }}>Actions</th>
+                                      <th>Subject</th>
+                                      <th>Code</th>
+                                      <th style={{ textAlign: 'center', width: '150px' }}>Weekly Periods</th>
+                                      <th style={{ textAlign: 'right', width: '120px' }}>Actions</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {courseSubjects.map(sub => (
-                                      <tr key={sub.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                                        <td style={{ padding: '0.65rem 0.75rem', fontWeight: '500', color: 'var(--text-main)' }}>{sub.subject_name}</td>
-                                        <td style={{ padding: '0.65rem 0.75rem', color: 'var(--text-secondary)' }}>{sub.subject_code}</td>
-                                        <td style={{ padding: '0.65rem 0.75rem', textAlign: 'center' }}>
-                                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-subtle)', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-sm)' }}>
+                                      <tr key={sub.id}>
+                                        <td style={{ fontWeight: '500', color: 'var(--text-main)' }}>{sub.subject_name}</td>
+                                        <td style={{ color: 'var(--text-secondary)' }}>{sub.subject_code}</td>
+                                        <td style={{ textAlign: 'center' }}>
+                                          <div className="academic-setup-periods-badge">
                                             <button
                                               type="button"
                                               onClick={async () => {
@@ -515,11 +502,11 @@ export default function AcademicSetup() {
                                                   setSubjects(updatedSubs);
                                                 }
                                               }}
-                                              style={{ border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                              className="academic-setup-periods-btn"
                                             >
                                               -
                                             </button>
-                                            <span style={{ fontWeight: '600', minWidth: '20px' }}>{sub.weekly_hours}</span>
+                                            <span className="academic-setup-periods-val">{sub.weekly_hours}</span>
                                             <button
                                               type="button"
                                               onClick={async () => {
@@ -527,14 +514,14 @@ export default function AcademicSetup() {
                                                 const updatedSubs = await api.get('/subjects');
                                                 setSubjects(updatedSubs);
                                               }}
-                                              style={{ border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                              className="academic-setup-periods-btn"
                                             >
                                               +
                                             </button>
                                           </div>
                                         </td>
-                                        <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right' }}>
-                                          <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+                                        <td style={{ textAlign: 'right' }}>
+                                          <div className="academic-setup-actions-row">
                                             <button
                                               type="button"
                                               onClick={() => handleEditSubjectClick(sub)}
@@ -559,12 +546,11 @@ export default function AcademicSetup() {
                                     ))}
                                   </tbody>
                                 </table>
-                                <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '1rem' }}>
+                                <div className="academic-setup-footer-row">
                                   <button
                                     type="button"
                                     onClick={() => handleAddSubjectClick(course.id)}
                                     className="btn btn-primary"
-                                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
                                   >
                                     <Plus size={14} /> Add Subject to {course.name}
                                   </button>
@@ -583,23 +569,22 @@ export default function AcademicSetup() {
             {/* ──── TAB 2: SUBJECT ASSIGNMENTS ──── */}
             {activeTab === 'assignments' && (
               <div className="assignments-container">
-                <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)' }}>Teacher ↔ Subject assignments</h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
-                      Assign subject teachers per class section. This updates the workload load balance metrics in real-time.
+                <div className="academic-setup-section-header">
+                  <div className="academic-setup-section-header-left">
+                    <h3>Teacher ↔ Subject Assignments</h3>
+                    <p>
+                      Assign subject teachers per class section. This updates workload balance metrics in real-time.
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Class Section:</label>
+                  <div className="academic-setup-year-filter">
+                    <label>Class Section:</label>
                     <select
                       value={selectedSectionId}
                       onChange={(e) => {
                         setSelectedSectionId(e.target.value);
                         setSelectedTeacherId(null);
                       }}
-                      className="input"
-                      style={{ width: '160px', padding: '0.4rem 0.6rem', height: 'auto', fontSize: '0.9rem' }}
+                      className="input academic-setup-year-select"
                     >
                       <option value="">-- Select Class --</option>
                       {sections
@@ -617,7 +602,7 @@ export default function AcademicSetup() {
 
                   if (sectionSubjects.length === 0) {
                     return (
-                      <div className="card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                      <div className="academic-setup-empty-container">
                         <Info size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.75rem' }} />
                         <p style={{ fontWeight: '500' }}>No subjects defined for this class's curriculum grade.</p>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
@@ -629,17 +614,17 @@ export default function AcademicSetup() {
 
                   return (
                     <div style={{ display: 'grid', gridTemplateColumns: selectedTeacherId ? '1fr 320px' : '1fr', gap: '1.5rem', alignItems: 'start' }}>
-                      <div className="card" style={{ padding: '1rem 1.25rem' }}>
-                        <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)', marginBottom: '0.75rem' }}>
+                      <div>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-main)', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)', marginBottom: '0.75rem' }}>
                           Subject Assignments for Section {section?.name}
                         </h4>
-                        <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                        <table className="academic-setup-table">
                           <thead>
                             <tr>
-                              <th style={{ textAlign: 'left', padding: '0.5rem 0.5rem', borderBottom: '1px solid var(--border)' }}>Subject</th>
-                              <th style={{ textAlign: 'center', padding: '0.5rem 0.5rem', borderBottom: '1px solid var(--border)', width: '80px' }}>Periods</th>
-                              <th style={{ textAlign: 'left', padding: '0.5rem 0.5rem', borderBottom: '1px solid var(--border)', width: '220px' }}>Assigned Teacher</th>
-                              <th style={{ textAlign: 'right', padding: '0.5rem 0.5rem', borderBottom: '1px solid var(--border)', width: '100px' }}>Load Info</th>
+                              <th>Subject</th>
+                              <th style={{ textAlign: 'center', width: '80px' }}>Periods</th>
+                              <th style={{ width: '260px' }}>Assigned Teacher</th>
+                              <th style={{ textAlign: 'right', width: '100px' }}>Load Info</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -651,29 +636,34 @@ export default function AcademicSetup() {
                               const load = getTeacherLoadInfo(assignedTeacherId);
 
                               return (
-                                <tr key={sub.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                                  <td style={{ padding: '0.65rem 0.5rem', fontWeight: '500', color: 'var(--text-main)' }}>
+                                <tr key={sub.id}>
+                                  <td style={{ fontWeight: '500', color: 'var(--text-main)' }}>
                                     {sub.subject_name} <span style={{ color: 'var(--text-muted)', fontWeight: '400', fontSize: '0.8rem' }}>({sub.subject_code})</span>
                                   </td>
-                                  <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                                  <td style={{ textAlign: 'center', fontWeight: '600', color: 'var(--text-secondary)' }}>
                                     {sub.weekly_hours}
                                   </td>
-                                  <td style={{ padding: '0.65rem 0.5rem' }}>
+                                  <td>
                                     <select
                                       value={assignedTeacherId}
                                       onChange={(e) => handleAssignmentChange(sub.id, e.target.value)}
                                       className="input"
-                                      style={{ padding: '0.3rem 0.5rem', height: 'auto', fontSize: '0.85rem' }}
+                                      style={{ padding: '0.3rem 0.5rem', height: 'auto', fontSize: '0.85rem', width: '100%' }}
                                     >
                                       <option value="">-- Unassigned --</option>
                                       {teachers
                                         .filter(t => t.status === 'ACTIVE')
-                                        .map(t => (
-                                          <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>
-                                        ))}
+                                        .map(t => {
+                                          const tLoad = getTeacherLoadInfo(t.id);
+                                          return (
+                                            <option key={t.id} value={t.id}>
+                                              {`${t.first_name} ${t.last_name} (${tLoad.hours}/24 periods - ${tLoad.hours > 24 ? '⚠️ Overloaded' : (tLoad.hours > 18 ? 'Nearly Full' : '✓ Available')})`}
+                                            </option>
+                                          );
+                                        })}
                                     </select>
                                   </td>
-                                  <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right' }}>
+                                  <td style={{ textAlign: 'right' }}>
                                     {assignedTeacherId ? (
                                       <button
                                         type="button"
@@ -749,26 +739,17 @@ export default function AcademicSetup() {
                     </div>
                   );
                 })() : (
-                  <div className="card" style={{ padding: '3rem 1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <div className="academic-setup-empty-container">
                     <Info size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.75rem' }} />
                     <p style={{ fontWeight: '500' }}>Please select a class section above to view and edit subject assignments.</p>
                   </div>
                 )}
 
                 {/* Advanced Views (Collapsible filters) */}
-                <div className="card" style={{ padding: '0', overflow: 'hidden', marginTop: '2rem' }}>
+                <div className="academic-setup-course-accordion" style={{ marginTop: '2rem' }}>
                   <div
                     onClick={() => setAdvancedViewsExpanded(!advancedViewsExpanded)}
-                    className="accordion-header"
-                    style={{
-                      padding: '1rem 1.25rem',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      background: 'var(--bg-subtle)',
-                      borderBottom: advancedViewsExpanded ? '1px solid var(--border)' : 'none'
-                    }}
+                    className="academic-setup-accordion-header"
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600', color: 'var(--text-main)', fontSize: '0.9rem' }}>
                       <ClipboardList size={16} />
@@ -780,7 +761,7 @@ export default function AcademicSetup() {
                   </div>
 
                   {advancedViewsExpanded && (
-                    <div className="accordion-content" style={{ padding: '1.25rem' }}>
+                    <div className="academic-setup-accordion-content">
                       <div className="sub-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
                         <button
                           type="button"
@@ -913,14 +894,14 @@ export default function AcademicSetup() {
             {activeTab === 'timetable' && (
               <div className="timetable-generator-container">
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)' }}>Timetable Generator setup checklist</h3>
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)' }}>Timetable Generator Setup Checklist</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
                     Verify academic setup status. Generate or open the schedule once all steps are checked.
                   </p>
                 </div>
 
-                <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-                  <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1.25rem' }}>
+                <div style={{ marginBottom: '2rem' }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1.25rem' }}>
                     Academic Setup Verification Checklist
                   </h4>
                   
@@ -934,9 +915,11 @@ export default function AcademicSetup() {
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Active: {checklist.activeYearName}</div>
                         </div>
                       </div>
-                      {!checklist.hasActiveYear && (
+                      {checklist.hasActiveYear ? (
+                        <span className="academic-checklist-completed-badge">Completed</span>
+                      ) : (
                         <button type="button" onClick={() => navigate('/setup')} className="btn btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', height: 'auto' }}>
-                          Setup Year
+                          Setup Year →
                         </button>
                       )}
                     </div>
@@ -950,9 +933,11 @@ export default function AcademicSetup() {
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Found {checklist.classCount} sections for this year</div>
                         </div>
                       </div>
-                      {!checklist.hasClasses && (
+                      {checklist.hasClasses ? (
+                        <span className="academic-checklist-completed-badge">Completed</span>
+                      ) : (
                         <button type="button" onClick={() => navigate('/classes')} className="btn btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', height: 'auto' }}>
-                          Create Classes
+                          Define Classes →
                         </button>
                       )}
                     </div>
@@ -966,9 +951,11 @@ export default function AcademicSetup() {
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Found {checklist.subjectCount} subjects total</div>
                         </div>
                       </div>
-                      {!checklist.hasSubjects && (
+                      {checklist.hasSubjects ? (
+                        <span className="academic-checklist-completed-badge">Completed</span>
+                      ) : (
                         <button type="button" onClick={() => navigate('/subjects')} className="btn btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', height: 'auto' }}>
-                          Create Subjects
+                          Create Subjects →
                         </button>
                       )}
                     </div>
@@ -982,9 +969,11 @@ export default function AcademicSetup() {
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>All subjects in current grades have positive weekly periods</div>
                         </div>
                       </div>
-                      {!checklist.curriculumConfigured && (
+                      {checklist.curriculumConfigured ? (
+                        <span className="academic-checklist-completed-badge">Completed</span>
+                      ) : (
                         <button type="button" onClick={() => handleTabChange('curriculum')} className="btn btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', height: 'auto' }}>
-                          Configure Periods
+                          Configure Periods →
                         </button>
                       )}
                     </div>
@@ -998,9 +987,11 @@ export default function AcademicSetup() {
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Found {checklist.teacherCount} active teachers</div>
                         </div>
                       </div>
-                      {!checklist.hasTeachers && (
+                      {checklist.hasTeachers ? (
+                        <span className="academic-checklist-completed-badge">Completed</span>
+                      ) : (
                         <button type="button" onClick={() => navigate('/teachers')} className="btn btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', height: 'auto' }}>
-                          Register Teachers
+                          Register Teachers →
                         </button>
                       )}
                     </div>
@@ -1014,18 +1005,20 @@ export default function AcademicSetup() {
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>All subjects for all current class sections have teachers assigned</div>
                         </div>
                       </div>
-                      {!checklist.assignmentsComplete && (
+                      {checklist.assignmentsComplete ? (
+                        <span className="academic-checklist-completed-badge">Completed</span>
+                      ) : (
                         <button type="button" onClick={() => handleTabChange('assignments')} className="btn btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', height: 'auto' }}>
-                          Assign Teachers
+                          Assign Teachers →
                         </button>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '4px solid var(--primary)' }}>
+                <div style={{ padding: '1.5rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)' }}>
                   <div>
-                    <h4 style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-main)' }}>Generate / Edit Timetable Grid</h4>
+                    <h4 style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-main)', margin: 0 }}>Generate / Edit Timetable Grid</h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                       {checklist.readyToGenerate
                         ? 'All academic setup prerequisites have been satisfied! Go to scheduler to set slot times.'
@@ -1051,15 +1044,15 @@ export default function AcademicSetup() {
 
       {/* ── Add/Edit Subject Modal ── */}
       {showSubjectModal && (
-        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="card modal-content" style={{ width: '420px', padding: '1.5rem' }}>
-            <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>
-              {editingSubject ? 'Edit Subject Details' : 'Add Subject to Curriculum'}
+        <div className="academic-setup-modal-overlay">
+          <div className="card modal-content academic-setup-modal-card">
+            <h4 className="academic-setup-modal-title">
+              {editingSubject ? 'Edit Subject' : 'Add Subject'}
             </h4>
             <form onSubmit={handleSubjectSubmit}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Subject Name</label>
+              <div className="academic-setup-modal-form-layout">
+                <div className="academic-setup-form-group-col">
+                  <label className="academic-setup-form-label-styled">Name *</label>
                   <input
                     type="text"
                     value={subjectForm.subject_name}
@@ -1070,8 +1063,8 @@ export default function AcademicSetup() {
                   />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Subject Code</label>
+                <div className="academic-setup-form-group-col">
+                  <label className="academic-setup-form-label-styled">Code</label>
                   <input
                     type="text"
                     value={subjectForm.subject_code}
@@ -1082,8 +1075,8 @@ export default function AcademicSetup() {
                   />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Weekly Periods</label>
+                <div className="academic-setup-form-group-col">
+                  <label className="academic-setup-form-label-styled">Weekly classes per week</label>
                   <input
                     type="number"
                     min="1"
@@ -1096,7 +1089,7 @@ export default function AcademicSetup() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <div className="academic-setup-modal-actions-row">
                 <button
                   type="button"
                   onClick={() => setShowSubjectModal(false)}
@@ -1110,7 +1103,7 @@ export default function AcademicSetup() {
                   className="btn btn-primary"
                   disabled={submitting}
                 >
-                  {submitting ? 'Saving...' : 'Save Subject'}
+                  {submitting ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>

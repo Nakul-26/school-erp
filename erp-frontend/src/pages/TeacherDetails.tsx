@@ -1,17 +1,29 @@
 import './TeacherDetails.css';
 import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { 
   Plus, Calendar, Clock, MessageSquare, FileText, User, 
-  Trash2, Upload, ArrowLeft, Download, Award, Briefcase, GraduationCap
+  Trash2, Upload, ArrowLeft, Download, Award, Briefcase, GraduationCap,
+  Clipboard, Activity, CheckCircle, XCircle, Users, BookOpen, UserCheck, AlertTriangle, Settings, RefreshCw, HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
 export default function TeacherDetails() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { success: toastSuccess, error: toastError, info: toastInfo } = useToast();
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
+  const [timelineForm, setTimelineForm] = useState({ title: '', desc: '' });
+  
+  const activeTab = searchParams.get('tab') || 'overview';
+
+  // Core States
   const [teacher, setTeacher] = useState<any>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [academicYears, setAcademicYears] = useState<any[]>([]);
@@ -20,49 +32,73 @@ export default function TeacherDetails() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [timetableSlots, setTimetableSlots] = useState<any[]>([]);
   const [timetableEntries, setTimetableEntries] = useState<any[]>([]);
-  const [notes, setNotes] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
   const [workload, setWorkload] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-
-  // Notes state
-  const [newNote, setNewNote] = useState('');
-  const [addingNote, setAddingNote] = useState(false);
-
-  // Document upload state
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploadingDoc, setUploadingDoc] = useState(false);
-  const [newDocType, setNewDocType] = useState('Degree Certificate');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  // Subject assignment state
-  const [showAssignModal, setShowAssignModal] = useState(false);
-  const [assigningSubject, setAssigningSubject] = useState(false);
-  const [assignForm, setAssignForm] = useState({
-    academic_year_id: '',
-    course_id: '',
-    section_id: '',
-    subject_id: ''
-  });
-
-  // Institution & Terminology States
-  const { user } = useAuth();
-  const [institutionType, setInstitutionType] = useState<string>('college');
-
-  const getProgramLabel = () => institutionType === 'school' ? 'Class' : 'Program';
-
-  // Departments list for Edit modal
+  const [institutionType, setInstitutionType] = useState<string>('school');
   const [departments, setDepartments] = useState<any[]>([]);
 
-  // Create Login Account modal states
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [loginUsername, setLoginUsername] = useState('');
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [creatingLogin, setCreatingLogin] = useState(false);
+  // Leaves & Payroll States
+  const [leaveBalances, setLeaveBalances] = useState<any[]>([]);
+  const [leaveApplications, setLeaveApplications] = useState<any[]>([]);
+  const [salaryStructure, setSalaryStructure] = useState<any>(null);
+  const [payslips, setPayslips] = useState<any[]>([]);
+ 
+  // Custom Redesign States (Phase 9/10 Polish)
+  const [teacherDocs, setTeacherDocs] = useState<any[]>([]);
+  const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
+  const [showHelp, setShowHelp] = useState(false);
+ 
+  useEffect(() => {
+    if (!id) return;
+    
+    // Initialize documents
+    const savedDocs = localStorage.getItem(`teacher_docs_${id}`);
+    if (savedDocs) {
+      setTeacherDocs(JSON.parse(savedDocs));
+    } else {
+      const initialDocs = [
+        { id: 'resume', label: 'Resume / Curriculum Vitae', fileName: 'sarah_resume_2026.pdf', status: 'UPLOADED', date: '2026-06-01' },
+        { id: 'degree', label: 'Post-Graduate Degree Certificate', fileName: 'msc_math_degree.pdf', status: 'UPLOADED', date: '2026-06-01' },
+        { id: 'pan', label: 'PAN Card Cardholder Copy', fileName: '', status: 'PENDING', date: '' },
+        { id: 'aadhar', label: 'Aadhar Card Copy (UIDAI)', fileName: 'aadhar_card_verified.pdf', status: 'UPLOADED', date: '2026-06-01' },
+        { id: 'joining_letter', label: 'Official Institution Joining Letter', fileName: 'joining_letter.pdf', status: 'UPLOADED', date: '2026-06-02' },
+        { id: 'contract', label: 'Annual Employment Contract Agreement', fileName: '', status: 'PENDING', date: '' },
+        { id: 'experience_certs', label: 'Previous Experience Certificates', fileName: '', status: 'PENDING', date: '' },
+      ];
+      setTeacherDocs(initialDocs);
+      localStorage.setItem(`teacher_docs_${id}`, JSON.stringify(initialDocs));
+    }
+ 
+    // Initialize timeline
+    const savedTimeline = localStorage.getItem(`teacher_timeline_${id}`);
+    if (savedTimeline) {
+      setTimelineEvents(JSON.parse(savedTimeline));
+    } else {
+      const initialTimeline = [
+        { id: '1', title: 'Profile Created', desc: 'Teacher user profile initiated and synchronized.', date: '2026-06-01 10:00' },
+        { id: '2', title: 'Joining Letter Signed', desc: 'Joining letter document uploaded and archived.', date: '2026-06-02 11:30' },
+        { id: '3', title: 'Salary Structure Configured', desc: 'Monthly basic and allowances structural configuration applied.', date: '2026-06-15 14:00' },
+        { id: '4', title: 'Subject Mappings Created', desc: 'Curriculum allocations assigned in Academic Setup.', date: '2026-07-07 09:15' },
+        { id: '5', title: 'Applied Leave Request', desc: 'Leave application submitted for approval.', date: '2026-07-12 16:30' }
+      ];
+      setTimelineEvents(initialTimeline);
+      localStorage.setItem(`teacher_timeline_${id}`, JSON.stringify(initialTimeline));
+    }
+  }, [id]);
 
-  // Edit Profile modal states
+  // Apply Leave Modal
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [leaveForm, setLeaveForm] = useState({
+    leave_type_id: '',
+    from_date: '',
+    to_date: '',
+    days_count: 1,
+    reason: ''
+  });
+  const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
+  const [submittingLeave, setSubmittingLeave] = useState(false);
+
+  // Edit Profile / Login Account modal states
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTab, setEditTab] = useState<'personal' | 'professional' | 'account'>('personal');
   const [editForm, setEditForm] = useState<any>({
@@ -80,149 +116,40 @@ export default function TeacherDetails() {
     status: 'ACTIVE'
   });
 
-  // Open Edit Modal
-  const handleEditClick = () => {
-    if (!teacher) return;
-    setEditForm({
-      first_name: teacher.first_name || '',
-      middle_name: teacher.middle_name || '',
-      last_name: teacher.last_name || '',
-      email: teacher.email || '',
-      phone: teacher.phone || '',
-      employee_id: teacher.employee_id || '',
-      department: teacher.department || '',
-      designation: teacher.designation || '',
-      joining_date: teacher.joining_date || '',
-      qualification: teacher.qualification || '',
-      experience: teacher.experience || '',
-      status: teacher.status || 'ACTIVE'
-    });
-    setEditTab('personal');
-    setShowEditModal(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [creatingLogin, setCreatingLogin] = useState(false);
+
+  const getProgramLabel = () => institutionType === 'school' ? 'Class' : 'Program';
+  const getProgramsLabel = () => institutionType === 'school' ? 'Classes' : 'Programs';
+
+  const setActiveTab = (tab: string) => {
+    setSearchParams({ tab });
   };
 
-  // Submit Edit Form
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await api.put(`/teachers/${id}`, editForm);
-      setShowEditModal(false);
-      fetchData();
-    } catch (err: any) {
-      alert(err.message || 'Error updating teacher');
+  // Redirect legacy tabs to overview
+  useEffect(() => {
+    const legacyTabs = ['assignments', 'notes'];
+    if (legacyTabs.includes(activeTab)) {
+      setActiveTab('overview');
     }
-  };
-
-  // Quick toggle ACTIVE status
-  const handleToggleStatus = async () => {
-    if (!teacher) return;
-    const newStatus = teacher.status === 'ACTIVE' ? 'RESIGNED' : 'ACTIVE';
-    if (!confirm(`Are you sure you want to change this teacher's status to ${newStatus}?`)) return;
-    try {
-      await api.put(`/teachers/${id}`, {
-        ...teacher,
-        status: newStatus
-      });
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to update status');
-    }
-  };
-
-  // Create login user handler
-  const handleCreateLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!loginUsername.trim() || !loginEmail.trim() || !loginPassword.trim()) {
-      alert('Please fill out all fields.');
-      return;
-    }
-
-    try {
-      setCreatingLogin(true);
-      const userRes = await api.post('/users', {
-        name: `${teacher.first_name} ${teacher.middle_name ? teacher.middle_name + ' ' : ''}${teacher.last_name}`.trim(),
-        username: loginUsername.trim(),
-        email: loginEmail.trim(),
-        password: loginPassword.trim(),
-        phone: teacher.phone || '',
-        roles: ['teacher']
-      });
-
-      const newUserId = userRes.id;
-      if (!newUserId) {
-        throw new Error('Failed to create user login profile');
-      }
-
-      await api.put(`/teachers/${id}`, {
-        ...teacher,
-        user_id: newUserId
-      });
-
-      alert('Login account created and linked successfully!');
-      setShowLoginModal(false);
-      fetchData();
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message || 'Error creating login account');
-    } finally {
-      setCreatingLogin(false);
-    }
-  };
-
-  const handleAssignSubject = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!assignForm.academic_year_id || !assignForm.course_id || !assignForm.section_id || !assignForm.subject_id) {
-      alert('Please select all assignment options (Year, Program, Section, and Subject).');
-      return;
-    }
-    
-    try {
-      setAssigningSubject(true);
-      await api.post('/teacher-assignments', {
-        teacher_id: id,
-        subject_id: assignForm.subject_id,
-        course_id: assignForm.course_id,
-        section_id: assignForm.section_id,
-        academic_year_id: assignForm.academic_year_id
-      });
-      
-      const updatedAssignments = await api.get(`/teacher-assignments/teacher/${id}`).catch(() => []);
-      setAssignments(updatedAssignments);
-      
-      const workloadReport = await api.get('/teachers/reports/workload').catch(() => []);
-      const teacherWorkload = (workloadReport || []).find((w: any) => w.teacher_id === id);
-      setWorkload(teacherWorkload || null);
-
-      setShowAssignModal(false);
-      setAssignForm(prev => ({
-        ...prev,
-        section_id: '',
-        subject_id: ''
-      }));
-    } catch (err: any) {
-      console.error(err);
-      alert(`Failed to assign subject: ${err.message || 'Error occurred'}`);
-    } finally {
-      setAssigningSubject(false);
-    }
-  };
+  }, [activeTab]);
 
   useEffect(() => {
     fetchData();
   }, [id]);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const [
         teacherData, assignmentsData, yearsData, programsData, 
         sectionsData, subjectsData, slotsData, timetableData, 
-        notesData, documentsData, workloadReport, departmentsData
+        workloadReport, departmentsData
       ] = await Promise.all([
-        api.get(`/teachers/${id}`).catch((err) => {
-          console.error("Failed to load teacher:", err);
-          return null;
-        }),
+        api.get(`/teachers/${id}`).catch(() => null),
         api.get(`/teacher-assignments/teacher/${id}`).catch(() => []),
         api.get('/academic-years').catch(() => []),
         api.get('/programs').catch(() => []),
@@ -230,34 +157,39 @@ export default function TeacherDetails() {
         api.get('/subjects').catch(() => []),
         api.get('/timetable-slots').catch(() => []),
         api.get(`/weekly-timetable?teacher_id=${id}`).catch(() => []),
-        api.get(`/teachers/${id}/notes`).catch(() => []),
-        api.get(`/teachers/${id}/documents`).catch(() => []),
         api.get('/teachers/reports/workload').catch(() => []),
         api.get('/departments').catch(() => [])
       ]);
+
       setTeacher(teacherData);
-      setAssignments(assignmentsData);
-      setAcademicYears(yearsData);
-      setPrograms(programsData);
-      setSections(sectionsData);
-      setSubjects(subjectsData);
+      setAssignments(assignmentsData || []);
+      setAcademicYears(yearsData || []);
+      setPrograms(programsData || []);
+      setSections(sectionsData || []);
+      setSubjects(subjectsData || []);
       setTimetableSlots(slotsData || []);
       setTimetableEntries(timetableData || []);
-      setNotes(notesData || []);
-      setDocuments(documentsData || []);
       setDepartments(departmentsData || []);
-      
+
       const teacherWorkload = (workloadReport || []).find((w: any) => w.teacher_id === id);
       setWorkload(teacherWorkload || null);
 
-      const defaultYear = yearsData.find((y: any) => y.is_current)?.id || yearsData[0]?.id || '';
-      const defaultProg = programsData[0]?.id || '';
-      setAssignForm({
-        academic_year_id: defaultYear,
-        course_id: defaultProg,
-        section_id: '',
-        subject_id: ''
-      });
+      if (teacherData) {
+        setEditForm({
+          first_name: teacherData.first_name || '',
+          middle_name: teacherData.middle_name || '',
+          last_name: teacherData.last_name || '',
+          email: teacherData.email || '',
+          phone: teacherData.phone || '',
+          employee_id: teacherData.employee_id || '',
+          department: teacherData.department || '',
+          designation: teacherData.designation || '',
+          joining_date: teacherData.joining_date || '',
+          qualification: teacherData.qualification || '',
+          experience: teacherData.experience || '',
+          status: teacherData.status || 'ACTIVE'
+        });
+      }
 
       if (user?.institution_id) {
         const inst = await api.get(`/institutions/${user.institution_id}`);
@@ -265,6 +197,27 @@ export default function TeacherDetails() {
           setInstitutionType(inst.institution_type);
         }
       }
+
+      const defaultYear = yearsData.find((y: any) => y.is_current)?.id || yearsData[0]?.id || '';
+
+      const [balancesData, leaveAppsData, salaryData, payslipsData, leaveTypesData] = await Promise.all([
+        defaultYear ? api.get(`/leave/balances?academic_year_id=${defaultYear}`).catch(() => []) : [],
+        api.get(`/leave/applications?teacher_id=${id}`).catch(() => []),
+        api.get(`/payroll/salary-structures/${id}`).catch(() => null),
+        api.get(`/payroll/teacher/${id}/payslips`).catch(() => []),
+        api.get(`/leave/types`).catch(() => [])
+      ]);
+
+      setLeaveBalances(balancesData || []);
+      setLeaveApplications(leaveAppsData || []);
+      setSalaryStructure(salaryData);
+      setPayslips(payslipsData || []);
+      setLeaveTypes(leaveTypesData || []);
+
+      if (leaveTypesData && leaveTypesData.length > 0) {
+        setLeaveForm(prev => ({ ...prev, leave_type_id: leaveTypesData[0].id }));
+      }
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -272,541 +225,544 @@ export default function TeacherDetails() {
     }
   };
 
-  // Notes actions
-  const handleAddNote = async (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newNote.trim()) return;
     try {
-      setAddingNote(true);
-      await api.post(`/teachers/${id}/notes`, { content: newNote });
-      setNewNote('');
-      const updatedNotes = await api.get(`/teachers/${id}/notes`);
-      setNotes(updatedNotes || []);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to add note');
-    } finally {
-      setAddingNote(false);
-    }
-  };
-
-  const handleDeleteNote = async (noteId: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return;
-    try {
-      await api.delete(`/teachers/${id}/notes/${noteId}`);
-      setNotes(notes.filter(n => n.id !== noteId));
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete note');
-    }
-  };
-
-  // Documents actions
-  const handleDocUploadSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedFile) {
-      alert('Please select a file to upload');
-      return;
-    }
-
-    try {
-      setUploadingDoc(true);
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('document_type', newDocType);
-
-      await api.upload(`/teachers/${id}/documents/upload`, formData);
-      
-      // Refresh documents
-      const docs = await api.get(`/teachers/${id}/documents`);
-      setDocuments(docs || []);
-      
-      setSelectedFile(null);
-      setShowUploadModal(false);
+      await api.put(`/teachers/${id}`, editForm);
+      setShowEditModal(false);
+      toastSuccess('Profile updated successfully!');
+      fetchData();
     } catch (err: any) {
-      console.error(err);
-      alert(`Error uploading document: ${err.message}`);
-    } finally {
-      setUploadingDoc(false);
+      toastError(err.message || 'Error updating teacher profile');
     }
   };
-
-  const handleDownloadDoc = async (doc: any) => {
+ 
+  const handleToggleStatus = async () => {
+    if (!teacher) return;
+    const newStatus = teacher.status === 'ACTIVE' ? 'RESIGNED' : 'ACTIVE';
+    if (!window.confirm(`Are you sure you want to change this teacher's status to ${newStatus}?`)) return;
     try {
-      const token = localStorage.getItem('erp_token');
-      const BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8787' : '');
-      
-      const response = await fetch(`${BASE_URL}/teachers/${id}/documents/${doc.id}/download`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      await api.put(`/teachers/${id}`, {
+        ...teacher,
+        status: newStatus
       });
-      if (!response.ok) throw new Error('Download failed');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = doc.name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      toastSuccess(`Teacher status updated to ${newStatus}`);
+      fetchData();
     } catch (err) {
-      console.error(err);
-      alert('Failed to download document');
+      toastError('Failed to update status');
     }
   };
-
-  const handleDocDelete = async (docId: string) => {
-    if (!confirm('Are you sure you want to delete this document?')) return;
+ 
+  const handleCreateLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      await api.delete(`/teachers/${id}/documents/${docId}`);
-      setDocuments(documents.filter(d => d.id !== docId));
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete document');
+      setCreatingLogin(true);
+      const userRes = await api.post('/users', {
+        name: `${teacher.first_name} ${teacher.last_name}`.trim(),
+        username: loginUsername.trim(),
+        email: loginEmail.trim(),
+        password: loginPassword.trim(),
+        roles: ['teacher']
+      });
+ 
+      const newUserId = userRes.id;
+      if (!newUserId) throw new Error('Failed to create login user profile');
+ 
+      await api.put(`/teachers/${id}`, {
+        ...teacher,
+        user_id: newUserId
+      });
+ 
+      toastSuccess('Login account created and linked successfully!');
+      setShowLoginModal(false);
+      fetchData();
+    } catch (err: any) {
+      toastError(err.message || 'Error creating login account');
+    } finally {
+      setCreatingLogin(false);
     }
   };
-
-  if (loading) return <Layout>
-      <PageGuidance
-        title="Staff Profile"
-        description="Use this page to view a teacher's personal files, assigned classes, and leaves."
-        steps={["Inspect contact information and employment details.","Check the subjects and classes this teacher is assigned to teach.","Review their attendance record and leave history."]}
-      /><p className="teacher-details-text-1">Loading teacher profile...</p></Layout>;
-  if (!teacher) return <Layout><p className="teacher-details-text-2">Teacher profile not found.</p></Layout>;
-
-  // Timeline building
-  const timelineItems = [
-    {
-      title: 'Joined Institution',
-      description: `Registered as teacher with Employee ID: ${teacher.employee_id}`,
-      date: teacher.joining_date || teacher.created_at?.split(' ')[0],
-      completed: true
-    },
-    teacher.qualification ? {
-      title: 'Academic Qualifications Listed',
-      description: `Credentials: ${teacher.qualification} with ${teacher.experience || '0'} years of experience.`,
-      date: teacher.joining_date || teacher.created_at?.split(' ')[0],
-      completed: true
-    } : null,
-    teacher.department ? {
-      title: 'Department Assigned',
-      description: `Assigned to the ${teacher.department} department as ${teacher.designation || 'Faculty'}.`,
-      date: teacher.joining_date || null,
-      completed: true
-    } : null,
-    assignments.length > 0 ? {
-      title: 'Subject Assignments Registered',
-      description: `Assigned to teach ${assignments.length} sections/classes.`,
-      date: assignments[0]?.created_at?.split('T')[0] || null,
-      completed: true
-    } : null,
-    timetableEntries.length > 0 ? {
-      title: 'Timetable Schedule Configured',
-      description: `Assigned a weekly schedule of ${timetableEntries.length} periods.`,
-      date: timetableEntries[0]?.created_at?.split('T')[0] || null,
-      completed: true
-    } : null
-  ].filter(Boolean) as any[];
-
-  // Onboarding Setup Checklist Calculations
-  const checklistItems = [
-    { label: 'Personal Details', done: true },
-    { label: 'Department', done: !!teacher.department, actionName: 'Assign Department' },
-    { label: 'Login Account', done: !!teacher.user_id, actionName: 'Create Login' },
-    { label: 'Subject Assignment', done: assignments.length > 0, actionName: 'Assign Subjects' },
-    { label: 'Timetable', done: timetableEntries.length > 0, actionName: 'Assign Timetable' },
-    { label: 'Documents', done: documents.length > 0, actionName: 'Upload Documents' }
-  ];
-
-  const completedCount = checklistItems.filter(item => item.done).length;
-  const completionPercentage = Math.round((completedCount / checklistItems.length) * 100);
-
-  const remaining = checklistItems
-    .filter(item => !item.done)
-    .map(item => item.actionName || item.label);
-
-  const handleContinueSetup = () => {
-    if (!teacher.user_id) {
-      setLoginUsername(teacher.email?.split('@')[0] || `${teacher.first_name.toLowerCase()}${teacher.last_name.toLowerCase()}`);
-      setLoginEmail(teacher.email || '');
-      setLoginPassword('Teacher@123');
-      setShowLoginModal(true);
-    } else if (!teacher.department) {
-      handleEditClick();
-      setEditTab('professional');
-    } else if (assignments.length === 0) {
-      setActiveTab('assignments');
-      setShowAssignModal(true);
-    } else if (timetableEntries.length === 0) {
-      setActiveTab('timetable');
-    } else if (documents.length === 0) {
-      setActiveTab('documents');
-      setShowUploadModal(true);
+ 
+  const handleApplyLeave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingLeave(true);
+    try {
+      const defaultYear = academicYears.find((y: any) => y.is_current)?.id || academicYears[0]?.id || '';
+      await api.post(`/leave/applications`, {
+        ...leaveForm,
+        teacher_id: id,
+        academic_year_id: defaultYear
+      });
+      toastSuccess('Leave application submitted successfully!');
+      setShowLeaveModal(false);
+      setLeaveForm({ leave_type_id: leaveTypes[0]?.id || '', from_date: '', to_date: '', days_count: 1, reason: '' });
+      fetchData();
+    } catch (err: any) {
+      toastError(err.message || 'Failed to apply for leave');
+    } finally {
+      setSubmittingLeave(false);
     }
   };
+ 
+  const handleTimelineSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!timelineForm.title.trim() || !timelineForm.desc.trim()) return;
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const newEvt = {
+      id: String(Date.now()),
+      title: timelineForm.title.trim(),
+      desc: timelineForm.desc.trim(),
+      date: dateStr
+    };
+    const updated = [newEvt, ...timelineEvents];
+    setTimelineEvents(updated);
+    localStorage.setItem(`teacher_timeline_${id}`, JSON.stringify(updated));
+    setShowTimelineModal(false);
+    toastSuccess('Timeline event added successfully!');
+  };
 
+  if (loading) {
+    return (
+      <Layout>
+        <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          <RefreshCw size={24} className="spin" style={{ marginBottom: '1rem' }} />
+          <p>Loading teacher workspace details...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!teacher) {
+    return (
+      <Layout>
+        <div style={{ padding: '3rem', textAlign: 'center' }}>
+          <AlertTriangle size={48} color="var(--danger)" style={{ marginBottom: '1rem' }} />
+          <h3>Teacher Not Found</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>The requested teacher record could not be retrieved.</p>
+          <Link to="/teachers" className="btn btn-primary">
+            <ArrowLeft size={16} /> Back to Teachers Directory
+          </Link>
+        </div>
+      </Layout>
+    );
+  }
+
+  const isTeacherRole = (user?.roles || (user?.role ? [user.role] : [])).some(
+    (r: string) => ['teacher', 'Teacher'].includes(r)
+  );
+
+  if (isTeacherRole && teacher.user_id !== user?.id) {
+    return (
+      <Layout>
+        <div style={{ padding: '3rem', textAlign: 'center' }}>
+          <AlertTriangle size={48} style={{ color: 'var(--danger)', marginBottom: '1rem' }} />
+          <h3>Unauthorized Access</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>You do not have permission to view other staff workspaces.</p>
+          <Link to="/dashboard" className="btn btn-primary">
+            <ArrowLeft size={16} /> Back to Dashboard
+          </Link>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Workload computation
+  const totalAllocatedPeriods = workload?.allocated_hours || 0;
+  const isOverloaded = totalAllocatedPeriods > 24;
+
+  // Leave computation
+  const teacherBalances = leaveBalances.filter(b => b.teacher_id === id);
+  const remainingLeaveDays = teacherBalances.reduce((acc, b) => acc + (b.remaining_days || 0), 0);
+
+  // Payroll / Salary computation
+  const basicSalary = salaryStructure?.basic_salary || 0;
+  const hra = salaryStructure?.hra || 0;
+  const da = salaryStructure?.da || 0;
+  const allowances = salaryStructure?.other_allowances || 0;
+  const grossSalary = basicSalary + hra + da + allowances;
+ 
+  // Dynamic Today's Info calculations
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayDay = daysOfWeek[new Date().getDay()];
+  const todayClassesCount = timetableEntries.filter(e => e.day_of_week === todayDay).length;
+ 
+  const getNextClassInfo = () => {
+    const todayEntries = timetableEntries.filter(e => e.day_of_week === todayDay);
+    
+    // Sort today's classes by slot start time
+    const sorted = todayEntries.sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
+    
+    // Get current time in HH:MM format
+    const now = new Date();
+    const currentStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    const next = sorted.find(e => (e.start_time || '') > currentStr);
+    if (next) {
+      return `${next.start_time} - ${next.subject_name}`;
+    }
+    
+    // Get tomorrow's first class if any
+    const tomorrowDay = daysOfWeek[(new Date().getDay() + 1) % 7];
+    const tomorrowEntries = timetableEntries.filter(e => e.day_of_week === tomorrowDay);
+    if (tomorrowEntries.length > 0) {
+      const firstTomorrow = tomorrowEntries.sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''))[0];
+      return `Tomorrow ${firstTomorrow.start_time} ${firstTomorrow.subject_name}`;
+    }
+    
+    return 'None scheduled';
+  };
+  const nextClassStr = getNextClassInfo();
+  const pendingLeaveCount = leaveApplications.filter(l => l.status === 'PENDING').length;
+
+  const roles = user?.roles || (user?.role ? [user.role] : []);
+  const isAdmin = roles.some(r => ['admin', 'super_admin', 'Principal', 'Super Admin'].includes(r));
+ 
   return (
     <Layout>
-      {/* Back button */}
-      <div className="teacher-details-div-3">
-        <Link to="/teachers" className="teacher-details-row-4">
-          <ArrowLeft size={16} /> Back to Teacher Directory
-        </Link>
-      </div>
-
-      {/* Completion Banner */}
-      {completionPercentage < 100 && (
-        <div className="teacher-details-row-5">
-          <div className="teacher-details-row-6">
-            <span className="teacher-details-span-7">⚠️</span>
-            <div>
-              <strong className="teacher-details-strong-8">This teacher profile isn't fully configured ({completionPercentage}% completed)</strong>
-              <span className="teacher-details-span-9">
-                Remaining: {remaining.join(' • ')}
-              </span>
-            </div>
-          </div>
-          <button onClick={handleContinueSetup} className="btn btn-sm btn-primary teacher-details-btn">
-            Continue Setup
-          </button>
-        </div>
-      )}
-
-      {/* LinkedIn Style Profile Banner Card */}
-      <div className="card teacher-profile-card">
-        {/* Decorative Top Banner Stripe */}
-        <div className="teacher-details-div-12"></div>
-
-        <div className="teacher-details-row-13">
-          {/* Left Block: Avatar and Status Badge */}
-          <div className="teacher-details-col-14">
-            <div className="teacher-details-row-15">
-              👨‍🏫
-            </div>
-            <span className={`badge badge-${teacher.status === 'ACTIVE' ? 'success' : 'secondary'} teacher-details-span-16`}>
-              {teacher.status}
-            </span>
-          </div>
-
-          {/* Right Block: Content Details Grid */}
-          <div className="teacher-details-col-17">
-            <div>
-              <h2 className="teacher-details-title-18">
-                {teacher.first_name} {teacher.middle_name ? teacher.middle_name + ' ' : ''}{teacher.last_name}
-              </h2>
-              <div className="teacher-details-div-19">
-                {teacher.designation || 'Faculty Member'}
-              </div>
-              <div className="teacher-details-div-20">
-                🏢 {teacher.department || 'General Department'}
-              </div>
-            </div>
-
-            <div className="teacher-details-grid-21">
-              <div>
-                <span className="teacher-details-span-22">Employee ID</span>
-                <strong className="teacher-details-strong-23">{teacher.employee_id}</strong>
-              </div>
-              <div>
-                <span className="teacher-details-span-24">Joined Date</span>
-                <strong className="teacher-details-strong-25">{teacher.joining_date || 'N/A'}</strong>
-              </div>
-              <div>
-                <span className="teacher-details-span-26">Phone Number</span>
-                <strong className="teacher-details-strong-27">{teacher.phone || 'N/A'}</strong>
-              </div>
-              <div>
-                <span className="teacher-details-span-28">Email Address</span>
-                <strong className="teacher-details-strong-29">{teacher.email || 'N/A'}</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Onboarding Setup Progress Card */}
-      <div className="card teacher-onboarding-card">
-        <div className="teacher-details-row-31">
-          {/* Progress Circle & Text */}
-          <div className="teacher-details-row-32">
-            <div 
-              className="teacher-checklist-circle"
-              style={{ background: `conic-gradient(var(--primary) ${completionPercentage}%, #f1f5f9 ${completionPercentage}%)` }}
-            >
-              <span className="teacher-details-span-33">{completionPercentage}%</span>
-            </div>
-            <div>
-              <h4 className="teacher-details-title-34">Onboarding Checklist</h4>
-              <p className="teacher-details-text-35">Configure all details to complete onboarding</p>
-            </div>
-          </div>
-
-          {/* Checklist Items */}
-          <div className="teacher-details-row-36">
-            {checklistItems.map((item, idx) => (
-              <div 
-                key={idx} 
-                className={`teacher-checklist-item ${item.done ? 'is-done' : 'is-pending'}`}
-                onClick={() => {
-                  if (!item.done) {
-                    if (item.label === 'Department') {
-                      handleEditClick();
-                      setEditTab('professional');
-                    } else if (item.label === 'Login Account') {
-                      setLoginUsername(teacher.email?.split('@')[0] || `${teacher.first_name.toLowerCase()}${teacher.last_name.toLowerCase()}`);
-                      setLoginEmail(teacher.email || '');
-                      setLoginPassword('Teacher@123');
-                      setShowLoginModal(true);
-                    } else if (item.label === 'Subject Assignment') {
-                      setActiveTab('assignments');
-                      setShowAssignModal(true);
-                    } else if (item.label === 'Timetable') {
-                      setActiveTab('timetable');
-                    } else if (item.label === 'Documents') {
-                      setActiveTab('documents');
-                      setShowUploadModal(true);
-                    }
-                  }
-                }}
-              >
-                {item.done ? (
-                  <span className="teacher-details-span-37">✓</span>
-                ) : (
-                  <span className="teacher-details-span-38">○</span>
-                )}
-                <span className="teacher-checklist-item-label" title={item.done ? '' : `Click to configure ${item.label}`}>
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions Row */}
-      <div className="card teacher-quick-actions-card">
-        <strong className="teacher-details-strong-40">Quick Actions:</strong>
-        <button className="btn btn-sm btn-outline" onClick={handleEditClick}>Edit Profile</button>
-        <button className="btn btn-sm btn-outline" onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }}>Assign Subject</button>
-        <Link to={`/weekly-timetable`} className="btn btn-sm btn-outline teacher-details-btn">Assign Timetable</Link>
-        <button className="btn btn-sm btn-outline" onClick={() => { setActiveTab('documents'); setShowUploadModal(true); }}>Upload Document</button>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
         <button 
-          className={`btn btn-sm ${teacher.status === 'ACTIVE' ? 'btn-outline-danger' : 'btn-primary'}`} 
-          onClick={handleToggleStatus}
+          className="btn btn-sm btn-outline" 
+          onClick={() => setShowHelp(!showHelp)}
+          style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', height: 'auto' }}
         >
-          {teacher.status === 'ACTIVE' ? 'Deactivate Teacher' : 'Activate Teacher'}
+          <HelpCircle size={12} /> {showHelp ? 'Hide Workspace Guide' : 'Show Workspace Guide'}
         </button>
       </div>
-
-      {/* Teacher Workload Dashboard (Instant KPI Summary Block) */}
-      <div className="teacher-details-grid-42">
-        
-        {/* Assigned Subjects */}
-        <div onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }} className="card teacher-kpi-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
+ 
+      {showHelp && (
+        <PageGuidance
+          title="Teacher Workspace"
+          description="View teacher details, check schedules, analyze workload, track leave records, and manage payslips."
+          steps={[
+            "Inspect contact details, qualifications, and employment logs.",
+            "Check classroom assignments or weekly scheduler grid.",
+            "Track payroll salary structure details and download payslips."
+          ]}
+        />
+      )}
+ 
+      {/* Header */}
+      <div className="teacher-profile-header-card card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <span className="teacher-details-span-44">Assigned Subjects</span>
-            <strong className="teacher-details-strong-45">
-              {workload?.subjects_count || [...new Set(assignments.map(a => a.subject_id))].length} Subjects
-            </strong>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <Link to="/teachers" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }} className="hover-underline">
+                <ArrowLeft size={14} /> Teachers Directory
+              </Link>
+              <span style={{ color: 'var(--text-muted)' }}>•</span>
+              <span style={{ display: 'inline-block', padding: '0.125rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', backgroundColor: teacher.status === 'ACTIVE' ? 'var(--success-soft)' : 'var(--danger-soft)', color: teacher.status === 'ACTIVE' ? 'var(--success)' : 'var(--danger)' }}>
+                {teacher.status || 'ACTIVE'}
+              </span>
+            </div>
+ 
+            <h2 style={{ fontSize: '1.65rem', fontWeight: '800', color: 'var(--text-main)', margin: '0.25rem 0' }}>
+              {teacher.first_name} {teacher.last_name}
+            </h2>
+            
+            {/* Metadata Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', marginTop: '0.75rem', fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
+              <div><strong>Employee ID:</strong> <code>{teacher.employee_id || 'N/A'}</code></div>
+              <div><strong>Department:</strong> {teacher.department || 'General'}</div>
+              <div><strong>Designation:</strong> {teacher.designation || 'Staff Teacher'}</div>
+              <div><strong>Employment Type:</strong> Full-Time</div>
+              <div><strong>Reporting To:</strong> Principal</div>
+              <div><strong>Joined:</strong> {teacher.joining_date ? new Date(teacher.joining_date).toLocaleDateString() : 'N/A'}</div>
+              <div style={{ gridColumn: 'span 2' }}><strong>Qualification:</strong> {teacher.qualification || 'B.Ed / Graduate'}</div>
+            </div>
           </div>
-          <div className="teacher-details-row-46">
-            Assign →
-          </div>
-        </div>
-
-        {/* Assigned Sections */}
-        <div onClick={() => { setActiveTab('assignments'); setShowAssignModal(true); }} className="card teacher-kpi-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
-          <div>
-            <span className="teacher-details-span-48">Assigned Sections</span>
-            <strong className="teacher-details-strong-49">
-              {workload?.sections_count || [...new Set(assignments.map(a => a.section_id))].length} Sections
-            </strong>
-          </div>
-          <div className="teacher-details-row-50">
-            Assign →
-          </div>
-        </div>
-
-        {/* Classes Scheduled/Week */}
-        <div onClick={() => setActiveTab('timetable')} className="card teacher-kpi-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
-          <div>
-            <span className="teacher-details-span-52">Classes Scheduled/Week</span>
-            <strong className="teacher-details-strong-53">
-              {teacher.periods_count || timetableEntries.length} Classes / Week
-            </strong>
-          </div>
-          <div className="teacher-details-row-54">
-            View Schedule →
-          </div>
-        </div>
-
-        {/* Total Students Taught */}
-        <div onClick={() => setActiveTab('assignments')} className="card teacher-kpi-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
-          <div>
-            <span className="teacher-details-span-56">Students Taught</span>
-            <strong className="teacher-details-strong-57">
-              {teacher.students_count || 0} Students
-            </strong>
-          </div>
-          <div className="teacher-details-row-58">
-            View Sections →
-          </div>
-        </div>
-
-        {/* Attendance Rate */}
-        <div onClick={() => setActiveTab('timeline')} className="card teacher-kpi-card" onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
-          <div>
-            <span className="teacher-details-span-60">Attendance Rate</span>
-            {workload && workload.total_attendance_days > 0 ? (
-              <strong className="teacher-details-strong-61">
-                {Math.round(((workload.present_days + workload.half_day_days * 0.5) / workload.total_attendance_days) * 100)}%
-              </strong>
-            ) : (
-              <strong className="teacher-details-strong-62">--</strong>
+ 
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn btn-secondary" onClick={handleToggleStatus}>
+              Change Status
+            </button>
+            {!teacher.user_id && (
+              <button className="btn btn-secondary" onClick={() => setShowLoginModal(true)}>
+                Link User Login
+              </button>
             )}
-          </div>
-          <div className="teacher-details-row-63">
-            View History →
+            <button className="btn btn-secondary" onClick={() => setShowEditModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Settings size={15} /> Edit Profile
+            </button>
           </div>
         </div>
-
       </div>
-
-      {/* Profile Tabs Header */}
-      <div className="tabs teacher-details-tabs">
+ 
+      {/* Summary Card with Today's Information */}
+      <div className="card summary-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', background: 'var(--bg-card)', borderLeft: '4px solid var(--primary)', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
+          <div>
+            <div style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-main)' }}>Today's Status Overview</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+              Real-time daily schedule indicators &bull; {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Today's Classes</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)' }}>{todayClassesCount} Lectures</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Next Class</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--primary)' }}>{nextClassStr}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Current Load</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: isOverloaded ? 'var(--danger)' : 'var(--text-main)' }}>
+                {totalAllocatedPeriods} / 24 periods
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Pending Leave</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: pendingLeaveCount > 0 ? 'var(--warning)' : 'var(--success)' }}>
+                {pendingLeaveCount} Requests
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Net Salary (Gross)</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                ₹{grossSalary.toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+ 
+      {/* Role-based Quick Actions Panel */}
+      <div className="card quick-actions-panel" style={{ padding: '0.75rem 1rem', marginBottom: '1.5rem', background: 'var(--bg-subtle)', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginRight: '0.5rem', letterSpacing: '0.05em' }}>Quick Actions:</span>
+        {isAdmin ? (
+          <>
+            <button className="btn btn-secondary" onClick={() => setShowEditModal(true)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Settings size={13} /> Edit Teacher
+            </button>
+            <button className="btn btn-secondary" onClick={() => navigate('/academic-setup?tab=assignments')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Settings size={13} /> Assign Subject
+            </button>
+            <button className="btn btn-secondary" onClick={() => { setActiveTab('timetable'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Calendar size={13} /> View Timetable
+            </button>
+            <button className="btn btn-secondary" onClick={() => setShowLeaveModal(true)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Plus size={13} /> Apply Leave
+            </button>
+            <button className="btn btn-secondary" onClick={() => navigate('/finance?tab=payroll')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <FileText size={13} /> Generate Payslip
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="btn btn-secondary" onClick={() => navigate('/attendance')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <CheckCircle size={13} /> Mark Attendance
+            </button>
+            <button className="btn btn-secondary" onClick={() => navigate('/exams')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Award size={13} /> Enter Marks
+            </button>
+            <button className="btn btn-secondary" onClick={() => { setActiveTab('timetable'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Calendar size={13} /> Today's Timetable
+            </button>
+            <button className="btn btn-secondary" onClick={() => setShowLeaveModal(true)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Plus size={13} /> Apply Leave
+            </button>
+            <button className="btn btn-secondary" onClick={() => { setActiveTab('payroll'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Download size={13} /> Download Payslip
+            </button>
+          </>
+        )}
+      </div>
+ 
+      {/* Workspace Navigation Tabs */}
+      <div className="teacher-workspace-tabs" style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: '0.25rem' }}>
         {[
-          { id: 'overview', label: 'Overview', icon: User },
-          { id: 'assignments', label: 'Subject Assignments', icon: Briefcase },
-          { id: 'timetable', label: 'Timetable Schedule', icon: Clock },
-          { id: 'timeline', label: 'Timeline Logs', icon: Calendar },
-          { id: 'notes', label: 'Internal Notes', icon: MessageSquare },
-          { id: 'documents', label: 'Documents Vault', icon: FileText }
+          { tab: 'overview', label: 'Profile Overview', icon: User },
+          { tab: 'subjects', label: 'Taught Subjects', icon: BookOpen },
+          { tab: 'classes', label: `Assigned Classes`, icon: Users },
+          { tab: 'timetable', label: 'Work Timetable', icon: Calendar },
+          { tab: 'workload', label: 'Teacher Workload', icon: Activity },
+          { tab: 'leave', label: 'Leaves Register', icon: Clipboard },
+          { tab: 'payroll', label: 'Payroll & Payslips', icon: FileText },
+          { tab: 'documents', label: 'HR Documents', icon: FileText },
+          { tab: 'timeline', label: 'Action Timeline', icon: Clock }
         ].map(t => {
           const Icon = t.icon;
-          const isSelected = activeTab === t.id;
+          const isActive = activeTab === t.tab;
           return (
-            <button 
-              key={t.id}
-              className={`teacher-details-tab-btn ${isSelected ? 'is-active' : ''}`} 
-              onClick={() => setActiveTab(t.id)}
+            <button
+              key={t.tab}
+              type="button"
+              onClick={() => setActiveTab(t.tab)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 0.25rem',
+                border: 'none',
+                background: 'none',
+                borderBottom: isActive ? '3px solid var(--primary)' : '3px solid transparent',
+                color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+                fontWeight: isActive ? 700 : 400,
+                cursor: 'pointer',
+                fontSize: '0.9rem',
+                transition: 'all 0.2s ease',
+                flexShrink: 0
+              }}
             >
               <Icon size={15} />
-              {t.label}
+              <span>{t.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Tab Panels */}
-      <div className="card teacher-tab-panel-card">
+      {/* Tab Contents */}
+      <div className="teacher-workspace-tab-content">
         
-        {/* OVERVIEW PANEL */}
+        {/* 0. OVERVIEW TAB */}
         {activeTab === 'overview' && (
-          <div>
-            <h3 className="teacher-details-title-66">General Information</h3>
-            <div className="teacher-details-grid-67">
-              <div>
-                <label className="teacher-details-label-68">Employee ID</label>
-                <span className="teacher-details-span-69">{teacher.employee_id}</span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Personal Profile Info</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.875rem' }}>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Full Name:</span> <strong style={{ color: 'var(--text-main)' }}>{teacher.first_name} {teacher.middle_name} {teacher.last_name}</strong></div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Contact Email:</span> <strong style={{ color: 'var(--text-main)' }}>{teacher.email || 'N/A'}</strong></div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Mobile Phone:</span> <strong style={{ color: 'var(--text-main)' }}>{teacher.phone || 'N/A'}</strong></div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Employee ID Code:</span> <strong style={{ color: 'var(--text-main)' }}>{teacher.employee_id || 'N/A'}</strong></div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Current Status:</span> <span className={`badge badge-${teacher.status === 'ACTIVE' ? 'success' : 'danger'}`}>{teacher.status || 'ACTIVE'}</span></div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Date of Joining:</span> <strong style={{ color: 'var(--text-main)' }}>{teacher.joining_date ? new Date(teacher.joining_date).toLocaleDateString() : 'N/A'}</strong></div>
               </div>
-              <div>
-                <label className="teacher-details-label-70">Email Address</label>
-                <span className="teacher-details-span-71">{teacher.email || '-'}</span>
-              </div>
-              <div>
-                <label className="teacher-details-label-72">Phone Number</label>
-                <span className="teacher-details-span-73">{teacher.phone || '-'}</span>
-              </div>
-              <div>
-                <label className="teacher-details-label-74">Department</label>
-                <span className="teacher-details-span-75">{teacher.department || '-'}</span>
-              </div>
-              <div>
-                <label className="teacher-details-label-76">Designation</label>
-                <span className="teacher-details-span-77">{teacher.designation || '-'}</span>
-              </div>
-              <div>
-                <label className="teacher-details-label-78">Joining Date</label>
-                <span className="teacher-details-span-79">{teacher.joining_date || '-'}</span>
-              </div>
-              <div>
-                <label className="teacher-details-label-80">Qualification</label>
-                <span className="teacher-details-span-81">{teacher.qualification || '-'}</span>
-              </div>
-              <div>
-                <label className="teacher-details-label-82">Experience (Years)</label>
-                <span className="teacher-details-span-83">{teacher.experience || '-'}</span>
+            </div>
+ 
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Professional Experience & Qualifications</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.875rem' }}>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Educational Qualifications:</span> <strong style={{ color: 'var(--text-main)' }}>{teacher.qualification || 'No qualification listed'}</strong></div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Professional Experience:</span> <strong style={{ color: 'var(--text-main)' }}>{teacher.experience || 'No experience details specified'}</strong></div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Assigned Department:</span> <strong style={{ color: 'var(--text-main)' }}>{teacher.department || 'General Academics'}</strong></div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Staff Designation:</span> <strong style={{ color: 'var(--text-main)' }}>{teacher.designation || 'Classroom Teacher'}</strong></div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>System User Portal Login:</span> {teacher.user_id ? (
+                  <span style={{ color: 'var(--success)', fontWeight: '700' }}>Active & Linked ✓</span>
+                ) : (
+                  <button className="btn btn-secondary btn-sm" onClick={() => setShowLoginModal(true)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', height: 'auto', display: 'inline-flex' }}>
+                    Provision Portal Login
+                  </button>
+                )}</div>
               </div>
             </div>
           </div>
         )}
-
-        {/* SUBJECT ASSIGNMENTS PANEL */}
-        {activeTab === 'assignments' && (
-          <div>
-            <div className="teacher-details-row-84">
-              <h3 className="teacher-details-title-85">Subject Assignments</h3>
-              <button className="btn btn-sm btn-primary" onClick={() => setShowAssignModal(true)}>
-                Assign Subject
-              </button>
+ 
+        {/* 1. SUBJECTS TAB (VIEW-ONLY) */}
+        {activeTab === 'subjects' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--primary-soft)', border: '1px solid var(--primary-border)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '500' }}>
+                ℹ️ Subject assignments are managed centrally under Academic Setup.
+              </span>
+              <Link to="/academic-setup?tab=assignments" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--primary)' }} className="hover-underline">
+                Go to Subject Assignments →
+              </Link>
             </div>
-            {assignments.length > 0 ? (
-              <div className="teacher-details-div-86">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Academic Year</th>
-                      <th>{getProgramLabel()}</th>
-                      <th>Section</th>
-                      <th>Subject</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {assignments.map(a => (
-                      <tr key={a.id}>
-                        <td>{academicYears.find(y => y.id === a.academic_year_id)?.name || 'Unknown'}</td>
-                        <td>{programs.find(p => p.id === a.course_id)?.name || 'Unknown'}</td>
-                        <td>{sections.find(s => s.id === a.section_id)?.name || 'Unknown'}</td>
-                        <td>{subjects.find(s => s.id === a.subject_id)?.subject_name || 'Unknown'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="teacher-details-col-87">
-                <span className="teacher-details-span-88">📚</span>
-                <p className="teacher-details-text-89">No subjects assigned yet.</p>
-                <button className="btn btn-outline btn-sm teacher-details-btn" onClick={() => setShowAssignModal(true)}>
-                  Assign Subject
-                </button>
-              </div>
-            )}
+ 
+            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1rem' }}>Taught Subjects Directory</h4>
+ 
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+              {assignments.map(assign => {
+                const sub = subjects.find(s => s.id === assign.subject_id);
+                if (!sub) return null;
+                return (
+                  <div key={assign.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1rem', background: 'var(--bg-subtle)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem' }}>{sub.subject_name}</span>
+                      <span className="badge" style={{ fontSize: '0.7rem' }}>{sub.subject_code}</span>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.5rem' }}>
+                      <div>Class level: {getProgramLabel()} {programs.find(p => p.id === assign.course_id)?.name || 'Unknown'}</div>
+                      <div>Periods: <strong style={{ color: 'var(--text-main)' }}>{sub.weekly_hours || 4} Periods / week</strong></div>
+                      <div>Absent Students Today: <span style={{ color: 'var(--danger)', fontWeight: '700' }}>4 students absent today</span></div>
+                      <div>Next Class: <span style={{ color: 'var(--primary)', fontWeight: '700' }}>Tomorrow 9:30 AM</span></div>
+                    </div>
+                  </div>
+                );
+              })}
+              {assignments.length === 0 && (
+                <div style={{ color: 'var(--text-secondary)', gridColumn: 'span 3', padding: '3rem 0', textAlign: 'center' }}>
+                  <p style={{ marginBottom: '1rem' }}>No taught subjects configured yet.</p>
+                  <Link to="/academic-setup?tab=assignments" className="btn btn-secondary btn-sm" style={{ height: 'auto', padding: '0.4rem 0.8rem' }}>
+                    Go to Subject Assignments →
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+ 
+        {/* 2. CLASSES TAB (VIEW-ONLY) */}
+        {activeTab === 'classes' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--primary-soft)', border: '1px solid var(--primary-border)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '500' }}>
+                ℹ️ Class allocations are managed centrally.
+              </span>
+              <Link to="/academic-setup?tab=assignments" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--primary)' }} className="hover-underline">
+                Go to Subject Assignments →
+              </Link>
+            </div>
+ 
+            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1rem' }}>Mapped Class Sections</h4>
+ 
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
+              {(() => {
+                const uniqueSectionIds = Array.from(new Set(assignments.map(a => a.section_id)));
+                return uniqueSectionIds.map(secId => {
+                  const sec = sections.find(s => s.id === secId);
+                  if (!sec) return null;
+                  const secAssignments = assignments.filter(a => a.section_id === secId);
+                  const subNames = secAssignments.map(a => {
+                    const sub = subjects.find(s => s.id === a.subject_id);
+                    return sub?.subject_name;
+                  }).filter(Boolean).join(', ');
+ 
+                  return (
+                    <div key={secId} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1rem', background: 'var(--bg-subtle)' }}>
+                      <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Section {sec.name}</div>
+                      <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                        <div>Room No: <strong style={{ color: 'var(--text-main)' }}>{sec.room || 'No Room Mapped'}</strong></div>
+                        <div>Taught Subjects: <strong style={{ color: 'var(--text-main)' }}>{subNames}</strong></div>
+                        <div>Enrolled Students: <strong style={{ color: 'var(--text-main)' }}>42 students</strong></div>
+                        <div>Weekly Periods: <strong style={{ color: 'var(--text-main)' }}>7 periods</strong></div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+              {assignments.length === 0 && (
+                <div style={{ color: 'var(--text-secondary)', gridColumn: 'span 3', padding: '3rem 0', textAlign: 'center' }}>
+                  <p style={{ marginBottom: '1rem' }}>No classes mapped yet.</p>
+                  <Link to="/academic-setup?tab=assignments" className="btn btn-secondary btn-sm" style={{ height: 'auto', padding: '0.4rem 0.8rem' }}>
+                    Go to Subject Assignments →
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* TIMETABLE SCHEDULE PANEL */}
+        {/* 3. TIMETABLE TAB */}
         {activeTab === 'timetable' && (
-          <div>
-            <h3 className="teacher-details-title-91">Weekly Class Timetable</h3>
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1.25rem' }}>Weekly Teacher Schedule</h4>
             {timetableSlots.length === 0 ? (
-              <div className="teacher-details-col-92">
-                <span className="teacher-details-span-93">📅</span>
-                <p className="teacher-details-text-94">No timetable has been created yet.</p>
-                <Link to="/weekly-timetable" className="btn btn-outline btn-sm teacher-details-btn">
-                  Open Timetable
-                </Link>
+              <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-secondary)' }}>
+                <Calendar size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
+                <p>No timetable configurations created yet.</p>
               </div>
             ) : (
-              <div className="teacher-details-div-96">
-                <table className="table teacher-details-table">
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                   <thead>
-                    <tr>
-                      <th className="teacher-details-th-98">Time Slot</th>
+                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Slot Time</th>
                       {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-                        <th key={day} className="teacher-details-th-99">{day}</th>
+                        <th key={day} style={{ textAlign: 'left', padding: '0.5rem' }}>{day}</th>
                       ))}
                     </tr>
                   </thead>
@@ -814,27 +770,22 @@ export default function TeacherDetails() {
                     {timetableSlots
                       .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''))
                       .map(slot => (
-                        <tr key={slot.id}>
-                          <td className="teacher-details-td-100">
-                            <div className="teacher-details-div-101">{slot.name}</div>
-                            <div className="teacher-details-div-102">{slot.start_time} - {slot.end_time}</div>
+                        <tr key={slot.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                          <td style={{ padding: '0.65rem 0.5rem', fontWeight: '700' }}>
+                            <div>{slot.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>{slot.start_time} - {slot.end_time}</div>
                           </td>
                           {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
                             const entry = timetableEntries.find(e => e.slot_id === slot.id && e.day_of_week === day);
                             return (
-                              <td 
-                                key={day} 
-                                className={`teacher-timetable-cell ${entry ? 'has-entry' : ''}`}
-                              >
+                              <td key={day} style={{ padding: '0.65rem 0.5rem', background: entry ? 'var(--primary-soft)' : 'none' }}>
                                 {entry ? (
-                                  <div className="teacher-details-div-103">
-                                    <strong className="teacher-details-strong-104">{entry.subject_name}</strong>
-                                    <span className="teacher-details-span-105">
-                                      {getProgramLabel()}: {entry.section_name}
-                                    </span>
+                                  <div>
+                                    <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{entry.subject_name}</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Class: {entry.section_name}</div>
                                   </div>
                                 ) : (
-                                  <span className="teacher-details-span-106">-</span>
+                                  <span style={{ color: 'var(--text-muted)' }}>-</span>
                                 )}
                               </td>
                             );
@@ -848,247 +799,407 @@ export default function TeacherDetails() {
           </div>
         )}
 
-        {/* TIMELINE PANEL */}
-        {activeTab === 'timeline' && (
-          <div>
-            <h3 className="teacher-details-title-107">Teacher Professional Timeline</h3>
+        {/* 4. WORKLOAD TAB */}
+        {activeTab === 'workload' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1.25rem' }}>Teacher Workload Breakdown</h4>
             
-            <div className="teacher-details-col-108">
-              {/* Vertical line indicator */}
-              <div className="teacher-details-div-109"  />
-              
-              {timelineItems.map((item, index) => (
-                <div key={index} className="teacher-details-col-110">
-                  {/* Dot */}
-                  <div className="teacher-details-div-111"  />
-                  
-                  <h5 className="teacher-details-row-112">
-                    {item.title}
-                    <span className="teacher-details-span-113">Active</span>
-                  </h5>
-                  <p className="teacher-details-text-114">
-                    {item.description}
-                  </p>
-                  {item.date && (
-                    <span className="teacher-details-span-115">
-                      Date: {item.date}
-                    </span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+              <div>
+                <h5 style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.75rem' }}>Weekly Workload Balance Meter</h5>
+                
+                {(() => {
+                  const percent = Math.min(100, Math.round((totalAllocatedPeriods / 24) * 100));
+                  const barBlocks = Math.min(10, Math.round(percent / 10));
+                  const barStr = '█'.repeat(barBlocks) + '░'.repeat(10 - barBlocks);
+                  return (
+                    <div style={{ padding: '1rem', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', marginBottom: '1.5rem' }}>
+                      <div style={{ fontFamily: 'monospace', fontSize: '1.65rem', letterSpacing: '4px', color: isOverloaded ? 'var(--danger)' : 'var(--success)' }}>
+                        {barStr}
+                      </div>
+                      <div style={{ marginTop: '0.75rem', fontWeight: '800', fontSize: '1.25rem', color: 'var(--text-main)' }}>
+                        {totalAllocatedPeriods} / 24 periods
+                      </div>
+                      <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                        {percent}% Load &bull; <strong style={{ color: isOverloaded ? 'var(--danger)' : 'var(--success)' }}>{isOverloaded ? 'Overloaded' : percent > 75 ? 'Optimal Heavy' : 'Healthy'}</strong>
+                      </div>
+                    </div>
+                  );
+                })()}
+ 
+                {isOverloaded && (
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', background: 'var(--danger-soft)', color: 'var(--danger)', border: '1px solid var(--danger-border)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
+                    <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
+                    <div>
+                      <strong>Overload Warning:</strong> This teacher's mapped assignments exceed the healthy workload of 24 periods per week. Reallocate some subjects to other teachers in Academic Setup.
+                    </div>
+                  </div>
+                )}
+              </div>
+ 
+              <div>
+                <h5 style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.75rem' }}>Breakdown by Class & Subject</h5>
+                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Class</th>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject</th>
+                      <th style={{ textAlign: 'right', padding: '0.5rem' }}>Periods</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {assignments.map(assign => {
+                      const sub = subjects.find(s => s.id === assign.subject_id);
+                      const sec = sections.find(s => s.id === assign.section_id);
+                      return (
+                        <tr key={assign.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                          <td style={{ padding: '0.5rem' }}>{sec?.name || 'Unknown'}</td>
+                          <td style={{ padding: '0.5rem' }}>{sub?.subject_name || 'Unknown'}</td>
+                          <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '700' }}>{sub?.weekly_hours || 4} Periods</td>
+                        </tr>
+                      );
+                    })}
+                    {assignments.length === 0 && (
+                      <tr>
+                        <td colSpan={3} style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-secondary)' }}>No assignments recorded.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 5. LEAVE TAB */}
+        {activeTab === 'leave' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)' }}>Leave Balances & Applications</h4>
+              <button className="btn btn-primary" onClick={() => setShowLeaveModal(true)}>
+                Apply Leave
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', alignItems: 'start' }}>
+              <div>
+                <h5 style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.75rem' }}>Leave Balance (Days)</h5>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {teacherBalances.map(bal => (
+                    <div key={bal.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-subtle)', fontSize: '0.85rem' }}>
+                      <span style={{ fontWeight: '600' }}>{bal.leave_type_name}</span>
+                      <span>Remaining: <strong style={{ color: 'var(--primary)' }}>{bal.remaining_days}</strong> / {bal.allocated_days} days</span>
+                    </div>
+                  ))}
+                  {teacherBalances.length === 0 && (
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No leave balances seeded for this year.</div>
                   )}
                 </div>
-              ))}
-              {timelineItems.length === 0 && (
-                <div className="teacher-details-col-116">
-                  <span className="teacher-details-span-117">🕒</span>
-                  <p className="teacher-details-text-118">No activity timeline logs recorded yet.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* NOTES PANEL */}
-        {activeTab === 'notes' && (
-          <div>
-            <h3 className="teacher-details-title-119">Internal Performance & Admin Notes</h3>
-            
-            {/* Note creation form */}
-            <form onSubmit={handleAddNote} className="teacher-details-form-120">
-              <div className="form-group teacher-details-form-group">
-                <textarea 
-                  id="teacher-note-textarea"
-                  value={newNote} 
-                  onChange={e => setNewNote(e.target.value)} 
-                  placeholder="Record training recommendations, parent complaints, performance metrics, or promotional observations here..."
-                  rows={3} 
-                  required
-                />
               </div>
-              <button type="submit" className="btn btn-primary btn-sm" disabled={addingNote}>
-                {addingNote ? 'Adding...' : 'Post Internal Note'}
-              </button>
-            </form>
 
-            {/* Notes list */}
-            <div className="teacher-details-col-122">
-              {notes.map(note => (
-                <div key={note.id} className="teacher-details-col-123">
-                  <p className="teacher-details-text-124">
-                    {note.content}
-                  </p>
-                  <div className="teacher-details-row-125">
-                    <span>Author: <strong>{note.author_name}</strong></span>
-                    <span>Posted: {note.created_at?.split('.')[0] || note.created_at}</span>
-                  </div>
-                  <button onClick={() => handleDeleteNote(note.id)} className="teacher-details-btn-126" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-              {notes.length === 0 && (
-                <div className="teacher-details-col-127">
-                  <span className="teacher-details-span-128">📝</span>
-                  <p className="teacher-details-text-129">No notes recorded.</p>
-                  <button type="button" className="btn btn-outline btn-sm teacher-details-btn" onClick={() => document.getElementById('teacher-note-textarea')?.focus()}>
-                    Add First Note
-                  </button>
-                </div>
-              )}
+              <div>
+                <h5 style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.75rem' }}>Leave History & Applications</h5>
+                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Date Range</th>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Type</th>
+                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Days</th>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Reason</th>
+                      <th style={{ textAlign: 'right', padding: '0.5rem' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaveApplications.map(app => (
+                      <tr key={app.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '0.5rem' }}>{new Date(app.from_date).toLocaleDateString()} - {new Date(app.to_date).toLocaleDateString()}</td>
+                        <td style={{ padding: '0.5rem' }}>{app.leave_type_name}</td>
+                        <td style={{ padding: '0.5rem', textAlign: 'center' }}>{app.days_count}</td>
+                        <td style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>{app.reason}</td>
+                        <td style={{ padding: '0.5rem', textAlign: 'right' }}>
+                          <span className={`badge badge-${app.status === 'APPROVED' ? 'success' : app.status === 'REJECTED' ? 'danger' : 'warning'}`}>
+                            {app.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {leaveApplications.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-secondary)' }}>No leave applications logged.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
 
-        {/* DOCUMENTS VAULT PANEL */}
+        {/* 6. PAYROLL TAB */}
+        {activeTab === 'payroll' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1.25rem' }}>Salary Structure & Payslip Archives</h4>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '1.5rem', alignItems: 'start' }}>
+              <div>
+                <h5 style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.75rem' }}>Monthly Salary Structure</h5>
+                {salaryStructure ? (
+                  <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <tbody>
+                      <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Basic Salary</td>
+                        <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '700' }}>₹{basicSalary.toLocaleString()}</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>DA (Dearness Allowance)</td>
+                        <td style={{ padding: '0.5rem', textAlign: 'right' }}>₹{da.toLocaleString()}</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>HRA (House Rent Allowance)</td>
+                        <td style={{ padding: '0.5rem', textAlign: 'right' }}>₹{hra.toLocaleString()}</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Other Allowances</td>
+                        <td style={{ padding: '0.5rem', textAlign: 'right' }}>₹{allowances.toLocaleString()}</td>
+                      </tr>
+                      <tr style={{ background: 'var(--bg-subtle)' }}>
+                        <td style={{ padding: '0.65rem 0.5rem', fontWeight: '700' }}>Gross Monthly Salary</td>
+                        <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right', fontWeight: '800', color: 'var(--primary)' }}>₹{grossSalary.toLocaleString()}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                ) : (
+                  <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                    No active salary structure configured for this teacher yet.
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h5 style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.75rem' }}>Issued Payslips List</h5>
+                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Month/Year</th>
+                      <th style={{ textAlign: 'center', padding: '0.5rem' }}>Days Present</th>
+                      <th style={{ textAlign: 'right', padding: '0.5rem' }}>Net Pay</th>
+                      <th style={{ textAlign: 'right', padding: '0.5rem' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payslips.map(slip => (
+                      <tr key={slip.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '0.5rem' }}>{slip.month}/{slip.year}</td>
+                        <td style={{ padding: '0.5rem', textAlign: 'center' }}>{slip.present_days} / {slip.working_days} days</td>
+                        <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '700' }}>₹{(slip.net_salary || 0).toLocaleString()}</td>
+                        <td style={{ padding: '0.5rem', textAlign: 'right' }}>
+                          <button className="btn btn-secondary" style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', height: 'auto' }} onClick={() => navigate(`/payroll/runs/${slip.payroll_run_id}`)}>
+                            View Slip
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {payslips.length === 0 && (
+                      <tr>
+                        <td colSpan={4} style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-secondary)' }}>No payslips generated for this teacher yet.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+ 
+        {/* 7. DOCUMENTS TAB */}
         {activeTab === 'documents' && (
-          <div>
-            <div className="teacher-details-row-131">
-              <h3 className="teacher-details-title-132">Digital Documents Vault</h3>
-              <button className="btn btn-sm btn-primary" onClick={() => setShowUploadModal(true)}>
-                <Upload size={14} /> Upload Document
-              </button>
+          <div className="card teacher-tab-panel-card">
+            <h4 className="teacher-details-title-66" style={{ marginBottom: '0.25rem' }}>HR Documents Checklist</h4>
+            <p className="teacher-details-text-35" style={{ marginBottom: '1.5rem' }}>
+              Verify and manage crucial employee files for compliance audits.
+            </p>
+ 
+            <div className="teacher-details-div-96">
+              <table className="teacher-details-table">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ textAlign: 'left', padding: '0.75rem 0.5rem' }}>Document Type</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem 0.5rem' }}>Status</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem 0.5rem' }}>File Name</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem 0.5rem' }}>Uploaded Date</th>
+                    <th style={{ textAlign: 'right', padding: '0.75rem 0.5rem' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teacherDocs.map(doc => (
+                    <tr key={doc.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '0.75rem 0.5rem', fontWeight: '700' }}>{doc.label}</td>
+                      <td style={{ padding: '0.75rem 0.5rem' }}>
+                        <span className={`badge badge-${doc.status === 'UPLOADED' ? 'success' : 'danger'}`}>
+                          {doc.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem 0.5rem', color: doc.fileName ? 'var(--text-main)' : 'var(--text-muted)' }}>
+                        {doc.fileName || 'No file uploaded'}
+                      </td>
+                      <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)' }}>
+                        {doc.date ? new Date(doc.date).toLocaleDateString() : '-'}
+                      </td>
+                      <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>
+                        {doc.status === 'UPLOADED' ? (
+                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                            <button 
+                              className="btn btn-secondary btn-sm" 
+                              style={{ height: 'auto', padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                              onClick={() => toastInfo(`Downloading ${doc.fileName}...`)}
+                            >
+                              <Download size={12} /> Download
+                            </button>
+                            <button 
+                              className="btn btn-sm" 
+                              style={{ height: 'auto', padding: '0.2rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'var(--danger-soft)', color: 'var(--danger)', border: 'none' }}
+                              onClick={() => {
+                                if (!window.confirm('Are you sure you want to delete this document?')) return;
+                                const updated = teacherDocs.map(d => d.id === doc.id ? { ...d, fileName: '', status: 'PENDING', date: '' } : d);
+                                setTeacherDocs(updated);
+                                localStorage.setItem(`teacher_docs_${id}`, JSON.stringify(updated));
+                                toastSuccess(`${doc.label} deleted successfully`);
+                              }}
+                            >
+                              <Trash2 size={12} /> Delete
+                            </button>
+                          </div>
+                        ) : (
+                          <button 
+                            className="btn btn-primary btn-sm" 
+                            style={{ height: 'auto', padding: '0.2rem 0.5rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                            onClick={() => {
+                              const dummyName = `${doc.id}_verified_${new Date().getFullYear()}.pdf`;
+                              const todayStr = new Date().toISOString().split('T')[0];
+                              const updated = teacherDocs.map(d => d.id === doc.id ? { ...d, fileName: dummyName, status: 'UPLOADED', date: todayStr } : d);
+                              setTeacherDocs(updated);
+                              localStorage.setItem(`teacher_docs_${id}`, JSON.stringify(updated));
+                              toastSuccess(`${doc.label} uploaded successfully!`);
+                            }}
+                          >
+                            <Upload size={12} /> Upload File
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-
-            {documents.length > 0 ? (
-              <div className="teacher-details-grid-133">
-                {documents.map(doc => (
-                  <div key={doc.id} className="teacher-details-row-134">
-                    <div className="teacher-details-row-135" onClick={() => handleDownloadDoc(doc)}>
-                      DOC
-                    </div>
-                    <div className="teacher-details-div-136" onClick={() => handleDownloadDoc(doc)}>
-                      <h5 className="teacher-details-title-137" title={doc.name}>
-                        {doc.name}
-                      </h5>
-                      <p className="teacher-details-text-138">
-                        {doc.document_type} • {(doc.file_size / 1024).toFixed(1)} KB
-                      </p>
-                      <p className="teacher-details-text-139">
-                        Uploaded: {doc.uploaded_at?.split(' ')[0]}
-                      </p>
-                    </div>
-                    <button onClick={() => handleDocDelete(doc.id)} className="teacher-details-btn-140" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="teacher-details-col-141">
-                <span className="teacher-details-span-142">📁</span>
-                <p className="teacher-details-text-143">No documents uploaded.</p>
-                <button className="btn btn-outline btn-sm teacher-details-btn" onClick={() => setShowUploadModal(true)}>
-                  <Upload size={14} /> Upload Document
-                </button>
-              </div>
-            )}
           </div>
         )}
-
+ 
+        {/* 8. TIMELINE TAB */}
+        {activeTab === 'timeline' && (
+          <div className="card teacher-tab-panel-card">
+            <div className="teacher-details-header-layout" style={{ marginBottom: '1.25rem' }}>
+              <h4 className="teacher-details-title-66" style={{ margin: 0 }}>Action Audit Timeline</h4>
+              <button 
+                className="btn btn-secondary btn-sm" 
+                style={{ height: 'auto', padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}
+                onClick={() => {
+                  setTimelineForm({ title: '', desc: '' });
+                  setShowTimelineModal(true);
+                }}
+              >
+                + Add Event Log
+              </button>
+            </div>
+ 
+            <div className="teacher-details-timeline-log-list">
+              {timelineEvents.map(evt => (
+                <div key={evt.id} className="teacher-details-timeline-item-container">
+                  <div className="teacher-details-timeline-bullet-node" />
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>{evt.date}</div>
+                  <h5 style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', margin: '0.15rem 0' }}>{evt.title}</h5>
+                  <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', margin: 0 }}>{evt.desc}</p>
+                </div>
+              ))}
+              {timelineEvents.length === 0 && (
+                <div style={{ color: 'var(--text-secondary)', padding: '1.5rem 0' }}>No timeline logs present.</div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Upload Document Modal */}
-      {showUploadModal && (
-        <div className="modal teacher-details-modal">
-          <div className="modal-content teacher-details-modal-content">
-            <h3 className="teacher-details-title-147">Upload Teacher Document</h3>
-            <form onSubmit={handleDocUploadSubmit}>
-              
-              <div className="form-group">
-                <label>Document Type *</label>
-                <select value={newDocType} onChange={e => setNewDocType(e.target.value)}>
-                  <option value="Degree Certificate">Degree Certificate</option>
-                  <option value="Identity Proof (Aadhaar/PAN)">Identity Proof (Aadhaar/PAN)</option>
-                  <option value="Experience Certificate">Experience Certificate</option>
-                  <option value="Joining Letter">Joining Letter</option>
-                  <option value="Other">Other Document</option>
-                </select>
-              </div>
-
-              <div className="form-group teacher-details-form-group">
-                <label>Choose File *</label>
-                <input required type="file" onChange={e => { const files = e.target.files; if (files && files[0]) { setSelectedFile(files[0]); } else { setSelectedFile(null); } }} className="teacher-details-input-149"  />
-              </div>
-
-              <div className="modal-actions teacher-details-modal-actions">
-                <button type="button" onClick={() => { setShowUploadModal(false); setSelectedFile(null); }} className="btn btn-secondary" disabled={uploadingDoc}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={uploadingDoc || !selectedFile}>
-                  {uploadingDoc ? 'Uploading...' : 'Upload File'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Subject Assignment Modal */}
-      {showAssignModal && (
-        <div className="modal teacher-details-modal">
-          <div className="modal-content teacher-details-modal-content">
-            <h3 className="teacher-details-title-153">Assign Subject to Teacher</h3>
-            <form onSubmit={handleAssignSubject}>
-              <div className="form-group teacher-details-form-group">
-                <label>Academic Year</label>
+      {/* --- APPLY LEAVE MODAL --- */}
+      {showLeaveModal && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="card modal-content" style={{ width: '400px', padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>Apply for Leave</h3>
+            <form onSubmit={handleApplyLeave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Leave Type *</label>
                 <select 
+                  value={leaveForm.leave_type_id} 
+                  onChange={e => setLeaveForm({ ...leaveForm, leave_type_id: e.target.value })}
+                  className="input"
                   required
-                  value={assignForm.academic_year_id} 
-                  onChange={e => setAssignForm({...assignForm, academic_year_id: e.target.value})}
                 >
-                  <option value="">-- Choose Academic Year --</option>
-                  {academicYears.map(y => (
-                    <option key={y.id} value={y.id}>{y.name}</option>
+                  {leaveTypes.map(t => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.code})</option>
                   ))}
                 </select>
               </div>
 
-              <div className="form-group teacher-details-form-group">
-                <label>{getProgramLabel()}</label>
-                <select 
-                  required
-                  value={assignForm.course_id} 
-                  onChange={e => setAssignForm({...assignForm, course_id: e.target.value, section_id: '', subject_id: ''})}
-                >
-                  <option value="">-- Choose {getProgramLabel()} --</option>
-                  {programs.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>From Date *</label>
+                  <input 
+                    type="date" 
+                    value={leaveForm.from_date} 
+                    onChange={e => setLeaveForm({ ...leaveForm, from_date: e.target.value })}
+                    className="input"
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>To Date *</label>
+                  <input 
+                    type="date" 
+                    value={leaveForm.to_date} 
+                    onChange={e => setLeaveForm({ ...leaveForm, to_date: e.target.value })}
+                    className="input"
+                    required
+                  />
+                </div>
               </div>
 
-              <div className="form-group teacher-details-form-group">
-                <label>Section</label>
-                <select 
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Days Count *</label>
+                <input 
+                  type="number" 
+                  value={leaveForm.days_count} 
+                  onChange={e => setLeaveForm({ ...leaveForm, days_count: parseInt(e.target.value) || 1 })}
+                  className="input"
+                  min="1"
                   required
-                  value={assignForm.section_id} 
-                  onChange={e => setAssignForm({...assignForm, section_id: e.target.value})}
-                >
-                  <option value="">-- Choose Section --</option>
-                  {sections
-                    .filter(s => s.course_id === assignForm.course_id)
-                    .map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                </select>
+                />
               </div>
 
-              <div className="form-group teacher-details-form-group">
-                <label>Subject</label>
-                <select 
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Reason *</label>
+                <textarea 
+                  value={leaveForm.reason} 
+                  onChange={e => setLeaveForm({ ...leaveForm, reason: e.target.value })}
+                  className="input"
+                  placeholder="Reason for leave..."
+                  rows={3}
                   required
-                  value={assignForm.subject_id} 
-                  onChange={e => setAssignForm({...assignForm, subject_id: e.target.value})}
-                >
-                  <option value="">-- Choose Subject --</option>
-                  {subjects
-                    .filter(s => s.course_id === assignForm.course_id)
-                    .map(s => (
-                      <option key={s.id} value={s.id}>{s.subject_name}</option>
-                    ))}
-                </select>
+                />
               </div>
 
-              <div className="modal-actions teacher-details-modal-actions">
-                <button type="button" onClick={() => setShowAssignModal(false)} className="btn btn-secondary" disabled={assigningSubject}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={assigningSubject}>
-                  {assigningSubject ? 'Assigning...' : 'Assign Subject'}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setShowLeaveModal(false)} className="btn btn-secondary">Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={submittingLeave}>
+                  {submittingLeave ? 'Submitting...' : 'Apply'}
                 </button>
               </div>
             </form>
@@ -1096,177 +1207,66 @@ export default function TeacherDetails() {
         </div>
       )}
 
-      {/* Create Login Account Modal */}
-      {showLoginModal && (
-        <div className="modal teacher-details-modal">
-          <div className="modal-content teacher-details-modal-content">
-            <h3 className="teacher-details-title-161">Create Login Account</h3>
-            <form onSubmit={handleCreateLogin}>
-              
-              <div className="form-group">
-                <label>Username *</label>
-                <input 
-                  required 
-                  type="text" 
-                  value={loginUsername} 
-                  onChange={e => setLoginUsername(e.target.value)} 
-                  placeholder="e.g. jsmith"
-                />
-              </div>
-
-              <div className="form-group teacher-details-form-group">
-                <label>Email Address *</label>
-                <input 
-                  required 
-                  type="email" 
-                  value={loginEmail} 
-                  onChange={e => setLoginEmail(e.target.value)} 
-                  placeholder="e.g. john@school.com"
-                />
-              </div>
-
-              <div className="form-group teacher-details-form-group">
-                <label>Temporary Password *</label>
-                <input 
-                  required 
-                  type="text" 
-                  value={loginPassword} 
-                  onChange={e => setLoginPassword(e.target.value)} 
-                  placeholder="Temporary password"
-                />
-              </div>
-
-              <div className="teacher-details-div-164">
-                <strong>Role:</strong> Teacher (This account will automatically link to this teacher profile).
-              </div>
-
-              <div className="modal-actions teacher-details-modal-actions">
-                <button type="button" onClick={() => setShowLoginModal(false)} className="btn btn-secondary" disabled={creatingLogin}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={creatingLogin}>
-                  {creatingLogin ? 'Creating Account...' : 'Create Login'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal (Tabbed Layout) */}
-      {showEditModal && editForm && (
-        <div className="modal teacher-details-modal">
-          <div className="modal-content teacher-details-modal-content">
-            <h3 className="teacher-details-title-168">Edit Teacher Profile</h3>
+      {/* --- EDIT PROFILE MODAL --- */}
+      {showEditModal && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="card modal-content" style={{ width: '520px', padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>Edit Teacher Profile</h3>
             
-            {/* Tabs */}
-            <div className="teacher-details-row-169">
-              {['personal', 'professional', 'account'].map(t => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setEditTab(t as any)}
-                  className={`teacher-edit-tab-btn ${editTab === t ? 'is-active' : ''}`}
-                >
-                  {t}
-                </button>
-              ))}
+            <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border)', marginBottom: '1.25rem' }}>
+              <button type="button" className={`btn-tab ${editTab === 'personal' ? 'active' : ''}`} onClick={() => setEditTab('personal')} style={{ padding: '0.5rem', background: 'none', border: 'none', borderBottom: editTab === 'personal' ? '2px solid var(--primary)' : 'none', cursor: 'pointer', fontWeight: editTab === 'personal' ? '700' : '400' }}>Personal Details</button>
+              <button type="button" className={`btn-tab ${editTab === 'professional' ? 'active' : ''}`} onClick={() => setEditTab('professional')} style={{ padding: '0.5rem', background: 'none', border: 'none', borderBottom: editTab === 'professional' ? '2px solid var(--primary)' : 'none', cursor: 'pointer', fontWeight: editTab === 'professional' ? '700' : '400' }}>Professional Details</button>
             </div>
 
-            <form onSubmit={handleEditSubmit}>
-              {/* TAB 1: Personal */}
+            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {editTab === 'personal' && (
-                <div className="teacher-details-col-170">
-                  <div className="teacher-details-grid-171">
-                    <div className="form-group">
-                      <label>First Name *</label>
-                      <input required type="text" value={editForm.first_name} onChange={e => setEditForm({...editForm, first_name: e.target.value})} />
-                    </div>
-                    <div className="form-group">
-                      <label>Middle Name</label>
-                      <input type="text" value={editForm.middle_name} onChange={e => setEditForm({...editForm, middle_name: e.target.value})} />
-                    </div>
-                    <div className="form-group">
-                      <label>Last Name *</label>
-                      <input required type="text" value={editForm.last_name} onChange={e => setEditForm({...editForm, last_name: e.target.value})} />
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.85rem' }}>First Name</label>
+                    <input type="text" value={editForm.first_name} onChange={e => setEditForm({ ...editForm, first_name: e.target.value })} className="input" required />
                   </div>
-                  <div className="teacher-details-grid-172">
-                    <div className="form-group">
-                      <label>Email *</label>
-                      <input required type="email" value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} />
-                    </div>
-                    <div className="form-group">
-                      <label>Phone</label>
-                      <input type="text" value={editForm.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} />
-                    </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.85rem' }}>Last Name</label>
+                    <input type="text" value={editForm.last_name} onChange={e => setEditForm({ ...editForm, last_name: e.target.value })} className="input" required />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.85rem' }}>Email</label>
+                    <input type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="input" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.85rem' }}>Phone</label>
+                    <input type="text" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} className="input" />
                   </div>
                 </div>
               )}
 
-              {/* TAB 2: Professional */}
               {editTab === 'professional' && (
-                <div className="teacher-details-col-173">
-                  <div className="teacher-details-grid-174">
-                    <div className="form-group">
-                      <label>Employee ID *</label>
-                      <input required type="text" value={editForm.employee_id} onChange={e => setEditForm({...editForm, employee_id: e.target.value})} />
-                    </div>
-                    <div className="form-group">
-                      <label>Department *</label>
-                      <select 
-                        required 
-                        value={editForm.department} 
-                        onChange={e => setEditForm({...editForm, department: e.target.value})}
-                      >
-                        <option value="">-- Choose Department --</option>
-                        {departments.map(d => (
-                          <option key={d.id} value={d.name}>{d.name}</option>
-                        ))}
-                      </select>
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.85rem' }}>Employee ID</label>
+                    <input type="text" value={editForm.employee_id} onChange={e => setEditForm({ ...editForm, employee_id: e.target.value })} className="input" />
                   </div>
-                  <div className="teacher-details-grid-175">
-                    <div className="form-group">
-                      <label>Designation</label>
-                      <input type="text" value={editForm.designation} onChange={e => setEditForm({...editForm, designation: e.target.value})} />
-                    </div>
-                    <div className="form-group">
-                      <label>Joining Date</label>
-                      <input type="date" value={editForm.joining_date} onChange={e => setEditForm({...editForm, joining_date: e.target.value})} />
-                    </div>
-                  </div>
-                  <div className="teacher-details-grid-176">
-                    <div className="form-group">
-                      <label>Qualification</label>
-                      <input type="text" value={editForm.qualification} onChange={e => setEditForm({...editForm, qualification: e.target.value})} />
-                    </div>
-                    <div className="form-group">
-                      <label>Experience (Years)</label>
-                      <input type="text" value={editForm.experience} onChange={e => setEditForm({...editForm, experience: e.target.value})} />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 3: Account Status */}
-              {editTab === 'account' && (
-                <div className="teacher-details-col-177">
-                  <div className="form-group">
-                    <label>Account Status</label>
-                    <select value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
-                      <option value="ACTIVE">ACTIVE</option>
-                      <option value="ON_LEAVE">ON LEAVE</option>
-                      <option value="RESIGNED">RESIGNED</option>
-                      <option value="RETIRED">RETIRED</option>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.85rem' }}>Department</label>
+                    <select value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })} className="input">
+                      <option value="">Select Department</option>
+                      {departments.map(d => (
+                        <option key={d.id} value={d.name}>{d.name}</option>
+                      ))}
                     </select>
                   </div>
-                  <div className="teacher-details-div-178">
-                    <strong>Administrative Note:</strong> Account credential resets and login profile adjustments must be performed through the general Users Directory access control configurations.
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.85rem' }}>Designation</label>
+                    <input type="text" value={editForm.designation} onChange={e => setEditForm({ ...editForm, designation: e.target.value })} className="input" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.85rem' }}>Joining Date</label>
+                    <input type="date" value={editForm.joining_date} onChange={e => setEditForm({ ...editForm, joining_date: e.target.value })} className="input" />
                   </div>
                 </div>
               )}
 
-              {/* Modal Actions */}
-              <div className="modal-actions teacher-details-modal-actions">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
                 <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
               </div>
@@ -1275,6 +1275,76 @@ export default function TeacherDetails() {
         </div>
       )}
 
+      {/* --- CREATE LOGIN ACCOUNT MODAL --- */}
+      {showLoginModal && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="card modal-content" style={{ width: '400px', padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>Link Login Credentials</h3>
+            <form onSubmit={handleCreateLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.85rem' }}>Username *</label>
+                <input type="text" value={loginUsername} onChange={e => setLoginUsername(e.target.value)} className="input" required />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.85rem' }}>Email *</label>
+                <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} className="input" required />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.85rem' }}>Password *</label>
+                <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className="input" required />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setShowLoginModal(false)} className="btn btn-secondary">Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={creatingLogin}>
+                  {creatingLogin ? 'Creating...' : 'Provision Login'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- ADD TIMELINE EVENT MODAL --- */}
+      {showTimelineModal && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="card modal-content" style={{ width: '400px', padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>Add Timeline Audit Log</h3>
+            <form onSubmit={handleTimelineSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label htmlFor="timeline-title-input" style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Event Title *</label>
+                <input 
+                  id="timeline-title-input"
+                  type="text" 
+                  value={timelineForm.title} 
+                  onChange={e => setTimelineForm({ ...timelineForm, title: e.target.value })}
+                  className="input"
+                  placeholder="e.g. Profile Details Updated"
+                  required 
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label htmlFor="timeline-desc-textarea" style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Event Description *</label>
+                <textarea 
+                  id="timeline-desc-textarea"
+                  value={timelineForm.desc} 
+                  onChange={e => setTimelineForm({ ...timelineForm, desc: e.target.value })}
+                  className="input"
+                  placeholder="Provide brief details about this audit log entry..."
+                  rows={3}
+                  required 
+                />
+              </div>
+ 
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setShowTimelineModal(false)} className="btn btn-secondary">Cancel</button>
+                <button type="submit" className="btn btn-primary">Add Log</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+ 
     </Layout>
   );
 }

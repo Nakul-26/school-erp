@@ -40,6 +40,13 @@ payroll.get('/salary-structures/:teacherId', async (c) => {
   return c.json(result);
 });
 
+payroll.get('/teacher/:teacherId/payslips', async (c) => {
+  const teacherId = c.req.param('teacherId')!;
+  const repo = new PayrollRepository(c.env.DB);
+  const slips = await repo.getPayslipsForTeacher(teacherId);
+  return c.json(slips);
+});
+
 // --- PAYROLL RUNS ---
 payroll.get('/runs', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
   const user = c.get('user');

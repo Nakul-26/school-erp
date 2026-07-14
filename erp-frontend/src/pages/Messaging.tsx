@@ -22,7 +22,7 @@ interface Message {
   is_read: number;
 }
 
-export default function Messaging() {
+export default function Messaging({ isSubComponent = false }: { isSubComponent?: boolean }) {
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [activeContactId, setActiveContactId] = useState<string>('');
@@ -132,13 +132,15 @@ export default function Messaging() {
   const activeContact = getActiveContact();
   const currentUserId = user?.id || (user as any)?.sub || '';
 
-  return (
-    <Layout>
-      <PageGuidance
-        title="Direct Chat Channels"
-        description="Communicate directly with staff, department heads, and guardians in a secure messaging inbox."
-        steps={["Select a contact from the left panel conversation list.","Write and send direct chat responses.","Chat window will automatically pull new incoming messages."]}
-      />
+  const content = (
+    <>
+      {!isSubComponent && (
+        <PageGuidance
+          title="Direct Chat Channels"
+          description="Communicate directly with staff, department heads, and guardians in a secure messaging inbox."
+          steps={["Select a contact from the left panel conversation list.","Write and send direct chat responses.","Chat window will automatically pull new incoming messages."]}
+        />
+      )}
 
       <div className="page-header">
         <div>
@@ -312,6 +314,9 @@ export default function Messaging() {
         </div>
 
       </div>
-    </Layout>
+    </>
   );
+
+  if (isSubComponent) return content;
+  return <Layout>{content}</Layout>;
 }

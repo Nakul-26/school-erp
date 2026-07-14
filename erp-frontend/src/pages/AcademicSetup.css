@@ -1,0 +1,76 @@
+/* AcademicSetup Styles */
+.academic-setup-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.setup-tabs {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.setup-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.setup-tab-btn:hover {
+  color: var(--primary);
+  background: var(--bg-subtle);
+}
+
+.setup-tab-btn.active {
+  color: #ffffff;
+  background: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.course-accordion {
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+}
+
+.course-accordion:hover {
+  border-color: var(--primary-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+.teacher-load-card {
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+.modal-overlay {
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  animation: scaleUp 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

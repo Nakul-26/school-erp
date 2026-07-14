@@ -15,7 +15,7 @@ interface FeeStructureRow {
   amount: number;
 }
 
-export default function FeeStructures() {
+export default function FeeStructures({ isSubComponent = false }: { isSubComponent?: boolean }) {
   const [structures, setStructures] = useState<FeeStructureRow[]>([]);
   const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
@@ -93,13 +93,15 @@ export default function FeeStructures() {
     }
   };
 
-  return (
-    <Layout>
-      <PageGuidance
-        title="Fee Structures"
-        description="Use this page to set the fee amounts for different grades and terms."
-        steps={["Define fee types (e.g. Tuition Fee, Exam Fee).","Set the exact amount required for each Grade level.","These rates will automatically generate fee balances for students."]}
-      />
+  const content = (
+    <>
+      {!isSubComponent && (
+        <PageGuidance
+          title="Fee Structures"
+          description="Use this page to set the fee amounts for different grades and terms."
+          steps={["Define fee types (e.g. Tuition Fee, Exam Fee).","Set the exact amount required for each Grade level.","These rates will automatically generate fee balances for students."]}
+        />
+      )}
       <div className="page-header">
         <div>
           <h2>Fee Structures</h2>
@@ -231,6 +233,9 @@ export default function FeeStructures() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
+
+  if (isSubComponent) return content;
+  return <Layout>{content}</Layout>;
 }

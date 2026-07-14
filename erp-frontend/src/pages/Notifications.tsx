@@ -15,7 +15,7 @@ interface NotificationRecord {
   created_at: string;
 }
 
-export default function Notifications() {
+export default function Notifications({ isSubComponent = false }: { isSubComponent?: boolean }) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,8 +156,8 @@ export default function Notifications() {
 
   const unreadCount = notifications.filter(n => n.is_read === 0).length;
 
-  return (
-    <Layout>
+  const content = (
+    <>
       <div className="page-header">
         <div>
           <h2>Notifications</h2>
@@ -315,6 +315,9 @@ export default function Notifications() {
       )}
 
       {/* Toast notifications managed globally */}
-    </Layout>
+    </>
   );
+
+  if (isSubComponent) return content;
+  return <Layout>{content}</Layout>;
 }

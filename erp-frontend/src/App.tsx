@@ -53,6 +53,9 @@ import SchoolSetup from './pages/SchoolSetup';
 import Visitors from './pages/Visitors';
 import Assets from './pages/Assets';
 import Alumni from './pages/Alumni';
+import AcademicSetup from './pages/AcademicSetup';
+import Finance from './pages/Finance';
+import Communication from './pages/Communication';
 
 function App() {
   return (
@@ -72,13 +75,22 @@ function App() {
           <Route path="/students" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Students /></ProtectedRoute>} />
           <Route path="/students/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><StudentDetails /></ProtectedRoute>} />
           <Route path="/teachers" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><Teachers /></ProtectedRoute>} />
-          <Route path="/teachers/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><TeacherDetails /></ProtectedRoute>} />
+          <Route path="/teachers/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher']}><TeacherDetails /></ProtectedRoute>} />
 
           {/* ── Admissions (V2 merged) ───────────────────────────────────── */}
           <Route path="/admissions" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><Admissions /></ProtectedRoute>} />
           {/* Legacy redirects */}
           <Route path="/admissions/inquiries" element={<Navigate to="/admissions" replace />} />
           <Route path="/admissions/applications" element={<Navigate to="/admissions?tab=applications" replace />} />
+
+          {/* ── Academic Setup ── */}
+          <Route path="/academic-setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><AcademicSetup /></ProtectedRoute>} />
+
+          {/* ── Finance ── */}
+          <Route path="/finance" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant', 'Teacher', 'Student', 'Parent']}><Finance /></ProtectedRoute>} />
+
+          {/* ── Communication ── */}
+          <Route path="/communication" element={<ProtectedRoute><Communication /></ProtectedRoute>} />
 
           {/* ── Academics ───────────────────────────────────────────────── */}
           <Route path="/academic-years" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><AcademicYears /></ProtectedRoute>} />
@@ -88,7 +100,7 @@ function App() {
           <Route path="/classes/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><SectionWorkspace /></ProtectedRoute>} />
           <Route path="/subjects" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><Subjects /></ProtectedRoute>} />
           <Route path="/subjects/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><SubjectWorkspace /></ProtectedRoute>} />
-          <Route path="/allocations" element={<Navigate to="/subjects?tab=assignments" replace />} />
+          <Route path="/allocations" element={<Navigate to="/academic-setup?tab=assignments" replace />} />
           <Route path="/approvals" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><ApprovalsInbox /></ProtectedRoute>} />
           <Route path="/calendar" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><AcademicCalendar /></ProtectedRoute>} />
           
@@ -106,19 +118,19 @@ function App() {
           <Route path="/homework" element={<ProtectedRoute><HomeworkList /></ProtectedRoute>} />
 
           {/* ── Communication ────────────────────────────────────────────── */}
-          <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+          <Route path="/announcements" element={<Navigate to="/communication?tab=announcements" replace />} />
+          <Route path="/notifications" element={<Navigate to="/communication?tab=notifications" replace />} />
           <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           <Route path="/transport" element={<ProtectedRoute><Transport /></ProtectedRoute>} />
           <Route path="/certificates" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Certificates /></ProtectedRoute>} />
-          <Route path="/messaging" element={<ProtectedRoute><Messaging /></ProtectedRoute>} />
+          <Route path="/messaging" element={<Navigate to="/communication?tab=messages" replace />} />
 
           {/* ── Finance ─────────────────────────────────────────────────── */}
-          <Route path="/fee-structures" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant']}><FeeStructures /></ProtectedRoute>} />
-          <Route path="/student-fees" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant', 'Teacher']}><StudentFees /></ProtectedRoute>} />
+          <Route path="/fee-structures" element={<Navigate to="/finance?tab=structures" replace />} />
+          <Route path="/student-fees" element={<Navigate to="/finance?tab=collection" replace />} />
           <Route path="/fee-reports" element={<Navigate to="/reports?tab=fees" replace />} />
           <Route path="/payroll/salary-structures" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><SalaryStructures /></ProtectedRoute>} />
-          <Route path="/payroll/runs" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><PayrollRuns /></ProtectedRoute>} />
+          <Route path="/payroll/runs" element={<Navigate to="/finance?tab=payroll" replace />} />
           <Route path="/payroll/runs/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><PayrollRunDetail /></ProtectedRoute>} />
 
           {/* ── Leave Management ─────────────────────────────────────────── */}
@@ -130,7 +142,7 @@ function App() {
           {/* ── Reports (V2 merged) ──────────────────────────────────────── */}
           <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Reports /></ProtectedRoute>} />
           {/* Legacy redirects */}
-          <Route path="/attendance-reports" element={<Navigate to="/reports" replace />} />
+          <Route path="/attendance-reports" element={<Navigate to="/reports?tab=attendance" replace />} />
           <Route path="/teacher-reports" element={<Navigate to="/reports?tab=teacher" replace />} />
 
           {/* ── Profile ──────────────────────────────────────────────────── */}

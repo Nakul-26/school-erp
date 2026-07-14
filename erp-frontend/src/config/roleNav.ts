@@ -8,7 +8,8 @@ export type NavKey =
   | '/leave/my' | '/leave/approvals' | '/leave/types' | '/student-leaves/approvals'
   | '/reports' | '/data-tools' | '/approvals'
   | '/setup' | '/settings' | '/users' | '/audit-logs' | '/institution-setup' | '/profile'
-  | '/visitors' | '/assets' | '/alumni';
+  | '/visitors' | '/assets' | '/alumni'
+  | '/academic-setup' | '/finance' | '/communication';
 
 // We map normalized lowercase keys to ensure no case mismatch errors.
 export const ROLE_NAV: Record<string, string[]> = {
@@ -22,7 +23,8 @@ export const ROLE_NAV: Record<string, string[]> = {
     '/leave/my', '/leave/approvals', '/leave/types', '/student-leaves/approvals',
     '/reports', '/data-tools', '/approvals',
     '/setup', '/settings', '/users', '/audit-logs', '/institution-setup', '/profile',
-    '/visitors', '/assets', '/alumni'
+    '/visitors', '/assets', '/alumni',
+    '/academic-setup', '/finance', '/communication'
   ],
   principal: [
     '/dashboard', '/announcements', '/notifications', '/messaging',
@@ -34,7 +36,8 @@ export const ROLE_NAV: Record<string, string[]> = {
     '/leave/my', '/leave/approvals', '/leave/types', '/student-leaves/approvals',
     '/reports', '/data-tools', '/approvals',
     '/setup', '/settings', '/users', '/audit-logs', '/institution-setup', '/profile',
-    '/visitors', '/assets', '/alumni'
+    '/visitors', '/assets', '/alumni',
+    '/academic-setup', '/finance', '/communication'
   ],
   admin: [
     '/dashboard', '/announcements', '/notifications', '/messaging',
@@ -46,7 +49,8 @@ export const ROLE_NAV: Record<string, string[]> = {
     '/leave/my', '/leave/approvals', '/leave/types', '/student-leaves/approvals',
     '/reports', '/data-tools', '/approvals',
     '/setup', '/settings', '/users', '/audit-logs', '/institution-setup', '/profile',
-    '/visitors', '/assets', '/alumni'
+    '/visitors', '/assets', '/alumni',
+    '/academic-setup', '/finance', '/communication'
   ],
   hod: [
     '/dashboard', '/announcements', '/notifications', '/messaging',
@@ -56,7 +60,8 @@ export const ROLE_NAV: Record<string, string[]> = {
     '/fee-structures', '/student-fees',
     '/leave/my', '/student-leaves/approvals',
     '/reports', '/approvals', '/setup', '/profile',
-    '/visitors', '/alumni'
+    '/visitors', '/alumni',
+    '/academic-setup', '/finance', '/communication'
   ],
   teacher: [
     '/dashboard', '/announcements', '/notifications', '/messaging',
@@ -64,7 +69,8 @@ export const ROLE_NAV: Record<string, string[]> = {
     '/timetable', '/attendance', '/homework', '/exams', '/calendar', '/library',
     '/student-fees',
     '/leave/my', '/student-leaves/approvals',
-    '/profile'
+    '/profile',
+    '/finance', '/communication'
   ],
   accountant: [
     '/dashboard', '/announcements', '/notifications', '/messaging',
@@ -72,21 +78,24 @@ export const ROLE_NAV: Record<string, string[]> = {
     '/fee-structures', '/student-fees',
     '/reports',
     '/leave/my',
-    '/profile'
+    '/profile',
+    '/finance', '/communication'
   ],
   student: [
     '/dashboard', '/announcements', '/notifications', '/messaging',
     '/homework', '/timetable', '/library',
     '/student-fees',
     '/leave/my',
-    '/profile'
+    '/profile',
+    '/finance', '/communication'
   ],
   parent: [
     '/dashboard', '/announcements', '/notifications', '/messaging',
     '/homework', '/timetable', '/library',
     '/student-fees',
     '/leave/my',
-    '/profile'
+    '/profile',
+    '/finance', '/communication'
   ]
 };
 

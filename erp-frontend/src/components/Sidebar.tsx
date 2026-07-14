@@ -1,6 +1,6 @@
 import './Sidebar.css';
 import React, { useEffect, useState, useRef } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../services/api';
 import {
   LayoutDashboard, GraduationCap, UserCheck, School, ClipboardCheck,
@@ -21,6 +21,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const user = userStr ? JSON.parse(userStr) : null;
   const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const normalizedRoles = roles.map(r => r.toLowerCase().replace(' ', '_').replace('role-', ''));
   const isAdmin = normalizedRoles.some(r => ['super_admin', 'admin', 'principal'].includes(r));
@@ -61,8 +62,9 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
     const saved = sessionStorage.getItem('sidebar_v2_collapsed');
     return saved ? JSON.parse(saved) : {
-      Admissions: false, People: false, Academics: false,
-      'Finance & HR': false, Reports: false, 'Settings & Setup': true,
+      'Academic Setup': false,
+      'Finance': false,
+      'Communication': false,
     };
   });
 
@@ -80,7 +82,10 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     fetchUnread();
     window.addEventListener('notifications_updated', fetchUnread);
     const iv = setInterval(fetchUnread, 30000);
-    return () => { window.removeEventListener('notifications_updated', fetchUnread); clearInterval(iv); };
+    return () => {
+      window.removeEventListener('notifications_updated', fetchUnread);
+      clearInterval(iv);
+    };
   }, []);
 
   useEffect(() => {
@@ -111,65 +116,49 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
 
   const allGroups: Group[] = [
     {
-      key: '__overview', label: '', always: true,
+      key: '__flat1', label: '', always: true,
       links: [
         { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { to: '/announcements', label: 'Announcements', icon: Megaphone },
-        { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
-        { to: '/messaging', label: 'Direct Messages', icon: MessageSquare, badge: unreadMessages },
-      ],
-    },
-    {
-      key: 'Admissions', label: 'Admissions',
-      links: [{ to: '/admissions', label: 'Admission Pipeline', icon: UserPlus }],
-    },
-    {
-      key: 'People', label: 'People',
-      links: [
         { to: '/students', label: 'Students', icon: Users },
         { to: '/teachers', label: 'Teachers', icon: UserCheck },
-        { to: '/alumni', label: 'Alumni Directory', icon: GraduationCap },
-        { to: '/visitors', label: 'Visitor Log', icon: ClipboardList },
-      ],
-    },
-    {
-      key: 'Academics', label: 'Academics',
-      links: [
-        { to: '/classes', label: 'Classes & Sections', icon: School },
+        { to: '/classes', label: 'Classes', icon: School },
         { to: '/subjects', label: 'Subjects', icon: BookOpen },
-        { to: '/timetable', label: 'Timetable', icon: CalendarDays },
+      ],
+    },
+    {
+      key: 'Academic Setup', label: 'Academic Setup',
+      links: [
+        { to: '/academic-setup?tab=curriculum', label: 'Curriculum', icon: Layers },
+        { to: '/academic-setup?tab=assignments', label: 'Subject Assignments', icon: ClipboardList },
+        { to: '/academic-setup?tab=timetable', label: 'Timetable Generator', icon: CalendarDays },
+      ],
+    },
+    {
+      key: '__flat2', label: '', always: true,
+      links: [
         { to: '/attendance', label: 'Attendance', icon: ClipboardCheck },
-        { to: '/homework', label: 'Homework', icon: Clipboard },
         { to: '/exams', label: 'Exams & Results', icon: Award },
-        { to: '/library', label: 'Library', icon: Library },
-        { to: '/calendar', label: 'School Calendar', icon: Calendar },
       ],
     },
     {
-      key: 'Finance & HR', label: 'Finance & HR',
+      key: 'Finance', label: 'Finance',
       links: [
-        { to: '/fee-structures', label: 'Fee Plans', icon: IndianRupee },
-        { to: '/student-fees', label: 'Student Fees', icon: IndianRupee },
-        { to: '/payroll/salary-structures', label: 'Salary Scales', icon: Landmark },
-        { to: '/payroll/runs', label: 'Payroll Runs', icon: Landmark },
-        { to: '/leave/approvals', label: 'Leave Approvals', icon: CheckSquare },
-        { to: '/student-leaves/approvals', label: 'Student Leave', icon: CheckSquare },
-        { to: '/leave/my', label: 'My Leave', icon: CalendarDays },
-        { to: '/transport', label: 'Transport', icon: Bus },
-        { to: '/assets', label: 'School Assets', icon: Package },
+        { to: '/finance?tab=fees', label: 'Fees', icon: IndianRupee },
+        { to: '/finance?tab=payroll', label: 'Payroll', icon: Landmark },
       ],
     },
     {
-      key: 'Reports', label: 'Reports',
+      key: 'Communication', label: 'Communication',
       links: [
-        { to: '/reports', label: 'All Reports', icon: BarChart3 },
-        { to: '/certificates', label: 'Official Certificates', icon: Award },
+        { to: '/communication?tab=announcements', label: 'Announcements', icon: Megaphone },
+        { to: '/communication?tab=messages', label: 'Messages', icon: MessageSquare, badge: unreadMessages },
+        { to: '/communication?tab=notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
       ],
     },
     {
-      key: 'Settings & Setup', label: 'Settings & Setup',
+      key: '__flat3', label: '', always: true,
       links: [
-        { to: '/approvals', label: 'Approvals Inbox', icon: CheckSquare },
+        { to: '/reports', label: 'Reports', icon: BarChart3 },
         { to: '/setup', label: 'School Setup', icon: Settings },
       ],
     },
@@ -178,7 +167,8 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const groups: Group[] = allGroups.map(group => {
     const filteredLinks = group.links.filter(link => {
       if (link.to === '/dashboard') return true;
-      return isAllowedNav(roles, link.to);
+      const pathOnly = link.to.split('?')[0] || '';
+      return isAllowedNav(roles, pathOnly);
     });
     return { ...group, links: filteredLinks };
   }).filter(group => group.always || group.links.length > 0);
@@ -212,11 +202,11 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       {/* Nav */}
       <nav ref={navRef} onScroll={(e) => sessionStorage.setItem('sidebar_scroll_top', String(e.currentTarget.scrollTop))} className="sidebar-col-5">
         {groups.map((group) => {
-          const isOverview = group.key === '__overview';
-          const isCollapsed = !isOverview && !group.always && collapsed[group.key];
+          const isFlat = group.label === '';
+          const isCollapsed = !isFlat && !group.always && collapsed[group.key];
           return (
-            <div key={group.key} style={{ marginBottom: isOverview ? '0.5rem' : '0' }}>
-              {!isOverview && (
+            <div key={group.key} style={{ marginBottom: isFlat ? '0.5rem' : '0' }}>
+              {!isFlat && (
                 <div onClick={() => toggle(group.key)} className="sidebar-row-6">
                   <span>{group.label}</span>
                   <span className="sidebar-span-7">
@@ -224,24 +214,47 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
                   </span>
                 </div>
               )}
-              {(!isCollapsed || isOverview || group.always) && (
+              {(!isCollapsed || isFlat || group.always) && (
                 <div className="sidebar-col-8">
-                  {group.links.map((link) => (
-                    <NavLink
-                      key={link.to}
-                      to={link.to}
-                      className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
-                      onClick={onNavigate}
-                    >
-                      <link.icon size={14} />
-                      <span className="sidebar-span-9">{link.label}</span>
-                      {(link.badge ?? 0) > 0 && (
-                        <span className="sidebar-span-10">
-                          {link.badge}
-                        </span>
-                      )}
-                    </NavLink>
-                  ))}
+                  {group.links.map((link) => {
+                    const isLinkActive = (() => {
+                      const linkPath = link.to.split('?')[0];
+                      const linkQuery = link.to.split('?')[1] || '';
+                      
+                      const isPathMatch = location.pathname === linkPath;
+                      let isQueryMatch = true;
+                      
+                      if (linkQuery) {
+                        const searchParams = new URLSearchParams(location.search);
+                        const linkParams = new URLSearchParams(linkQuery);
+                        for (const [key, val] of linkParams.entries()) {
+                          if (searchParams.get(key) !== val) {
+                            isQueryMatch = false;
+                            break;
+                          }
+                        }
+                      }
+                      
+                      return isPathMatch && isQueryMatch;
+                    })();
+
+                    return (
+                      <NavLink
+                        key={link.to}
+                        to={link.to}
+                        className={isLinkActive ? 'nav-link active' : 'nav-link'}
+                        onClick={onNavigate}
+                      >
+                        <link.icon size={14} />
+                        <span className="sidebar-span-9">{link.label}</span>
+                        {(link.badge ?? 0) > 0 && (
+                          <span className="sidebar-span-10">
+                            {link.badge}
+                          </span>
+                        )}
+                      </NavLink>
+                    );
+                  })}
                 </div>
               )}
             </div>

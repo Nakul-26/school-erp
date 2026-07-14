@@ -19,7 +19,7 @@ interface Announcement {
 
 const CATEGORIES = ['All', 'General', 'Academic', 'Holiday', 'Event', 'Urgent'];
 
-export default function Announcements() {
+export default function Announcements({ isSubComponent = false }: { isSubComponent?: boolean }) {
   const { user } = useAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,13 +150,15 @@ export default function Announcements() {
     return parsed.category.toLowerCase() === selectedCategory.toLowerCase();
   });
 
-  return (
-    <Layout>
-      <PageGuidance
-        title="Notice Board Circulars"
-        description="Use this page to write and broadcast official circulars and notice board announcements to students, teachers, or parents with categories and attachment links."
-        steps={["Click \"New Circular Notice\" to open the editor.","Select a category (Holiday, Academic, Event, etc.) and add optional attachments.","Filter existing notices using the category tabs at the top."]}
-      />
+  const content = (
+    <>
+      {!isSubComponent && (
+        <PageGuidance
+          title="Notice Board Circulars"
+          description="Use this page to write and broadcast official circulars and notice board announcements to students, teachers, or parents with categories and attachment links."
+          steps={["Click \"New Circular Notice\" to open the editor.","Select a category (Holiday, Academic, Event, etc.) and add optional attachments.","Filter existing notices using the category tabs at the top."]}
+        />
+      )}
       <div className="page-header">
         <div>
           <h2>Notice Board & Circulars</h2>
@@ -328,6 +330,9 @@ export default function Announcements() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
+
+  if (isSubComponent) return content;
+  return <Layout>{content}</Layout>;
 }

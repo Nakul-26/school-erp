@@ -16,7 +16,7 @@ interface PayrollRun {
   created_at: string;
 }
 
-export default function PayrollRuns() {
+export default function PayrollRuns({ isSubComponent = false }: { isSubComponent?: boolean }) {
   const [runs, setRuns] = useState<PayrollRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -63,13 +63,15 @@ export default function PayrollRuns() {
     return dates.toLocaleString('default', { month: 'long' });
   };
 
-  return (
-    <Layout>
-      <PageGuidance
-        title="Payroll Process"
-        description="Use this page to calculate monthly salaries for teachers and staff. Select the month and year, then click **Calculate Payroll**. The system automatically considers attendance, approved leaves, and salary settings before generating payslips."
-        steps={["Select target Month and Year.","Click Calculate Monthly Payroll to compute earnings and apply LOP deductions.","Review calculation details and click Finalize & Release to publish payslips to teacher portals."]}
-      />
+  const content = (
+    <>
+      {!isSubComponent && (
+        <PageGuidance
+          title="Payroll Process"
+          description="Use this page to calculate monthly salaries for teachers and staff. Select the month and year, then click **Calculate Payroll**. The system automatically considers attendance, approved leaves, and salary settings before generating payslips."
+          steps={["Select target Month and Year.","Click Calculate Monthly Payroll to compute earnings and apply LOP deductions.","Review calculation details and click Finalize & Release to publish payslips to teacher portals."]}
+        />
+      )}
       <div className="page-header">
         <div>
           <h2>Payroll Process Logs</h2>
@@ -168,6 +170,9 @@ export default function PayrollRuns() {
           )}
         </div>
       </div>
-    </Layout>
+    </>
   );
+
+  if (isSubComponent) return content;
+  return <Layout>{content}</Layout>;
 }

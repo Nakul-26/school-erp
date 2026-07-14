@@ -1,6 +1,5 @@
 import './SectionWorkspace.css';
 import React, { useEffect, useState } from 'react';
-import { PageGuidance } from '../components/PageGuidance';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
@@ -9,8 +8,9 @@ import {
   BookOpen, Users, Calendar, Clock, BarChart2, Bell, FolderOpen,
   Settings, Activity, Plus, ArrowLeft, Upload, Trash2, CheckCircle2,
   AlertTriangle, IndianRupee, MapPin, Search, Edit2, Archive,
-  MessageSquare, ClipboardCheck, Play, ArrowRight, UserCheck, Shield, HelpCircle, FileText
+  MessageSquare, ClipboardCheck, Play, ArrowRight, UserCheck, Shield, HelpCircle, FileText, RefreshCw
 } from 'lucide-react';
+import { PageGuidance } from '../components/PageGuidance';
 
 interface Student {
   id: string;
@@ -31,79 +31,31 @@ interface TimetableItem {
   teacher_name: string;
 }
 
-interface SectionDocument {
-  id: string;
-  name: string;
-  folder: string;
-  file_key: string;
-  file_size: number;
-  uploaded_by: string;
-  uploaded_at: string;
-}
-
-interface AuditLog {
-  id: string;
-  user_name: string;
-  user_email: string;
-  action: string;
-  description: string;
-  timestamp: string;
-}
-
-interface Announcement {
-  id: string;
-  title: string;
-  content: string;
-  visible_to_students: number;
-  visible_to_teachers: number;
-  visible_to_parents: number;
-  created_at: string;
-}
-
 export default function SectionWorkspace() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const activeTab = searchParams.get('tab') || 'overview';
+  const activeTab = searchParams.get('tab') || 'students';
 
   // Section Details
   const [section, setSection] = useState<any>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [timetable, setTimetable] = useState<TimetableItem[]>([]);
-  const [documents, setDocuments] = useState<SectionDocument[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [timeline, setTimeline] = useState<AuditLog[]>([]);
-  const [attendanceReport, setAttendanceReport] = useState<any[]>([]);
-  const [feeRecords, setFeeRecords] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
   const [allTeachers, setAllTeachers] = useState<any[]>([]);
   const [allSubjects, setAllSubjects] = useState<any[]>([]);
+  const [allocations, setAllocations] = useState<any[]>([]);
+  const [attendanceReport, setAttendanceReport] = useState<any[]>([]);
   const [attendanceSessions, setAttendanceSessions] = useState<any[]>([]);
+  const [feeRecords, setFeeRecords] = useState<any[]>([]);
 
   // Loading States
   const [loading, setLoading] = useState(true);
-  const [tabLoading, setTabLoading] = useState(false);
-  const [institutionType, setInstitutionType] = useState<string>('college');
+  const [institutionType, setInstitutionType] = useState<string>('school');
 
-  // Modal / Form States
-  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
-  const [announcementForm, setAnnouncementForm] = useState({
-    title: '',
-    content: '',
-    visible_to_students: 1,
-    visible_to_teachers: 1,
-    visible_to_parents: 1,
-  });
-
-  const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [documentForm, setDocumentForm] = useState({
-    folder: 'Assignments',
-    file: null as File | null
-  });
-  const [uploadingDoc, setUploadingDoc] = useState(false);
-
+  // Settings Modal Form State
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsForm, setSettingsForm] = useState({
     name: '',
@@ -122,15 +74,17 @@ export default function SectionWorkspace() {
     setSearchParams({ tab });
   };
 
+  // Redirect legacy tabs (overview, announcements, documents, timeline, reports) to students tab
+  useEffect(() => {
+    const legacyTabs = ['overview', 'announcements', 'documents', 'timeline', 'reports'];
+    if (legacyTabs.includes(activeTab)) {
+      setActiveTab('students');
+    }
+  }, [activeTab]);
+
   useEffect(() => {
     fetchWorkspaceData();
   }, [id]);
-
-  useEffect(() => {
-    if (section) {
-      fetchTabSpecificData();
-    }
-  }, [activeTab, section]);
 
   const fetchWorkspaceData = async () => {
     setLoading(true);
@@ -156,7 +110,7 @@ export default function SectionWorkspace() {
       }
 
       // 3. Fetch basic related listings for KPIs
-      const [studentsData, timetableData, attendanceRep, allFeeRecs, examsData, teachersData, subjectsData, attSessions] = await Promise.all([
+      const [studentsData, timetableData, attendanceRep, allFeeRecs, examsData, teachersData, subjectsData, attSessions, allocationsData] = await Promise.all([
         api.get(`/students?section_id=${id}`).catch(() => []),
         api.get(`/weekly-timetable?section_id=${id}`).catch(() => []),
         api.get(`/attendance/reports/students?section_id=${id}`).catch(() => []),
@@ -164,7 +118,8 @@ export default function SectionWorkspace() {
         api.get(`/exams`).catch(() => []),
         api.get(`/teachers`).catch(() => []),
         api.get(`/subjects`).catch(() => []),
-        api.get(`/attendance/sessions?section_id=${id}`).catch(() => [])
+        api.get(`/attendance/sessions?section_id=${id}`).catch(() => []),
+        api.get(`/teaching-allocations?section_id=${id}`).catch(() => [])
       ]);
 
       setStudents(studentsData || []);
@@ -174,6 +129,7 @@ export default function SectionWorkspace() {
       setAllTeachers(teachersData || []);
       setAllSubjects(subjectsData || []);
       setAttendanceSessions(attSessions || []);
+      setAllocations(allocationsData || []);
 
       // Filter fee records in memory for this section's students
       const studentIds = (studentsData || []).map((s: any) => s.id);
@@ -187,86 +143,6 @@ export default function SectionWorkspace() {
     }
   };
 
-  const fetchTabSpecificData = async () => {
-    setTabLoading(true);
-    try {
-      if (activeTab === 'documents') {
-        const docs = await api.get(`/sections/${id}/documents`).catch(() => []);
-        setDocuments(docs);
-      } else if (activeTab === 'timeline') {
-        const logs = await api.get(`/sections/${id}/timeline`).catch(() => []);
-        setTimeline(logs);
-      } else if (activeTab === 'announcements') {
-        const notices = await api.get(`/announcements?section_id=${id}`).catch(() => []);
-        setAnnouncements(notices);
-      }
-    } catch (err) {
-      console.error('Error fetching tab data:', err);
-    } finally {
-      setTabLoading(false);
-    }
-  };
-
-  const handleCreateAnnouncement = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        ...announcementForm,
-        section_id: id
-      };
-      await api.post('/announcements', payload);
-      setShowAnnouncementModal(false);
-      setAnnouncementForm({
-        title: '',
-        content: '',
-        visible_to_students: 1,
-        visible_to_teachers: 1,
-        visible_to_parents: 1,
-      });
-      fetchTabSpecificData();
-    } catch (err: any) {
-      alert(err.message || 'Error publishing announcement');
-    }
-  };
-
-  const handleUploadDocument = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!documentForm.file) {
-      alert('Please select a file to upload');
-      return;
-    }
-    setUploadingDoc(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', documentForm.file);
-      formData.append('folder', documentForm.folder);
-
-      await api.post(`/sections/${id}/documents/upload`, formData);
-      setShowDocumentModal(false);
-      setDocumentForm({ folder: 'Assignments', file: null });
-      fetchTabSpecificData();
-    } catch (err: any) {
-      alert(err.message || 'Error uploading document');
-    } finally {
-      setUploadingDoc(false);
-    }
-  };
-
-  const handleDeleteDocument = async (docId: string) => {
-    if (!confirm('Are you sure you want to permanently delete this document?')) return;
-    try {
-      await api.delete(`/sections/${id}/documents/${docId}`);
-      fetchTabSpecificData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete document');
-    }
-  };
-
-  const handleDownloadDocument = (docId: string) => {
-    const baseURL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8787' : '');
-    window.open(`${baseURL}/sections/${id}/documents/${docId}/download`, '_blank');
-  };
-
   const handleUpdateSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -274,21 +150,16 @@ export default function SectionWorkspace() {
       setShowSettingsModal(false);
       fetchWorkspaceData();
     } catch (err: any) {
-      alert(err.message || 'Failed to update section settings');
+      alert(err.message || 'Failed to update section settings.');
     }
   };
 
   if (loading) {
     return (
       <Layout>
-      <PageGuidance
-        title="Class Workspace"
-        description="Use this page to manage the weekly timetable, enrolled students, and teacher assignments for this class section."
-        steps={["View all students enrolled in this class section.","Assign teachers to teach specific subjects in this section.","Review and build the section's weekly timetable."]}
-      />
-        <div className="section-workspace-col-1">
-          <Activity className="spinner section-workspace-spinner" size={48}  />
-          <p className="section-workspace-text-3">Initializing Section Workspace...</p>
+        <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          <RefreshCw size={24} className="spin" style={{ marginBottom: '1rem' }} />
+          <p>Loading class workspace...</p>
         </div>
       </Layout>
     );
@@ -297,11 +168,11 @@ export default function SectionWorkspace() {
   if (!section) {
     return (
       <Layout>
-        <div className="section-workspace-div-4">
-          <AlertTriangle size={48} className="section-workspace-AlertTriangle-5"  />
-          <h3 className="section-workspace-title-6">Section Not Found</h3>
-          <p className="section-workspace-text-7">The requested class or section records could not be retrieved.</p>
-          <Link to="/classes" className="btn btn-primary section-workspace-btn">
+        <div style={{ padding: '3rem', textAlign: 'center' }}>
+          <AlertTriangle size={48} color="var(--danger)" style={{ marginBottom: '1rem' }} />
+          <h3>Section Not Found</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>The requested class or section records could not be retrieved.</p>
+          <Link to="/classes" className="btn btn-primary">
             <ArrowLeft size={16} /> Back to Sections List
           </Link>
         </div>
@@ -312,14 +183,14 @@ export default function SectionWorkspace() {
   // --- STATS COMPUTATION ---
   const activeStudentsCount = students.length;
   
-  // 1. Attendance %
+  // Attendance Rate
   const totalSessionsCount = attendanceReport.reduce((acc, r) => acc + (r.total_sessions || 0), 0);
   const presentCount = attendanceReport.reduce((acc, r) => acc + (r.present_count || 0) + (r.late_count || 0), 0);
   const attendancePercentage = totalSessionsCount > 0 
     ? Math.round((presentCount / totalSessionsCount) * 100) 
-    : 95; // Mock/default value if no sessions exist
+    : 95;
 
-  // 2. Upcoming Exams (filtered to section's course & semester/year)
+  // Upcoming Exams
   const filteredExams = exams.filter(e => 
     e.course_id === section.course_id && 
     e.academic_year_id === section.academic_year_id &&
@@ -327,23 +198,6 @@ export default function SectionWorkspace() {
   );
   const upcomingExamsCount = filteredExams.filter(e => new Date(e.end_date) >= new Date()).length;
 
-  // 3. Today's Classes
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const todayDay = days[new Date().getDay()];
-  const todaysSchedule = timetable
-    .filter(t => t.day_of_week === todayDay)
-    .sort((a, b) => a.start_time.localeCompare(b.start_time));
-  const todaysClassesCount = todaysSchedule.length;
-
-  // 4. Pending Fees
-  const studentsWithPendingFees = Array.from(new Set(
-    feeRecords
-      .filter(f => f.status !== 'PAID')
-      .map(f => f.student_id)
-  ));
-  const pendingFeesCount = studentsWithPendingFees.length;
-
-  // 5. Students At Risk (Attendance < 75%)
   const riskThreshold = 75.0;
   const atRiskStudents = attendanceReport
     .filter(r => {
@@ -353,170 +207,119 @@ export default function SectionWorkspace() {
       return pct < riskThreshold;
     })
     .map(r => r.student_id);
-  const atRiskStudentsCount = atRiskStudents.length;
-
-  // Today's classes timeline slots helper
-  const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-  const getPeriodStatus = (startTime: string, endTime: string) => {
-    const parseTime = (t: string) => {
-      const parts = t.split(':').map(Number);
-      const h = parts[0] || 0;
-      const m = parts[1] || 0;
-      return h * 60 + m;
-    };
-    const start = parseTime(startTime);
-    const end = parseTime(endTime);
-
-    if (currentMinutes >= start && currentMinutes <= end) return 'current';
-    if (currentMinutes < start) return 'upcoming';
-    return 'completed';
-  };
 
   return (
     <Layout>
-      {/* 1. Header */}
-      <div className="section-workspace-row-9">
+      <PageGuidance
+        title="Class Workspace"
+        description="View roster details, track attendance, check schedules, and manage exam details for this class."
+        steps={[
+          "Select the students tab to view current roster.",
+          "Check mapped subjects and teaching staff assignments.",
+          "Track daily attendance marking or weekly timetable setup."
+        ]}
+      />
+
+      {/* Header */}
+      <div className="section-workspace-row-9" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
-          <div className="section-workspace-row-10">
-            <Link to="/classes" className="hover-underline section-workspace-hover-underline">
-              <ArrowLeft size={16} /> All Classes
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <Link to="/classes" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }} className="hover-underline">
+              <ArrowLeft size={14} /> All Classes
             </Link>
-            <span className="section-workspace-span-12">•</span>
-            <span style={{ display: 'inline-block', padding: '0.125rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', backgroundColor: section.is_active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)', color: section.is_active ? '#10b981' : '#ef4444' }}>
+            <span style={{ color: 'var(--text-muted)' }}>•</span>
+            <span style={{ display: 'inline-block', padding: '0.125rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', backgroundColor: section.is_active ? 'var(--success-soft)' : 'var(--danger-soft)', color: section.is_active ? 'var(--success)' : 'var(--danger)' }}>
               {section.is_active ? 'Active Workspace' : 'Archived'}
             </span>
           </div>
 
-          <h2 className="section-workspace-row-13">
-            {section.name}
-            <span className="section-workspace-span-14">
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-main)' }}>
+            Class {section.name}
+            <span style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: '400' }}>
               ({section.academic_year_name})
             </span>
           </h2>
-          <p className="section-workspace-text-15">
-            {section.course_name} • {institutionType === 'school' ? `Class/Grade 1` : `Year ${section.year_number}`}
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            {section.course_name} • {getProgramLabel()} Level
           </p>
         </div>
 
-        {/* Quick Actions Panel */}
-        <div className="section-workspace-row-16">
-          <button className="btn btn-secondary section-workspace-btn" onClick={() => navigate(`/attendance?section_id=${id}`)}>
-            <ClipboardCheck size={18} className="section-workspace-ClipboardCheck-18"  /> Mark Attendance
-          </button>
-          
-          <button className="btn btn-secondary section-workspace-btn" onClick={() => setShowAnnouncementModal(true)}>
-            <Bell size={18} className="section-workspace-Bell-20"  /> Broadcast Notice
-          </button>
+        <button className="btn btn-secondary" onClick={() => setShowSettingsModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+          <Settings size={15} /> Class Settings
+        </button>
+      </div>
 
-          <button className="btn btn-secondary section-workspace-btn" onClick={() => setActiveTab('timetable')}>
-            <Calendar size={18} className="section-workspace-Calendar-22"  /> View Timetable
-          </button>
-
-          <button className="btn btn-primary section-workspace-btn" onClick={() => setShowSettingsModal(true)}>
-            <Settings size={18} /> Settings
-          </button>
+      {/* Summary Card */}
+      <div className="card summary-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', background: 'var(--bg-card)', borderLeft: '4px solid var(--primary)', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-main)' }}>{section.name} Summary</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+              Location: {section.room || 'No Room Mapped'} • Advisor: {section.class_teacher_name || 'Unassigned'}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Students</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)' }}>{activeStudentsCount}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Teachers</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                {Array.from(new Set(allocations.map(a => a.teacher_id))).length}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Subjects</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                {allSubjects.filter(s => s.course_id === section.course_id).length}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Avg Attendance</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: attendancePercentage >= riskThreshold ? 'var(--success)' : 'var(--danger)' }}>
+                {attendancePercentage}%
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Upcoming Exams</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: upcomingExamsCount > 0 ? 'var(--warning)' : 'var(--text-main)' }}>
+                {upcomingExamsCount}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 2. KPIs Grid */}
-      <div className="section-workspace-grid-24">
-        
-        {/* Class Teacher KPI */}
-        <div onClick={() => setActiveTab('teachers')} className="hover-lift section-workspace-hover-lift">
-          <div className="section-workspace-row-26">
-            <span className="section-workspace-span-27">Class Teacher</span>
-            <Users size={16} className="section-workspace-Users-28"  />
-          </div>
-          <span className="section-workspace-span-29">
-            {section.class_teacher_name || 'Unassigned'}
-          </span>
-          <span className="section-workspace-span-30">View Profile & Contacts</span>
-        </div>
-
-        {/* Room Mapped KPI */}
-        <div onClick={() => setActiveTab('settings')} className="hover-lift section-workspace-hover-lift">
-          <div className="section-workspace-row-32">
-            <span className="section-workspace-span-33">Classroom Room</span>
-            <MapPin size={16} className="section-workspace-MapPin-34"  />
-          </div>
-          <span className="section-workspace-span-35">
-            {section.room || 'No Room Mapped'}
-          </span>
-          <span className="section-workspace-span-36">Capacity: {section.capacity || 40} Seats</span>
-        </div>
-
-        {/* Enrollment / Fill Rate KPI */}
-        <div onClick={() => setActiveTab('students')} className="hover-lift section-workspace-hover-lift">
-          <div className="section-workspace-row-38">
-            <span className="section-workspace-span-39">Students Enrolled</span>
-            <UserCheck size={16} className="section-workspace-UserCheck-40"  />
-          </div>
-          <span className="section-workspace-span-41">
-            {activeStudentsCount} / {section.capacity || 40}
-          </span>
-          <div className="section-workspace-div-42">
-            <div style={{ width: `${Math.min(100, Math.round((activeStudentsCount / (section.capacity || 40)) * 100))}%`, height: '100%', backgroundColor: 'var(--primary)' }} />
-          </div>
-        </div>
-
-        {/* Attendance KPI */}
-        <div onClick={() => setActiveTab('attendance')} className="hover-lift section-workspace-hover-lift">
-          <div className="section-workspace-row-44">
-            <span className="section-workspace-span-45">Avg Attendance</span>
-            <Activity size={16} style={{ color: attendancePercentage >= 85 ? '#10b981' : '#f97316' }} />
-          </div>
-          <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 900, color: attendancePercentage >= riskThreshold ? '#10b981' : '#ef4444' }}>
-            {attendancePercentage}%
-          </span>
-          <span className="section-workspace-span-46">Threshold limit: 75%</span>
-        </div>
-
-        {/* Risk / Alerts KPI */}
-        <div onClick={() => { setStudentsFilterRisk(true); setActiveTab('students'); }} className="hover-lift section-workspace-hover-lift">
-          <div className="section-workspace-row-48">
-            <span className="section-workspace-span-49">Students At Risk</span>
-            <AlertTriangle size={16} style={{ color: atRiskStudentsCount > 0 ? '#ef4444' : 'var(--text-muted)' }} />
-          </div>
-          <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 900, color: atRiskStudentsCount > 0 ? '#ef4444' : 'var(--text-main)' }}>
-            {atRiskStudentsCount}
-          </span>
-          <span style={{ display: 'block', fontSize: '0.75rem', color: atRiskStudentsCount > 0 ? '#b91c1c' : 'var(--text-muted)', fontWeight: atRiskStudentsCount > 0 ? 600 : 500, marginTop: '0.25rem' }}>
-            {atRiskStudentsCount > 0 ? 'Click to see roster' : 'All students safe'}
-          </span>
-        </div>
-
-        {/* Fees Pending KPI */}
-        <div onClick={() => setActiveTab('reports')} className="hover-lift section-workspace-hover-lift">
-          <div className="section-workspace-row-51">
-            <span className="section-workspace-span-52">Fee Defaulters</span>
-            <IndianRupee size={16} className="section-workspace-IndianRupee-53"  />
-          </div>
-          <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 900, color: pendingFeesCount > 0 ? '#ef4444' : 'var(--text-main)' }}>
-            {pendingFeesCount} <span className="section-workspace-span-54">Students</span>
-          </span>
-          <span className="section-workspace-span-55">Click to view details</span>
-        </div>
-
+      {/* Quick Actions Panel */}
+      <div className="card quick-actions-panel" style={{ padding: '0.75rem 1rem', marginBottom: '1.5rem', background: 'var(--bg-subtle)', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginRight: '0.5rem', letterSpacing: '0.05em' }}>Quick Actions:</span>
+        <button className="btn btn-secondary" onClick={() => navigate(`/students?showAdd=true&section_id=${id}`)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+          <Plus size={13} /> Enroll Student
+        </button>
+        <button className="btn btn-secondary" onClick={() => navigate(`/attendance?section_id=${id}`)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+          <ClipboardCheck size={13} /> Mark Attendance
+        </button>
+        <button className="btn btn-secondary" onClick={() => { setActiveTab('timetable'); navigate('?tab=timetable'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+          <Calendar size={13} /> View Timetable
+        </button>
+        <button className="btn btn-secondary" onClick={() => navigate(`/homework`)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+          <BookOpen size={13} /> Assign Homework
+        </button>
       </div>
 
-      {/* 3. Workspace Navigation Tabs */}
-      <div className="section-workspace-row-56">
+      {/* Workspace Navigation Tabs */}
+      <div className="section-workspace-tabs" style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem' }}>
         {[
-          { tab: 'overview', label: 'Dashboard', icon: Activity },
-          { tab: 'students', label: `Roster (${activeStudentsCount})`, icon: Users },
-          { tab: 'attendance', label: 'Attendance', icon: ClipboardCheck },
-          { tab: 'timetable', label: 'Timetable', icon: Calendar },
-          { tab: 'subjects', label: 'Subjects', icon: BookOpen },
-          { tab: 'teachers', label: 'Teachers', icon: Users },
-          { tab: 'exams', label: `Exams (${upcomingExamsCount})`, icon: FileText },
-          { tab: 'announcements', label: 'Notices', icon: Bell },
-          { tab: 'reports', label: 'Analytics', icon: BarChart2 },
-          { tab: 'documents', label: 'Documents', icon: FolderOpen },
-          { tab: 'timeline', label: 'Timeline', icon: Clock }
+          { tab: 'students', label: `Students Roster (${activeStudentsCount})`, icon: Users },
+          { tab: 'subjects', label: 'Curriculum Subjects', icon: BookOpen },
+          { tab: 'teachers', label: 'Instructors & Staff', icon: UserCheck },
+          { tab: 'timetable', label: 'Class Timetable', icon: Calendar },
+          { tab: 'attendance', label: 'Daily Attendance', icon: ClipboardCheck },
+          { tab: 'exams', label: `Scheduled Exams (${upcomingExamsCount})`, icon: FileText }
         ].map(t => {
           const Icon = t.icon;
+          const isActive = activeTab === t.tab;
           return (
             <button
               key={t.tab}
@@ -526,1010 +329,433 @@ export default function SectionWorkspace() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                padding: '0.5rem 0.25rem',
+                padding: '0.75rem 0.25rem',
                 border: 'none',
                 background: 'none',
-                borderBottom: activeTab === t.tab ? '3px solid var(--primary)' : '3px solid transparent',
-                color: activeTab === t.tab ? 'var(--primary)' : 'var(--text-muted)',
-                fontWeight: activeTab === t.tab ? 700 : 500,
+                borderBottom: isActive ? '3px solid var(--primary)' : '3px solid transparent',
+                color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+                fontWeight: isActive ? 700 : 400,
                 cursor: 'pointer',
                 fontSize: '0.9rem',
-                whiteSpace: 'nowrap',
-                height: '100%',
-                transition: 'border-bottom-color 0.2s, color 0.2s'
+                transition: 'all 0.2s ease'
               }}
             >
-              <Icon size={16} />
-              {t.label}
+              <Icon size={15} />
+              <span>{t.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* 4. Tab Contents */}
-      <div className="section-workspace-div-57">
-        {tabLoading && activeTab !== 'overview' ? (
-          <div className="section-workspace-col-58">
-            <Activity className="spinner section-workspace-spinner" size={32}  />
-            <span className="section-workspace-span-60">Loading workspace components...</span>
+      {/* Tab Contents */}
+      <div className="section-workspace-tab-content">
+        
+        {/* 1. STUDENTS ROSTER TAB */}
+        {activeTab === 'students' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.35rem 0.65rem', width: '320px' }}>
+                <Search size={15} style={{ color: 'var(--text-secondary)', marginRight: '0.5rem' }} />
+                <input
+                  type="text"
+                  placeholder="Search students by name or roll no..."
+                  value={studentsSearch}
+                  onChange={e => setStudentsSearch(e.target.value)}
+                  style={{ border: 'none', background: 'none', outline: 'none', width: '100%', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={studentsFilterRisk} 
+                    onChange={e => setStudentsFilterRisk(e.target.checked)} 
+                  />
+                  <span>Show Students At Attendance Risk Only (&lt; 75%)</span>
+                </label>
+              </div>
+            </div>
+
+            <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                  <th style={{ textAlign: 'left', padding: '0.5rem' }}>Roll No.</th>
+                  <th style={{ textAlign: 'left', padding: '0.5rem' }}>Student Name</th>
+                  <th style={{ textAlign: 'left', padding: '0.5rem' }}>Admission No.</th>
+                  <th style={{ textAlign: 'left', padding: '0.5rem' }}>Attendance Rate</th>
+                  <th style={{ textAlign: 'left', padding: '0.5rem' }}>Fee Status</th>
+                  <th style={{ textAlign: 'right', padding: '0.5rem' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students
+                  .filter(s => {
+                    const name = `${s.first_name} ${s.last_name}`.toLowerCase();
+                    const searchMatch = name.includes(studentsSearch.toLowerCase()) || 
+                      (s.roll_number?.toLowerCase() || '').includes(studentsSearch.toLowerCase()) ||
+                      s.admission_number.toLowerCase().includes(studentsSearch.toLowerCase());
+                    
+                    if (studentsFilterRisk) {
+                      return searchMatch && atRiskStudents.includes(s.id);
+                    }
+                    return searchMatch;
+                  })
+                  .map(s => {
+                    const studentRep = attendanceReport.find(r => r.student_id === s.id);
+                    const studentSessions = studentRep?.total_sessions || 0;
+                    const studentPresent = (studentRep?.present_count || 0) + (studentRep?.late_count || 0);
+                    const studentPct = studentSessions > 0 ? Math.round((studentPresent / studentSessions) * 100) : 95;
+
+                    const recordsForStudent = feeRecords.filter(f => f.student_id === s.id);
+                    const hasUnpaid = recordsForStudent.some(f => f.status !== 'PAID');
+
+                    return (
+                      <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '0.65rem 0.5rem' }}>{s.roll_number || 'N/A'}</td>
+                        <td style={{ padding: '0.65rem 0.5rem' }}>
+                          <Link to={`/students/${s.id}`} style={{ fontWeight: '600', color: 'var(--primary)' }} className="hover-underline">
+                            {s.first_name} {s.last_name}
+                          </Link>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{s.email || 'No email mapped'}</div>
+                        </td>
+                        <td style={{ padding: '0.65rem 0.5rem' }}><code>{s.admission_number}</code></td>
+                        <td style={{ padding: '0.65rem 0.5rem' }}>
+                          <span style={{ fontWeight: '700', color: studentPct < riskThreshold ? 'var(--danger)' : 'var(--success)' }}>
+                            {studentPct}%
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.65rem 0.5rem' }}>
+                          <span className={`badge badge-${hasUnpaid ? 'warning' : 'success'}`} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
+                            {hasUnpaid ? 'Unpaid' : 'Paid'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right' }}>
+                          <Link to={`/students/${s.id}`} className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', height: 'auto' }}>
+                            View Profile
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                {students.length === 0 && (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                      No students enrolled in this section.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <div>
-            {/* OVERVIEW DASHBOARD */}
-            {activeTab === 'overview' && (
-              <div className="section-workspace-grid-61">
-                <div className="section-workspace-col-62">
-                  {/* Today's Schedule Card */}
-                  <div className="card section-workspace-card">
-                    <div className="section-workspace-row-64">
-                      <h4 className="section-workspace-row-65">
-                        <Clock size={18} className="section-workspace-Clock-66"  /> Today's Schedule
-                      </h4>
-                      <button className="btn btn-sm btn-secondary" onClick={() => setActiveTab('timetable')}>Weekly Grid</button>
+        )}
+
+        {/* 2. SUBJECTS TAB (VIEW-ONLY) */}
+        {activeTab === 'subjects' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--primary-soft)', border: '1px solid var(--primary-border)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '500' }}>
+                ℹ️ Subject assignments are managed centrally. Edit allocations under academic setup.
+              </span>
+              <Link to="/academic-setup?tab=assignments" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--primary)' }} className="hover-underline">
+                Go to Subject Assignments →
+              </Link>
+            </div>
+
+            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1rem' }}>Mapped Curriculum Subjects</h4>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+              {allSubjects
+                .filter(sub => sub.course_id === section.course_id)
+                .map(sub => {
+                  const alloc = allocations.find(a => a.subject_id === sub.id && a.section_id === id);
+                  const teacher = alloc ? allTeachers.find(t => t.id === alloc.teacher_id) : null;
+                  const teacherName = teacher ? `${teacher.first_name} ${teacher.last_name}` : 'Unassigned';
+
+                  return (
+                    <div key={sub.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1rem', background: 'var(--bg-subtle)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem' }}>{sub.subject_name}</span>
+                        <span className="badge" style={{ fontSize: '0.7rem' }}>{sub.subject_code}</span>
+                      </div>
+                      <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.75rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>Instructor:</span>
+                          <span style={{ fontWeight: '600', color: teacher ? 'var(--text-main)' : 'var(--text-muted)' }}>{teacherName}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>Periods/Week:</span>
+                          <span style={{ fontWeight: '600' }}>{sub.weekly_hours || 4} Periods</span>
+                        </div>
+                      </div>
                     </div>
+                  );
+                })}
+              {allSubjects.filter(sub => sub.course_id === section.course_id).length === 0 && (
+                <div style={{ color: 'var(--text-secondary)', padding: '1rem 0' }}>No subjects defined for this curriculum grade.</div>
+              )}
+            </div>
+          </div>
+        )}
 
-                    <div className="section-workspace-col-67">
-                      {todaysSchedule.map((item, index) => {
-                        const status = getPeriodStatus(item.start_time, item.end_time);
-                        return (
-                          <div 
-                            key={item.id} 
-                            style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'space-between', 
-                              padding: '1rem', 
-                              borderRadius: 'var(--radius-md)', 
-                              border: '1px solid var(--border)',
-                              backgroundColor: status === 'current' ? 'rgba(59, 130, 246, 0.04)' : 'var(--bg-surface)',
-                              borderColor: status === 'current' ? 'var(--primary)' : 'var(--border)',
-                              borderLeft: status === 'current' ? '4px solid var(--primary)' : '1px solid var(--border)'
-                            }}
-                          >
-                            <div className="section-workspace-row-68">
-                              <div style={{ 
-                                padding: '0.35rem 0.75rem', 
-                                borderRadius: 'var(--radius-sm)', 
-                                backgroundColor: status === 'current' ? 'var(--primary)' : '#f1f5f9',
-                                color: status === 'current' ? '#ffffff' : '#475569',
-                                fontSize: '0.75rem', 
-                                fontWeight: 700 
-                              }}>
-                                Period {index + 1}
-                              </div>
-                              <div>
-                                <span className="section-workspace-span-69">{item.subject_name}</span>
-                                <span className="section-workspace-span-70">{item.teacher_name}</span>
-                              </div>
-                            </div>
+        {/* 3. TEACHERS TAB (VIEW-ONLY) */}
+        {activeTab === 'teachers' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--primary-soft)', border: '1px solid var(--primary-border)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '500' }}>
+                ℹ️ Class teaching staff assignments are managed centrally.
+              </span>
+              <Link to="/academic-setup?tab=assignments" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--primary)' }} className="hover-underline">
+                Go to Subject Assignments →
+              </Link>
+            </div>
 
-                            <div className="section-workspace-row-71">
-                              <span className="section-workspace-row-72">
-                                <Clock size={14} /> {item.start_time} - {item.end_time}
-                              </span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+              <div>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '0.75rem' }}>Class Teacher Advisor</h4>
+                {section.class_teacher_name ? (
+                  <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', background: 'var(--bg-subtle)' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>
+                      {section.class_teacher_name.charAt(0)}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{section.class_teacher_name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Primary Advisor & Roster Lead</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    No Advisor mapped.
+                  </div>
+                )}
+              </div>
 
-                              {status === 'current' && (
-                                <span className="section-workspace-span-73">
-                                  Ongoing
-                                </span>
-                              )}
-                            </div>
+              <div>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '0.75rem' }}>Subject Instructors</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {(() => {
+                    const uniqueTeacherIds = Array.from(new Set(allocations.map(a => a.teacher_id)));
+                    return uniqueTeacherIds.map(tId => {
+                      const teacher = allTeachers.find(t => t.id === tId);
+                      if (!teacher) return null;
+                      
+                      const teacherAllocations = allocations.filter(a => a.teacher_id === tId && a.section_id === id);
+                      const subjectNames = teacherAllocations.map(a => {
+                        const sub = allSubjects.find(s => s.id === a.subject_id);
+                        return sub?.subject_name;
+                      }).filter(Boolean).join(', ');
+
+                      return (
+                        <div key={tId} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.75rem 1rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-subtle)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '0.85rem' }}>
+                            {teacher.first_name.charAt(0)}
                           </div>
-                        );
-                      })}
-                      {todaysSchedule.length === 0 && (
-                        <div className="section-workspace-div-74">
-                          No classes scheduled for today ({todayDay}). Free day!
+                          <div>
+                            <div style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.85rem' }}>{teacher.first_name} {teacher.last_name}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Teaches: {subjectNames}</div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Upcoming Exams List */}
-                  <div className="card section-workspace-card">
-                    <div className="section-workspace-row-76">
-                      <h4 className="section-workspace-row-77">
-                        <FileText size={18} className="section-workspace-FileText-78"  /> Upcoming Exams
-                      </h4>
-                      <button className="btn btn-sm btn-secondary" onClick={() => setActiveTab('exams')}>Full Schedule</button>
-                    </div>
-
-                    <div className="section-workspace-grid-79">
-                      {filteredExams.slice(0, 2).map(exam => (
-                        <div key={exam.id} className="section-workspace-div-80">
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', padding: '0.125rem 0.5rem', borderRadius: '4px', backgroundColor: exam.status === 'PUBLISHED' ? '#dcfce7' : '#f1f5f9', color: exam.status === 'PUBLISHED' ? '#15803d' : '#475569', display: 'inline-block', marginBottom: '0.5rem' }}>
-                            {exam.status}
-                          </span>
-                          <span className="section-workspace-span-81">{exam.name}</span>
-                          <span className="section-workspace-span-82">
-                            {new Date(exam.start_date).toLocaleDateString()} - {new Date(exam.end_date).toLocaleDateString()}
-                          </span>
-                        </div>
-                      ))}
-                      {filteredExams.length === 0 && (
-                        <div className="section-workspace-div-83">
-                          No upcoming exams scheduled.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="section-workspace-col-84">
-                  {/* Class Teacher Details Card */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-title-86">Class Teacher</h4>
-                    {section.class_teacher_name ? (
-                      <div className="section-workspace-row-87">
-                        <div className="section-workspace-row-88">
-                          {section.class_teacher_name.charAt(0)}
-                        </div>
-                        <div>
-                          <span className="section-workspace-span-89">{section.class_teacher_name}</span>
-                          <span className="section-workspace-span-90">Class Advisor</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="section-workspace-col-91">
-                        <span>No class teacher has been assigned yet.</span>
-                        <button className="btn btn-sm btn-secondary" onClick={() => setShowSettingsModal(true)}>Assign Teacher</button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Section Health Card */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-title-93">Section Health</h4>
-                    <div className="section-workspace-col-94">
-                      <div>
-                        <div className="section-workspace-row-95">
-                          <span className="section-workspace-span-96">Attendance Rate</span>
-                          <span style={{ color: attendancePercentage >= riskThreshold ? '#10b981' : '#ef4444' }}>{attendancePercentage}%</span>
-                        </div>
-                        <div className="section-workspace-div-97">
-                          <div style={{ width: `${attendancePercentage}%`, height: '100%', borderRadius: '3px', backgroundColor: attendancePercentage >= riskThreshold ? '#10b981' : '#ef4444' }} />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="section-workspace-row-98">
-                          <span className="section-workspace-span-99">Enrollment fill rate</span>
-                          <span>{Math.round(activeStudentsCount / (section.capacity || 40) * 100)}%</span>
-                        </div>
-                        <div className="section-workspace-div-100">
-                          <div style={{ width: `${Math.round(activeStudentsCount / (section.capacity || 40) * 100)}%`, height: '100%', borderRadius: '3px', backgroundColor: 'var(--primary)' }} />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="section-workspace-row-101">
-                          <span className="section-workspace-span-102">Fee Collection Rate</span>
-                          {(() => {
-                            const totalCollected = feeRecords.reduce((acc, f) => acc + (f.paid_amount || 0), 0);
-                            const totalAmount = feeRecords.reduce((acc, f) => acc + (f.total_amount || 0), 0);
-                            const rate = totalAmount > 0 ? Math.round(totalCollected / totalAmount * 100) : 100;
-                            return (
-                              <>
-                                <span>{rate}%</span>
-                              </>
-                            );
-                          })()}
-                        </div>
-                        {(() => {
-                          const totalCollected = feeRecords.reduce((acc, f) => acc + (f.paid_amount || 0), 0);
-                          const totalAmount = feeRecords.reduce((acc, f) => acc + (f.total_amount || 0), 0);
-                          const rate = totalAmount > 0 ? Math.round(totalCollected / totalAmount * 100) : 100;
-                          return (
-                            <div className="section-workspace-div-103">
-                              <div style={{ width: `${rate}%`, height: '100%', borderRadius: '3px', backgroundColor: '#8b5cf6' }} />
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </div>
+                      );
+                    }).filter(Boolean);
+                  })()}
+                  {allocations.length === 0 && (
+                    <div style={{ color: 'var(--text-secondary)' }}>No instructors assigned to this class section.</div>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {/* STUDENTS TAB */}
-            {activeTab === 'students' && (
-              <div className="card section-workspace-card">
-                <div className="section-workspace-row-105">
-                  <div className="section-workspace-div-106">
-                    <Search size={16} className="section-workspace-Search-107"  />
-                    <input type="text" placeholder="Search roster..." value={studentsSearch} onChange={e => setStudentsSearch(e.target.value)} className="section-workspace-input-108"  />
-                  </div>
+        {/* 4. TIMETABLE TAB */}
+        {activeTab === 'timetable' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)' }}>Weekly Timetable Schedule</h4>
+              <Link to="/timetable" className="btn btn-secondary" style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto' }}>
+                Open Timetable Editor
+              </Link>
+            </div>
 
-                  <div className="section-workspace-row-109">
-                    <label className="section-workspace-row-110">
-                      <input 
-                        type="checkbox" 
-                        checked={studentsFilterRisk} 
-                        onChange={e => setStudentsFilterRisk(e.target.checked)} 
-                      />
-                      Show Students At Risk Only (&lt; 75%)
-                    </label>
-                  </div>
+            <div style={{ overflowX: 'auto' }}>
+              {timetable.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-secondary)' }}>
+                  <Calendar size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
+                  <p>No timetable entries scheduled for this class section.</p>
                 </div>
-
-                <table className="table section-workspace-table">
+              ) : (
+                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                   <thead>
-                    <tr className="section-workspace-tr-112">
-                      <th className="section-workspace-th-113">Roll No.</th>
-                      <th className="section-workspace-th-114">Student Name</th>
-                      <th className="section-workspace-th-115">Admission No.</th>
-                      <th className="section-workspace-th-116">Attendance Rate</th>
-                      <th className="section-workspace-th-117">Fee Status</th>
-                      <th className="section-workspace-th-118">Quick Actions</th>
+                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Day</th>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Slot Time</th>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject</th>
+                      <th style={{ textAlign: 'left', padding: '0.5rem' }}>Instructor</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {students
-                      .filter(s => {
-                        const name = `${s.first_name} ${s.last_name}`.toLowerCase();
-                        const searchMatch = name.includes(studentsSearch.toLowerCase()) || 
-                          (s.roll_number?.toLowerCase() || '').includes(studentsSearch.toLowerCase()) ||
-                          s.admission_number.toLowerCase().includes(studentsSearch.toLowerCase());
-                        
-                        if (studentsFilterRisk) {
-                          return searchMatch && atRiskStudents.includes(s.id);
-                        }
-                        return searchMatch;
-                      })
-                      .map(s => {
-                        // Calculate student attendance
-                        const studentRep = attendanceReport.find(r => r.student_id === s.id);
-                        const studentSessions = studentRep?.total_sessions || 0;
-                        const studentPresent = (studentRep?.present_count || 0) + (studentRep?.late_count || 0);
-                        const studentPct = studentSessions > 0 ? Math.round((studentPresent / studentSessions) * 100) : 95;
-
-                        // Calculate fee status
-                        const recordsForStudent = feeRecords.filter(f => f.student_id === s.id);
-                        const hasUnpaid = recordsForStudent.some(f => f.status !== 'PAID');
-
-                        return (
-                          <tr key={s.id} className="hover-row section-workspace-hover-row">
-                            <td className="section-workspace-td-120">{s.roll_number || 'N/A'}</td>
-                            <td className="section-workspace-td-121">
-                              <Link to={`/students/${s.id}`} className="hover-underline section-workspace-hover-underline">
-                                {s.first_name} {s.last_name}
-                              </Link>
-                              <span className="section-workspace-span-123">{s.email || 'No Email Mapped'}</span>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
+                      const dayEntries = timetable.filter(t => t.day_of_week === day);
+                      if (dayEntries.length === 0) return null;
+                      return dayEntries.map((entry, index) => (
+                        <tr key={entry.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                          {index === 0 && (
+                            <td rowSpan={dayEntries.length} style={{ padding: '0.65rem 0.5rem', fontWeight: '700', background: 'var(--bg-subtle)', verticalAlign: 'top', width: '100px' }}>
+                              {day}
                             </td>
-                            <td className="section-workspace-td-124"><code>{s.admission_number}</code></td>
-                            <td className="section-workspace-td-125">
-                              <span style={{
-                                fontWeight: 700,
-                                color: studentPct < riskThreshold ? '#ef4444' : '#10b981',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.25rem'
-                              }}>
-                                {studentPct}%
-                                {studentPct < riskThreshold && <AlertTriangle size={12} />}
-                              </span>
-                            </td>
-                            <td className="section-workspace-td-126">
-                              <span style={{
-                                display: 'inline-block',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '4px',
-                                fontSize: '0.75rem',
-                                fontWeight: 700,
-                                backgroundColor: hasUnpaid ? '#fef3c7' : '#dcfce7',
-                                color: hasUnpaid ? '#b45309' : '#15803d'
-                              }}>
-                                {hasUnpaid ? 'Unpaid' : 'Paid'}
-                              </span>
-                            </td>
-                            <td className="section-workspace-td-127">
-                              <div className="section-workspace-row-128">
-                                <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/students/${s.id}`)}>Profile</button>
-                                <button className="btn btn-sm btn-secondary" onClick={() => alert('Feature to notify parent triggered successfully!')}>Message Parent</button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    {students.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="section-workspace-td-129">
-                          No students are currently enrolled in this section.
-                        </td>
-                      </tr>
-                    )}
+                          )}
+                          <td style={{ padding: '0.65rem 0.5rem' }}><code>{entry.start_time} - {entry.end_time}</code></td>
+                          <td style={{ padding: '0.65rem 0.5rem', fontWeight: '600' }}>{entry.subject_name}</td>
+                          <td style={{ padding: '0.65rem 0.5rem' }}>{entry.teacher_name}</td>
+                        </tr>
+                      ));
+                    })}
                   </tbody>
                 </table>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 5. ATTENDANCE TAB */}
+        {activeTab === 'attendance' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)' }}>Attendance Register sessions</h4>
+              <button className="btn btn-primary" onClick={() => navigate(`/attendance?section_id=${id}`)}>
+                Mark Daily Attendance
+              </button>
+            </div>
+
+            {attendanceSessions.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-secondary)' }}>
+                <ClipboardCheck size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
+                <p>No attendance records logged for this class yet.</p>
               </div>
-            )}
-
-            {/* ATTENDANCE TAB */}
-            {activeTab === 'attendance' && (
-              <div className="section-workspace-col-130">
-                <div className="section-workspace-grid-131">
-                  {/* Today's Stats Card */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-title-133">Today's Attendance Work</h4>
-                    <div className="section-workspace-col-134">
-                      <div className="section-workspace-row-135">
-                        <span className="section-workspace-span-136">Total Students</span>
-                        <span className="section-workspace-span-137">{activeStudentsCount} Students</span>
-                      </div>
-                      
-                      {/* Attendance Sessions marked today */}
-                      {(() => {
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        const sessionsToday = attendanceSessions.filter(s => s.date === todayStr);
-                        return (
-                          <div className="section-workspace-div-138">
-                            <span className="section-workspace-span-139">Today's Sessions ({sessionsToday.length})</span>
-                            {sessionsToday.length > 0 ? (
-                              <div className="section-workspace-col-140">
-                                {sessionsToday.map(s => (
-                                  <div key={s.id} className="section-workspace-row-141">
-                                    <span className="section-workspace-span-142">{s.subject_name}</span>
-                                    <span className="section-workspace-span-143">{s.start_time || 'General Slot'}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="section-workspace-span-144">No attendance sessions marked yet today.</span>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      <button className="btn btn-primary section-workspace-btn" onClick={() => navigate(`/attendance?section_id=${id}`)}>
-                        <ClipboardCheck size={18} /> Mark Today's Attendance
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Below Threshold List */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-row-147">
-                      <AlertTriangle size={18} className="section-workspace-AlertTriangle-148"  /> Below Threshold (&lt; {riskThreshold}%)
-                    </h4>
-                    <div className="section-workspace-col-149">
-                      {attendanceReport
-                        .filter(r => {
-                          const sSessions = r.total_sessions || 0;
-                          if (sSessions === 0) return false;
-                          const pct = ((r.present_count || 0) + (r.late_count || 0)) / sSessions * 100;
-                          return pct < riskThreshold;
-                        })
-                        .map(r => {
-                          const sPct = Math.round(((r.present_count || 0) + (r.late_count || 0)) / r.total_sessions * 100);
-                          return (
-                            <div key={r.student_id} className="section-workspace-row-150">
-                              <span className="section-workspace-span-151">{r.first_name} {r.last_name}</span>
-                              <span className="section-workspace-span-152">{sPct}%</span>
-                            </div>
-                          );
-                        })}
-                      {atRiskStudentsCount === 0 && (
-                        <div className="section-workspace-row-153">No students below threshold! Excellent.</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent Sessions list */}
-                <div className="card section-workspace-card">
-                  <h4 className="section-workspace-title-155">Recent Attendance Sessions Log</h4>
-                  <table className="table section-workspace-table">
-                    <thead>
-                      <tr className="section-workspace-tr-157">
-                        <th className="section-workspace-th-158">Session Date</th>
-                        <th className="section-workspace-th-159">Subject Mapped</th>
-                        <th className="section-workspace-th-160">Teacher Assigned</th>
-                        <th className="section-workspace-th-161">Timetable Period</th>
-                        <th className="section-workspace-th-162">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {attendanceSessions.slice(0, 5).map(session => (
-                        <tr key={session.id} className="section-workspace-tr-163">
-                          <td className="section-workspace-td-164">{session.date}</td>
-                          <td className="section-workspace-td-165">{session.subject_name}</td>
-                          <td className="section-workspace-td-166">{session.teacher_name}</td>
-                          <td className="section-workspace-td-167">{session.slot_name || 'General'}</td>
-                          <td className="section-workspace-td-168">
-                            <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/attendance?session_id=${session.id}`)}>Edit Marks</button>
-                          </td>
-                        </tr>
-                      ))}
-                      {attendanceSessions.length === 0 && (
-                        <tr>
-                          <td colSpan={5} className="section-workspace-td-169">No historical attendance sessions logged.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* TIMETABLE TAB */}
-            {activeTab === 'timetable' && (
-              <div className="section-workspace-col-170">
-                <div className="section-workspace-grid-171">
-                  
-                  {/* Status Panel */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-title-173">Schedule status</h4>
-                    <div className="section-workspace-col-174">
-                      {/* Current Period Highlight */}
-                      {(() => {
-                        const current = todaysSchedule.find(t => getPeriodStatus(t.start_time, t.end_time) === 'current');
-                        return (
-                          <div style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: current ? 'rgba(16, 185, 129, 0.05)' : '#f8fafc' }}>
-                            <span className="section-workspace-span-175">Current active class</span>
-                            {current ? (
-                              <>
-                                <span className="section-workspace-span-176">{current.subject_name}</span>
-                                <span className="section-workspace-span-177">by {current.teacher_name}</span>
-                                <span className="section-workspace-row-178">
-                                  <Clock size={12} /> Ends at {current.end_time}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="section-workspace-span-179">No ongoing class right now. (Free Period / Break)</span>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Next Period Highlight */}
-                      {(() => {
-                        const nextSlot = todaysSchedule.find(t => getPeriodStatus(t.start_time, t.end_time) === 'upcoming');
-                        return (
-                          <div className="section-workspace-div-180">
-                            <span className="section-workspace-span-181">Next Scheduled Period</span>
-                            {nextSlot ? (
-                              <>
-                                <span className="section-workspace-span-182">{nextSlot.subject_name}</span>
-                                <span className="section-workspace-span-183">by {nextSlot.teacher_name}</span>
-                                <span className="section-workspace-row-184">
-                                  <Clock size={12} /> Starts at {nextSlot.start_time}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="section-workspace-span-185">No upcoming classes for the rest of today.</span>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Weekly Timeline Grid */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-title-187">Weekly Schedule Overview</h4>
-                    <div className="section-workspace-div-188">
-                      <table className="section-workspace-table-189">
-                        <thead>
-                          <tr className="section-workspace-tr-190">
-                            <th className="section-workspace-th-191">Day</th>
-                            <th className="section-workspace-th-192">Schedule slots details</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => {
-                            const slots = timetable.filter(t => t.day_of_week === day).sort((a, b) => a.start_time.localeCompare(b.start_time));
-                            return (
-                              <tr key={day} className="section-workspace-tr-193">
-                                <td style={{ padding: '0.75rem 0.5rem', fontWeight: 700, color: day === todayDay ? 'var(--primary)' : 'var(--text-main)' }}>{day}</td>
-                                <td className="section-workspace-td-194">
-                                  <div className="section-workspace-row-195">
-                                    {slots.map(s => (
-                                      <div key={s.id} className="section-workspace-col-196">
-                                        <span className="section-workspace-span-197">{s.subject_name}</span>
-                                        <span className="section-workspace-span-198">{s.start_time} - {s.end_time}</span>
-                                      </div>
-                                    ))}
-                                    {slots.length === 0 && <span className="section-workspace-span-199">No slots scheduled</span>}
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SUBJECTS TAB */}
-            {activeTab === 'subjects' && (
-              <div className="card section-workspace-card">
-                <h4 className="section-workspace-title-201">Mapped Course Subjects</h4>
-                <div className="section-workspace-grid-202">
-                  {allSubjects
-                    .filter(sub => sub.course_id === section.course_id)
-                    .map(sub => {
-                      // Get assigned weekly slots for this subject
-                      const subjectSlots = timetable.filter(t => t.subject_name === sub.subject_name);
-                      const firstSlot = subjectSlots[0];
-                      const mappedTeacher = firstSlot ? firstSlot.teacher_name : 'No Teacher Assigned';
-
-                      return (
-                        <div key={sub.id} className="section-workspace-div-203">
-                          <span className="section-workspace-span-204">
-                            {sub.credits || '3'} Credits
-                          </span>
-                          <span className="section-workspace-span-205">{sub.subject_code}</span>
-                          <span className="section-workspace-span-206">{sub.subject_name}</span>
-                          
-                          <div className="section-workspace-col-207">
-                            <div className="section-workspace-row-208">
-                              <span className="section-workspace-span-209">Instructor</span>
-                              <span className="section-workspace-span-210">{mappedTeacher}</span>
-                            </div>
-                            <div className="section-workspace-row-211">
-                              <span className="section-workspace-span-212">Classes Mapped/Week</span>
-                              <span className="section-workspace-span-213">{subjectSlots.length} Classes</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  {allSubjects.filter(sub => sub.course_id === section.course_id).length === 0 && (
-                    <div className="section-workspace-div-214">No subjects mapped to this Program/Class.</div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* TEACHERS TAB */}
-            {activeTab === 'teachers' && (
-              <div className="section-workspace-col-215">
-                <div className="section-workspace-grid-216">
-                  
-                  {/* Class Teacher Card */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-title-218">Class Teacher Details</h4>
-                    {section.class_teacher_name ? (
-                      <div className="section-workspace-col-219">
-                        <div className="section-workspace-row-220">
-                          {section.class_teacher_name.charAt(0)}
-                        </div>
-                        <div>
-                          <span className="section-workspace-span-221">{section.class_teacher_name}</span>
-                          <span className="section-workspace-span-222">Primary Section Advisor</span>
-                        </div>
-                        <span className="section-workspace-span-223">
-                          Active Duty
+            ) : (
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Session Date</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Marked By</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Mapped</th>
+                    <th style={{ textAlign: 'center', padding: '0.5rem', width: '150px' }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendanceSessions.map(session => (
+                    <tr key={session.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '0.65rem 0.5rem', fontWeight: '500' }}>{new Date(session.session_date).toLocaleDateString()}</td>
+                      <td style={{ padding: '0.65rem 0.5rem' }}>{session.marked_by_name || 'Staff Advisor'}</td>
+                      <td style={{ padding: '0.65rem 0.5rem' }}>{session.subject_name || 'General Attendance'}</td>
+                      <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center' }}>
+                        <span className="badge badge-success" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
+                          ✓ Marked
                         </span>
-                      </div>
-                    ) : (
-                      <div className="section-workspace-div-224">
-                        <Users size={32} className="section-workspace-Users-225"  />
-                        <p className="section-workspace-text-226">No Class Advisor assigned yet.</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Subject Teachers Directory */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-title-228">Subject Instructors Directory</h4>
-                    <div className="section-workspace-col-229">
-                      {(() => {
-                        const added = new Set();
-                        const uniqueTimetableTeachers = timetable.filter(t => {
-                          if (added.has(t.teacher_name)) return false;
-                          added.add(t.teacher_name);
-                          return true;
-                        });
-
-                        return uniqueTimetableTeachers.map(item => (
-                          <div key={item.id} className="section-workspace-row-230">
-                            <div className="section-workspace-row-231">
-                              <div className="section-workspace-row-232">
-                                {item.teacher_name.charAt(0)}
-                              </div>
-                              <div>
-                                <span className="section-workspace-span-233">{item.teacher_name}</span>
-                                <span className="section-workspace-span-234">Teaches: {item.subject_name}</span>
-                              </div>
-                            </div>
-                            <span className="section-workspace-span-235">Assigned via Timetable</span>
-                          </div>
-                        ));
-                      })()}
-                      {timetable.length === 0 && (
-                        <div className="section-workspace-div-236">No teachers mapped to weekly timetable slots.</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
+          </div>
+        )}
 
-            {/* EXAMS TAB */}
-            {activeTab === 'exams' && (
-              <div className="card section-workspace-card">
-                <h4 className="section-workspace-title-238">Exam Schedules & Statuses</h4>
-                <div className="section-workspace-col-239">
+        {/* 6. EXAMS TAB */}
+        {activeTab === 'exams' && (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1.25rem' }}>Scheduled Class Examinations</h4>
+            
+            {filteredExams.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-secondary)' }}>
+                <FileText size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
+                <p>No active exams scheduled for this class section.</p>
+              </div>
+            ) : (
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Exam Name</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Term / Description</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Subject Mapped</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Dates</th>
+                    <th style={{ textAlign: 'right', padding: '0.5rem' }}>Max Marks</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {filteredExams.map(exam => (
-                    <div key={exam.id} className="section-workspace-row-240">
-                      <div>
-                        <span style={{ display: 'inline-block', fontSize: '0.7rem', padding: '0.125rem 0.5rem', borderRadius: '4px', backgroundColor: exam.status === 'PUBLISHED' ? '#dcfce7' : '#fef3c7', color: exam.status === 'PUBLISHED' ? '#15803d' : '#b45309', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                          {exam.status}
-                        </span>
-                        <span className="section-workspace-span-241">{exam.name}</span>
-                        <span className="section-workspace-span-242">
-                          Timeline: {new Date(exam.start_date).toLocaleDateString()} to {new Date(exam.end_date).toLocaleDateString()}
-                        </span>
-                      </div>
-
-                      <div className="section-workspace-row-243">
-                        <button className="btn btn-secondary" onClick={() => navigate(`/exams`)}>View Exam dossier</button>
-                      </div>
-                    </div>
+                    <tr key={exam.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '0.65rem 0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>{exam.name}</td>
+                      <td style={{ padding: '0.65rem 0.5rem', color: 'var(--text-secondary)' }}>{exam.term || 'General Assessment'}</td>
+                      <td style={{ padding: '0.65rem 0.5rem' }}>{allSubjects.find(s => s.id === exam.subject_id)?.subject_name || 'All Subjects'}</td>
+                      <td style={{ padding: '0.65rem 0.5rem' }}><code>{new Date(exam.start_date).toLocaleDateString()} - {new Date(exam.end_date).toLocaleDateString()}</code></td>
+                      <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right', fontWeight: '700' }}>{exam.max_marks || 100}</td>
+                    </tr>
                   ))}
-                  {filteredExams.length === 0 && (
-                    <div className="section-workspace-div-244">No exams scheduled for this Section.</div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ANNOUNCEMENTS TAB */}
-            {activeTab === 'announcements' && (
-              <div className="section-workspace-col-245">
-                <div className="section-workspace-row-246">
-                  <h4 className="section-workspace-title-247">Section notices & Broadcasts</h4>
-                  <button className="btn btn-primary section-workspace-btn" onClick={() => setShowAnnouncementModal(true)}>
-                    <Plus size={16} /> Broadcast notice
-                  </button>
-                </div>
-
-                <div className="section-workspace-col-249">
-                  {announcements.map(item => (
-                    <div key={item.id} className="card section-workspace-card">
-                      <div className="section-workspace-row-251">
-                        <span className="section-workspace-span-252">{item.title}</span>
-                        <span className="section-workspace-span-253">{new Date(item.created_at).toLocaleString()}</span>
-                      </div>
-                      <p className="section-workspace-text-254">{item.content}</p>
-                    </div>
-                  ))}
-                  {announcements.length === 0 && (
-                    <div className="section-workspace-div-255">
-                      No notices have been broadcasted for this Section.
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* REPORTS TAB */}
-            {activeTab === 'reports' && (
-              <div className="section-workspace-col-256">
-                <div className="section-workspace-grid-257">
-                  {/* Top Performers Card */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-title-259">Top Attendance Performers</h4>
-                    <div className="section-workspace-col-260">
-                      {attendanceReport
-                        .map(r => ({
-                          ...r,
-                          pct: r.total_sessions > 0 ? Math.round(((r.present_count || 0) + (r.late_count || 0)) / r.total_sessions * 100) : 100
-                        }))
-                        .sort((a, b) => b.pct - a.pct)
-                        .slice(0, 3)
-                        .map((student, index) => (
-                          <div key={student.student_id} className="section-workspace-row-261">
-                            <span className="section-workspace-span-262">{index + 1}. {student.first_name} {student.last_name}</span>
-                            <span className="section-workspace-span-263">{student.pct}%</span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-
-                  {/* Fee Collection Status Card */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-title-265">Fee Collection progress</h4>
-                    {(() => {
-                      const totalCollected = feeRecords.reduce((acc, f) => acc + (f.paid_amount || 0), 0);
-                      const totalAmount = feeRecords.reduce((acc, f) => acc + (f.total_amount || 0), 0);
-                      const rate = totalAmount > 0 ? Math.round(totalCollected / totalAmount * 100) : 100;
-                      return (
-                        <div className="section-workspace-col-266">
-                          <div className="section-workspace-div-267">
-                            <span className="section-workspace-span-268">₹{totalCollected.toLocaleString()}</span>
-                            <span className="section-workspace-span-269">collected of ₹{totalAmount.toLocaleString()} total</span>
-                          </div>
-                          
-                          <div>
-                            <div className="section-workspace-row-270">
-                              <span>Collection Progress Rate</span>
-                              <span>{rate}%</span>
-                            </div>
-                            <div className="section-workspace-div-271">
-                              <div style={{ width: `${rate}%`, height: '100%', backgroundColor: 'var(--primary)' }} />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Gender and Demographics Summary */}
-                  <div className="card section-workspace-card">
-                    <h4 className="section-workspace-title-273">Section Demographic Distribution</h4>
-                    <div className="section-workspace-col-274">
-                      <div className="section-workspace-row-275">
-                        <span className="section-workspace-span-276">Total Enrollment Capacity</span>
-                        <span className="section-workspace-span-277">{section.capacity || 40} seats</span>
-                      </div>
-                      <div className="section-workspace-row-278">
-                        <span className="section-workspace-span-279">Seats Occupied</span>
-                        <span className="section-workspace-span-280">{activeStudentsCount} seats ({Math.round(activeStudentsCount / (section.capacity || 40) * 100)}% fill)</span>
-                      </div>
-                      <div className="section-workspace-row-281">
-                        <span className="section-workspace-span-282">Available Seats</span>
-                        <span className="section-workspace-span-283">{Math.max(0, (section.capacity || 40) - activeStudentsCount)} seats free</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* DOCUMENTS TAB */}
-            {activeTab === 'documents' && (
-              <div className="section-workspace-col-284">
-                <div className="section-workspace-row-285">
-                  <h4 className="section-workspace-title-286">Workspace documents folders</h4>
-                  <button className="btn btn-primary section-workspace-btn" onClick={() => setShowDocumentModal(true)}>
-                    <Upload size={16} /> Upload file
-                  </button>
-                </div>
-
-                <div className="section-workspace-grid-288">
-                  {['Timetable', 'Exam Schedule', 'Projects', 'Circulars', 'Photos', 'Assignments'].map(folderName => {
-                    const folderDocs = documents.filter(d => d.folder === folderName);
-                    return (
-                      <div key={folderName} className="card section-workspace-card">
-                        <div className="section-workspace-row-290">
-                          <FolderOpen size={24} className="section-workspace-FolderOpen-291"  />
-                          <div>
-                            <span className="section-workspace-span-292">{folderName}</span>
-                            <span className="section-workspace-span-293">{folderDocs.length} files</span>
-                          </div>
-                        </div>
-
-                        <div className="section-workspace-col-294">
-                          {folderDocs.map(doc => (
-                            <div key={doc.id} className="section-workspace-row-295">
-                              <span onClick={() => handleDownloadDocument(doc.id)} className="hover-underline section-workspace-hover-underline" title="Download Document">
-                                {doc.name}
-                              </span>
-                              <div className="section-workspace-row-297">
-                                <button onClick={() => handleDeleteDocument(doc.id)} className="section-workspace-btn-298">
-                                  <Trash2 size={12} />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                          {folderDocs.length === 0 && (
-                            <div className="section-workspace-row-299">Empty Folder</div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* TIMELINE TAB */}
-            {activeTab === 'timeline' && (
-              <div className="card section-workspace-card">
-                <h4 className="section-workspace-title-301">Audit Timeline Logs</h4>
-                <div className="section-workspace-col-302">
-                  {timeline.map((log, index) => (
-                    <div 
-                      key={log.id} 
-                      style={{ 
-                        display: 'flex', 
-                        gap: '1rem', 
-                        position: 'relative',
-                        paddingBottom: index === timeline.length - 1 ? 0 : '1.5rem'
-                      }}
-                    >
-                      {/* Vertical line connector */}
-                      {index !== timeline.length - 1 && (
-                        <div className="section-workspace-div-303"  />
-                      )}
-                      
-                      {/* Timeline dot */}
-                      <div className="section-workspace-row-304">
-                        <Activity size={16} />
-                      </div>
-
-                      <div>
-                        <span className="section-workspace-span-305">{log.description}</span>
-                        <span className="section-workspace-span-306">
-                          by {log.user_name} ({log.user_email}) • {new Date(log.timestamp).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                  {timeline.length === 0 && (
-                    <div className="section-workspace-div-307">No timeline entries found.</div>
-                  )}
-                </div>
-              </div>
+                </tbody>
+              </table>
             )}
           </div>
         )}
       </div>
 
-      {/* --- BROADCAST ANNOUNCEMENT MODAL --- */}
-      {showAnnouncementModal && (
-        <div className="modal-overlay section-workspace-modal-overlay">
-          <div className="modal-content section-workspace-modal-content">
-            <h3 className="section-workspace-title-310">Broadcast notice to Section</h3>
-            <form onSubmit={handleCreateAnnouncement} className="section-workspace-col-311">
-              <div className="form-group">
-                <label className="section-workspace-label-312">Title *</label>
-                <input 
-                  type="text" 
-                  value={announcementForm.title} 
-                  onChange={e => setAnnouncementForm({ ...announcementForm, title: e.target.value })} 
-                  placeholder="e.g. Test announcement title"
-                  required 
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="section-workspace-label-313">Content *</label>
-                <textarea 
-                  value={announcementForm.content} 
-                  onChange={e => setAnnouncementForm({ ...announcementForm, content: e.target.value })} 
-                  placeholder="Type the message content..."
-                  rows={4}
-                  required 
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="section-workspace-label-314">Target Audience</label>
-                <div className="section-workspace-row-315">
-                  <label className="section-workspace-row-316">
-                    <input 
-                      type="checkbox" 
-                      checked={announcementForm.visible_to_students === 1} 
-                      onChange={e => setAnnouncementForm({ ...announcementForm, visible_to_students: e.target.checked ? 1 : 0 })} 
-                    /> Students
-                  </label>
-                  <label className="section-workspace-row-317">
-                    <input 
-                      type="checkbox" 
-                      checked={announcementForm.visible_to_teachers === 1} 
-                      onChange={e => setAnnouncementForm({ ...announcementForm, visible_to_teachers: e.target.checked ? 1 : 0 })} 
-                    /> Teachers
-                  </label>
-                  <label className="section-workspace-row-318">
-                    <input 
-                      type="checkbox" 
-                      checked={announcementForm.visible_to_parents === 1} 
-                      onChange={e => setAnnouncementForm({ ...announcementForm, visible_to_parents: e.target.checked ? 1 : 0 })} 
-                    /> Parents
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-actions section-workspace-modal-actions">
-                <button type="button" onClick={() => setShowAnnouncementModal(false)} className="btn btn-secondary">Cancel</button>
-                <button type="submit" className="btn btn-primary">Publish</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* --- DOCUMENT UPLOAD MODAL --- */}
-      {showDocumentModal && (
-        <div className="modal-overlay section-workspace-modal-overlay">
-          <div className="modal-content section-workspace-modal-content">
-            <h3 className="section-workspace-title-322">Upload Document to Section</h3>
-            <form onSubmit={handleUploadDocument} className="section-workspace-col-323">
-              
-              <div className="form-group">
-                <label className="section-workspace-label-324">Destination Folder</label>
-                <select 
-                  value={documentForm.folder} 
-                  onChange={e => setDocumentForm({ ...documentForm, folder: e.target.value })}
-                >
-                  <option value="Timetable">Timetable</option>
-                  <option value="Exam Schedule">Exam Schedule</option>
-                  <option value="Projects">Projects</option>
-                  <option value="Circulars">Circulars</option>
-                  <option value="Photos">Photos</option>
-                  <option value="Assignments">Assignments</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="section-workspace-label-325">Select File</label>
-                <input 
-                  type="file" 
-                  onChange={e => setDocumentForm({ ...documentForm, file: (e.target.files && e.target.files[0]) || null })}
-                  required
-                />
-              </div>
-
-              <div className="modal-actions section-workspace-modal-actions">
-                <button type="button" onClick={() => setShowDocumentModal(false)} className="btn btn-secondary">Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={uploadingDoc}>
-                  {uploadingDoc ? 'Uploading...' : 'Upload'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* --- SETTINGS MODAL --- */}
+      {/* --- CLASS SETTINGS MODAL --- */}
       {showSettingsModal && (
-        <div className="modal-overlay section-workspace-modal-overlay">
-          <div className="modal-content section-workspace-modal-content">
-            <h3 className="section-workspace-title-329">Edit Section configurations</h3>
-            <form onSubmit={handleUpdateSettings} className="section-workspace-col-330">
-              <div className="form-group">
-                <label className="section-workspace-label-331">Section Name *</label>
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="card modal-content" style={{ width: '440px', padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1.25rem' }}>Edit Class Configuration</h3>
+            <form onSubmit={handleUpdateSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Section Name *</label>
                 <input 
                   type="text" 
                   value={settingsForm.name} 
                   onChange={e => setSettingsForm({ ...settingsForm, name: e.target.value })} 
+                  className="input"
                   required 
                 />
               </div>
 
-              <div className="section-workspace-grid-332">
-                <div className="form-group">
-                  <label className="section-workspace-label-333">Classroom Location</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Classroom Location</label>
                   <input 
                     type="text" 
                     value={settingsForm.room} 
                     onChange={e => setSettingsForm({ ...settingsForm, room: e.target.value })} 
+                    className="input"
                     placeholder="e.g. Block C-302"
                   />
                 </div>
 
-                <div className="form-group">
-                  <label className="section-workspace-label-334">Max Capacity *</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Max Capacity *</label>
                   <input 
                     type="number" 
                     value={settingsForm.capacity} 
                     onChange={e => setSettingsForm({ ...settingsForm, capacity: parseInt(e.target.value) || 0 })} 
+                    className="input"
                     required 
                     min="1"
                   />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="section-workspace-label-335">Class Teacher / Advisor</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Class Teacher / Advisor</label>
                 <select 
                   value={settingsForm.class_teacher_id} 
                   onChange={e => setSettingsForm({ ...settingsForm, class_teacher_id: e.target.value })}
+                  className="input"
                 >
                   <option value="">-- Assign Class Teacher (Optional) --</option>
                   {allTeachers.map(t => (
-                    <option key={t.id} value={t.id}>{t.first_name} {t.last_name} ({t.employee_id || 'No ID'})</option>
+                    <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>
                   ))}
                 </select>
               </div>
 
-              <div className="modal-actions section-workspace-modal-actions">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
                 <button type="button" onClick={() => setShowSettingsModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary">Save Settings</button>
               </div>

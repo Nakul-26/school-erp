@@ -1,10 +1,12 @@
 import './TimetablePage.css';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, Trash2, Clock, Calendar, BookOpen, User } from 'lucide-react';
+import { Plus, Trash2, Clock, Calendar, BookOpen, User, RefreshCw } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
+import { useAuth } from '../contexts/AuthContext';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,35 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function TimetablePage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    const checkRedirect = async () => {
+      if (!user) return;
+      const isTeacher = (user.roles || (user.role ? [user.role] : [])).some(
+        (r: string) => ['teacher', 'Teacher'].includes(r)
+      );
+      if (isTeacher) {
+        setRedirecting(true);
+        try {
+          const teachersList = await api.get('/teachers');
+          const myTeacher = teachersList.find((t: any) => t.user_id === user.id);
+          if (myTeacher) {
+            navigate(`/teachers/${myTeacher.id}?tab=timetable`, { replace: true });
+          } else {
+            setRedirecting(false);
+          }
+        } catch (err) {
+          console.error('Error fetching teacher ID for redirection:', err);
+          setRedirecting(false);
+        }
+      }
+    };
+    checkRedirect();
+  }, [user, navigate]);
+
   const [activeTab, setActiveTab] = useState<'weekly' | 'periods'>('weekly');
   const getTodayDayName = () => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -566,6 +597,17 @@ export default function TimetablePage() {
   );
 
   // ── Root render ────────────────────────────────────────────────────────────
+
+  if (redirecting) {
+    return (
+      <Layout>
+        <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          <RefreshCw size={24} className="spin" style={{ marginBottom: '1rem' }} />
+          <p>Redirecting to your timetable workspace...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

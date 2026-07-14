@@ -43,7 +43,7 @@ interface PaymentRecord {
   receipt_number: string | null;
 }
 
-export default function StudentFees() {
+export default function StudentFees({ isSubComponent = false }: { isSubComponent?: boolean }) {
   const { user } = useAuth();
   const [view, setView] = useState<'list' | 'ledger' | 'receipt'>('list');
   const [students, setStudents] = useState<StudentFeeSummaryRow[]>([]);
@@ -452,13 +452,15 @@ export default function StudentFees() {
     }
   };
 
-  return (
-    <Layout>
-      <PageGuidance
-        title="Fee Collection"
-        description="Use this page to collect school fees, view ledgers, and print receipts."
-        steps={["Search for a student to open their fee ledger.","Click Collect Fee to record Cash, UPI, or Card payments.","Print payment receipts for parents immediately."]}
-      />
+  const content = (
+    <>
+      {!isSubComponent && (
+        <PageGuidance
+          title="Fee Collection"
+          description="Use this page to collect school fees, view ledgers, and print receipts."
+          steps={["Search for a student to open their fee ledger.","Click Collect Fee to record Cash, UPI, or Card payments.","Print payment receipts for parents immediately."]}
+        />
+      )}
       {view === 'list' && (
         <>
           <div className="page-header">
@@ -1039,6 +1041,9 @@ export default function StudentFees() {
 
       {/* PRINT CUSTOM STYLING */}
       
-    </Layout>
+    </>
   );
+
+  if (isSubComponent) return content;
+  return <Layout>{content}</Layout>;
 }

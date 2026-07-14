@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   Building2, Users, Calendar, Layers, Award, Settings,
   FileSpreadsheet, ClipboardList, GraduationCap, BookOpen,
-  ArrowRight, Shield, School, ChevronRight
+  ArrowRight, Shield, School, ChevronRight, Clock
 } from 'lucide-react';
 
 interface SetupSection {
@@ -40,7 +40,7 @@ export default function SchoolSetup() {
           icon: <Building2 size={16} />
         },
         {
-          label: 'System Settings',
+          label: 'General Settings',
           description: 'Academic calendar, term dates, language',
           to: '/settings',
           icon: <Settings size={16} />
@@ -77,6 +77,12 @@ export default function SchoolSetup() {
           description: 'Standard I–XII or program-level definitions',
           to: '/programs',
           icon: <BookOpen size={16} />
+        },
+        {
+          label: 'Period Timings',
+          description: 'Configure standard school periods and timings',
+          to: '/timetable?tab=periods',
+          icon: <Clock size={16} />
         },
       ]
     },

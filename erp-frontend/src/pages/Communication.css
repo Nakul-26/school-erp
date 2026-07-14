@@ -1,15 +1,15 @@
-/* Finance Styles */
-.finance-page {
+/* Communication Styles */
+.communication-page {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.finance-page .tab-btn {
+.communication-page .tab-btn {
   font-family: inherit;
   font-size: 0.95rem;
   transition: all 0.2s ease;
 }
 
-.finance-page .tab-btn:hover {
+.communication-page .tab-btn:hover {
   color: var(--primary) !important;
 }

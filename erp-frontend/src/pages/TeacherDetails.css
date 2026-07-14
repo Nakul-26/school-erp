@@ -1594,5 +1594,44 @@
   font-weight: 700;
 }
 
+/* Workspace main tabs styles */
+.teacher-workspace-tabs {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+}
+
+.teacher-workspace-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.teacher-workspace-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.25rem;
+  border: none;
+  background: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-secondary);
+  font-weight: 400;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.teacher-workspace-tab-btn.is-active {
+  border-bottom: 3px solid var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+
 
 

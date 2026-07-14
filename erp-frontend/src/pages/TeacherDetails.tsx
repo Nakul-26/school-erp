@@ -571,7 +571,7 @@ export default function TeacherDetails() {
       </div>
  
       {/* Workspace Navigation Tabs */}
-      <div className="teacher-workspace-tabs" style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: '0.25rem' }}>
+      <div className="teacher-workspace-tabs">
         {[
           { tab: 'overview', label: 'Profile Overview', icon: User },
           { tab: 'subjects', label: 'Taught Subjects', icon: BookOpen },
@@ -590,21 +590,7 @@ export default function TeacherDetails() {
               key={t.tab}
               type="button"
               onClick={() => setActiveTab(t.tab)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.75rem 0.25rem',
-                border: 'none',
-                background: 'none',
-                borderBottom: isActive ? '3px solid var(--primary)' : '3px solid transparent',
-                color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
-                fontWeight: isActive ? 700 : 400,
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                transition: 'all 0.2s ease',
-                flexShrink: 0
-              }}
+              className={`teacher-workspace-tab-btn${isActive ? ' is-active' : ''}`}
             >
               <Icon size={15} />
               <span>{t.label}</span>

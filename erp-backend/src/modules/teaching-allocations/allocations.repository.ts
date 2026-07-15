@@ -4,7 +4,9 @@ import { getUpdateFields } from '../../utils/repository';
 const UPDATE_FIELDS = [
   'classes_per_week', 'theory_hours', 'practical_hours', 'tutorial_hours',
   'mentoring_hours', 'admin_hours', 'primary_teacher', 'status',
-  'start_date', 'end_date', 'remarks'
+  'start_date', 'end_date', 'remarks',
+  'teacher_id', 'subject_id', 'section_id', 'academic_year_id',
+  'department_id', 'program_id', 'semester', 'year_number'
 ] as const;
 
 export class TeachingAllocationRepository {
@@ -16,8 +18,27 @@ export class TeachingAllocationRepository {
         id, institution_id, academic_year_id, department_id, program_id, semester, year_number,
         section_id, subject_id, teacher_id, classes_per_week, theory_hours, practical_hours,
         tutorial_hours, mentoring_hours, admin_hours, primary_teacher, status, start_date, end_date,
-        remarks, created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        remarks, created_by, updated_by, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+      ON CONFLICT(teacher_id, subject_id, section_id, academic_year_id) DO UPDATE SET
+        is_active = 1,
+        department_id = excluded.department_id,
+        program_id = excluded.program_id,
+        semester = excluded.semester,
+        year_number = excluded.year_number,
+        classes_per_week = excluded.classes_per_week,
+        theory_hours = excluded.theory_hours,
+        practical_hours = excluded.practical_hours,
+        tutorial_hours = excluded.tutorial_hours,
+        mentoring_hours = excluded.mentoring_hours,
+        admin_hours = excluded.admin_hours,
+        primary_teacher = excluded.primary_teacher,
+        status = excluded.status,
+        start_date = excluded.start_date,
+        end_date = excluded.end_date,
+        remarks = excluded.remarks,
+        updated_by = excluded.updated_by,
+        updated_at = datetime('now')
     `).bind(
       id,
       institutionId,
@@ -171,6 +192,44 @@ export class TeachingAllocationRepository {
 
     const res = await this.db.prepare(query).bind(...params).first();
     return Boolean(res);
+  }
+
+  async findByMapping(
+    teacherId: string,
+    subjectId: string,
+    sectionId: string,
+    academicYearId: string
+  ): Promise<any | null> {
+    return await this.db.prepare(`
+      SELECT * FROM teaching_allocations 
+      WHERE teacher_id = ? AND subject_id = ? AND section_id = ? AND academic_year_id = ?
+    `).bind(teacherId, subjectId, sectionId, academicYearId).first();
+  }
+
+  async reactivateAndMerge(
+    reactivateId: string,
+    softDeleteId: string,
+    institutionId: string,
+    input: UpdateAllocationInput,
+    userId?: string
+  ): Promise<void> {
+    const fields = getUpdateFields(input, UPDATE_FIELDS);
+    const sets = [...fields.map(field => `${field} = ?`), 'is_active = 1'].join(', ');
+    const values = [...fields.map(field => input[field]), userId || null, reactivateId, institutionId];
+
+    const stmt1 = this.db.prepare(`
+      UPDATE teaching_allocations 
+      SET ${sets}, updated_at = datetime('now'), updated_by = ?
+      WHERE id = ? AND institution_id = ?
+    `).bind(...values);
+
+    const stmt2 = this.db.prepare(`
+      UPDATE teaching_allocations 
+      SET is_active = 0, updated_at = datetime('now'), updated_by = ? 
+      WHERE id = ? AND institution_id = ?
+    `).bind(userId || null, softDeleteId, institutionId);
+
+    await this.db.batch([stmt1, stmt2]);
   }
 
   async calculateTeacherLoad(teacherId: string, academicYearId: string): Promise<{

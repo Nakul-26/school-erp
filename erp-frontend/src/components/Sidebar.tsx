@@ -61,11 +61,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
     const saved = sessionStorage.getItem('sidebar_v2_collapsed');
-    return saved ? JSON.parse(saved) : {
-      'Academic Setup': false,
-      'Finance': false,
-      'Communication': false,
-    };
+    return saved ? JSON.parse(saved) : {};
   });
 
   useEffect(() => {
@@ -123,14 +119,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/teachers', label: 'Teachers', icon: UserCheck },
         { to: '/classes', label: 'Classes', icon: School },
         { to: '/subjects', label: 'Subjects', icon: BookOpen },
-      ],
-    },
-    {
-      key: 'Academic Setup', label: 'Academic Setup',
-      links: [
-        { to: '/academic-setup?tab=curriculum', label: 'Curriculum', icon: Layers },
-        { to: '/academic-setup?tab=assignments', label: 'Subject Assignments', icon: ClipboardList },
-        { to: '/academic-setup?tab=timetable', label: 'Timetable Generator', icon: CalendarDays },
+        { to: '/academic-setup', label: 'Academic Setup', icon: Layers },
       ],
     },
     {
@@ -138,21 +127,8 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       links: [
         { to: '/attendance', label: 'Attendance', icon: ClipboardCheck },
         { to: '/exams', label: 'Exams & Results', icon: Award },
-      ],
-    },
-    {
-      key: 'Finance', label: 'Finance',
-      links: [
-        { to: '/finance?tab=fees', label: 'Fees', icon: IndianRupee },
-        { to: '/finance?tab=payroll', label: 'Payroll', icon: Landmark },
-      ],
-    },
-    {
-      key: 'Communication', label: 'Communication',
-      links: [
-        { to: '/communication?tab=announcements', label: 'Announcements', icon: Megaphone },
-        { to: '/communication?tab=messages', label: 'Messages', icon: MessageSquare, badge: unreadMessages },
-        { to: '/communication?tab=notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+        { to: '/finance', label: 'Finance', icon: IndianRupee },
+        { to: '/communication', label: 'Communication', icon: MessageSquare, badge: unreadMessages + unreadCount },
       ],
     },
     {

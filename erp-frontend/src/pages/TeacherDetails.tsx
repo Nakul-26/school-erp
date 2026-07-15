@@ -150,7 +150,7 @@ export default function TeacherDetails() {
         workloadReport, departmentsData
       ] = await Promise.all([
         api.get(`/teachers/${id}`).catch(() => null),
-        api.get(`/teacher-assignments/teacher/${id}`).catch(() => []),
+        api.get(`/teaching-allocations?teacher_id=${id}`).catch(() => []),
         api.get('/academic-years').catch(() => []),
         api.get('/programs').catch(() => []),
         api.get('/sections').catch(() => []),
@@ -368,7 +368,11 @@ export default function TeacherDetails() {
   }
 
   // Workload computation
-  const totalAllocatedPeriods = workload?.allocated_hours || 0;
+  const currentYearId = academicYears.find((y: any) => y.is_current)?.id || '';
+  const activeYearAssignments = assignments.filter((a: any) => !currentYearId || a.academic_year_id === currentYearId);
+  const totalAllocatedPeriods = activeYearAssignments.reduce((acc: number, a: any) => {
+    return acc + (a.classes_per_week || 4);
+  }, 0);
   const isOverloaded = totalAllocatedPeriods > 24;
 
   // Leave computation
@@ -651,9 +655,10 @@ export default function TeacherDetails() {
             <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1rem' }}>Taught Subjects Directory</h4>
  
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-              {assignments.map(assign => {
+              {activeYearAssignments.map(assign => {
                 const sub = subjects.find(s => s.id === assign.subject_id);
                 if (!sub) return null;
+                const hours = assign.classes_per_week || 4;
                 return (
                   <div key={assign.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1rem', background: 'var(--bg-subtle)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -661,15 +666,15 @@ export default function TeacherDetails() {
                       <span className="badge" style={{ fontSize: '0.7rem' }}>{sub.subject_code}</span>
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.5rem' }}>
-                      <div>Class level: {getProgramLabel()} {programs.find(p => p.id === assign.course_id)?.name || 'Unknown'}</div>
-                      <div>Periods: <strong style={{ color: 'var(--text-main)' }}>{sub.weekly_hours || 4} Periods / week</strong></div>
+                      <div>Class level: {getProgramLabel()} {programs.find(p => p.id === (assign.program_id || assign.course_id))?.name || 'Unknown'}</div>
+                      <div>Workload: <strong style={{ color: 'var(--text-main)' }}>{hours} Hours / week</strong></div>
                       <div>Absent Students Today: <span style={{ color: 'var(--danger)', fontWeight: '700' }}>4 students absent today</span></div>
                       <div>Next Class: <span style={{ color: 'var(--primary)', fontWeight: '700' }}>Tomorrow 9:30 AM</span></div>
                     </div>
                   </div>
                 );
               })}
-              {assignments.length === 0 && (
+              {activeYearAssignments.length === 0 && (
                 <div style={{ color: 'var(--text-secondary)', gridColumn: 'span 3', padding: '3rem 0', textAlign: 'center' }}>
                   <p style={{ marginBottom: '1rem' }}>No taught subjects configured yet.</p>
                   <Link to="/academic-setup?tab=assignments" className="btn btn-secondary btn-sm" style={{ height: 'auto', padding: '0.4rem 0.8rem' }}>
@@ -697,16 +702,16 @@ export default function TeacherDetails() {
  
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
               {(() => {
-                const uniqueSectionIds = Array.from(new Set(assignments.map(a => a.section_id)));
+                const uniqueSectionIds = Array.from(new Set(activeYearAssignments.map(a => a.section_id)));
                 return uniqueSectionIds.map(secId => {
                   const sec = sections.find(s => s.id === secId);
                   if (!sec) return null;
-                  const secAssignments = assignments.filter(a => a.section_id === secId);
+                  const secAssignments = activeYearAssignments.filter(a => a.section_id === secId);
                   const subNames = secAssignments.map(a => {
                     const sub = subjects.find(s => s.id === a.subject_id);
                     return sub?.subject_name;
                   }).filter(Boolean).join(', ');
- 
+  
                   return (
                     <div key={secId} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1rem', background: 'var(--bg-subtle)' }}>
                       <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Section {sec.name}</div>
@@ -720,7 +725,7 @@ export default function TeacherDetails() {
                   );
                 });
               })()}
-              {assignments.length === 0 && (
+              {activeYearAssignments.length === 0 && (
                 <div style={{ color: 'var(--text-secondary)', gridColumn: 'span 3', padding: '3rem 0', textAlign: 'center' }}>
                   <p style={{ marginBottom: '1rem' }}>No classes mapped yet.</p>
                   <Link to="/academic-setup?tab=assignments" className="btn btn-secondary btn-sm" style={{ height: 'auto', padding: '0.4rem 0.8rem' }}>
@@ -804,7 +809,7 @@ export default function TeacherDetails() {
                         {barStr}
                       </div>
                       <div style={{ marginTop: '0.75rem', fontWeight: '800', fontSize: '1.25rem', color: 'var(--text-main)' }}>
-                        {totalAllocatedPeriods} / 24 periods
+                        {totalAllocatedPeriods} / 24 hours
                       </div>
                       <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                         {percent}% Load &bull; <strong style={{ color: isOverloaded ? 'var(--danger)' : 'var(--success)' }}>{isOverloaded ? 'Overloaded' : percent > 75 ? 'Optimal Heavy' : 'Healthy'}</strong>
@@ -834,18 +839,19 @@ export default function TeacherDetails() {
                     </tr>
                   </thead>
                   <tbody>
-                    {assignments.map(assign => {
+                    {activeYearAssignments.map(assign => {
                       const sub = subjects.find(s => s.id === assign.subject_id);
                       const sec = sections.find(s => s.id === assign.section_id);
+                      const hours = assign.classes_per_week || 4;
                       return (
                         <tr key={assign.id} style={{ borderBottom: '1px solid var(--border)' }}>
                           <td style={{ padding: '0.5rem' }}>{sec?.name || 'Unknown'}</td>
                           <td style={{ padding: '0.5rem' }}>{sub?.subject_name || 'Unknown'}</td>
-                          <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '700' }}>{sub?.weekly_hours || 4} Periods</td>
+                          <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '700' }}>{hours} Hours</td>
                         </tr>
                       );
                     })}
-                    {assignments.length === 0 && (
+                    {activeYearAssignments.length === 0 && (
                       <tr>
                         <td colSpan={3} style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-secondary)' }}>No assignments recorded.</td>
                       </tr>

@@ -485,8 +485,14 @@ export default function Attendance() {
                             <div className="attendance-row-18">
                               <button
                                 type="button"
-                                className={`btn btn-sm ${rec.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
-                                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: rec.status === 'present' ? 1 : 0.65 }}
+                                className="btn btn-sm btn-secondary"
+                                style={{
+                                  padding: '0.3rem 0.6rem',
+                                  fontSize: '0.75rem',
+                                  backgroundColor: rec.status === 'present' ? '#22c55e' : '',
+                                  color: rec.status === 'present' ? '#fff' : '',
+                                  opacity: rec.status === 'present' ? 1 : 0.65
+                                }}
                                 onClick={() => handleMarkStudentStatus(rec.student_id, 'present')}
                               >
                                 Present
@@ -501,8 +507,14 @@ export default function Attendance() {
                               </button>
                               <button
                                 type="button"
-                                className={`btn btn-sm ${rec.status === 'late' ? 'btn-warning' : 'btn-secondary'}`}
-                                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: rec.status === 'late' ? 1 : 0.65 }}
+                                className="btn btn-sm btn-secondary"
+                                style={{
+                                  padding: '0.3rem 0.6rem',
+                                  fontSize: '0.75rem',
+                                  backgroundColor: rec.status === 'late' ? '#4b5563' : '',
+                                  color: rec.status === 'late' ? '#fff' : '',
+                                  opacity: rec.status === 'late' ? 1 : 0.65
+                                }}
                                 onClick={() => handleMarkStudentStatus(rec.student_id, 'late')}
                               >
                                 Late
@@ -556,8 +568,14 @@ export default function Attendance() {
                       <div className="attendance-grid-26">
                         <button
                           type="button"
-                          className={`btn btn-sm ${rec.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
-                          style={{ padding: '0.4rem 0.25rem', fontSize: '0.72rem', opacity: rec.status === 'present' ? 1 : 0.65 }}
+                          className="btn btn-sm btn-secondary"
+                          style={{
+                            padding: '0.4rem 0.25rem',
+                            fontSize: '0.72rem',
+                            backgroundColor: rec.status === 'present' ? '#22c55e' : '',
+                            color: rec.status === 'present' ? '#fff' : '',
+                            opacity: rec.status === 'present' ? 1 : 0.65
+                          }}
                           onClick={() => handleMarkStudentStatus(rec.student_id, 'present')}
                         >
                           Present
@@ -572,8 +590,14 @@ export default function Attendance() {
                         </button>
                         <button
                           type="button"
-                          className={`btn btn-sm ${rec.status === 'late' ? 'btn-warning' : 'btn-secondary'}`}
-                          style={{ padding: '0.4rem 0.25rem', fontSize: '0.72rem', opacity: rec.status === 'late' ? 1 : 0.65 }}
+                          className="btn btn-sm btn-secondary"
+                          style={{
+                            padding: '0.4rem 0.25rem',
+                            fontSize: '0.72rem',
+                            backgroundColor: rec.status === 'late' ? '#4b5563' : '',
+                            color: rec.status === 'late' ? '#fff' : '',
+                            opacity: rec.status === 'late' ? 1 : 0.65
+                          }}
                           onClick={() => handleMarkStudentStatus(rec.student_id, 'late')}
                         >
                           Late
@@ -654,14 +678,20 @@ export default function Attendance() {
                         </td>
                         <td>
                           <div className="attendance-row-35">
-                            <button
-                              type="button"
-                              className={`btn btn-sm ${t.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
-                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', opacity: t.status === 'present' ? 1 : 0.65 }}
-                              onClick={() => handleMarkTeacherStatus(t.teacher_id, 'present')}
-                            >
-                              Present
-                            </button>
+                             <button
+                               type="button"
+                               className="btn btn-sm btn-secondary"
+                               style={{
+                                 padding: '0.3rem 0.6rem',
+                                 fontSize: '0.75rem',
+                                 backgroundColor: t.status === 'present' ? '#22c55e' : '',
+                                 color: t.status === 'present' ? '#fff' : '',
+                                 opacity: t.status === 'present' ? 1 : 0.65
+                               }}
+                               onClick={() => handleMarkTeacherStatus(t.teacher_id, 'present')}
+                             >
+                               Present
+                             </button>
                             <button
                               type="button"
                               className={`btn btn-sm ${t.status === 'absent' ? 'btn-danger' : 'btn-secondary'}`}
@@ -729,8 +759,14 @@ export default function Attendance() {
                     <div className="attendance-grid-45">
                       <button
                         type="button"
-                        className={`btn btn-sm ${t.status === 'present' ? 'btn-success' : 'btn-secondary'}`}
-                        style={{ padding: '0.4rem 0.25rem', fontSize: '0.72rem', opacity: t.status === 'present' ? 1 : 0.65 }}
+                        className="btn btn-sm btn-secondary"
+                        style={{
+                          padding: '0.4rem 0.25rem',
+                          fontSize: '0.72rem',
+                          backgroundColor: t.status === 'present' ? '#22c55e' : '',
+                          color: t.status === 'present' ? '#fff' : '',
+                          opacity: t.status === 'present' ? 1 : 0.65
+                        }}
                         onClick={() => handleMarkTeacherStatus(t.teacher_id, 'present')}
                       >
                         Present

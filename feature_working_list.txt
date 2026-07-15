@@ -40,5 +40,5 @@ Remove Guardian - working
 7. Filter Subjects - working
 8. Subject Status (Active/Inactive) - working
 9. Assign Subject to Teacher - working
-10. View Teacher's Assigned Subjects
+
 

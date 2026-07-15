@@ -331,15 +331,28 @@ allocations.put('/:id', requirePermission('academic.manage'), async (c) => {
   const sectionId = input.section_id || existing.section_id;
   const academicYearId = input.academic_year_id || existing.academic_year_id;
 
-  if (
+  const isMappingChanged =
     teacherId !== existing.teacher_id ||
     subjectId !== existing.subject_id ||
     sectionId !== existing.section_id ||
-    academicYearId !== existing.academic_year_id
-  ) {
+    academicYearId !== existing.academic_year_id;
+
+  if (isMappingChanged) {
     const isDuplicate = await repo.checkDuplicateAllocation(teacherId, subjectId, sectionId, academicYearId, id);
     if (isDuplicate) {
       return c.json({ error: 'Conflict: An allocation already exists for this mapping.' }, 400);
+    }
+
+    // Check if an inactive record exists for the new mapping
+    const existingMapping = await repo.findByMapping(teacherId, subjectId, sectionId, academicYearId);
+    if (existingMapping) {
+      try {
+        await repo.reactivateAndMerge(existingMapping.id, id, user.institution_id, input, user.sub);
+        await createAuditLog(c.env.DB, user.sub, 'UPDATE_TEACHING_ALLOCATION', 'teaching_allocations', existingMapping.id, `Reactivated and updated allocation details due to teacher reassignment`);
+        return c.json({ success: true });
+      } catch (err: any) {
+        return c.json({ error: err.message }, 500);
+      }
     }
   }
 
@@ -493,8 +506,25 @@ allocations.post('/bulk', requirePermission('academic.manage'), async (c) => {
         INSERT INTO teaching_allocations (
           id, institution_id, academic_year_id, department_id, program_id, semester, year_number,
           section_id, subject_id, teacher_id, classes_per_week, theory_hours, practical_hours,
-          tutorial_hours, mentoring_hours, admin_hours, primary_teacher, status, remarks, created_by, updated_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          tutorial_hours, mentoring_hours, admin_hours, primary_teacher, status, remarks, created_by, updated_by, is_active
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+        ON CONFLICT(teacher_id, subject_id, section_id, academic_year_id) DO UPDATE SET
+          is_active = 1,
+          department_id = excluded.department_id,
+          program_id = excluded.program_id,
+          semester = excluded.semester,
+          year_number = excluded.year_number,
+          classes_per_week = excluded.classes_per_week,
+          theory_hours = excluded.theory_hours,
+          practical_hours = excluded.practical_hours,
+          tutorial_hours = excluded.tutorial_hours,
+          mentoring_hours = excluded.mentoring_hours,
+          admin_hours = excluded.admin_hours,
+          primary_teacher = excluded.primary_teacher,
+          status = excluded.status,
+          remarks = excluded.remarks,
+          updated_by = excluded.updated_by,
+          updated_at = datetime('now')
       `).bind(
         id,
         alloc.institution_id,

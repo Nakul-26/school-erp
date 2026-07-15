@@ -78,15 +78,41 @@ export class TeacherRepository {
         t.designation,
         t.department,
         (
-          SELECT COUNT(DISTINCT a.subject_id) 
-          FROM teacher_subject_assignments a 
-          WHERE a.teacher_id = t.id AND a.is_active = 1
+          SELECT COUNT(DISTINCT ta.subject_id) 
+          FROM teaching_allocations ta 
+          WHERE ta.teacher_id = t.id 
+            AND ta.is_active = 1 
+            AND ta.status = 'Active'
+            AND ta.academic_year_id = (
+              SELECT id FROM academic_years 
+              WHERE institution_id = t.institution_id AND is_current = 1 AND is_active = 1 
+              LIMIT 1
+            )
         ) AS subjects_count,
         (
-          SELECT COUNT(DISTINCT a.section_id) 
-          FROM teacher_subject_assignments a 
-          WHERE a.teacher_id = t.id AND a.is_active = 1
+          SELECT COUNT(DISTINCT ta.section_id) 
+          FROM teaching_allocations ta 
+          WHERE ta.teacher_id = t.id 
+            AND ta.is_active = 1 
+            AND ta.status = 'Active'
+            AND ta.academic_year_id = (
+              SELECT id FROM academic_years 
+              WHERE institution_id = t.institution_id AND is_current = 1 AND is_active = 1 
+              LIMIT 1
+            )
         ) AS sections_count,
+        (
+          SELECT COALESCE(SUM(ta.classes_per_week), 0)
+          FROM teaching_allocations ta
+          WHERE ta.teacher_id = t.id 
+            AND ta.is_active = 1 
+            AND ta.status = 'Active'
+            AND ta.academic_year_id = (
+              SELECT id FROM academic_years 
+              WHERE institution_id = t.institution_id AND is_current = 1 AND is_active = 1 
+              LIMIT 1
+            )
+        ) AS allocated_hours,
         (
           SELECT COUNT(*) 
           FROM attendance_sessions s 

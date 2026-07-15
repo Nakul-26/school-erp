@@ -20,12 +20,22 @@ export class GradesRepository {
       `UPDATE grade_scales SET is_active = 0, updated_at = datetime('now') WHERE institution_id = ?`
     ).bind(institutionId).run();
     
-    // Insert new
+    // Insert/UPSERT new
     for (const s of scales) {
       const id = crypto.randomUUID();
       await this.db.prepare(
-        `INSERT INTO grade_scales (id, institution_id, grade, min_percent, max_percent, grade_point, remarks, is_passing, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO grade_scales (
+          id, institution_id, grade, min_percent, max_percent, grade_point, remarks, is_passing, sort_order, is_active
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+         ON CONFLICT(institution_id, grade) DO UPDATE SET
+           is_active = 1,
+           min_percent = excluded.min_percent,
+           max_percent = excluded.max_percent,
+           grade_point = excluded.grade_point,
+           remarks = excluded.remarks,
+           is_passing = excluded.is_passing,
+           sort_order = excluded.sort_order,
+           updated_at = datetime('now')`
       ).bind(
         id, 
         institutionId, 

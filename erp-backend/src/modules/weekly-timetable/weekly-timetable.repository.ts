@@ -9,8 +9,15 @@ export class WeeklyTimetableRepository {
   async create(id: string, institutionId: string, input: CreateWeeklyTimetableInput, userId?: string): Promise<void> {
     await this.db.prepare(`
       INSERT INTO weekly_timetable (
-        id, institution_id, academic_year_id, teacher_id, subject_id, section_id, slot_id, day_of_week, created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, institution_id, academic_year_id, teacher_id, subject_id, section_id, slot_id, day_of_week, created_by, updated_by, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+      ON CONFLICT(institution_id, academic_year_id, section_id, slot_id, day_of_week) DO UPDATE SET
+        is_active = 1,
+        deleted_at = NULL,
+        teacher_id = excluded.teacher_id,
+        subject_id = excluded.subject_id,
+        updated_by = excluded.updated_by,
+        updated_at = datetime('now')
     `).bind(
       id, institutionId, input.academic_year_id, input.teacher_id || null, input.subject_id, input.section_id, input.slot_id, input.day_of_week, userId || null, userId || null
     ).run();

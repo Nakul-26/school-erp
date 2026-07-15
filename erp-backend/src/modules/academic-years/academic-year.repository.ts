@@ -255,8 +255,24 @@ export class AcademicYearRepository {
               INSERT INTO teaching_allocations (
                 id, institution_id, academic_year_id, department_id, program_id, semester, year_number,
                 section_id, subject_id, teacher_id, classes_per_week, theory_hours, practical_hours,
-                tutorial_hours, mentoring_hours, admin_hours, primary_teacher, status, created_by, updated_by
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?)
+                tutorial_hours, mentoring_hours, admin_hours, primary_teacher, status, created_by, updated_by, is_active
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, 1)
+              ON CONFLICT(teacher_id, subject_id, section_id, academic_year_id) DO UPDATE SET
+                is_active = 1,
+                status = 'Active',
+                department_id = excluded.department_id,
+                program_id = excluded.program_id,
+                semester = excluded.semester,
+                year_number = excluded.year_number,
+                classes_per_week = excluded.classes_per_week,
+                theory_hours = excluded.theory_hours,
+                practical_hours = excluded.practical_hours,
+                tutorial_hours = excluded.tutorial_hours,
+                mentoring_hours = excluded.mentoring_hours,
+                admin_hours = excluded.admin_hours,
+                primary_teacher = excluded.primary_teacher,
+                updated_by = excluded.updated_by,
+                updated_at = datetime('now')
             `).bind(
               newId, institutionId, targetYearId, a.department_id, a.program_id, a.semester, a.year_number,
               targetSecId, a.subject_id, a.teacher_id, a.classes_per_week, a.theory_hours, a.practical_hours,
@@ -286,8 +302,16 @@ export class AcademicYearRepository {
           if (!exists) {
             const newId = crypto.randomUUID();
             await this.db.prepare(`
-              INSERT INTO weekly_timetable (id, institution_id, academic_year_id, teacher_id, subject_id, section_id, slot_id, day_of_week, created_by, updated_by)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              INSERT INTO weekly_timetable (
+                id, institution_id, academic_year_id, teacher_id, subject_id, section_id, slot_id, day_of_week, created_by, updated_by, is_active
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+              ON CONFLICT(institution_id, academic_year_id, section_id, slot_id, day_of_week) DO UPDATE SET
+                is_active = 1,
+                deleted_at = NULL,
+                teacher_id = excluded.teacher_id,
+                subject_id = excluded.subject_id,
+                updated_by = excluded.updated_by,
+                updated_at = datetime('now')
             `).bind(newId, institutionId, targetYearId, t.teacher_id, t.subject_id, targetSecId, t.slot_id, t.day_of_week, userId || null, userId || null).run();
             ttCopied++;
           }

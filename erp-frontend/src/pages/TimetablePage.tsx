@@ -203,28 +203,65 @@ export default function TimetablePage() {
     }
   };
 
+  const [allocations, setAllocations] = useState<any[]>([]);
+
   const fetchTimetable = async () => {
     try {
-      const data = await api.get(`/weekly-timetable?section_id=${selectedSection}`);
-      setTimetable(data);
+      const [timetableData, allocationsData] = await Promise.all([
+        api.get(`/weekly-timetable?section_id=${selectedSection}`),
+        api.get(`/teaching-allocations?section_id=${selectedSection}`).catch(() => [])
+      ]);
+      setTimetable(timetableData);
+      setAllocations(allocationsData || []);
     } catch (err) {
       console.error('Error fetching timetable:', err);
     }
   };
 
   const handleCellClick = (day: string, slotId: string) => {
+    const sectionObj = sections.find(s => s.id === selectedSection);
+    const courseId = sectionObj?.course_id;
+    const classSubjects = subjects.filter(sub => sub.course_id === courseId);
+    
+    // Find the first subject that is not full yet
+    const availableSubject = classSubjects.find(s => {
+      const assignedPeriods = timetable.filter(entry => entry.subject_id === s.id).length;
+      const requiredPeriods = s.weekly_hours || s.credits || 0;
+      return requiredPeriods === 0 || assignedPeriods < requiredPeriods;
+    }) || classSubjects[0];
+
+    const defaultSubjectId = availableSubject?.id || '';
+    
+    const defaultSubjectAllocations = allocations.filter(a => a.subject_id === defaultSubjectId);
+    const defaultTeacherId = defaultSubjectAllocations[0]?.teacher_id || '';
+
     setWeeklyForm(f => ({
       ...f,
       day_of_week: day,
       slot_id: slotId,
       section_id: selectedSection,
       academic_year_id: selectedYear,
+      subject_id: defaultSubjectId,
+      teacher_id: defaultTeacherId,
     }));
     setShowWeeklyModal(true);
   };
 
   const handleWeeklySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check if the subject has reached its weekly hours/periods limit
+    const selectedSubject = subjects.find(sub => sub.id === weeklyForm.subject_id);
+    if (selectedSubject) {
+      const requiredPeriods = selectedSubject.weekly_hours || selectedSubject.credits || 0;
+      const assignedPeriods = timetable.filter(entry => entry.subject_id === weeklyForm.subject_id).length;
+      
+      if (requiredPeriods > 0 && assignedPeriods >= requiredPeriods) {
+        alert(`Cannot assign slot: Subject '${selectedSubject.subject_name}' (${selectedSubject.subject_code}) has already reached its maximum limit of ${requiredPeriods} period(s) per week.`);
+        return;
+      }
+    }
+
     try {
       await api.post('/weekly-timetable', weeklyForm);
       setShowWeeklyModal(false);
@@ -272,154 +309,214 @@ export default function TimetablePage() {
       </div>
 
       {selectedSection ? (
-        <div className="card timetable-page-card">
-          {weeklyLoading ? (
-            <SkeletonLoader type="table" rows={6} cols={6} />
-          ) : weeklySlots.length === 0 ? (
-            <EmptyState
-              title="No Class Periods Configured"
-              description="Define class periods (breaks and subject periods) in the 'Class Periods' tab first to structure a weekly schedule."
-              icon={Clock}
-              action={{
-                label: "Manage Class Periods",
-                onClick: () => setActiveTab('periods')
-              }}
-            />
-          ) : (
-            <>
-              {/* Desktop Table View */}
-              <div className="table-responsive timetable-table-desktop timetable-page-table-responsive">
-                <table className="table timetable-page-table">
-                  <thead>
-                    <tr>
-                      <th className="timetable-page-th-7">Day</th>
-                      {weeklySlots.map(slot => (
-                        <th key={slot.id} className="timetable-page-th-8">
-                          <div className="timetable-page-div-9">{slot.name}</div>
-                          <div className="timetable-page-div-10">
-                            {slot.start_time} - {slot.end_time}
+        <>
+          {/* Allocation Report Card */}
+          <div className="card timetable-page-card timetable-report-card">
+            <h3 className="timetable-report-title">
+              <BookOpen size={16} />
+              Subject & Period Allocation Summary
+            </h3>
+            
+            {weeklyLoading ? (
+              <SkeletonLoader type="list" count={1} />
+            ) : (
+              (() => {
+                const sectionObj = sections.find(s => s.id === selectedSection);
+                const courseId = sectionObj?.course_id;
+                const classSubjects = subjects.filter(sub => sub.course_id === courseId);
+                
+                if (classSubjects.length === 0) {
+                  return <p className="timetable-report-text-empty">No subjects mapped to this class program.</p>;
+                }
+                
+                return (
+                  <div>
+                    <div className="timetable-report-subtitle">
+                      Total Subjects in Class: <strong>{classSubjects.length}</strong>
+                    </div>
+                    
+                    <div className="timetable-report-grid">
+                      {classSubjects.map(sub => {
+                        const assignedPeriods = timetable.filter(entry => entry.subject_id === sub.id).length;
+                        const requiredPeriods = sub.weekly_hours || sub.credits || 0;
+                        
+                        let badgeClass = 'timetable-report-badge-under';
+                        if (assignedPeriods === 0) {
+                          badgeClass = 'timetable-report-badge-empty';
+                        } else if (assignedPeriods === requiredPeriods) {
+                          badgeClass = 'timetable-report-badge-complete';
+                        } else if (assignedPeriods > requiredPeriods) {
+                          badgeClass = 'timetable-report-badge-over';
+                        }
+
+                        return (
+                          <div key={sub.id} className="timetable-report-item">
+                            <div className="timetable-report-info">
+                              <span className="timetable-report-subject-name">{sub.subject_name}</span>
+                              <span className="timetable-report-subject-code">{sub.subject_code}</span>
+                            </div>
+                            <span className={`timetable-report-badge ${badgeClass}`}>
+                              {assignedPeriods} / {requiredPeriods} assigned
+                            </span>
                           </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {DAYS.map(day => (
-                      <tr key={day}>
-                        <td className="timetable-page-td-11">
-                          {day}
-                        </td>
-                        {weeklySlots.map(slot => {
-                          const entry = getCellEntry(day, slot.id);
-                          return (
-                            <td
-                              key={slot.id}
-                              onClick={() => !entry && handleCellClick(day, slot.id)}
-                              className={`timetable-grid-cell${entry ? ' has-entry' : ''}${entry ? (slot.slot_type === 'break' ? ' slot-break' : ' slot-period') : ''}`}
-                            >
-                              {entry ? (
-                                <div className="timetable-page-col-12">
-                                  <div>
-                                    <div className="timetable-page-row-13">
-                                      <BookOpen size={12} />
-                                      <span>{entry.subject_code}</span>
-                                    </div>
-                                    <div className="timetable-page-div-14">
-                                      {entry.subject_name}
-                                    </div>
-                                    <div className="timetable-page-row-15">
-                                      <User size={12} />
-                                      <span>{entry.teacher_name || 'No Teacher'}</span>
-                                    </div>
-                                  </div>
-                                  <button className="btn btn-sm timetable-page-btn" onClick={(e) => handleWeeklyDelete(entry.id, e)}>
-                                    Remove
-                                  </button>
-                                </div>
-                              ) : (
-                                <div className="timetable-page-row-17">
-                                  <Plus size={14} className="timetable-page-Plus-18"  /> Assign
-                                </div>
-                              )}
-                            </td>
-                          );
-                        })}
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()
+            )}
+          </div>
+
+          <div className="card timetable-page-card">
+            {weeklyLoading ? (
+              <SkeletonLoader type="table" rows={6} cols={6} />
+            ) : weeklySlots.length === 0 ? (
+              <EmptyState
+                title="No Class Periods Configured"
+                description="Define class periods (breaks and subject periods) in the 'Class Periods' tab first to structure a weekly schedule."
+                icon={Clock}
+                action={{
+                  label: "Manage Class Periods",
+                  onClick: () => setActiveTab('periods')
+                }}
+              />
+            ) : (
+              <>
+                {/* Desktop Table View */}
+                <div className="table-responsive timetable-table-desktop timetable-page-table-responsive">
+                  <table className="table timetable-page-table">
+                    <thead>
+                      <tr>
+                        <th className="timetable-page-th-7">Day</th>
+                        {weeklySlots.map(slot => (
+                          <th key={slot.id} className="timetable-page-th-8">
+                            <div className="timetable-page-div-9">{slot.name}</div>
+                            <div className="timetable-page-div-10">
+                              {slot.start_time} - {slot.end_time}
+                            </div>
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Timeline View */}
-              <div className="timetable-timeline-mobile">
-                <div className="day-selector-scroll timetable-page-day-selector-scroll">
-                  {DAYS.map(day => (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => setSelectedDayMobile(day)}
-                      className={`timetable-mobile-day-btn${selectedDayMobile === day ? ' is-active' : ''}`}
-                    >
-                      {day}
-                    </button>
-                  ))}
+                    </thead>
+                    <tbody>
+                      {DAYS.map(day => (
+                        <tr key={day}>
+                          <td className="timetable-page-td-11">
+                            {day}
+                          </td>
+                          {weeklySlots.map(slot => {
+                            const entry = getCellEntry(day, slot.id);
+                            return (
+                              <td
+                                key={slot.id}
+                                onClick={() => !entry && handleCellClick(day, slot.id)}
+                                className={`timetable-grid-cell${entry ? ' has-entry' : ''}${entry ? (slot.slot_type === 'break' ? ' slot-break' : ' slot-period') : ''}`}
+                              >
+                                {entry ? (
+                                  <div className="timetable-page-col-12">
+                                    <div>
+                                      <div className="timetable-page-row-13">
+                                        <BookOpen size={12} />
+                                        <span>{entry.subject_code}</span>
+                                      </div>
+                                      <div className="timetable-page-div-14">
+                                        {entry.subject_name}
+                                      </div>
+                                      <div className="timetable-page-row-15">
+                                        <User size={12} />
+                                        <span>{entry.teacher_name || 'No Teacher'}</span>
+                                      </div>
+                                    </div>
+                                    <button className="btn btn-sm timetable-page-btn" onClick={(e) => handleWeeklyDelete(entry.id, e)}>
+                                      Remove
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="timetable-page-row-17">
+                                    <Plus size={14} className="timetable-page-Plus-18"  /> Assign
+                                  </div>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
-                <div className="timetable-page-col-20">
-                  {weeklySlots.map(slot => {
-                    const entry = getCellEntry(selectedDayMobile, slot.id);
-                    return (
-                      <div
-                        key={slot.id}
-                        className={`timetable-mobile-timeline-slot${entry ? (slot.slot_type === 'break' ? ' slot-break' : ' slot-period') : ''}`}
+                {/* Mobile Timeline View */}
+                <div className="timetable-timeline-mobile">
+                  <div className="day-selector-scroll timetable-page-day-selector-scroll">
+                    {DAYS.map(day => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => setSelectedDayMobile(day)}
+                        className={`timetable-mobile-day-btn${selectedDayMobile === day ? ' is-active' : ''}`}
                       >
-                        <div className="timetable-page-div-21">
-                          <span className="timetable-page-span-22">{slot.name}</span>
-                          <div className="timetable-page-row-23">
-                            <Clock size={10} />
-                            <span>{slot.start_time}</span>
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="timetable-page-col-20">
+                    {weeklySlots.map(slot => {
+                      const entry = getCellEntry(selectedDayMobile, slot.id);
+                      return (
+                        <div
+                          key={slot.id}
+                          className={`timetable-mobile-timeline-slot${entry ? (slot.slot_type === 'break' ? ' slot-break' : ' slot-period') : ''}`}
+                        >
+                          <div className="timetable-page-div-21">
+                            <span className="timetable-page-span-22">{slot.name}</span>
+                            <div className="timetable-page-row-23">
+                              <Clock size={10} />
+                              <span>{slot.start_time}</span>
+                            </div>
+                          </div>
+
+                          <div className="timetable-page-div-24"></div>
+
+                          <div className="timetable-page-div-25">
+                            {entry ? (
+                              <div className="timetable-page-row-26">
+                                <div>
+                                  <span className="timetable-page-span-27">
+                                    {entry.subject_code}
+                                  </span>
+                                  <h4 className="timetable-page-title-28">
+                                    {entry.subject_name}
+                                  </h4>
+                                  <div className="timetable-page-row-29">
+                                    <User size={12} />
+                                    <span>{entry.teacher_name || 'No Teacher'}</span>
+                                  </div>
+                                </div>
+                                <button className="btn btn-sm timetable-page-btn" onClick={(e) => handleWeeklyDelete(entry.id, e)}>
+                                  Remove
+                                </button>
+                              </div>
+                            ) : (
+                              <div onClick={() => handleCellClick(selectedDayMobile, slot.id)} className="timetable-page-row-31">
+                                <Plus size={14} className="timetable-page-Plus-32"  />
+                                <span className="timetable-page-span-33">Tap to assign...</span>
+                              </div>
+                            )}
                           </div>
                         </div>
-
-                        <div className="timetable-page-div-24"></div>
-
-                        <div className="timetable-page-div-25">
-                          {entry ? (
-                            <div className="timetable-page-row-26">
-                              <div>
-                                <span className="timetable-page-span-27">
-                                  {entry.subject_code}
-                                </span>
-                                <h4 className="timetable-page-title-28">
-                                  {entry.subject_name}
-                                </h4>
-                                <div className="timetable-page-row-29">
-                                  <User size={12} />
-                                  <span>{entry.teacher_name || 'No Teacher'}</span>
-                                </div>
-                              </div>
-                              <button className="btn btn-sm timetable-page-btn" onClick={(e) => handleWeeklyDelete(entry.id, e)}>
-                                Remove
-                              </button>
-                            </div>
-                          ) : (
-                            <div onClick={() => handleCellClick(selectedDayMobile, slot.id)} className="timetable-page-row-31">
-                              <Plus size={14} className="timetable-page-Plus-32"  />
-                              <span className="timetable-page-span-33">Tap to assign...</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {weeklySlots.length === 0 && (
-                    <p className="timetable-page-text-34">No class periods configured.</p>
-                  )}
+                      );
+                    })}
+                    {weeklySlots.length === 0 && (
+                      <p className="timetable-page-text-34">No class periods configured.</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
         </div>
+      </>
       ) : (
         <div className="card timetable-page-card">
           <p className="timetable-page-text-36">Please select a section/class to display its weekly timetable.</p>
@@ -437,15 +534,73 @@ export default function TimetablePage() {
             <form onSubmit={handleWeeklySubmit}>
               <div className="form-group">
                 <label>Subject</label>
-                <select value={weeklyForm.subject_id} onChange={(e) => setWeeklyForm({ ...weeklyForm, subject_id: e.target.value })} required>
-                  {subjects.map(s => <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>)}
+                <select 
+                  value={weeklyForm.subject_id} 
+                  onChange={(e) => {
+                    const subId = e.target.value;
+                    const subAllocations = allocations.filter(a => a.subject_id === subId);
+                    const defaultTeacherId = subAllocations[0]?.teacher_id || '';
+                    setWeeklyForm({ 
+                      ...weeklyForm, 
+                      subject_id: subId, 
+                      teacher_id: defaultTeacherId 
+                    });
+                  }} 
+                  required
+                >
+                  {(() => {
+                    const sectionObj = sections.find(s => s.id === selectedSection);
+                    const courseId = sectionObj?.course_id;
+                    const classSubjects = subjects.filter(sub => sub.course_id === courseId);
+                    return classSubjects.map(s => {
+                      const assignedPeriods = timetable.filter(entry => entry.subject_id === s.id).length;
+                      const requiredPeriods = s.weekly_hours || s.credits || 0;
+                      const isFull = requiredPeriods > 0 && assignedPeriods >= requiredPeriods;
+                      
+                      return (
+                        <option 
+                          key={s.id} 
+                          value={s.id} 
+                          disabled={isFull}
+                        >
+                          {s.subject_name} ({s.subject_code}){requiredPeriods > 0 ? ` (${assignedPeriods}/${requiredPeriods}${isFull ? ' - FULL' : ''})` : ''}
+                        </option>
+                      );
+                    });
+                  })()}
                 </select>
               </div>
               <div className="form-group">
                 <label>Teacher</label>
-                <select value={weeklyForm.teacher_id} onChange={(e) => setWeeklyForm({ ...weeklyForm, teacher_id: e.target.value })} required>
-                  {teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}
+                <select 
+                  value={weeklyForm.teacher_id} 
+                  onChange={(e) => setWeeklyForm({ ...weeklyForm, teacher_id: e.target.value })} 
+                  required
+                >
+                  {(() => {
+                    const subAllocations = allocations.filter(a => a.subject_id === weeklyForm.subject_id);
+                    const allocatedTeacherIds = subAllocations.map(a => a.teacher_id);
+                    const filteredTeachers = teachers.filter(t => allocatedTeacherIds.includes(t.id));
+                    
+                    const listToUse = filteredTeachers.length > 0 ? filteredTeachers : teachers;
+                    return listToUse.map(t => (
+                      <option key={t.id} value={t.id}>
+                        {t.first_name} {t.last_name}{filteredTeachers.length > 0 ? '' : ' (Not Allocated)'}
+                      </option>
+                    ));
+                  })()}
                 </select>
+                {(() => {
+                  const subAllocations = allocations.filter(a => a.subject_id === weeklyForm.subject_id);
+                  if (subAllocations.length === 0) {
+                    return (
+                      <span className="timetable-page-warning-text">
+                        ⚠️ Note: No teachers are allocated to this subject in this section. Showing all teachers.
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
               <div className="modal-actions">
                 <button type="button" onClick={() => setShowWeeklyModal(false)} className="btn btn-secondary">Cancel</button>

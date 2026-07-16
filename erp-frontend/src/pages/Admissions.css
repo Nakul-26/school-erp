@@ -43,13 +43,7 @@
 }
 
 .admissions-input-10 {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  padding: 0.75rem 1rem 0.75rem 2.75rem !important;
   width: 100%;
-  min-height: 42px !important;
-  box-sizing: border-box;
 }
 
 .admissions-div-11 {
@@ -57,13 +51,7 @@
 }
 
 .admissions-select-12 {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  padding: 0.75rem 1rem !important;
   width: 100%;
-  min-height: 42px !important;
-  box-sizing: border-box;
 }
 
 .admissions-div-13 {
@@ -71,13 +59,7 @@
 }
 
 .admissions-select-14 {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  padding: 0.75rem 1rem !important;
   width: 100%;
-  min-height: 42px !important;
-  box-sizing: border-box;
 }
 
 .admissions-grid-15 {

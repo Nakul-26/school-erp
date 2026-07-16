@@ -4,7 +4,7 @@ import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { Landmark, Calendar, Play } from 'lucide-react';
+import { Landmark, Calendar, Play, Trash2 } from 'lucide-react';
 
 interface PayrollRun {
   id: string;
@@ -55,6 +55,21 @@ export default function PayrollRuns({ isSubComponent = false }: { isSubComponent
       alert(err.message || 'Failed to generate payroll');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleDeleteRun = async (id: string, month: number, year: number) => {
+    if (!confirm(`Are you sure you want to delete the payroll run for ${getMonthName(month)} ${year}? All calculated payslips for this month will be removed.`)) {
+      return;
+    }
+    try {
+      setLoading(true);
+      await api.delete(`/payroll/runs/${id}`);
+      alert('Payroll run deleted successfully.');
+      fetchPayrollRuns();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete payroll run');
+      setLoading(false);
     }
   };
 
@@ -151,9 +166,14 @@ export default function PayrollRuns({ isSubComponent = false }: { isSubComponent
                       </span>
                     </td>
                     <td className="payroll-runs-td-12">
-                      <button className="btn btn-sm btn-outline" onClick={() => navigate(`/payroll/runs/${r.id}`)}>
-                        View Payslips
-                      </button>
+                      <div className="payroll-runs-actions">
+                        <button className="btn btn-sm btn-outline" onClick={() => navigate(`/payroll/runs/${r.id}`)}>
+                          View Payslips
+                        </button>
+                        <button className="btn btn-sm btn-outline payroll-runs-btn-delete" onClick={() => handleDeleteRun(r.id, r.month, r.year)}>
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

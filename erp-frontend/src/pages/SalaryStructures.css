@@ -81,7 +81,20 @@
 }
 
 .salary-structures-td-14 {
-  text-align: right;
+  display: flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.salary-structures-btn-delete {
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.salary-structures-btn-delete:hover {
+  background-color: rgba(239, 68, 68, 0.05);
+  color: var(--danger);
 }
 
 .salary-structures-td-15 {

@@ -526,7 +526,7 @@ export default function Teachers() {
               <p className="teachers-text-4">Manage academic faculty members, subject assignments, and login credentials.</p>
             </div>
             
-            <div className="teachers-header-actions">
+            <div className="header-actions teachers-header-actions">
               {/* Layout view controls */}
               <div className="view-toggle teachers-view-toggle">
                 <button 

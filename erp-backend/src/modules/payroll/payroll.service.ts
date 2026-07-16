@@ -45,7 +45,7 @@ export class PayrollService {
   // --- MAIN PAYROLL GENERATOR ENGINE ---
   async generatePayrollForMonth(institutionId: string, month: number, year: number, userId?: string): Promise<string> {
     const existingRun = await this.repo.getPayrollRun(institutionId, month, year);
-    if (existingRun && existingRun.status === 'Finalized') {
+    if (existingRun && existingRun.status === 'Finalized' && existingRun.is_active === 1) {
       throw new Error('Payroll for this month has already been finalized');
     }
 
@@ -53,7 +53,10 @@ export class PayrollService {
     if (!existingRun) {
       await this.repo.createPayrollRun(runId, institutionId, month, year, userId);
     } else {
-      // Clear previous payslips if re-generating draft
+      if (existingRun.is_active === 0) {
+        await this.repo.reactivatePayrollRun(runId, userId);
+      }
+      // Always hard-delete old payslips to avoid UNIQUE constraint conflicts
       await this.repo.deletePayslipsForRun(runId);
     }
 

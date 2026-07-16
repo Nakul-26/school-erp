@@ -468,7 +468,7 @@ export default function Classes() {
   // Sections KPIs
   const activeSections = classes.filter(c => c.is_active === 1);
   const totalSectionsCount = activeSections.length;
-  const sectionsWithoutTeacher = activeSections.filter(c => !c.class_teacher_id).length;
+  const assignedTeachersCount = activeSections.filter(c => c.class_teacher_id).length;
   const totalCapacity = activeSections.reduce((acc, c) => acc + (c.capacity || 0), 0);
   const avgCapacity = totalSectionsCount > 0 ? Math.round(totalCapacity / totalSectionsCount) : 0;
   const enrolledStudentsCount = activeSections.reduce((acc, c) => acc + (c.student_count || 0), 0);
@@ -606,11 +606,11 @@ export default function Classes() {
 
             <div className="classes-row-12">
               <div className="classes-row-13">
-                <AlertTriangle size={24} />
+                <CheckCircle2 size={24} />
               </div>
               <div>
-                <span className="classes-span-14">No Class Teacher</span>
-                <span className="classes-span-15">{sectionsWithoutTeacher}</span>
+                <span className="classes-span-14">Number of Class Teachers Assigned</span>
+                <span className="classes-span-15">{assignedTeachersCount}</span>
               </div>
             </div>
 
@@ -636,29 +636,35 @@ export default function Classes() {
           </div>
 
           {/* Filters Bar */}
-          <div className="classes-row-24">
-            <div className="classes-div-25">
-              <Search size={18} className="classes-Search-26"  />
+          <div className="card filters classes-filters-card">
+            <div className="search-container classes-search-container">
+              <Search size={14} className="classes-Search-26"  />
               <input type="text" value={sectionSearchQuery} onChange={e => setSectionSearchQuery(e.target.value)} placeholder="Search by section name, room, or teacher..." className="classes-input-27"  />
             </div>
 
-            <div className="classes-row-28">
+            <div className="classes-filter-item">
               <select value={sectionFilterYear} onChange={e => setSectionFilterYear(e.target.value)} className="classes-select-29">
                 <option value="">All Academic Years</option>
                 {years.map(y => <option key={y.id} value={y.id}>{y.name}</option>)}
               </select>
+            </div>
 
+            <div className="classes-filter-item">
               <select value={sectionFilterProgram} onChange={e => setSectionFilterProgram(e.target.value)} className="classes-select-30">
                 <option value="">All {getProgramLabel()}s</option>
                 {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
+            </div>
 
+            <div className="classes-filter-item">
               <select value={sectionFilterStatus} onChange={e => setSectionFilterStatus(e.target.value)} className="classes-select-31">
                 <option value="1">Active Only</option>
                 <option value="0">Archived Only</option>
                 <option value="">All Statuses</option>
               </select>
-              
+            </div>
+            
+            <div className="classes-filter-action">
               <button className="btn btn-secondary classes-btn" onClick={fetchData}>
                 <RefreshCw size={14} /> Sync
               </button>

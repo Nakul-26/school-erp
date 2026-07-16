@@ -133,22 +133,18 @@
 
 .input-icon {
   position: absolute;
-  left: 32px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: #8c8c8c;
   pointer-events: none;
 }
 
-.input-with-icon input, .input-with-icon select {
+.form-group .input-with-icon input:not([type="checkbox"]):not([type="radio"]),
+.form-group .input-with-icon select {
   width: 100%;
-  padding: 0.6rem 0.6rem 0.6rem 3rem;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
-  outline: none;
-  transition: all 0.2s;
+  padding-left: 36px !important;
   box-sizing: border-box;
-  background: white;
 }
 
 .input-with-icon input:focus, .input-with-icon select:focus {

@@ -249,3 +249,16 @@
   width: 150px;
 }
 
+.payroll-run-detail-empty-cell {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.payroll-run-detail-empty-title {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+

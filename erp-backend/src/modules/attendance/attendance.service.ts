@@ -5,6 +5,12 @@ export class AttendanceService {
   constructor(private repo: AttendanceRepository) {}
 
   async createSession(institutionId: string, input: CreateAttendanceSessionInput, userId?: string): Promise<string> {
+    if (input.slot_id) {
+      const existing = await this.repo.findActiveSession(input.section_id, input.date, input.slot_id);
+      if (existing) {
+        throw new Error('An active attendance session already exists for this class, date, and period slot.');
+      }
+    }
     const id = crypto.randomUUID();
     await this.repo.createSession(id, institutionId, input, userId);
     return id;

@@ -50,8 +50,8 @@
   transform: translateY(-50%);
 }
 
-.fee-structures-input-11 {
-  padding-left: 2rem;
+body div.fee-structures-div-9 input.fee-structures-input-11:not([type="checkbox"]):not([type="radio"]) {
+  padding-left: 2.25rem !important;
 }
 
 .fee-structures-modal-actions {

@@ -15,23 +15,26 @@
 
 .messaging-div-3 {
   border-bottom: 1px solid var(--border);
-  padding: 1rem;
+  padding: 0.625rem 0.75rem;
   position: relative;
+  background-color: #f8fafc;
 }
 
 .messaging-Search-4 {
   color: var(--text-muted);
-  left: 1.75rem;
+  left: 22px;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: none;
 }
 
-.messaging-input-5 {
+body div.messaging-div-3 input.messaging-input-5:not([type="checkbox"]):not([type="radio"]) {
   background-color: #ffffff;
   font-size: 0.85rem;
   margin-bottom: 0px;
-  padding-left: 2.25rem;
+  padding-left: 30px !important;
   width: 100%;
 }
 

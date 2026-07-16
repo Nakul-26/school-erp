@@ -709,3 +709,78 @@
   gap: 0.25rem;
 }
 
+/* Subjects Page Filters Card Styling */
+.subjects-filters-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 1.5rem;
+}
+
+.subjects-search-container {
+  flex: 2 1 280px;
+  min-width: 240px;
+  position: relative;
+}
+
+.subjects-Search-icon {
+  position: absolute;
+  left: 0.5rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+div.subjects-filters-card div.subjects-search-container input.subjects-search-input:not([type="checkbox"]):not([type="radio"]) {
+  padding-left: 26px !important;
+  width: 100%;
+}
+
+.subjects-filter-item {
+  flex: 1 1 150px;
+  min-width: 140px;
+  max-width: 200px;
+}
+
+.subjects-filter-action {
+  flex: 0 0 auto;
+}
+
+div.subjects-filters-card div.subjects-filter-item select {
+  width: 100% !important;
+}
+
+.subjects-filters-card button.subjects-btn-toggle {
+  height: 36px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.subjects-extra-filters-card {
+  margin-top: -1rem;
+  margin-bottom: 1.5rem;
+}
+
+.subjects-active-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: -1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+.subjects-active-chips button.subjects-btn-clear {
+  height: 28px !important;
+  font-size: 0.75rem !important;
+  padding: 0 10px !important;
+}
+

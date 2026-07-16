@@ -3,6 +3,14 @@ import { AttendanceSession, StudentAttendanceRecord, CreateAttendanceSessionInpu
 export class AttendanceRepository {
   constructor(private db: D1Database) {}
 
+  async findActiveSession(sectionId: string, date: string, slotId: string | null): Promise<any> {
+    if (!slotId) return null;
+    return await this.db.prepare(`
+      SELECT id FROM attendance_sessions 
+      WHERE section_id = ? AND date = ? AND slot_id = ? AND is_active = 1
+    `).bind(sectionId, date, slotId).first<any>();
+  }
+
   async createSession(id: string, institutionId: string, input: CreateAttendanceSessionInput, userId?: string): Promise<void> {
     await this.db.prepare(`
       INSERT INTO attendance_sessions (

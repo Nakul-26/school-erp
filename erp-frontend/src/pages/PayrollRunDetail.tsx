@@ -140,30 +140,42 @@ export default function PayrollRunDetail() {
               </tr>
             </thead>
             <tbody>
-              {payslips.map((p) => {
-                const totalDeductions = p.pf_deduction + p.tds_deduction + p.lop_deduction + p.other_deductions;
-                return (
-                  <tr key={p.id}>
-                    <td><strong>{p.employee_id}</strong></td>
-                    <td><strong>{p.first_name} {p.last_name}</strong></td>
-                    <td>{p.designation}</td>
-                    <td>{p.working_days} days</td>
-                    <td>
-                      <span style={{ color: p.lop_days > 0 ? 'var(--danger)' : '' }}>
-                        {p.lop_days} days
-                      </span>
-                    </td>
-                    <td>₹{p.gross_salary.toLocaleString('en-IN')}</td>
-                    <td>₹{totalDeductions.toLocaleString('en-IN')}</td>
-                    <td><strong>₹{p.net_salary.toLocaleString('en-IN')}</strong></td>
-                    <td className="payroll-run-detail-td-7">
-                      <button className="btn btn-sm btn-outline" onClick={() => handleOpenPayslip(p)}>
-                        <Printer size={12} /> View
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {payslips.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="payroll-run-detail-empty-cell">
+                    <div className="payroll-run-detail-empty-title">No Payslips Calculated</div>
+                    <p>
+                      Please ensure that active staff members have their <strong>Salary Structures</strong> configured first,
+                      then re-run the payroll calculation for this month.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                payslips.map((p) => {
+                  const totalDeductions = p.pf_deduction + p.tds_deduction + p.lop_deduction + p.other_deductions;
+                  return (
+                    <tr key={p.id}>
+                      <td><strong>{p.employee_id}</strong></td>
+                      <td><strong>{p.first_name} {p.last_name}</strong></td>
+                      <td>{p.designation}</td>
+                      <td>{p.working_days} days</td>
+                      <td>
+                        <span style={{ color: p.lop_days > 0 ? 'var(--danger)' : '' }}>
+                          {p.lop_days} days
+                        </span>
+                      </td>
+                      <td>₹{p.gross_salary.toLocaleString('en-IN')}</td>
+                      <td>₹{totalDeductions.toLocaleString('en-IN')}</td>
+                      <td><strong>₹{p.net_salary.toLocaleString('en-IN')}</strong></td>
+                      <td className="payroll-run-detail-td-7">
+                        <button className="btn btn-sm btn-outline" onClick={() => handleOpenPayslip(p)}>
+                          <Printer size={12} /> View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         )}

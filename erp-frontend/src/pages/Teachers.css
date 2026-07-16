@@ -809,6 +809,11 @@
   padding: 1rem 1.25rem;
 }
 
+.teachers-filters-card input,
+.teachers-filters-card select {
+  width: 100% !important;
+}
+
 .teachers-search-container {
   display: flex;
   align-items: center;

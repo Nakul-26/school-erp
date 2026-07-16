@@ -54,6 +54,23 @@
   text-align: right;
 }
 
+.payroll-runs-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.payroll-runs-btn-delete {
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.payroll-runs-btn-delete:hover {
+  background-color: rgba(239, 68, 68, 0.05);
+  color: var(--danger);
+}
+
 .payroll-runs-td-13 {
   color: var(--text-muted);
   padding: 3rem;

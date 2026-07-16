@@ -319,4 +319,116 @@
   margin-bottom: 1rem;
 }
 
+/* Timetable Allocation Report Styles */
+.timetable-report-card {
+  margin-bottom: 1.5rem !important;
+  padding: 1.25rem 1.5rem !important;
+  text-align: left !important;
+}
+
+.timetable-report-title {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 0.75rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  color: var(--text-main) !important;
+}
+
+.timetable-report-title svg {
+  color: var(--primary) !important;
+}
+
+.timetable-report-subtitle {
+  font-size: 0.85rem !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 1rem !important;
+}
+
+.timetable-report-subtitle strong {
+  color: var(--text-main) !important;
+  font-weight: 700 !important;
+}
+
+.timetable-report-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 1rem !important;
+}
+
+.timetable-report-item {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background-color: var(--bg-subtle) !important;
+  padding: 0.625rem 0.875rem !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.timetable-report-info {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.timetable-report-subject-name {
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  color: var(--text-main) !important;
+  text-align: left !important;
+}
+
+.timetable-report-subject-code {
+  font-size: 0.75rem !important;
+  color: var(--text-muted) !important;
+}
+
+.timetable-report-badge {
+  font-size: 0.75rem !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: var(--radius-sm) !important;
+  font-weight: 700 !important;
+  border: 1px solid var(--border) !important;
+  white-space: nowrap !important;
+}
+
+.timetable-report-badge-complete {
+  background-color: var(--success-soft) !important;
+  color: var(--success) !important;
+  border-color: var(--success-border) !important;
+}
+
+.timetable-report-badge-over {
+  background-color: var(--danger-soft) !important;
+  color: var(--danger) !important;
+  border-color: var(--danger-border) !important;
+}
+
+.timetable-report-badge-under {
+  background-color: var(--primary-soft) !important;
+  color: var(--primary) !important;
+  border-color: var(--border) !important;
+}
+
+.timetable-report-badge-empty {
+  background-color: var(--bg-card) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border) !important;
+}
+
+.timetable-report-text-empty {
+  font-size: 0.85rem !important;
+  color: var(--text-muted) !important;
+  text-align: left !important;
+}
+
+.timetable-page-warning-text {
+  font-size: 0.75rem !important;
+  color: #d97706 !important;
+  margin-top: 0.25rem !important;
+  display: block !important;
+}
+
 

@@ -32,17 +32,19 @@ export class PayrollRepository {
         pf_deduction = excluded.pf_deduction,
         tds_deduction = excluded.tds_deduction,
         other_deductions = excluded.other_deductions,
-        effective_from = excluded.effective_from,
-        updated_at = datetime('now')
+        effective_from = excluded.effective_from
     `).bind(
       id, institutionId, input.teacher_id, input.basic_salary, input.da, input.hra, input.other_allowances,
       input.pf_deduction, input.tds_deduction, input.other_deductions, input.effective_from, userId || null
     ).run();
   }
+  async deleteSalaryStructure(teacherId: string): Promise<void> {
+    await this.db.prepare('UPDATE salary_structures SET is_active = 0 WHERE teacher_id = ?').bind(teacherId).run();
+  }
 
   // --- PAYROLL RUNS ---
   async getPayrollRun(institutionId: string, month: number, year: number): Promise<PayrollRun | null> {
-    return await this.db.prepare('SELECT * FROM payroll_runs WHERE institution_id = ? AND month = ? AND year = ? AND is_active = 1')
+    return await this.db.prepare('SELECT * FROM payroll_runs WHERE institution_id = ? AND month = ? AND year = ?')
       .bind(institutionId, month, year).first<PayrollRun>();
   }
 
@@ -79,9 +81,23 @@ export class PayrollRepository {
     `).bind(id).run();
   }
 
+  async deletePayrollRun(id: string): Promise<void> {
+    // Soft-delete the run and all its payslips
+    await this.db.prepare('UPDATE payslips SET is_active = 0 WHERE payroll_run_id = ?').bind(id).run();
+    await this.db.prepare('UPDATE payroll_runs SET is_active = 0 WHERE id = ?').bind(id).run();
+  }
+
+  async reactivatePayrollRun(id: string, userId?: string): Promise<void> {
+    await this.db.prepare(`
+      UPDATE payroll_runs
+      SET is_active = 1, status = 'Draft', total_gross = 0, total_net = 0, generated_by = ?
+      WHERE id = ?
+    `).bind(userId || null, id).run();
+  }
+
   // --- PAYSLIPS ---
   async deletePayslipsForRun(runId: string): Promise<void> {
-    await this.db.prepare('UPDATE payslips SET is_active = 0 WHERE payroll_run_id = ?').bind(runId).run();
+    await this.db.prepare('DELETE FROM payslips WHERE payroll_run_id = ?').bind(runId).run();
   }
 
   async createPayslip(id: string, institutionId: string, p: Omit<Payslip, 'id' | 'institution_id' | 'is_active' | 'created_at'>): Promise<void> {

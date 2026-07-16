@@ -87,6 +87,89 @@ export default function Attendance() {
     date: new Date().toISOString().split('T')[0]
   });
 
+  const [sectionTimetable, setSectionTimetable] = useState<any[]>([]);
+  const [allocations, setAllocations] = useState<any[]>([]);
+
+  // Fetch weekly timetable and teaching allocations for the selected class section
+  useEffect(() => {
+    if (sessionForm.section_id) {
+      const fetchTimetableAndAllocations = async () => {
+        try {
+          const [timetableData, allocationsData] = await Promise.all([
+            api.get(`/weekly-timetable?section_id=${sessionForm.section_id}`),
+            api.get(`/teaching-allocations?section_id=${sessionForm.section_id}`).catch(() => [])
+          ]);
+          setSectionTimetable(timetableData || []);
+          setAllocations(allocationsData || []);
+        } catch (err) {
+          console.error('Failed to fetch section metadata:', err);
+          setSectionTimetable([]);
+          setAllocations([]);
+        }
+      };
+      fetchTimetableAndAllocations();
+    } else {
+      setSectionTimetable([]);
+      setAllocations([]);
+    }
+  }, [sessionForm.section_id]);
+
+  // Helper to extract day name
+  const getDayOfWeek = (dateStr: string | undefined | null) => {
+    if (!dateStr) return '';
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayIndex = new Date(dateStr).getDay();
+    return days[dayIndex] || '';
+  };
+
+  // Update default subject and teacher when section changes
+  useEffect(() => {
+    if (sessionForm.section_id && stdSections.length > 0 && stdSubjects.length > 0) {
+      const sectionObj = stdSections.find(s => s.id === sessionForm.section_id);
+      const courseId = sectionObj?.course_id;
+      const classSubjects = stdSubjects.filter(sub => sub.course_id === courseId);
+      
+      const allocatedSubjectIds = allocations.map(a => a.subject_id);
+      const validSubjects = classSubjects.filter(s => allocatedSubjectIds.includes(s.id));
+      
+      const defaultSubject = validSubjects[0] || classSubjects[0];
+      const defaultSubjectId = defaultSubject?.id || '';
+      
+      const subAllocations = allocations.filter(a => a.subject_id === defaultSubjectId);
+      const defaultTeacherId = subAllocations[0]?.teacher_id || (stdTeachers[0]?.id || '');
+      
+      setSessionForm(f => ({
+        ...f,
+        subject_id: defaultSubjectId,
+        teacher_id: defaultTeacherId,
+        slot_id: ''
+      }));
+    }
+  }, [sessionForm.section_id, allocations, stdSections, stdSubjects]);
+
+  // Auto-match Subject and Teacher with the weekly timetable
+  useEffect(() => {
+    if (sessionForm.date && sessionForm.slot_id && sectionTimetable.length > 0) {
+      const dayOfWeek = getDayOfWeek(sessionForm.date);
+      const matchedEntry = sectionTimetable.find(
+        (entry: any) => entry.day_of_week === dayOfWeek && entry.slot_id === sessionForm.slot_id
+      );
+      if (matchedEntry) {
+        setSessionForm(f => ({
+          ...f,
+          subject_id: matchedEntry.subject_id,
+          teacher_id: matchedEntry.teacher_id || f.teacher_id,
+        }));
+      } else {
+        setSessionForm(f => ({
+          ...f,
+          subject_id: '',
+          teacher_id: ''
+        }));
+      }
+    }
+  }, [sessionForm.date, sessionForm.slot_id, sectionTimetable]);
+
   // --- TAB 2: TEACHER ATTENDANCE STATES ---
   const [tchrDate, setTchrDate] = useState<string>(new Date().toISOString().split('T')[0] || '');
   const [tchrRecords, setTchrRecords] = useState<TeacherAttendanceRecord[]>([]);
@@ -151,6 +234,20 @@ export default function Attendance() {
 
   const handleStartSession = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check for duplicate active session on frontend
+    if (sessionForm.slot_id) {
+      const isDuplicate = stdSessions.some(
+        s => s.section_id === sessionForm.section_id &&
+             s.date === sessionForm.date &&
+             s.slot_id === sessionForm.slot_id
+      );
+      if (isDuplicate) {
+        alert('An attendance session has already been started/created for this class, date, and period slot.');
+        return;
+      }
+    }
+
     try {
       const { id } = await api.post('/attendance/sessions', sessionForm);
       const createdSession: AttendanceSession = {
@@ -169,8 +266,9 @@ export default function Attendance() {
       
       await fetchStdSessionsOnly();
       handleOpenMarking(createdSession);
-    } catch (err) {
-      alert('Error creating session');
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.error || err?.message || 'Error creating session';
+      alert(errorMsg);
     }
   };
 
@@ -398,10 +496,45 @@ export default function Attendance() {
                 <label>Subject</label>
                 <select
                   value={sessionForm.subject_id}
-                  onChange={(e) => setSessionForm({ ...sessionForm, subject_id: e.target.value })}
+                  onChange={(e) => {
+                    const subId = e.target.value;
+                    const subAllocations = allocations.filter(a => a.subject_id === subId);
+                    const defaultTeacherId = subAllocations[0]?.teacher_id || '';
+                    setSessionForm({
+                      ...sessionForm,
+                      subject_id: subId,
+                      teacher_id: defaultTeacherId
+                    });
+                  }}
                   required
                 >
-                  {stdSubjects.map(s => <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>)}
+                  {(() => {
+                    // Check if slot has scheduled class
+                    const dayOfWeek = getDayOfWeek(sessionForm.date);
+                    const matchedEntry = sessionForm.slot_id
+                      ? sectionTimetable.find((entry: any) => entry.day_of_week === dayOfWeek && entry.slot_id === sessionForm.slot_id)
+                      : null;
+
+                    if (matchedEntry) {
+                      const matchedSub = stdSubjects.find(s => s.id === matchedEntry.subject_id);
+                      if (matchedSub) {
+                        return <option value={matchedSub.id}>{matchedSub.subject_name} ({matchedSub.subject_code}) [Scheduled]</option>;
+                      }
+                    }
+
+                    // Otherwise show allocated subjects or fall back to class subjects
+                    const sectionObj = stdSections.find(s => s.id === sessionForm.section_id);
+                    const courseId = sectionObj?.course_id;
+                    const classSubjects = stdSubjects.filter(sub => sub.course_id === courseId);
+                    
+                    const allocatedSubjectIds = allocations.map(a => a.subject_id);
+                    const validSubjects = classSubjects.filter(s => allocatedSubjectIds.includes(s.id));
+                    const listToUse = validSubjects.length > 0 ? validSubjects : classSubjects;
+
+                    return listToUse.map(s => (
+                      <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>
+                    ));
+                  })()}
                 </select>
               </div>
 
@@ -412,7 +545,30 @@ export default function Attendance() {
                   onChange={(e) => setSessionForm({ ...sessionForm, teacher_id: e.target.value })}
                   required
                 >
-                  {stdTeachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}
+                  {(() => {
+                    // Check if slot has scheduled class
+                    const dayOfWeek = getDayOfWeek(sessionForm.date);
+                    const matchedEntry = sessionForm.slot_id
+                      ? sectionTimetable.find((entry: any) => entry.day_of_week === dayOfWeek && entry.slot_id === sessionForm.slot_id)
+                      : null;
+
+                    if (matchedEntry) {
+                      const matchedTeacher = stdTeachers.find(t => t.id === matchedEntry.teacher_id);
+                      if (matchedTeacher) {
+                        return <option value={matchedTeacher.id}>{matchedTeacher.first_name} {matchedTeacher.last_name} [Scheduled]</option>;
+                      }
+                    }
+
+                    // Otherwise show allocated teachers for this subject, or fall back to all teachers
+                    const subAllocations = allocations.filter(a => a.subject_id === sessionForm.subject_id);
+                    const allocatedTeacherIds = subAllocations.map(a => a.teacher_id);
+                    const validTeachers = stdTeachers.filter(t => allocatedTeacherIds.includes(t.id));
+                    const listToUse = validTeachers.length > 0 ? validTeachers : stdTeachers;
+
+                    return listToUse.map(t => (
+                      <option key={t.id} value={t.id}>{t.first_name} {t.last_name}{validTeachers.length > 0 ? '' : ' (Not Allocated)'}</option>
+                    ));
+                  })()}
                 </select>
               </div>
 
@@ -425,6 +581,34 @@ export default function Attendance() {
                   <option value="">-- Ad-hoc / Free Period --</option>
                   {stdSlots.map(s => <option key={s.id} value={s.id}>{s.name} ({s.start_time} - {s.end_time})</option>)}
                 </select>
+                {(() => {
+                  if (!sessionForm.slot_id) return null;
+                  const dayOfWeek = getDayOfWeek(sessionForm.date);
+                  const matchedEntry = sectionTimetable.find(
+                    (entry: any) => entry.day_of_week === dayOfWeek && entry.slot_id === sessionForm.slot_id
+                  );
+                  if (matchedEntry) {
+                    const isMatched = matchedEntry.subject_id === sessionForm.subject_id && matchedEntry.teacher_id === sessionForm.teacher_id;
+                    if (isMatched) {
+                      return (
+                        <span className="attendance-match-notice">
+                          ✓ Matches Weekly Timetable ({dayOfWeek} Period)
+                        </span>
+                      );
+                    } else {
+                      return (
+                        <span className="attendance-mismatch-notice">
+                          ⚠️ Timetable scheduled: {matchedEntry.subject_name} with {matchedEntry.teacher_name || 'No Teacher'}
+                        </span>
+                      );
+                    }
+                  }
+                  return (
+                    <span className="attendance-mismatch-notice">
+                      ⚠️ No class period scheduled in timetable for {dayOfWeek} at this slot.
+                    </span>
+                  );
+                })()}
               </div>
 
               <div className="modal-actions attendance-modal-actions">

@@ -497,7 +497,7 @@ export default function Students() {
               <p className="students-text-2">Manage student enrollments, academic records, and family contacts.</p>
             </div>
             
-            <div className="students-header-actions">
+            <div className="header-actions students-header-actions">
               {/* Layout view controls */}
               <div className="view-toggle students-view-toggle">
                 <button 
@@ -550,41 +550,39 @@ export default function Students() {
             <>
               {/* Bulk Actions Panel */}
               {selectedStudentIds.length > 0 && (
-                <div className="card bulk-actions-bar students-bulk-bar animate-slide-in">
-                  <div className="students-row-80">
-                    <span className="students-span-81">
-                      <strong className="students-strong-51">{selectedStudentIds.length}</strong> {selectedStudentIds.length === 1 ? 'student' : 'students'} selected
-                    </span>
-                    <div className="students-row-83">
-                      <button onClick={() => setShowBulkSectionModal(true)} className="btn btn-sm btn-outline">
-                        Assign Section
+                <div className="students-row-80 animate-slide-in">
+                  <span className="students-span-81">
+                    <strong className="students-strong-51">{selectedStudentIds.length}</strong> {selectedStudentIds.length === 1 ? 'student' : 'students'} selected
+                  </span>
+                  <div className="students-row-83">
+                    <button onClick={() => setShowBulkSectionModal(true)} className="btn btn-sm btn-outline">
+                      Assign Section
+                    </button>
+                    <button onClick={() => handleBulkAction('promote_semester')} className="btn btn-sm btn-outline">
+                      Promote Semester
+                    </button>
+                    {showDeactivateBtn && (
+                      <button onClick={() => handleBulkAction('deactivate')} className="btn btn-sm btn-outline text-warning">
+                        <Archive size={14} /> Deactivate
                       </button>
-                      <button onClick={() => handleBulkAction('promote_semester')} className="btn btn-sm btn-outline">
-                        Promote Semester
+                    )}
+                    {showReactivateBtn && (
+                      <button onClick={() => handleBulkAction('reactivate')} className="btn btn-sm btn-outline text-success">
+                        <Check size={14} /> Reactivate
                       </button>
-                      {showDeactivateBtn && (
-                        <button onClick={() => handleBulkAction('deactivate')} className="btn btn-sm btn-outline text-warning">
-                          <Archive size={14} /> Deactivate
-                        </button>
-                      )}
-                      {showReactivateBtn && (
-                        <button onClick={() => handleBulkAction('reactivate')} className="btn btn-sm btn-outline text-success">
-                          <Check size={14} /> Reactivate
-                        </button>
-                      )}
-                      <button onClick={() => handleBulkAction('delete')} className="btn btn-sm btn-danger">
-                        <Trash2 size={14} /> Delete
-                      </button>
-                      
-                      <div className="students-div-82" />
-                      
-                      <button onClick={() => handleBulkExport('xlsx')} className="btn btn-sm btn-outline">
-                        Export Excel
-                      </button>
-                      <button onClick={() => handleBulkExport('csv')} className="btn btn-sm btn-outline">
-                        Export CSV
-                      </button>
-                    </div>
+                    )}
+                    <button onClick={() => handleBulkAction('delete')} className="btn btn-sm btn-danger">
+                      <Trash2 size={14} /> Delete
+                    </button>
+                    
+                    <div className="students-div-82" />
+                    
+                    <button onClick={() => handleBulkExport('xlsx')} className="btn btn-sm btn-outline">
+                      Export Excel
+                    </button>
+                    <button onClick={() => handleBulkExport('csv')} className="btn btn-sm btn-outline">
+                      Export CSV
+                    </button>
                   </div>
                 </div>
               )}

@@ -40,6 +40,19 @@ payroll.get('/salary-structures/:teacherId', async (c) => {
   return c.json(result);
 });
 
+payroll.delete('/salary-structures/:teacherId', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
+  const user = c.get('user');
+  const teacherId = c.req.param('teacherId')!;
+  const repo = new PayrollRepository(c.env.DB);
+  try {
+    await repo.deleteSalaryStructure(teacherId);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_SALARY_STRUCTURE', 'payroll', teacherId, `Deleted salary structure for teacher ${teacherId}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
 payroll.get('/teacher/:teacherId/payslips', async (c) => {
   const teacherId = c.req.param('teacherId')!;
   const repo = new PayrollRepository(c.env.DB);
@@ -90,6 +103,19 @@ payroll.patch('/runs/:id/finalize', requireRole('admin', 'super_admin', 'Princip
   try {
     await service.finalizeRun(id, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'FINALIZE_PAYROLL', 'payroll', id, `Finalized payroll run`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+payroll.delete('/runs/:id', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new PayrollRepository(c.env.DB);
+  try {
+    await repo.deletePayrollRun(id);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_PAYROLL_RUN', 'payroll', id, `Deleted payroll run ${id}`);
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Landmark, Save } from 'lucide-react';
+import { Landmark, Save, Trash2 } from 'lucide-react';
 
 interface TeacherSalary {
   teacher_id: string;
@@ -98,6 +98,20 @@ export default function SalaryStructures() {
     }
   };
 
+  const handleDeleteStructure = async (teacher: TeacherSalary) => {
+    if (!confirm(`Are you sure you want to delete the salary structure for ${teacher.first_name} ${teacher.last_name}? They will be excluded from future payroll runs.`)) return;
+    try {
+      setSaving(teacher.teacher_id);
+      await api.delete(`/payroll/salary-structures/${teacher.teacher_id}`);
+      alert(`Salary structure for ${teacher.first_name} ${teacher.last_name} deleted.`);
+      fetchSalaryStructures();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete salary structure');
+    } finally {
+      setSaving(null);
+    }
+  };
+
   return (
     <Layout>
       <PageGuidance
@@ -171,6 +185,13 @@ export default function SalaryStructures() {
                       disabled={saving === t.teacher_id}
                     >
                       <Save size={12} /> {saving === t.teacher_id ? 'Saving' : 'Save'}
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline salary-structures-btn-delete"
+                      onClick={() => handleDeleteStructure(t)}
+                      disabled={saving === t.teacher_id}
+                    >
+                      <Trash2 size={12} />
                     </button>
                   </td>
                 </tr>

@@ -12,12 +12,12 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #2D3348;
+  color: #64748B;
   cursor: pointer;
   user-select: none;
   transition: color 0.12s;
 }
-.sidebar-row-6:hover { color: #475569; }
+.sidebar-row-6:hover { color: #A78BFA; }
 
 /* Chevron icon */
 .sidebar-span-7 { opacity: 0.5; display: flex; align-items: center; }
@@ -61,7 +61,7 @@
   background: transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  color: #3D4455;
+  color: #94A3B8;
   transition: all 0.15s ease;
   flex-shrink: 0;
 }

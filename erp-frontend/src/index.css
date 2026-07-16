@@ -255,7 +255,7 @@ small, .caption {
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  color: #64748B;
+  color: #94A3B8;
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
@@ -268,7 +268,7 @@ small, .caption {
   position: relative;
 }
 
-.nav-link svg { flex-shrink: 0; color: #475569; transition: color 0.12s; }
+.nav-link svg { flex-shrink: 0; color: #64748B; transition: color 0.12s; }
 .nav-link:hover { background: var(--shell-hover); color: #C4B5FD; }
 .nav-link:hover svg { color: #A78BFA; }
 
@@ -561,7 +561,6 @@ input:focus, select:focus, textarea:focus {
 .admissions-div-8,
 .classes-div-25,
 .library-div-10,
-.messaging-div-3,
 .section-workspace-div-106,
 .transport-div-5,
 .certificates-div-5 {
@@ -572,7 +571,14 @@ input:focus, select:focus, textarea:focus {
 
 .search-container input,
 div.search-container input[class*="-input-"]:not([type="checkbox"]):not([type="radio"]),
-div.search-container select[class*="-select-"] {
+div.search-container select[class*="-select-"],
+.students-search-container input,
+.admissions-div-8 input,
+.classes-div-25 input,
+.library-div-10 input,
+.section-workspace-div-106 input,
+.transport-div-5 input,
+.certificates-div-5 input {
   border: none !important;
   background: transparent !important;
   width: 100% !important;
@@ -583,7 +589,7 @@ div.search-container select[class*="-select-"] {
   padding: 0 !important;
   box-shadow: none !important;
   min-width: 0 !important;
-  height: auto !important;
+  height: 100% !important;
 }
 
 .search-container input:hover,
@@ -600,7 +606,6 @@ div.search-container select[class*="-select-"] {
 .admissions-div-8,
 .classes-div-25,
 .library-div-10,
-.messaging-div-3,
 .section-workspace-div-106,
 .transport-div-5,
 .certificates-div-5 {
@@ -631,7 +636,8 @@ input.library-input-12,
 input.transport-input-7,
 input.messaging-input-5,
 input.section-workspace-input-108,
-input.classes-input-27 {
+input.classes-input-27,
+.certificates-div-5 input {
   padding-left: 34px !important;
 }
 
@@ -639,7 +645,6 @@ input.classes-input-27 {
 .admissions-div-8 svg,
 .classes-div-25 svg,
 .library-div-10 svg,
-.messaging-div-3 svg,
 .section-workspace-div-106 svg,
 .transport-div-5 svg,
 .certificates-div-5 svg {
@@ -1007,7 +1012,7 @@ input.classes-input-27 {
 }
 .sidebar-brand-text  { display: flex; flex-direction: column; }
 .sidebar-brand-name  { font-size: 13px; font-weight: 700; color: #F1F5F9; letter-spacing: -0.01em; line-height: 1.2; }
-.sidebar-brand-tag   { font-size: 10px; font-weight: 500; color: #3D4455; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 1px; }
+.sidebar-brand-tag   { font-size: 10px; font-weight: 500; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 1px; }
 
 /* ── Sidebar User Pill ──────────────────────────────────────────────────────── */
 .sidebar-user-pill {
@@ -1032,7 +1037,7 @@ input.classes-input-27 {
 }
 .sidebar-user-info { flex: 1; min-width: 0; }
 .sidebar-user-name { font-size: 12px; font-weight: 600; color: #CBD5E1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sidebar-user-role { font-size: 10px; color: #3D4455; margin-top: 1px; }
+.sidebar-user-role { font-size: 10px; color: #94A3B8; margin-top: 1px; }
 
 /* ── Setup Checklist ────────────────────────────────────────────────────────── */
 .setup-checklist {

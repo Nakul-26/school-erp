@@ -254,108 +254,100 @@ export default function Subjects() {
         )}
       </div>
 
-      <div className="subjects-toolbar">
-        {/* Row 1: Primary Search Control */}
-        <div className="subjects-toolbar-row-main">
-          <div className="subjects-search-wrapper" style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.4rem 0.75rem', width: '100%', maxWidth: '400px' }}>
-            <Search size={16} className="subjects-search-icon" style={{ color: 'var(--text-secondary)', marginRight: '0.5rem' }} />
-            <input 
-              type="text" 
-              placeholder="Search by subject name or code..." 
-              value={subjectSearchText}
-              onChange={e => setSubjectSearchText(e.target.value)}
-              className="subjects-search-input"
-              style={{ border: 'none', background: 'none', outline: 'none', width: '100%', fontSize: '0.9rem' }}
-              aria-label="Search by subject name or code"
-            />
-          </div>
+      <div className="card filters subjects-filters-card">
+        {/* Search */}
+        <div className="search-container subjects-search-container">
+          <Search size={14} className="subjects-Search-icon" />
+          <input 
+            type="text" 
+            placeholder="Search by subject name or code..." 
+            value={subjectSearchText}
+            onChange={e => setSubjectSearchText(e.target.value)}
+            className="subjects-search-input"
+            aria-label="Search by subject name or code"
+          />
         </div>
 
-        {/* Row 2: Secondary Dropdown Filters Grid */}
-        <div className="subjects-toolbar-row-filters" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
-          {/* Program Selector */}
+        {/* Program Selector */}
+        <div className="subjects-filter-item">
+          <select 
+            value={subjectSelectedProgId} 
+            onChange={e => setSubjectSelectedProgId(e.target.value)}
+            className="subjects-select"
+            aria-label="Filter by Class"
+          >
+            <option value="All">All {getProgramLabel()}es</option>
+            {programs.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Department Selector */}
+        {uniqueSubjectDepts.length > 0 && (
           <div className="subjects-filter-item">
             <select 
-              value={subjectSelectedProgId} 
-              onChange={e => setSubjectSelectedProgId(e.target.value)}
-              className="input"
-              style={{ padding: '0.35rem 0.5rem', height: 'auto', fontSize: '0.85rem' }}
-              aria-label="Filter by Class"
+              value={subjectSelectedDept} 
+              onChange={e => setSubjectSelectedDept(e.target.value)}
+              className="subjects-select"
+              aria-label="Filter by Department"
             >
-              <option value="All">All {getProgramLabel()}es</option>
-              {programs.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+              <option value="All">All Departments</option>
+              {uniqueSubjectDepts.map(d => (
+                <option key={d} value={d}>{d}</option>
               ))}
             </select>
           </div>
+        )}
 
-          {/* Department Selector */}
-          {uniqueSubjectDepts.length > 0 && (
-            <div className="subjects-filter-item">
-              <select 
-                value={subjectSelectedDept} 
-                onChange={e => setSubjectSelectedDept(e.target.value)}
-                className="input"
-                style={{ padding: '0.35rem 0.5rem', height: 'auto', fontSize: '0.85rem' }}
-                aria-label="Filter by Department"
-              >
-                <option value="All">All Departments</option>
-                {uniqueSubjectDepts.map(d => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Type Selector (Theory/Lab) */}
-          <div className="subjects-filter-item">
-            <select 
-              value={subjectSelectedType} 
-              onChange={e => setSubjectSelectedType(e.target.value)}
-              className="input"
-              style={{ padding: '0.35rem 0.5rem', height: 'auto', fontSize: '0.85rem' }}
-              aria-label="Filter by Type"
-            >
-              <option value="All">All Types</option>
-              <option value="Theory">Theory</option>
-              <option value="Lab">Lab</option>
-            </select>
-          </div>
-
-          {/* Status Selector */}
-          <div className="subjects-filter-item">
-            <select 
-              value={subjectSelectedStatus} 
-              onChange={e => setSubjectSelectedStatus(e.target.value)}
-              className="input"
-              style={{ padding: '0.35rem 0.5rem', height: 'auto', fontSize: '0.85rem' }}
-              aria-label="Filter by Status"
-            >
-              <option value="All">All Statuses</option>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="INACTIVE">INACTIVE</option>
-            </select>
-          </div>
-
-          {/* More Filters Toggle */}
-          <button 
-            type="button"
-            className="btn btn-secondary"
-            style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem', height: 'auto' }}
-            onClick={() => setShowMoreFilters(!showMoreFilters)}
+        {/* Type Selector (Theory/Lab) */}
+        <div className="subjects-filter-item">
+          <select 
+            value={subjectSelectedType} 
+            onChange={e => setSubjectSelectedType(e.target.value)}
+            className="subjects-select"
+            aria-label="Filter by Type"
           >
-            {showMoreFilters ? 'Less Filters ▲' : 'More Filters ▼'}
-          </button>
+            <option value="All">All Types</option>
+            <option value="Theory">Theory</option>
+            <option value="Lab">Lab</option>
+          </select>
         </div>
 
-        {/* Row 3: Collapsible Extra Filters */}
-        {showMoreFilters && (
-          <div style={{ marginTop: '1rem' }}>
+        {/* Status Selector */}
+        <div className="subjects-filter-item">
+          <select 
+            value={subjectSelectedStatus} 
+            onChange={e => setSubjectSelectedStatus(e.target.value)}
+            className="subjects-select"
+            aria-label="Filter by Status"
+          >
+            <option value="All">All Statuses</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="INACTIVE">INACTIVE</option>
+          </select>
+        </div>
+
+        {/* More Filters Toggle */}
+        <div className="subjects-filter-action">
+          <button 
+            type="button"
+            className="btn btn-secondary subjects-btn-toggle"
+            onClick={() => setShowMoreFilters(!showMoreFilters)}
+          >
+            {showMoreFilters ? 'Less ▲' : 'More ▼'}
+          </button>
+        </div>
+      </div>
+
+      {/* Row 3: Collapsible Extra Filters */}
+      {showMoreFilters && (
+        <div className="card filters subjects-filters-card subjects-extra-filters-card">
+          <div className="subjects-filter-item">
             <select 
               value={subjectSelectedElective} 
               onChange={e => setSubjectSelectedElective(e.target.value)}
-              className="input"
-              style={{ padding: '0.35rem 0.5rem', height: 'auto', fontSize: '0.85rem', width: '160px' }}
+              className="subjects-select"
               aria-label="Filter by Elective"
             >
               <option value="All">All Electives</option>
@@ -363,22 +355,21 @@ export default function Subjects() {
               <option value="Elective">Elective</option>
             </select>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Row 4: Active Filter Chips */}
-        {hasActiveFilters && (
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1rem', alignItems: 'center' }}>
-            <button 
-              type="button"
-              className="btn btn-secondary"
-              style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', height: 'auto' }}
-              onClick={handleClearAllFilters}
-            >
-              Clear All Filters
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Row 4: Active Filter Chips */}
+      {hasActiveFilters && (
+        <div className="subjects-active-chips">
+          <button 
+            type="button"
+            className="btn btn-secondary subjects-btn-clear"
+            onClick={handleClearAllFilters}
+          >
+            Clear All Filters
+          </button>
+        </div>
+      )}
 
       <div className="card" style={{ padding: '1rem 1.25rem', marginTop: '1.5rem' }}>
         {loading ? (

@@ -7,7 +7,8 @@ import { api } from '../services/api';
 import { 
   Plus, Calendar, Clock, MessageSquare, FileText, User, 
   Trash2, Upload, ArrowLeft, Download, Award, Briefcase, GraduationCap,
-  Clipboard, Activity, CheckCircle, XCircle, Users, BookOpen, UserCheck, AlertTriangle, Settings, RefreshCw, HelpCircle
+  Clipboard, Activity, CheckCircle, XCircle, Users, BookOpen, UserCheck, AlertTriangle, Settings, RefreshCw, HelpCircle,
+  Printer
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -42,6 +43,8 @@ export default function TeacherDetails() {
   const [leaveApplications, setLeaveApplications] = useState<any[]>([]);
   const [salaryStructure, setSalaryStructure] = useState<any>(null);
   const [payslips, setPayslips] = useState<any[]>([]);
+  const [selectedPayslip, setSelectedPayslip] = useState<any | null>(null);
+  const [showSlipModal, setShowSlipModal] = useState(false);
  
   // Custom Redesign States (Phase 9/10 Polish)
   const [teacherDocs, setTeacherDocs] = useState<any[]>([]);
@@ -985,7 +988,14 @@ export default function TeacherDetails() {
                         <td style={{ padding: '0.5rem', textAlign: 'center' }}>{slip.present_days} / {slip.working_days} days</td>
                         <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '700' }}>₹{(slip.net_salary || 0).toLocaleString()}</td>
                         <td style={{ padding: '0.5rem', textAlign: 'right' }}>
-                          <button className="btn btn-secondary" style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', height: 'auto' }} onClick={() => navigate(`/payroll/runs/${slip.payroll_run_id}`)}>
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', height: 'auto' }}
+                            onClick={() => {
+                              setSelectedPayslip(slip);
+                              setShowSlipModal(true);
+                            }}
+                          >
                             View Slip
                           </button>
                         </td>
@@ -1344,6 +1354,87 @@ export default function TeacherDetails() {
                 <button type="submit" className="btn btn-primary">Add Log</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- PAYSLIP PREVIEW MODAL --- */}
+      {showSlipModal && selectedPayslip && (
+        <div className="teacher-details-modal-overlay no-print" onClick={() => { setShowSlipModal(false); setSelectedPayslip(null); }}>
+          <div className="card modal-content teacher-details-payslip-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Salary Payslip Preview</h3>
+              <button onClick={() => { setShowSlipModal(false); setSelectedPayslip(null); }} className="teacher-details-payslip-close-btn">✕</button>
+            </div>
+            <div className="modal-body">
+              <div id="teacher-printable-payslip" className="teacher-details-payslip-div-9">
+                <div className="teacher-details-payslip-div-10">
+                  <h2 className="teacher-details-payslip-title-11">Payslip Advice</h2>
+                  <h3 className="teacher-details-payslip-title-12">{(user as any)?.institution_name || 'Education Institution'}</h3>
+                  <p className="teacher-details-payslip-text-13">
+                    Salary statement for {(() => {
+                      const dates = new Date(2000, selectedPayslip.month - 1, 1);
+                      return dates.toLocaleString('default', { month: 'long' });
+                    })()} {selectedPayslip.year}
+                  </p>
+                </div>
+
+                <div className="teacher-details-payslip-grid-14">
+                  <div>
+                    <p className="teacher-details-payslip-text-15"><strong>Employee Name:</strong> {selectedPayslip.first_name} {selectedPayslip.last_name}</p>
+                    <p className="teacher-details-payslip-text-16"><strong>Employee ID:</strong> {selectedPayslip.employee_id}</p>
+                    <p className="teacher-details-payslip-text-17"><strong>Designation:</strong> {selectedPayslip.designation}</p>
+                  </div>
+                  <div className="teacher-details-payslip-div-18">
+                    <p className="teacher-details-payslip-text-19"><strong>Working Days:</strong> {selectedPayslip.working_days}</p>
+                    <p className="teacher-details-payslip-text-20"><strong>Present Days:</strong> {selectedPayslip.present_days}</p>
+                    <p className="teacher-details-payslip-text-21"><strong>LOP Days:</strong> {selectedPayslip.lop_days}</p>
+                  </div>
+                </div>
+
+                <div className="teacher-details-payslip-grid-22">
+                  {/* Earnings */}
+                  <div className="teacher-details-payslip-div-23">
+                    <h4 className="teacher-details-payslip-title-24">EARNINGS</h4>
+                    <div className="teacher-details-payslip-row-25"><span>Basic Salary</span><span>₹{(selectedPayslip.basic_salary || 0).toLocaleString('en-IN')}</span></div>
+                    <div className="teacher-details-payslip-row-26"><span>Dearness Allowance (DA)</span><span>₹{(selectedPayslip.da || 0).toLocaleString('en-IN')}</span></div>
+                    <div className="teacher-details-payslip-row-27"><span>House Rent Allowance (HRA)</span><span>₹{(selectedPayslip.hra || 0).toLocaleString('en-IN')}</span></div>
+                    <div className="teacher-details-payslip-row-28"><span>Other Allowances</span><span>₹{(selectedPayslip.other_allowances || 0).toLocaleString('en-IN')}</span></div>
+                    <div className="teacher-details-payslip-row-29">
+                      <span>Gross Earnings</span>
+                      <span>₹{(selectedPayslip.gross_salary || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+
+                  {/* Deductions */}
+                  <div className="teacher-details-payslip-div-30">
+                    <h4 className="teacher-details-payslip-title-31">DEDUCTIONS</h4>
+                    <div className="teacher-details-payslip-row-32"><span>Provident Fund (PF)</span><span>₹{(selectedPayslip.pf_deduction || 0).toLocaleString('en-IN')}</span></div>
+                    <div className="teacher-details-payslip-row-33"><span>Tax Withheld (TDS)</span><span>₹{(selectedPayslip.tds_deduction || 0).toLocaleString('en-IN')}</span></div>
+                    <div className="teacher-details-payslip-row-34"><span style={{ color: selectedPayslip.lop_deduction > 0 ? 'var(--danger)' : '' }}>Loss of Pay (LOP)</span><span>₹{(selectedPayslip.lop_deduction || 0).toLocaleString('en-IN')}</span></div>
+                    <div className="teacher-details-payslip-row-35"><span>Other Deductions</span><span>₹{(selectedPayslip.other_deductions || 0).toLocaleString('en-IN')}</span></div>
+                    <div className="teacher-details-payslip-row-36">
+                      <span>Total Deductions</span>
+                      <span>₹{((selectedPayslip.pf_deduction || 0) + (selectedPayslip.tds_deduction || 0) + (selectedPayslip.lop_deduction || 0) + (selectedPayslip.other_deductions || 0)).toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="teacher-details-payslip-row-37">
+                  <span>NET SALARY PAYOUT</span>
+                  <span>₹{(selectedPayslip.net_salary || 0).toLocaleString('en-IN')}</span>
+                </div>
+
+                <div className="teacher-details-payslip-row-38">
+                  <div className="teacher-details-payslip-div-39">Employer Signature</div>
+                  <div className="teacher-details-payslip-div-40">Employee Signature</div>
+                </div>
+              </div>
+            </div>
+            <div className="teacher-details-payslip-footer no-print">
+              <button className="btn btn-outline" onClick={() => { setShowSlipModal(false); setSelectedPayslip(null); }}>Close</button>
+              <button className="btn btn-primary" onClick={() => window.print()}>Print Payslip</button>
+            </div>
           </div>
         </div>
       )}

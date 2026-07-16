@@ -609,7 +609,7 @@ export default function Dashboard() {
               ) : (
                 <div className="announcements-list">
                   {announcements.slice(0, 5).map((ann: any) => (
-                    <div key={ann.id} className="announcement-item" style={{ padding: '0.75rem 0', borderBottom: '1px solid var(--border)' }}>
+                    <div key={ann.id} className="announcement-item" style={{ padding: '0.75rem 1rem' }}>
                       <div className="ann-title" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                         <h4 style={{ fontWeight: '700' }}>{ann.title}</h4>
                         <span className="ann-date" style={{ color: 'var(--text-muted)' }}>{new Date(ann.created_at).toLocaleDateString()}</span>
@@ -637,7 +637,7 @@ export default function Dashboard() {
               ) : (
                 <div className="notifications-list">
                   {notifications.slice(0, 5).map((notif: any) => (
-                    <div key={notif.id} className={`notification-item ${notif.is_read ? 'read' : 'unread'}`} style={{ padding: '0.75rem 0', borderBottom: '1px solid var(--border)', opacity: notif.is_read ? 0.6 : 1 }}>
+                    <div key={notif.id} className={`notification-item ${notif.is_read ? 'read' : 'unread'}`} style={{ padding: '0.75rem 1rem', opacity: notif.is_read ? 0.6 : 1 }}>
                       <div className="notif-content" style={{ fontSize: '0.85rem' }}>
                         <strong style={{ fontWeight: '700' }}>{notif.title}</strong>
                         <p style={{ color: 'var(--text-secondary)', marginTop: '0.15rem' }}>{notif.message}</p>

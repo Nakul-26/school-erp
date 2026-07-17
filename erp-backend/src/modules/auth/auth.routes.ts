@@ -88,6 +88,7 @@ auth.post('/switch-branch', authMiddleware, async (c) => {
   }
 
   dbUser.institution_id = institution_id;
+  dbUser.permissions = await userRepo.getUserPermissions(dbUser.id);
   const newToken = await service.generateToken(dbUser);
 
   return c.json({

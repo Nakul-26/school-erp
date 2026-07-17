@@ -20,6 +20,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const userStr = localStorage.getItem('erp_user');
   const user = userStr ? JSON.parse(userStr) : null;
   const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
+  const permissions: string[] = user?.permissions || [];
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -134,6 +135,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     {
       key: '__flat3', label: '', always: true,
       links: [
+        { to: '/access-control', label: 'Access Control', icon: UserCog },
         { to: '/reports', label: 'Reports', icon: BarChart3 },
         { to: '/setup', label: 'School Setup', icon: Settings },
       ],
@@ -144,7 +146,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     const filteredLinks = group.links.filter(link => {
       if (link.to === '/dashboard') return true;
       const pathOnly = link.to.split('?')[0] || '';
-      return isAllowedNav(roles, pathOnly);
+      return isAllowedNav(roles, permissions, pathOnly);
     });
     return { ...group, links: filteredLinks };
   }).filter(group => group.always || group.links.length > 0);

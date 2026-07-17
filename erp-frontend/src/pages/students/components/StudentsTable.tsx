@@ -12,6 +12,8 @@ interface StudentsTableProps {
   handleArchiveStudent: (id: string, name: string) => void;
   handleDeleteStudent: (id: string, name: string) => void;
   getProgramLabel: () => string;
+  canEditStudent: boolean;
+  canDeleteStudent: boolean;
 }
 
 export const StudentsTable: React.FC<StudentsTableProps> = ({
@@ -24,6 +26,8 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
   handleArchiveStudent,
   handleDeleteStudent,
   getProgramLabel,
+  canEditStudent,
+  canDeleteStudent,
 }) => {
   const allSelected = selectedStudentIds.length === students.length && students.length > 0;
 
@@ -102,13 +106,13 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
               <td>
                 <div className="students-row-67">
                   <Link to={`/students/${s.id}`} className="btn btn-sm btn-outline students-btn-table-action">View</Link>
-                  <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline students-btn-table-action" title="Edit Record"><Edit2 size={12} /></button>
-                  {s.status === 'DROPPED' ? (
+                  {canEditStudent && <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline students-btn-table-action" title="Edit Record"><Edit2 size={12} /></button>}
+                  {canEditStudent && (s.status === 'DROPPED' ? (
                     <button onClick={() => handleReactivateStudent(s.id, getFullName(s))} className="btn btn-sm btn-outline students-btn-table-action students-btn-table-reactivate" title="Reactivate Student"><Check size={12} /></button>
                   ) : (
                     <button onClick={() => handleArchiveStudent(s.id, getFullName(s))} className="btn btn-sm btn-outline students-btn-table-action students-btn-table-archive" title="Archive Student"><Archive size={12} /></button>
-                  )}
-                  <button onClick={() => handleDeleteStudent(s.id, getFullName(s))} className="btn btn-sm btn-danger students-btn-table-action students-btn-table-delete" title="Delete Permanently"><Trash2 size={12} /></button>
+                  ))}
+                  {canDeleteStudent && <button onClick={() => handleDeleteStudent(s.id, getFullName(s))} className="btn btn-sm btn-danger students-btn-table-action students-btn-table-delete" title="Delete Permanently"><Trash2 size={12} /></button>}
                 </div>
               </td>
             </tr>

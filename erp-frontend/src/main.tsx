@@ -19,7 +19,7 @@ const clearLocalServiceWorker = async () => {
 };
 
 // Register Service Worker only for production builds.
-// In Vite dev, a previously registered worker can serve stale app bundles.
+// In Vite dev, keeping the worker registered helps the browser recognize the app as installable.
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
@@ -33,12 +33,6 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
       .catch(err => {
         console.error('Service Worker registration failed:', err);
       });
-  });
-} else if ('serviceWorker' in navigator && import.meta.env.DEV) {
-  window.addEventListener('load', () => {
-    clearLocalServiceWorker().catch(err => {
-      console.error('Failed to clear local Service Worker:', err);
-    });
   });
 }
 

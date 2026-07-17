@@ -29,6 +29,7 @@ INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-att-mar
 INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-att-view', 'attendance.view', 'View attendance records');
 INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-fees-collect', 'fees.collect', 'Collect student fees');
 INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-fees-view', 'fees.view', 'View fee structures and payments');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-finance-access', 'finance.access', 'Access the finance workspace');
 
 -- 4. Role Permissions Mapping
 -- Super Admin / Principal gets all permissions
@@ -48,6 +49,7 @@ INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-s
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-super-admin', 'perm-att-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-super-admin', 'perm-fees-collect');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-super-admin', 'perm-fees-view');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-super-admin', 'perm-finance-access');
 
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-principal', permission_id FROM role_permissions WHERE role_id = 'role-super-admin';
 
@@ -59,6 +61,7 @@ INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-h
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-hod', 'perm-teacher-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-hod', 'perm-att-mark');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-hod', 'perm-att-view');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-hod', 'perm-finance-access');
 
 -- Teacher gets attendance and student/teacher viewing
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-teacher', 'perm-student-view');
@@ -70,11 +73,13 @@ INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-t
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-student', 'perm-student-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-student', 'perm-att-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-student', 'perm-fees-view');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-student', 'perm-finance-access');
 
 -- Accountant gets fees collection and view
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-accountant', 'perm-fees-collect');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-accountant', 'perm-fees-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-accountant', 'perm-student-view');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-accountant', 'perm-finance-access');
 
 -- 5. Create Users (Password: admin123)
 -- Admin User (Oxford Principal)

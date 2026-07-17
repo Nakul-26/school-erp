@@ -2,8 +2,10 @@ import './Teachers.css';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { Plus, Grid, List, Trash2, Archive, Check } from 'lucide-react';
+import { Plus, Grid, List, Trash2, Archive, Check, ShieldAlert } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { hasAnyPermission } from '../utils/accessControl';
 
 // Modular Imports
 import { teacherService } from './teachers/teacherService';
@@ -99,6 +101,13 @@ export default function Teachers() {
     subject_id: ''
   });
 
+  const { user } = useAuth();
+  const userPermissions = user?.permissions || [];
+  const canViewTeacher = hasAnyPermission(userPermissions, ['teacher.view']);
+  const canCreateTeacher = hasAnyPermission(userPermissions, ['teacher.create']);
+  const canEditTeacher = hasAnyPermission(userPermissions, ['teacher.edit']);
+  const canDeleteTeacher = hasAnyPermission(userPermissions, ['teacher.delete']);
+
   useEffect(() => {
     fetchTeachers();
     fetchDepartments();
@@ -164,6 +173,11 @@ export default function Teachers() {
   };
 
   const handleAddTeacherClick = () => {
+    if (!canCreateTeacher) {
+      toast.error('You do not have permission to create teachers.');
+      return;
+    }
+
     const currentYear = academicYears.find(y => y.is_current) || academicYears[0];
     setForm({
       employee_id: '',
@@ -213,6 +227,11 @@ export default function Teachers() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canCreateTeacher) {
+      toast.error('You do not have permission to create teachers.');
+      return;
+    }
+
     if (createStep < 4) {
       nextStep();
       return;
@@ -281,6 +300,11 @@ export default function Teachers() {
   };
 
   const handleEditClick = async (teacher: any) => {
+    if (!canEditTeacher) {
+      toast.error('You do not have permission to edit teachers.');
+      return;
+    }
+
     setEditForm({
       id: teacher.id,
       employee_id: teacher.employee_id || '',
@@ -318,6 +342,11 @@ export default function Teachers() {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEditTeacher) {
+      toast.error('You do not have permission to edit teachers.');
+      return;
+    }
+
     const error = teacherValidation.validateEdit(editForm);
     if (error) {
       toast.error(error);
@@ -346,6 +375,11 @@ export default function Teachers() {
 
   const handleAddAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEditTeacher) {
+      toast.error('You do not have permission to edit teachers.');
+      return;
+    }
+
     if (!newAssignment.academic_year_id || !newAssignment.course_id || !newAssignment.section_id || !newAssignment.subject_id) {
       toast.error('Please select all assignment details');
       return;
@@ -370,6 +404,11 @@ export default function Teachers() {
   };
 
   const handleRemoveAssignment = async (assignId: string) => {
+    if (!canEditTeacher) {
+      toast.error('You do not have permission to edit teachers.');
+      return;
+    }
+
     if (!window.confirm('Are you sure you want to remove this assignment?')) return;
     try {
       await teacherService.deleteAssignment(assignId);
@@ -382,6 +421,11 @@ export default function Teachers() {
   };
 
   const handleDeleteTeacher = async (id: string, name: string) => {
+    if (!canDeleteTeacher) {
+      toast.error('You do not have permission to delete teachers.');
+      return;
+    }
+
     if (!window.confirm(`Are you sure you want to permanently delete teacher "${name}"? This action is irreversible.`)) return;
     try {
       setLoading(true);
@@ -395,6 +439,11 @@ export default function Teachers() {
   };
 
   const handleDeactivateTeacher = async (id: string, name: string) => {
+    if (!canEditTeacher) {
+      toast.error('You do not have permission to edit teachers.');
+      return;
+    }
+
     if (!window.confirm(`Are you sure you want to deactivate teacher "${name}"?`)) {
       return;
     }
@@ -411,6 +460,11 @@ export default function Teachers() {
   };
 
   const handleReactivateTeacher = async (id: string, name: string) => {
+    if (!canEditTeacher) {
+      toast.error('You do not have permission to edit teachers.');
+      return;
+    }
+
     try {
       setLoading(true);
       await teacherService.updateTeacher(id, { status: 'ACTIVE' });
@@ -442,6 +496,11 @@ export default function Teachers() {
 
   const handleBulkAction = async (action: 'assign_department' | 'deactivate' | 'reactivate' | 'delete', payload?: any) => {
     if (selectedTeacherIds.length === 0) return;
+    if ((action === 'delete' && !canDeleteTeacher) || (action !== 'delete' && !canEditTeacher)) {
+      toast.error('You do not have permission to perform this action.');
+      return;
+    }
+
     if (action === 'deactivate' && !window.confirm(`Are you sure you want to deactivate ${selectedTeacherIds.length} teachers?`)) return;
     if (action === 'reactivate' && !window.confirm(`Are you sure you want to reactivate ${selectedTeacherIds.length} teachers?`)) return;
     if (action === 'delete') {
@@ -501,7 +560,7 @@ export default function Teachers() {
 
   return (
     <Layout>
-      {showModal ? (
+      {showModal && canCreateTeacher ? (
         <AddTeacherWizard
           createStep={createStep}
           setCreateStep={setCreateStep}
@@ -518,6 +577,13 @@ export default function Teachers() {
           nextStep={nextStep}
           setShowModal={setShowModal}
         />
+      ) : showModal ? (
+        <div className="card teachers-empty-card">
+          <div className="teachers-empty-icon"><ShieldAlert size={28} /></div>
+          <p className="teachers-empty-title">Teacher creation is restricted</p>
+          <p className="teachers-empty-subtitle">You do not have permission to create teacher records.</p>
+          <button className="btn btn-primary" onClick={() => setShowModal(false)}>Back to Teachers</button>
+        </div>
       ) : (
         <>
           <div className="page-header teachers-page-header">
@@ -545,10 +611,10 @@ export default function Teachers() {
                 </button>
               </div>
 
-              <button className="btn btn-outline" onClick={() => setShowImportModal(true)}>
+              <button className="btn btn-outline" onClick={() => setShowImportModal(true)} disabled={!canCreateTeacher} title={!canCreateTeacher ? 'Requires teacher.create' : 'Import Excel'}>
                 Import Excel
               </button>
-              <button className="btn btn-primary" onClick={handleAddTeacherClick}>
+              <button className="btn btn-primary" onClick={handleAddTeacherClick} disabled={!canCreateTeacher} title={!canCreateTeacher ? 'Requires teacher.create' : 'Add Teacher'}>
                 <Plus size={18} /> Add Teacher
               </button>
             </div>
@@ -580,22 +646,24 @@ export default function Teachers() {
                     <strong>{selectedTeacherIds.length}</strong> {selectedTeacherIds.length === 1 ? 'teacher' : 'teachers'} selected
                   </span>
                   <div className="teachers-bulk-actions">
-                    <button onClick={() => setShowBulkDeptModal(true)} className="btn btn-sm btn-outline">
+                    <button onClick={() => setShowBulkDeptModal(true)} className="btn btn-sm btn-outline" disabled={!canEditTeacher} title={!canEditTeacher ? 'Requires teacher.edit' : 'Assign Department'}>
                       Assign Department
                     </button>
-                    {showDeactivateBtn && (
+                    {showDeactivateBtn && canEditTeacher && (
                       <button onClick={() => handleBulkAction('deactivate')} className="btn btn-sm btn-outline text-warning">
                         <Archive size={14} /> Deactivate
                       </button>
                     )}
-                    {showReactivateBtn && (
+                    {showReactivateBtn && canEditTeacher && (
                       <button onClick={() => handleBulkAction('reactivate')} className="btn btn-sm btn-outline text-success">
                         <Check size={14} /> Reactivate
                       </button>
                     )}
-                    <button onClick={() => handleBulkAction('delete')} className="btn btn-sm btn-danger">
-                      <Trash2 size={14} /> Delete
-                    </button>
+                    {canDeleteTeacher && (
+                      <button onClick={() => handleBulkAction('delete')} className="btn btn-sm btn-danger">
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    )}
                     
                     <div className="teachers-bulk-divider" />
                     
@@ -623,6 +691,8 @@ export default function Teachers() {
                       handleDeleteTeacher={handleDeleteTeacher}
                       handleDeactivateTeacher={handleDeactivateTeacher}
                       handleReactivateTeacher={handleReactivateTeacher}
+                      canEditTeacher={canEditTeacher}
+                      canDeleteTeacher={canDeleteTeacher}
                     />
                   ))}
                 </div>
@@ -636,6 +706,8 @@ export default function Teachers() {
                   handleDeleteTeacher={handleDeleteTeacher}
                   handleDeactivateTeacher={handleDeactivateTeacher}
                   handleReactivateTeacher={handleReactivateTeacher}
+                  canEditTeacher={canEditTeacher}
+                  canDeleteTeacher={canDeleteTeacher}
                 />
               )}
 

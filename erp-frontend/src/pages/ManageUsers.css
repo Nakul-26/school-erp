@@ -12,6 +12,12 @@
   gap: 0.25rem;
 }
 
+.manage-users-table-shell {
+  min-height: fit-content;
+  height: auto;
+  overflow: visible;
+}
+
 .manage-users-badge {
   align-items: center;
   display: inline-flex;
@@ -23,6 +29,14 @@
   font-size: 0.75rem;
 }
 
+.manage-users-permission-desc {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  margin-top: 0.15rem;
+}
+
 .manage-users-row-5 {
   display: flex;
   gap: 0.5rem;
@@ -31,6 +45,86 @@
 .manage-users-td-6 {
   padding: 2rem;
   text-align: center;
+}
+
+.manage-users-user-cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.manage-users-user-card {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  background: var(--bg-card);
+  min-height: fit-content;
+}
+
+.manage-users-user-card-top {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.manage-users-user-card-name {
+  color: var(--text-main);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.manage-users-user-card-meta {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+.manage-users-empty-state {
+  color: var(--text-muted);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.manage-users-role-modal {
+  max-width: 860px;
+}
+
+.manage-users-assign-modal {
+  max-width: 760px;
+}
+
+.manage-users-permissions-grid {
+  max-height: 340px;
+  overflow: auto;
+}
+
+.manage-users-assign-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.manage-users-assign-item {
+  align-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  cursor: pointer;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: auto 1fr auto;
+  padding: 0.85rem 0.95rem;
+}
+
+.manage-users-assign-item strong {
+  color: var(--text-main);
+}
+
+.manage-users-assign-item input {
+  margin-top: 0;
 }
 
 .manage-users-modal-content {

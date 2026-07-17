@@ -5,6 +5,7 @@ import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { hasAnyPermission } from '../utils/accessControl';
 import { 
   Search, IndianRupee, CreditCard, Receipt, 
   ArrowLeft, Plus, Check, Calendar, User, Printer 
@@ -89,8 +90,8 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
   const [dynamicInstallments, setDynamicInstallments] = useState<Array<{ due_date: string; amount: number }>>([]);
 
   // Auth user check
-  const userRoles = user?.roles || (user?.role ? [user.role] : []);
-  const isFinanceAdmin = userRoles.some(r => ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal', 'Accountant', 'accountant'].includes(r));
+  const userPermissions = user?.permissions || [];
+  const canAccessFinance = hasAnyPermission(userPermissions, ['finance.access']);
 
   useEffect(() => {
     fetchStudentRecords();
@@ -555,7 +556,7 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
               </div>
             </div>
             <div className="student-fees-row-12">
-              {isFinanceAdmin && (
+              {canAccessFinance && (
                 <>
                   <button className="btn btn-outline" onClick={handleGenerateLedger} disabled={ledgerLoading}>
                     Generate Ledger
@@ -586,7 +587,7 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
                       <th>Paid</th>
                       <th>Due</th>
                       <th>Status</th>
-                      {isFinanceAdmin && <th className="student-fees-th-18">Manage</th>}
+                      {canAccessFinance && <th className="student-fees-th-18">Manage</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -599,7 +600,7 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
                           <td>₹{item.paid_amount.toLocaleString('en-IN')}</td>
                           <td><span style={{ fontWeight: 'bold', color: outstanding > 0 ? 'var(--danger)' : '' }}>₹{outstanding.toLocaleString('en-IN')}</span></td>
                           <td>{getStatusBadge(item.status)}</td>
-                          {isFinanceAdmin && (
+                          {canAccessFinance && (
                             <td className="student-fees-td-19">
                               <div className="student-fees-row-20">
                                 <button className="btn btn-sm btn-outline student-fees-btn" onClick={() => handleOpenConcessions(item)}>

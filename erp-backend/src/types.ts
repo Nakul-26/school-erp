@@ -15,6 +15,7 @@ export interface JwtPayload extends Record<string, unknown> {
   institution_id: string;
   roles: string[];
   role?: string;
+  permissions?: string[];
   email: string;
   name: string;
   exp: number;

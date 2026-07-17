@@ -3,11 +3,12 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { 
   Plus, ChevronLeft, ChevronRight, 
-  Grid, List, Trash2, Archive, Check 
+  Grid, List, Trash2, Archive, Check, ShieldAlert 
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { hasAnyPermission } from '../utils/accessControl';
 
 // Modular Imports
 import { studentService } from './students/studentService';
@@ -94,6 +95,11 @@ export default function Students() {
 
   // Institution & Terminology States
   const { user } = useAuth();
+  const userPermissions = user?.permissions || [];
+  const canViewStudent = hasAnyPermission(userPermissions, ['student.view']);
+  const canCreateStudent = hasAnyPermission(userPermissions, ['student.create']);
+  const canEditStudent = hasAnyPermission(userPermissions, ['student.edit']);
+  const canDeleteStudent = hasAnyPermission(userPermissions, ['student.delete']);
   const [institutionType, setInstitutionType] = useState<string>('college');
   const [editTab, setEditTab] = useState<'personal' | 'academic' | 'guardian' | 'health'>('personal');
 
@@ -281,6 +287,10 @@ export default function Students() {
   };
 
   const handleDeleteStudent = async (id: string, name: string) => {
+    if (!canDeleteStudent) {
+      showToast('You do not have permission to delete students.', 'error');
+      return;
+    }
     if (!confirm(`Are you sure you want to permanently delete student "${name}"? This action is irreversible and will delete all their records.`)) {
       return;
     }
@@ -297,6 +307,10 @@ export default function Students() {
   };
 
   const handleArchiveStudent = async (id: string, name: string) => {
+    if (!canEditStudent) {
+      showToast('You do not have permission to archive students.', 'error');
+      return;
+    }
     if (!confirm(`Are you sure you want to archive student "${name}"? This will set their status to DROPPED.`)) {
       return;
     }
@@ -313,6 +327,10 @@ export default function Students() {
   };
 
   const handleReactivateStudent = async (id: string, name: string) => {
+    if (!canEditStudent) {
+      showToast('You do not have permission to reactivate students.', 'error');
+      return;
+    }
     try {
       setLoading(true);
       await studentService.updateStudent(id, { status: 'ACTIVE' });
@@ -351,6 +369,10 @@ export default function Students() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canCreateStudent) {
+      showToast('You do not have permission to create students.', 'error');
+      return;
+    }
     if (step < 5) {
       handleNextStep();
       return;
@@ -395,6 +417,10 @@ export default function Students() {
 
   // Edit functions
   const handleOpenEditModal = async (student: any) => {
+    if (!canEditStudent) {
+      showToast('You do not have permission to edit students.', 'error');
+      return;
+    }
     try {
       const freshStudent = await studentService.getStudentById(student.id);
       setEditForm({
@@ -472,6 +498,20 @@ export default function Students() {
   return (
     <Layout>
       {showAddModal ? (
+        !canCreateStudent ? (
+          <div className="card" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+            <div style={{ maxWidth: '560px', textAlign: 'center' }}>
+              <ShieldAlert size={56} style={{ color: 'var(--danger)', marginBottom: '1rem' }} />
+              <h2 style={{ marginBottom: '0.5rem' }}>Access Denied</h2>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                You do not have permission to create students. The admission form is hidden until the student.create permission is granted.
+              </p>
+              <button className="btn btn-primary" onClick={() => setShowAddModal(false)} style={{ marginTop: '1rem' }}>
+                Go Back
+              </button>
+            </div>
+          </div>
+        ) : (
         <AddStudentWizard
           step={step}
           setStep={setStep}
@@ -489,6 +529,7 @@ export default function Students() {
           setShowAddModal={setShowAddModal}
           resetAddForm={resetAddForm}
         />
+        )
       ) : (
         <>
           <div className="page-header students-page-header">
@@ -519,9 +560,15 @@ export default function Students() {
               <button className="btn btn-outline" onClick={() => setShowImportModal(true)}>
                 Import Excel
               </button>
-              <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                <Plus size={18} /> Admit Student
-              </button>
+              {canCreateStudent ? (
+                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                  <Plus size={18} /> Admit Student
+                </button>
+              ) : (
+                <button className="btn btn-primary" disabled title="You do not have permission to create students.">
+                  <Plus size={18} /> Admit Student
+                </button>
+              )}
             </div>
           </div>
 
@@ -601,6 +648,8 @@ export default function Students() {
                       handleReactivateStudent={handleReactivateStudent}
                       handleArchiveStudent={handleArchiveStudent}
                       handleDeleteStudent={handleDeleteStudent}
+                      canEditStudent={canEditStudent}
+                      canDeleteStudent={canDeleteStudent}
                     />
                   ))}
                 </div>
@@ -615,6 +664,8 @@ export default function Students() {
                   handleArchiveStudent={handleArchiveStudent}
                   handleDeleteStudent={handleDeleteStudent}
                   getProgramLabel={getProgramLabel}
+                  canEditStudent={canEditStudent}
+                  canDeleteStudent={canDeleteStudent}
                 />
               )}
 

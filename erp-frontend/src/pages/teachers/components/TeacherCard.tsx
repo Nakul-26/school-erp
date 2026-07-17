@@ -12,6 +12,8 @@ interface TeacherCardProps {
   handleDeleteTeacher: (id: string, name: string) => void;
   handleDeactivateTeacher: (id: string, name: string) => void;
   handleReactivateTeacher: (id: string, name: string) => void;
+  canEditTeacher: boolean;
+  canDeleteTeacher: boolean;
 }
 
 export const TeacherCard: React.FC<TeacherCardProps> = ({
@@ -24,6 +26,8 @@ export const TeacherCard: React.FC<TeacherCardProps> = ({
   handleDeleteTeacher,
   handleDeactivateTeacher,
   handleReactivateTeacher,
+  canEditTeacher,
+  canDeleteTeacher,
 }) => {
   const isSelected = selectedTeacherIds.includes(teacher.id);
 
@@ -157,37 +161,43 @@ export const TeacherCard: React.FC<TeacherCardProps> = ({
           </button>
           {activeMenuId === teacher.id && (
             <div className="dropdown-menu teachers-dropdown-menu">
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleEditClick(teacher); }} 
-                className="dropdown-item teachers-dropdown-item" 
-              >
-                <Edit2 size={14} /> Edit Profile
-              </button>
-              
-              <div className="teachers-dropdown-divider" />
-              
-              {teacher.status === 'INACTIVE' ? (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handleReactivateTeacher(teacher.id, getFullName()); }} 
-                  className="dropdown-item teachers-dropdown-item text-success" 
-                >
-                  <Check size={14} /> Reactivate Profile
-                </button>
-              ) : (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handleDeactivateTeacher(teacher.id, getFullName()); }} 
-                  className="dropdown-item teachers-dropdown-item text-warning" 
-                >
-                  <Archive size={14} /> Deactivate Profile
-                </button>
+              {canEditTeacher && (
+                <>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleEditClick(teacher); }} 
+                    className="dropdown-item teachers-dropdown-item" 
+                  >
+                    <Edit2 size={14} /> Edit Profile
+                  </button>
+                  
+                  <div className="teachers-dropdown-divider" />
+                  
+                  {teacher.status === 'INACTIVE' ? (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleReactivateTeacher(teacher.id, getFullName()); }} 
+                      className="dropdown-item teachers-dropdown-item text-success" 
+                    >
+                      <Check size={14} /> Reactivate Profile
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeactivateTeacher(teacher.id, getFullName()); }} 
+                      className="dropdown-item teachers-dropdown-item text-warning" 
+                    >
+                      <Archive size={14} /> Deactivate Profile
+                    </button>
+                  )}
+                </>
               )}
               
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleDeleteTeacher(teacher.id, getFullName()); }} 
-                className="dropdown-item teachers-dropdown-item text-danger"
-              >
-                <Trash2 size={14} /> Delete
-              </button>
+              {canDeleteTeacher && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleDeleteTeacher(teacher.id, getFullName()); }} 
+                  className="dropdown-item teachers-dropdown-item text-danger"
+                >
+                  <Trash2 size={14} /> Delete
+                </button>
+              )}
             </div>
           )}
         </div>

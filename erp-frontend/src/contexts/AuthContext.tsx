@@ -6,6 +6,7 @@ export interface User {
   email: string;
   roles: string[];
   role?: string;
+  permissions?: string[];
   institution_id: string;
   profile_photo?: string;
   username?: string;

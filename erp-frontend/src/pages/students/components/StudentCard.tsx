@@ -12,6 +12,8 @@ interface StudentCardProps {
   handleReactivateStudent: (id: string, name: string) => void;
   handleArchiveStudent: (id: string, name: string) => void;
   handleDeleteStudent: (id: string, name: string) => void;
+  canEditStudent: boolean;
+  canDeleteStudent: boolean;
 }
 
 export const StudentCard: React.FC<StudentCardProps> = ({
@@ -24,6 +26,8 @@ export const StudentCard: React.FC<StudentCardProps> = ({
   handleReactivateStudent,
   handleArchiveStudent,
   handleDeleteStudent,
+  canEditStudent,
+  canDeleteStudent,
 }) => {
   const isSelected = selectedStudentIds.includes(student.id);
 
@@ -137,12 +141,14 @@ export const StudentCard: React.FC<StudentCardProps> = ({
           </button>
           {activeMenuId === student.id && (
             <div className="dropdown-menu students-dropdown-menu">
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleOpenEditModal(student); }} 
-                className="dropdown-item students-dropdown-item" 
-              >
-                <Edit2 size={14} /> Edit Profile
-              </button>
+              {canEditStudent && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleOpenEditModal(student); }} 
+                  className="dropdown-item students-dropdown-item" 
+                >
+                  <Edit2 size={14} /> Edit Profile
+                </button>
+              )}
               <Link to={`/students/${student.id}?tab=attendance`} className="dropdown-item students-dropdown-item">
                 <Calendar size={14} /> Attendance
               </Link>
@@ -153,7 +159,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                 <IndianRupee size={14} /> Fee Ledger
               </Link>
               <div className="students-dropdown-divider" />
-              {student.status === 'DROPPED' ? (
+              {canEditStudent && (student.status === 'DROPPED' ? (
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleReactivateStudent(student.id, getFullName()); }} 
                   className="dropdown-item students-dropdown-item text-success" 
@@ -167,13 +173,15 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                 >
                   Deactivate / Archive
                 </button>
+              ))}
+              {canDeleteStudent && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleDeleteStudent(student.id, getFullName()); }} 
+                  className="dropdown-item students-dropdown-item text-danger"
+                >
+                  <Trash2 size={14} /> Delete Permanently
+                </button>
               )}
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleDeleteStudent(student.id, getFullName()); }} 
-                className="dropdown-item students-dropdown-item text-danger"
-              >
-                <Trash2 size={14} /> Delete Permanently
-              </button>
             </div>
           )}
         </div>

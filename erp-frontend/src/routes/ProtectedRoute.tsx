@@ -1,13 +1,15 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: string[];
+  allowedPermissions?: string[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles, allowedPermissions }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -19,13 +21,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const userRoles = (user.roles || (user.role ? [user.role] : [])).map((r: string) => r.toLowerCase().replace(/[\s_-]+/g, ''));
-  const hasRole = allowedRoles 
-    ? userRoles.some((r: string) => allowedRoles.map((ar: string) => ar.toLowerCase().replace(/[\s_-]+/g, '')).includes(r)) 
-    : true;
+  const userPermissions = user.permissions || [];
 
-  if (allowedRoles && !hasRole) {
-    return <Navigate to="/dashboard" replace />;
+  const hasRole = allowedRoles ? hasAnyRole(user.roles || (user.role ? [user.role] : []), allowedRoles) : false;
+  const hasPermission = allowedPermissions ? hasAnyPermission(userPermissions, allowedPermissions) : false;
+
+  const hasAccess = (!allowedRoles && !allowedPermissions) ? true : hasRole || hasPermission;
+
+  if (!hasAccess) {
+    return <Navigate to="/access-denied" state={{ reason: 'You do not have permission to access this page.' }} replace />;
   }
 
   return <>{children}</>;

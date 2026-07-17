@@ -7,9 +7,20 @@ export type NavKey =
   | '/payroll/salary-structures' | '/payroll/runs'
   | '/leave/my' | '/leave/approvals' | '/leave/types' | '/student-leaves/approvals'
   | '/reports' | '/data-tools' | '/approvals'
-  | '/setup' | '/settings' | '/users' | '/audit-logs' | '/institution-setup' | '/profile'
+  | '/setup' | '/settings' | '/users' | '/access-control' | '/audit-logs' | '/institution-setup' | '/profile'
   | '/visitors' | '/assets' | '/alumni'
   | '/academic-setup' | '/finance' | '/communication';
+
+export const PERMISSION_NAV: Record<string, string[]> = {
+  'student.view': ['/students'],
+  'teacher.view': ['/teachers'],
+  'student.create': ['/admissions'],
+  'academic.manage': ['/academic-setup', '/classes', '/subjects', '/academic-years', '/departments', '/admissions', '/approvals', '/setup'],
+  'finance.access': ['/finance', '/fee-structures', '/student-fees', '/payroll/runs', '/payroll/salary-structures'],
+  'user.manage': ['/access-control', '/users'],
+  'institution.manage': ['/settings', '/institution-setup'],
+  'audit.view': ['/audit-logs']
+};
 
 // We map normalized lowercase keys to ensure no case mismatch errors.
 export const ROLE_NAV: Record<string, string[]> = {
@@ -22,7 +33,7 @@ export const ROLE_NAV: Record<string, string[]> = {
     '/payroll/salary-structures', '/payroll/runs',
     '/leave/my', '/leave/approvals', '/leave/types', '/student-leaves/approvals',
     '/reports', '/data-tools', '/approvals',
-    '/setup', '/settings', '/users', '/audit-logs', '/institution-setup', '/profile',
+    '/setup', '/settings', '/users', '/access-control', '/audit-logs', '/institution-setup', '/profile',
     '/visitors', '/assets', '/alumni',
     '/academic-setup', '/finance', '/communication'
   ],
@@ -35,7 +46,7 @@ export const ROLE_NAV: Record<string, string[]> = {
     '/payroll/salary-structures', '/payroll/runs',
     '/leave/my', '/leave/approvals', '/leave/types', '/student-leaves/approvals',
     '/reports', '/data-tools', '/approvals',
-    '/setup', '/settings', '/users', '/audit-logs', '/institution-setup', '/profile',
+    '/setup', '/settings', '/users', '/access-control', '/audit-logs', '/institution-setup', '/profile',
     '/visitors', '/assets', '/alumni',
     '/academic-setup', '/finance', '/communication'
   ],
@@ -48,7 +59,7 @@ export const ROLE_NAV: Record<string, string[]> = {
     '/payroll/salary-structures', '/payroll/runs',
     '/leave/my', '/leave/approvals', '/leave/types', '/student-leaves/approvals',
     '/reports', '/data-tools', '/approvals',
-    '/setup', '/settings', '/users', '/audit-logs', '/institution-setup', '/profile',
+    '/setup', '/settings', '/users', '/access-control', '/audit-logs', '/institution-setup', '/profile',
     '/visitors', '/assets', '/alumni',
     '/academic-setup', '/finance', '/communication'
   ],
@@ -70,7 +81,7 @@ export const ROLE_NAV: Record<string, string[]> = {
     '/student-fees',
     '/leave/my', '/student-leaves/approvals',
     '/profile',
-    '/finance', '/communication'
+    '/communication'
   ],
   accountant: [
     '/dashboard', '/announcements', '/notifications', '/messaging',
@@ -99,7 +110,14 @@ export const ROLE_NAV: Record<string, string[]> = {
   ]
 };
 
-export const isAllowedNav = (userRoles: string[], path: string): boolean => {
+export const isAllowedNav = (userRoles: string[], userPermissions: string[] | undefined, path: string): boolean => {
+  if (userPermissions && userPermissions.length > 0) {
+    const allowedByPermission = Object.entries(PERMISSION_NAV).some(([permission, paths]) => {
+      return userPermissions.includes(permission) && paths.includes(path);
+    });
+    if (allowedByPermission) return true;
+  }
+
   if (!userRoles || userRoles.length === 0) return false;
   // If user has any role that is allowed access to the path, return true.
   return userRoles.some(role => {

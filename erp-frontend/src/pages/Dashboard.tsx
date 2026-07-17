@@ -18,10 +18,14 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { subscribeToPushNotifications } from '../services/pushNotification';
+import { hasAnyPermission } from '../utils/accessControl';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const userPermissions = user?.permissions || [];
+  const canCreateStudent = hasAnyPermission(userPermissions, ['student.create']);
+  const canCreateTeacher = hasAnyPermission(userPermissions, ['teacher.create']);
   
   // Dashboard data states
   const [stats, setStats] = useState<any>(null);
@@ -374,9 +378,16 @@ export default function Dashboard() {
       return (
         <div className="card quick-actions-panel" style={{ padding: '0.75rem 1.25rem', marginBottom: '1.5rem', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginRight: '0.5rem', letterSpacing: '0.05em' }}>Actions:</span>
-          <button className="btn btn-secondary" onClick={() => navigate('/users')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-            <Plus size={13} /> Add Student / Teacher
-          </button>
+          {canCreateStudent && (
+            <button className="btn btn-secondary" onClick={() => navigate('/students')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Plus size={13} /> Admit Student
+            </button>
+          )}
+          {canCreateTeacher && (
+            <button className="btn btn-secondary" onClick={() => navigate('/teachers')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Plus size={13} /> Add Teacher
+            </button>
+          )}
           <button className="btn btn-secondary" onClick={() => navigate('/academic-setup?tab=assignments')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
             <Settings size={13} /> Subject Allocations
           </button>

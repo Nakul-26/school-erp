@@ -741,45 +741,43 @@ export default function Profile() {
                     You can launch it directly from your home screen or application list.
                   </p>
                 </div>
-              ) : installState === 'installable' ? (
-                <div style={{ padding: '1.5rem', background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', textAlign: 'center' }}>
-                  <Smartphone size={48} style={{ color: 'var(--primary)' }} />
-                  <div>
-                    <h4 style={{ margin: '0 0 0.25rem 0', color: '#1e40af', fontWeight: '700' }}>App Installation Available</h4>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#1e3a8a', lineHeight: '1.4' }}>
-                      Get a full-screen, fast standalone app experience without the browser search bar.
-                    </p>
-                  </div>
-                  <button 
-                    className="btn btn-primary" 
-                    onClick={handleInstallClick} 
-                    disabled={installing}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}
-                  >
-                    <Download size={16} /> {installing ? 'Installing...' : 'Install ERP App'}
-                  </button>
-                </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div style={{ padding: '1rem', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '8px', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                    <Info size={20} style={{ color: '#d97706', flexShrink: 0, marginTop: '0.1rem' }} />
+                  <div style={{ padding: '1.25rem', background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', textAlign: 'center' }}>
+                    <Smartphone size={48} style={{ color: 'var(--primary)' }} />
                     <div>
-                      <span style={{ fontWeight: '700', color: '#92400e', fontSize: '0.85rem' }}>Manual Installation Required</span>
-                      <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: '#b45309', lineHeight: '1.4' }}>
-                        If you cancelled the popup previously or are using Safari/iOS, browsers prevent triggering the installation popup automatically. Follow the manual guide below to install.
+                      <h4 style={{ margin: '0 0 0.25rem 0', color: '#1e40af', fontWeight: '700' }}>Install the App</h4>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#1e3a8a', lineHeight: '1.4' }}>
+                        Click the button below to ask your browser to open the native install dialog.
                       </p>
                     </div>
+                    <button 
+                      className="btn btn-primary" 
+                      onClick={handleInstallClick} 
+                      disabled={installing}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}
+                    >
+                      <Download size={16} /> {installing ? 'Installing...' : 'Install ERP App'}
+                    </button>
                   </div>
 
                   <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
                     <div style={{ background: 'var(--bg-subtle)', padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)', fontWeight: '700', fontSize: '0.85rem' }}>
-                      🍏 Apple iOS (Safari - iPhone / iPad)
+                      <Info size={14} style={{ verticalAlign: 'text-bottom', marginRight: '0.35rem' }} />
+                      If the popup does not appear
                     </div>
                     <div style={{ padding: '1rem', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', lineHeight: '1.4' }}>
-                      <span>1. Open this website in the <strong>Safari</strong> browser.</span>
-                      <span>2. Tap the <strong>Share</strong> button (box with an upward arrow) in the bottom navigation bar.</span>
-                      <span>3. Scroll down the share menu and select <strong>"Add to Home Screen"</strong>.</span>
-                      <span>4. Tap <strong>"Add"</strong> in the top-right corner to complete the installation.</span>
+                      <span>If your browser does not support the install dialog, use the browser menu to add School ERP to your home screen or install it from the browser options.</span>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '1rem', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '8px', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                    <Info size={20} style={{ color: '#d97706', flexShrink: 0, marginTop: '0.1rem' }} />
+                    <div>
+                      <span style={{ fontWeight: '700', color: '#92400e', fontSize: '0.85rem' }}>Some browsers require a manual install step</span>
+                      <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: '#b45309', lineHeight: '1.4' }}>
+                        Safari on iPhone and iPad usually shows the install option in the Share menu instead of a popup.
+                      </p>
                     </div>
                   </div>
 

@@ -11,6 +11,8 @@ interface TeachersTableProps {
   handleDeleteTeacher: (id: string, name: string) => void;
   handleDeactivateTeacher: (id: string, name: string) => void;
   handleReactivateTeacher: (id: string, name: string) => void;
+  canEditTeacher: boolean;
+  canDeleteTeacher: boolean;
 }
 
 export const TeachersTable: React.FC<TeachersTableProps> = ({
@@ -22,6 +24,8 @@ export const TeachersTable: React.FC<TeachersTableProps> = ({
   handleDeleteTeacher,
   handleDeactivateTeacher,
   handleReactivateTeacher,
+  canEditTeacher,
+  canDeleteTeacher,
 }) => {
   const allSelected = selectedTeacherIds.length === teachers.length && teachers.length > 0;
 
@@ -92,10 +96,12 @@ export const TeachersTable: React.FC<TeachersTableProps> = ({
                   <Link to={`/teachers/${t.id}`} className="btn btn-sm btn-outline teachers-btn">
                     <Eye size={12} /> View
                   </Link>
-                  <button onClick={() => handleEditClick(t)} className="btn btn-sm btn-secondary teachers-btn">
-                    <Edit3 size={12} /> Edit
-                  </button>
-                  {t.status === 'INACTIVE' ? (
+                  {canEditTeacher && (
+                    <button onClick={() => handleEditClick(t)} className="btn btn-sm btn-secondary teachers-btn">
+                      <Edit3 size={12} /> Edit
+                    </button>
+                  )}
+                  {canEditTeacher && (t.status === 'INACTIVE' ? (
                     <button 
                       onClick={() => handleReactivateTeacher(t.id, getFullName(t))} 
                       className="btn btn-sm btn-outline teachers-btn text-success" 
@@ -111,10 +117,12 @@ export const TeachersTable: React.FC<TeachersTableProps> = ({
                     >
                       <Archive size={12} />
                     </button>
+                  ))}
+                  {canDeleteTeacher && (
+                    <button onClick={() => handleDeleteTeacher(t.id, getFullName(t))} className="btn btn-sm btn-danger teachers-btn" title="Delete Permanent">
+                      <Trash2 size={12} />
+                    </button>
                   )}
-                  <button onClick={() => handleDeleteTeacher(t.id, getFullName(t))} className="btn btn-sm btn-danger teachers-btn" title="Delete Permanent">
-                    <Trash2 size={12} />
-                  </button>
                 </div>
               </td>
             </tr>

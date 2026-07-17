@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import Login from './pages/Login';
+import AccessDenied from './pages/AccessDenied';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
@@ -94,6 +95,7 @@ function App() {
         <Routes>
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/access-denied" element={<AccessDenied />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           
@@ -101,10 +103,10 @@ function App() {
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           
           {/* ── People ──────────────────────────────────────────────────── */}
-          <Route path="/students" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Students /></ProtectedRoute>} />
-          <Route path="/students/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><StudentDetails /></ProtectedRoute>} />
-          <Route path="/teachers" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><Teachers /></ProtectedRoute>} />
-          <Route path="/teachers/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher']}><TeacherDetails /></ProtectedRoute>} />
+          <Route path="/students" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']} allowedPermissions={['student.view']}><Students /></ProtectedRoute>} />
+          <Route path="/students/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']} allowedPermissions={['student.view']}><StudentDetails /></ProtectedRoute>} />
+          <Route path="/teachers" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']} allowedPermissions={['teacher.view']}><Teachers /></ProtectedRoute>} />
+          <Route path="/teachers/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher']} allowedPermissions={['teacher.view']}><TeacherDetails /></ProtectedRoute>} />
 
           {/* ── Admissions (V2 merged) ───────────────────────────────────── */}
           <Route path="/admissions" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><Admissions /></ProtectedRoute>} />
@@ -113,10 +115,10 @@ function App() {
           <Route path="/admissions/applications" element={<Navigate to="/admissions?tab=applications" replace />} />
 
           {/* ── Academic Setup ── */}
-          <Route path="/academic-setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><AcademicSetup /></ProtectedRoute>} />
+          <Route path="/academic-setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']} allowedPermissions={['academic.manage']}><AcademicSetup /></ProtectedRoute>} />
 
           {/* ── Finance ── */}
-          <Route path="/finance" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant', 'Teacher', 'Student', 'Parent']}><Finance /></ProtectedRoute>} />
+          <Route path="/finance" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant', 'Student', 'Parent']} allowedPermissions={['finance.access']}><Finance /></ProtectedRoute>} />
 
           {/* ── Communication ── */}
           <Route path="/communication" element={<ProtectedRoute><Communication /></ProtectedRoute>} />
@@ -178,11 +180,12 @@ function App() {
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
           {/* ── Settings & Setup ─────────────────────────────────────────── */}
-          <Route path="/users" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><ManageUsers /></ProtectedRoute>} />
+          <Route path="/users" element={<Navigate to="/access-control" replace />} />
+          <Route path="/access-control" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><ManageUsers /></ProtectedRoute>} />
           <Route path="/institution-setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><InstitutionSetup /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><SystemSettings /></ProtectedRoute>} />
-          <Route path="/settings/grades" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><GradeSettings /></ProtectedRoute>} />
-          <Route path="/audit-logs" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><AuditLogs /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']} allowedPermissions={['institution.manage']}><SystemSettings /></ProtectedRoute>} />
+          <Route path="/settings/grades" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']} allowedPermissions={['institution.manage']}><GradeSettings /></ProtectedRoute>} />
+          <Route path="/audit-logs" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']} allowedPermissions={['audit.view']}><AuditLogs /></ProtectedRoute>} />
           <Route path="/setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><SchoolSetup /></ProtectedRoute>} />
 
           {/* ── Data Tools (V2 merged) ───────────────────────────────────── */}

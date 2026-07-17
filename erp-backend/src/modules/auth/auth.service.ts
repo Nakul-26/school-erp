@@ -20,11 +20,14 @@ export class AuthService {
       throw new Error('Server configuration error: JWT_SECRET is not configured');
     }
 
+    const permissions = user.permissions || (user.id ? await this.userRepo.getUserPermissions(user.id) : []);
+
     const payload: JwtPayload = {
       sub: user.id,
       institution_id: user.institution_id,
       roles: user.roles || [],
       role: user.role || '',
+      permissions,
       email: user.email,
       name: user.name,
       exp: Math.floor(Date.now() / 1000) + TOKEN_EXPIRY_SECONDS,
@@ -51,6 +54,7 @@ export class AuthService {
         email: user.email, 
         roles: user.roles || [], 
         role: user.role || '', 
+        permissions: await this.userRepo.getUserPermissions(user.id),
         institution_id: user.institution_id 
       },
     };
@@ -82,7 +86,7 @@ export class AuthService {
       roles: ['Principal']
     });
 
-    const user = { id: userId, name: data.admin_name, email: data.admin_email, roles: ['Principal'], role: 'Principal', institution_id: institutionId };
+    const user = { id: userId, name: data.admin_name, email: data.admin_email, roles: ['Principal'], role: 'Principal', permissions: await this.userRepo.getUserPermissions(userId), institution_id: institutionId };
     const token = await this.generateToken(user);
 
     await createAuditLog(this.env.DB, userId, 'REGISTER_INSTITUTION', 'auth', institutionId, `Registered institution ${data.institution_name} with admin ${data.admin_email}`);

@@ -21,7 +21,7 @@ interface TeacherSalary {
   effective_from: string;
 }
 
-export default function SalaryStructures() {
+export default function SalaryStructures({ isSubComponent = false }: { isSubComponent?: boolean }) {
   const [teachers, setTeachers] = useState<TeacherSalary[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
@@ -112,13 +112,15 @@ export default function SalaryStructures() {
     }
   };
 
-  return (
-    <Layout>
-      <PageGuidance
-        title="Staff Salary Structures"
-        description="Use this page to set the standard salary details for teachers and staff. Enter the basic salary, allowances, and deductions. These settings are used automatically when monthly salaries are calculated."
-        steps={["Configure basic pay, allowances (HRA, DA), and tax deductions for each employee.","Click Save inline to persist salary structural settings.","Calculations are used automatically during the monthly payroll runs."]}
-      />
+  const content = (
+    <>
+      {!isSubComponent && (
+        <PageGuidance
+          title="Staff Salary Structures"
+          description="Use this page to set the standard salary details for teachers and staff. Enter the basic salary, allowances, and deductions. These settings are used automatically when monthly salaries are calculated."
+          steps={["Configure basic pay, allowances (HRA, DA), and tax deductions for each employee.","Click Save inline to persist salary structural settings.","Calculations are used automatically during the monthly payroll runs."]}
+        />
+      )}
       <div className="page-header">
         <div>
           <h2>Staff Salary Structures</h2>
@@ -128,74 +130,75 @@ export default function SalaryStructures() {
         </div>
       </div>
 
-      
-
       <div className="card salary-structures-card">
         {loading ? <p>Loading staff salary details...</p> : (
-          <table className="table salary-structures-table">
-            <thead>
-              <tr>
-                <th>Teacher</th>
-                <th>Basic (₹)</th>
-                <th>DA (₹)</th>
-                <th>HRA (₹)</th>
-                <th>Allowances (₹)</th>
-                <th>PF Ded (₹)</th>
-                <th>TDS Ded (₹)</th>
-                <th>Other Ded (₹)</th>
-                <th>Effective</th>
-                <th className="salary-structures-th-4">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {teachers.map((t, idx) => (
-                <tr key={t.teacher_id}>
-                  <td>
-                    <strong>{t.first_name} {t.last_name}</strong>
-                    <div className="salary-structures-div-5">{t.employee_id} ({t.designation})</div>
-                  </td>
-                  <td>
-                    <input type="number" value={t.basic_salary} onChange={(e) => handleValueChange(idx, 'basic_salary', e.target.value)} className="salary-structures-input-6"  />
-                  </td>
-                  <td>
-                    <input type="number" value={t.da} onChange={(e) => handleValueChange(idx, 'da', e.target.value)} className="salary-structures-input-7"  />
-                  </td>
-                  <td>
-                    <input type="number" value={t.hra} onChange={(e) => handleValueChange(idx, 'hra', e.target.value)} className="salary-structures-input-8"  />
-                  </td>
-                  <td>
-                    <input type="number" value={t.other_allowances} onChange={(e) => handleValueChange(idx, 'other_allowances', e.target.value)} className="salary-structures-input-9"  />
-                  </td>
-                  <td>
-                    <input type="number" value={t.pf_deduction} onChange={(e) => handleValueChange(idx, 'pf_deduction', e.target.value)} className="salary-structures-input-10"  />
-                  </td>
-                  <td>
-                    <input type="number" value={t.tds_deduction} onChange={(e) => handleValueChange(idx, 'tds_deduction', e.target.value)} className="salary-structures-input-11"  />
-                  </td>
-                  <td>
-                    <input type="number" value={t.other_deductions} onChange={(e) => handleValueChange(idx, 'other_deductions', e.target.value)} className="salary-structures-input-12"  />
-                  </td>
-                  <td>
-                    <input type="date" value={t.effective_from} onChange={(e) => handleValueChange(idx, 'effective_from', e.target.value)} className="salary-structures-input-13"  />
-                  </td>
-                  <td className="salary-structures-td-14">
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => handleSave(t)}
-                      disabled={saving === t.teacher_id}
-                    >
-                      <Save size={12} /> {saving === t.teacher_id ? 'Saving' : 'Save'}
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline salary-structures-btn-delete"
-                      onClick={() => handleDeleteStructure(t)}
-                      disabled={saving === t.teacher_id}
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </td>
+          <div className="salary-structures-table-wrapper">
+            <table className="table salary-structures-table">
+              <thead>
+                <tr>
+                  <th className="salary-structures-th-teacher">Teacher</th>
+                  <th className="salary-structures-th-numeric">Basic (₹)</th>
+                  <th className="salary-structures-th-numeric">DA (₹)</th>
+                  <th className="salary-structures-th-numeric">HRA (₹)</th>
+                  <th className="salary-structures-th-numeric">Allowances (₹)</th>
+                  <th className="salary-structures-th-numeric">PF Ded (₹)</th>
+                  <th className="salary-structures-th-numeric">TDS Ded (₹)</th>
+                  <th className="salary-structures-th-numeric">Other Ded (₹)</th>
+                  <th className="salary-structures-th-date">Effective</th>
+                  <th className="salary-structures-th-actions">Action</th>
                 </tr>
-              ))}
+              </thead>
+              <tbody>
+                {teachers.map((t, idx) => (
+                  <tr key={t.teacher_id}>
+                    <td className="salary-structures-td-teacher">
+                      <strong>{t.first_name} {t.last_name}</strong>
+                      <div className="salary-structures-div-5">{t.employee_id} ({t.designation})</div>
+                    </td>
+                    <td className="salary-structures-td-numeric">
+                      <input type="number" value={t.basic_salary} onChange={(e) => handleValueChange(idx, 'basic_salary', e.target.value)} className="salary-structures-input-6"  />
+                    </td>
+                    <td className="salary-structures-td-numeric">
+                      <input type="number" value={t.da} onChange={(e) => handleValueChange(idx, 'da', e.target.value)} className="salary-structures-input-7"  />
+                    </td>
+                    <td className="salary-structures-td-numeric">
+                      <input type="number" value={t.hra} onChange={(e) => handleValueChange(idx, 'hra', e.target.value)} className="salary-structures-input-8"  />
+                    </td>
+                    <td className="salary-structures-td-numeric">
+                      <input type="number" value={t.other_allowances} onChange={(e) => handleValueChange(idx, 'other_allowances', e.target.value)} className="salary-structures-input-9"  />
+                    </td>
+                    <td className="salary-structures-td-numeric">
+                      <input type="number" value={t.pf_deduction} onChange={(e) => handleValueChange(idx, 'pf_deduction', e.target.value)} className="salary-structures-input-10"  />
+                    </td>
+                    <td className="salary-structures-td-numeric">
+                      <input type="number" value={t.tds_deduction} onChange={(e) => handleValueChange(idx, 'tds_deduction', e.target.value)} className="salary-structures-input-11"  />
+                    </td>
+                    <td className="salary-structures-td-numeric">
+                      <input type="number" value={t.other_deductions} onChange={(e) => handleValueChange(idx, 'other_deductions', e.target.value)} className="salary-structures-input-12"  />
+                    </td>
+                    <td className="salary-structures-td-date">
+                      <input type="date" value={t.effective_from} onChange={(e) => handleValueChange(idx, 'effective_from', e.target.value)} className="salary-structures-input-13"  />
+                    </td>
+                    <td className="salary-structures-td-actions">
+                      <div className="salary-structures-actions-wrapper">
+                        <button
+                          className="btn btn-sm btn-primary"
+                          onClick={() => handleSave(t)}
+                          disabled={saving === t.teacher_id}
+                        >
+                          <Save size={12} /> {saving === t.teacher_id ? 'Saving' : 'Save'}
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline salary-structures-btn-delete"
+                          onClick={() => handleDeleteStructure(t)}
+                          disabled={saving === t.teacher_id}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               {teachers.length === 0 && (
                 <tr>
                   <td colSpan={10} className="salary-structures-td-15">
@@ -206,8 +209,12 @@ export default function SalaryStructures() {
               )}
             </tbody>
           </table>
+          </div>
         )}
       </div>
-    </Layout>
+    </>
   );
+
+  if (isSubComponent) return content;
+  return <Layout>{content}</Layout>;
 }

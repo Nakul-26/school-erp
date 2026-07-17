@@ -937,7 +937,17 @@ export default function TeacherDetails() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '1.5rem', alignItems: 'start' }}>
               <div>
-                <h5 style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.75rem' }}>Monthly Salary Structure</h5>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <h5 style={{ fontWeight: '600', fontSize: '0.9rem', margin: 0 }}>Monthly Salary Structure</h5>
+                  {isAdmin && (
+                    <button 
+                      onClick={() => navigate('/finance?tab=salary-structures')}
+                      style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer', padding: 0 }}
+                    >
+                      Configure
+                    </button>
+                  )}
+                </div>
                 {salaryStructure ? (
                   <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                     <tbody>
@@ -964,8 +974,17 @@ export default function TeacherDetails() {
                     </tbody>
                   </table>
                 ) : (
-                  <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                    No active salary structure configured for this teacher yet.
+                  <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1.25rem 1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                    <p style={{ margin: '0 0 0.5rem 0' }}>No active salary structure configured for this teacher yet.</p>
+                    {isAdmin && (
+                      <button 
+                        className="btn btn-sm btn-outline" 
+                        onClick={() => navigate('/finance?tab=salary-structures')}
+                        style={{ marginTop: '0.25rem' }}
+                      >
+                        Set Up Salary
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

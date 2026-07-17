@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -34,7 +35,7 @@ import LeaveTypes from './pages/LeaveTypes';
 import MyLeaveApplications from './pages/MyLeaveApplications';
 import LeaveApprovals from './pages/LeaveApprovals';
 import GradeSettings from './pages/GradeSettings';
-import SalaryStructures from './pages/SalaryStructures';
+
 import PayrollRuns from './pages/PayrollRuns';
 import PayrollRunDetail from './pages/PayrollRunDetail';
 import StudentLeaveApprovals from './pages/StudentLeaveApprovals';
@@ -58,6 +59,34 @@ import Finance from './pages/Finance';
 import Communication from './pages/Communication';
 
 function App() {
+  useEffect(() => {
+    // 1. Prevent scroll wheel from changing numbers on type="number" inputs
+    const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'number') {
+        (target as HTMLInputElement).blur();
+      }
+    };
+
+    // 2. Select text on focus for type="number" inputs to prevent default value "0" appending issues
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'number') {
+        setTimeout(() => {
+          (target as HTMLInputElement).select();
+        }, 0);
+      }
+    };
+
+    document.addEventListener('wheel', handleWheel);
+    document.addEventListener('focusin', handleFocusIn);
+
+    return () => {
+      document.removeEventListener('wheel', handleWheel);
+      document.removeEventListener('focusin', handleFocusIn);
+    };
+  }, []);
+
   return (
     <AuthProvider>
       <ToastProvider>
@@ -129,7 +158,7 @@ function App() {
           <Route path="/fee-structures" element={<Navigate to="/finance?tab=structures" replace />} />
           <Route path="/student-fees" element={<Navigate to="/finance?tab=collection" replace />} />
           <Route path="/fee-reports" element={<Navigate to="/reports?tab=fees" replace />} />
-          <Route path="/payroll/salary-structures" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><SalaryStructures /></ProtectedRoute>} />
+          <Route path="/payroll/salary-structures" element={<Navigate to="/finance?tab=salary-structures" replace />} />
           <Route path="/payroll/runs" element={<Navigate to="/finance?tab=payroll" replace />} />
           <Route path="/payroll/runs/:id" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><PayrollRunDetail /></ProtectedRoute>} />
 

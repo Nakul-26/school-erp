@@ -4,7 +4,7 @@ import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { Landmark, Calendar, Play, Trash2 } from 'lucide-react';
+import { Landmark, Calendar, Play, Trash2, FileSpreadsheet } from 'lucide-react';
 
 interface PayrollRun {
   id: string;
@@ -21,6 +21,12 @@ export default function PayrollRuns({ isSubComponent = false }: { isSubComponent
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const navigate = useNavigate();
+
+  const userStr = localStorage.getItem('erp_user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
+  const normalizedRoles = roles.map(r => r.toLowerCase().replace(' ', '_').replace('role-', ''));
+  const canManageSalary = normalizedRoles.some(r => ['super_admin', 'admin', 'principal'].includes(r));
 
   const [form, setForm] = useState({
     month: new Date().getMonth() + 1,
@@ -87,13 +93,23 @@ export default function PayrollRuns({ isSubComponent = false }: { isSubComponent
           steps={["Select target Month and Year.","Click Calculate Monthly Payroll to compute earnings and apply LOP deductions.","Review calculation details and click Finalize & Release to publish payslips to teacher portals."]}
         />
       )}
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h2>Payroll Process Logs</h2>
           <p className="payroll-runs-text-1">
             Generate monthly salary ledgers and verify calculations with automated loss of pay (LOP) check.
           </p>
         </div>
+        {canManageSalary && (
+          <button 
+            type="button" 
+            className="btn btn-secondary" 
+            onClick={() => navigate('/payroll/salary-structures')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', padding: '0.5rem 0.75rem', height: 'auto' }}
+          >
+            <FileSpreadsheet size={14} /> Configure Salary Scales
+          </button>
+        )}
       </div>
 
       

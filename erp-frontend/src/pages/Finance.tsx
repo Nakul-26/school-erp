@@ -5,7 +5,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { 
   Landmark, IndianRupee, CreditCard, Receipt, FileText, Plus, Search, Calendar, Play, 
-  Activity, ArrowUpRight, ArrowDownRight, CheckCircle, AlertTriangle, TrendingUp, DollarSign, Wallet, Trash2
+  Activity, ArrowUpRight, ArrowDownRight, CheckCircle, AlertTriangle, TrendingUp, DollarSign, Wallet, Trash2,
+  FileSpreadsheet
 } from 'lucide-react';
 import { PageGuidance } from '../components/PageGuidance';
 
@@ -13,6 +14,7 @@ import { PageGuidance } from '../components/PageGuidance';
 import FeeStructures from './FeeStructures';
 import StudentFees from './StudentFees';
 import PayrollRuns from './PayrollRuns';
+import SalaryStructures from './SalaryStructures';
 
 interface Expense {
   id: string;
@@ -37,6 +39,12 @@ export default function Finance() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const activeTab = searchParams.get('tab') || 'overview';
+
+  const userStr = localStorage.getItem('erp_user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
+  const normalizedRoles = roles.map(r => r.toLowerCase().replace(' ', '_').replace('role-', ''));
+  const canManageSalary = normalizedRoles.some(r => ['super_admin', 'admin', 'principal'].includes(r));
 
   // Overall Financial States
   const [loading, setLoading] = useState(true);
@@ -226,6 +234,11 @@ export default function Finance() {
         <button className="btn btn-secondary" onClick={() => { handleTabChange('structures'); navigate('?tab=structures'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
           <Plus size={13} /> Add Fee Structure
         </button>
+        {canManageSalary && (
+          <button className="btn btn-secondary" onClick={() => { handleTabChange('salary-structures'); navigate('?tab=salary-structures'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            <FileSpreadsheet size={13} /> Manage Salary Structures
+          </button>
+        )}
       </div>
 
       {/* Workspace Navigation Tabs */}
@@ -235,6 +248,7 @@ export default function Finance() {
           { tab: 'structures', label: 'Fee Structures', icon: Landmark },
           { tab: 'collection', label: 'Fee Collection Register', icon: CreditCard },
           { tab: 'expenses', label: `Operating Expenses (${expenses.length})`, icon: Wallet },
+          ...(canManageSalary ? [{ tab: 'salary-structures', label: 'Salary Structures', icon: FileSpreadsheet }] : []),
           { tab: 'payroll', label: 'Payroll Processing', icon: FileText }
         ].map(t => {
           const Icon = t.icon;
@@ -443,6 +457,11 @@ export default function Finance() {
               </tbody>
             </table>
           </div>
+        )}
+
+        {/* 4.5. SALARY STRUCTURES TAB */}
+        {activeTab === 'salary-structures' && canManageSalary && (
+          <SalaryStructures isSubComponent={true} />
         )}
 
         {/* 5. PAYROLL PROCESSING TAB */}

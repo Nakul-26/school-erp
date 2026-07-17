@@ -78,41 +78,82 @@ export class NotificationService {
       await this.repo.createBulk(institutionId, notificationsInput);
     }
 
-    // Hook: Parent Absence Email Alerts (Phase B)
+    // Hook: Parent Absence Broadcast and Delivery (Central Notification Pipeline)
     if (env) {
       const absentGuardians = await this.db.prepare(`
         SELECT 
           s.first_name || ' ' || s.last_name as student_name,
+          g.name as guardian_name,
           COALESCE(g.email, u.email, '') as guardian_email,
-          g.name as guardian_name
+          COALESCE(g.phone, u.phone, '') as guardian_phone,
+          g.user_id as guardian_user_id,
+          t.user_id as teacher_user_id
         FROM student_attendance sa
         JOIN students s ON sa.student_id = s.id
         JOIN guardians g ON s.id = g.student_id
+        JOIN attendance_sessions asess ON sa.session_id = asess.id
         LEFT JOIN users u ON g.user_id = u.id
+        LEFT JOIN teachers t ON asess.teacher_id = t.id
         WHERE sa.session_id = ? AND sa.status = 'absent' AND sa.is_active = 1 AND g.is_active = 1 AND s.is_active = 1
-      `).bind(sessionId).all<{ student_name: string; guardian_email: string; guardian_name: string }>();
+      `).bind(sessionId).all<{ student_name: string; guardian_name: string; guardian_email: string; guardian_phone: string; guardian_user_id: string | null; teacher_user_id: string | null }>();
 
       if (absentGuardians.results && absentGuardians.results.length > 0) {
-        const { sendEmail } = await import('../../utils/email');
+        const { BroadcastsRepository } = await import('../broadcasts/broadcasts.repository');
+        const { BroadcastsService } = await import('../broadcasts/broadcasts.service');
+        const { NotificationService: CentralNotifService } = await import('../broadcasts/notification.service');
+        
+        const broadcastsRepo = new BroadcastsRepository(this.db);
+        const broadcastsService = new BroadcastsService(broadcastsRepo);
+        const centralNotif = new CentralNotifService();
+
         for (const row of absentGuardians.results) {
-          if (row.guardian_email && row.guardian_email.trim() !== '') {
+          const alertSubject = `Absence Alert: ${row.student_name} was Absent`;
+          const alertBody = `Dear ${row.guardian_name || 'Parent/Guardian'},\n\nThis is to inform you that your child, ${row.student_name}, was marked ABSENT during the attendance roll call for class session "${session.subject_name}" on ${session.date}.\n\nRegards,\nSchool Administration`;
+
+          if (row.guardian_user_id) {
             try {
-              await sendEmail(env, {
-                to: row.guardian_email,
-                subject: `Absence Alert: ${row.student_name} was Absent`,
-                html: `
-                  <div style="font-family: sans-serif; padding: 20px; line-height: 1.6; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #fff;">
-                    <h2 style="color: #ef4444; margin-top: 0; border-bottom: 2px solid #fee2e2; padding-bottom: 0.5rem;">Student Absence Alert</h2>
-                    <p>Dear ${row.guardian_name || 'Parent/Guardian'},</p>
-                    <p>This is to inform you that your child, <strong>${row.student_name}</strong>, was marked <strong>ABSENT</strong> during the attendance roll call for class session <strong>"${session.subject_name}"</strong> on <strong>${session.date}</strong>.</p>
-                    <p>If this absence was unplanned, please contact the class teacher or the school administration office to clarify the reason.</p>
-                    <hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 20px 0;" />
-                    <p style="font-size: 0.8rem; color: #64748b; text-align: center;">This is an automated notification from your School ERP Portal.</p>
-                  </div>
-                `
-              });
-            } catch (emailErr) {
-              console.error(`Failed to dispatch parent absence email to ${row.guardian_email}:`, emailErr);
+              await broadcastsService.createBroadcast(
+                institutionId,
+                row.teacher_user_id || 'system',
+                {
+                  subject: alertSubject,
+                  body: alertBody,
+                  category: 'attendance',
+                  priority: 'important',
+                  recipient_type: 'custom',
+                  recipient_filter: JSON.stringify({
+                    type: 'custom',
+                    userIds: [row.guardian_user_id]
+                  }),
+                  channel: 'erp,email,sms',
+                  status: 'sent',
+                  expires_at: null,
+                  attachments: []
+                },
+                env
+              );
+            } catch (err) {
+              console.error('Failed to auto-create absence broadcast:', err);
+            }
+          } else {
+            // Fallback for guardians without user account (send direct email/SMS)
+            try {
+              await centralNotif.deliver(
+                env,
+                ['email', 'sms'],
+                [{
+                  id: 'anonymous',
+                  name: row.guardian_name,
+                  email: row.guardian_email,
+                  phone: row.guardian_phone
+                }],
+                {
+                  subject: alertSubject,
+                  body: alertBody
+                }
+              );
+            } catch (err) {
+              console.error('Failed to send direct notification to guardian without user account:', err);
             }
           }
         }
@@ -120,7 +161,7 @@ export class NotificationService {
     }
   }
 
-  async notifyResultPublished(institutionId: string, examId: string): Promise<void> {
+  async notifyResultPublished(institutionId: string, examId: string, env?: any): Promise<void> {
     if (!this.db) return;
 
     // Get exam details
@@ -130,24 +171,94 @@ export class NotificationService {
 
     if (!exam) return;
 
-    // Find all student user IDs enrolled in that course + semester
+    // Find all student user IDs and guardian user IDs
     const { results } = await this.db.prepare(`
-      SELECT DISTINCT s.user_id 
+      SELECT DISTINCT 
+        s.user_id as student_user_id,
+        g.user_id as guardian_user_id,
+        g.name as guardian_name,
+        COALESCE(g.email, u.email, '') as guardian_email,
+        COALESCE(g.phone, u.phone, '') as guardian_phone
       FROM student_enrollments se
       JOIN students s ON se.student_id = s.id
-      WHERE se.course_id = ? AND se.semester = ? AND se.is_active = 1 AND s.is_active = 1 AND s.user_id IS NOT NULL
-    `).bind(exam.course_id, exam.semester).all<{ user_id: string }>();
+      LEFT JOIN guardians g ON s.id = g.student_id AND g.is_active = 1
+      LEFT JOIN users u ON g.user_id = u.id
+      WHERE se.course_id = ? AND se.semester = ? AND se.is_active = 1 AND s.is_active = 1
+    `).bind(exam.course_id, exam.semester).all<{ student_user_id: string | null; guardian_user_id: string | null; guardian_name: string | null; guardian_email: string | null; guardian_phone: string | null }>();
 
     if (!results || results.length === 0) return;
 
-    const notificationsInput: CreateNotificationInput[] = results.map(row => ({
-      user_id: row.user_id,
-      title: 'Result Published',
-      message: `Results for exam "${exam.name}" have been published. Check your marksheet.`,
-      type: 'result'
-    }));
+    const userIdsSet = new Set<string>();
+    const directContacts: { id: string; name: string; email: string; phone?: string | null }[] = [];
 
-    await this.repo.createBulk(institutionId, notificationsInput);
+    for (const row of results) {
+      if (row.student_user_id) {
+        userIdsSet.add(row.student_user_id);
+      }
+      if (row.guardian_user_id) {
+        userIdsSet.add(row.guardian_user_id);
+      } else if (row.guardian_email || row.guardian_phone) {
+        directContacts.push({
+          id: 'anonymous',
+          name: row.guardian_name || 'Parent/Guardian',
+          email: row.guardian_email || '',
+          phone: row.guardian_phone || ''
+        });
+      }
+    }
+
+    const targetUserIds = Array.from(userIdsSet);
+
+    if (targetUserIds.length > 0) {
+      const { BroadcastsRepository } = await import('../broadcasts/broadcasts.repository');
+      const { BroadcastsService } = await import('../broadcasts/broadcasts.service');
+      const broadcastsRepo = new BroadcastsRepository(this.db);
+      const broadcastsService = new BroadcastsService(broadcastsRepo);
+
+      try {
+        await broadcastsService.createBroadcast(
+          institutionId,
+          'system',
+          {
+            subject: `Exam Results Published: ${exam.name}`,
+            body: `Dear Student/Parent,\n\nThe results for the examination "${exam.name}" have been published. Please check your dashboard marksheet for details.\n\nRegards,\nExamination Cell`,
+            category: 'examination',
+            priority: 'normal',
+            recipient_type: 'custom',
+            recipient_filter: JSON.stringify({
+              type: 'custom',
+              userIds: targetUserIds
+            }),
+            channel: 'erp,email,sms',
+            status: 'sent',
+            expires_at: null,
+            attachments: []
+          },
+          env
+        );
+      } catch (err) {
+        console.error('Failed to auto-create result publication broadcast:', err);
+      }
+    }
+
+    // Direct deliver to guardians without user account
+    if (directContacts.length > 0 && env) {
+      try {
+        const { NotificationService: CentralNotifService } = await import('../broadcasts/notification.service');
+        const centralNotif = new CentralNotifService();
+        await centralNotif.deliver(
+          env,
+          ['email', 'sms'],
+          directContacts,
+          {
+            subject: `Exam Results Published: ${exam.name}`,
+            body: `Dear Parent/Guardian,\n\nThe results for the examination "${exam.name}" have been published. Please check details in your parent portal.\n\nRegards,\nExamination Cell`
+          }
+        );
+      } catch (err) {
+        console.error('Failed to send direct notifications for exam results:', err);
+      }
+    }
   }
 
   async notifyHomeworkPosted(

@@ -152,7 +152,7 @@ function App() {
           <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           <Route path="/transport" element={<ProtectedRoute><Transport /></ProtectedRoute>} />
           <Route path="/certificates" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Certificates /></ProtectedRoute>} />
-          <Route path="/messaging" element={<Navigate to="/communication?tab=messages" replace />} />
+          <Route path="/messaging" element={<Navigate to="/communication?tab=inbox" replace />} />
 
           {/* ── Finance ─────────────────────────────────────────────────── */}
           <Route path="/fee-structures" element={<Navigate to="/finance?tab=structures" replace />} />

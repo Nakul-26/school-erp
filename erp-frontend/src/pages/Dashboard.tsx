@@ -17,6 +17,7 @@ import {
   Plus, CheckSquare, Settings, Briefcase, FileText
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { subscribeToPushNotifications } from '../services/pushNotification';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPushBanner, setShowPushBanner] = useState(false);
   
   // Parent state for active child
   const [selectedChildIndex, setSelectedChildIndex] = useState(0);
@@ -152,6 +154,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData();
+    // Show push banner only if permission not yet decided and not previously dismissed
+    if ('Notification' in window && Notification.permission === 'default') {
+      const dismissed = sessionStorage.getItem('push_banner_dismissed');
+      if (!dismissed) {
+        setShowPushBanner(true);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -537,6 +546,50 @@ export default function Dashboard() {
           <LogOut size={18} /> Logout
         </button>
       </div>
+
+      {/* Push Notification Onboarding Banner */}
+      {showPushBanner && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          padding: '0.85rem 1.25rem',
+          marginBottom: '1rem',
+          background: 'linear-gradient(135deg, #1a237e 0%, #283593 100%)',
+          borderRadius: '10px',
+          color: '#fff',
+          boxShadow: '0 4px 12px rgba(26,35,126,0.3)',
+        }}>
+          <Bell size={22} style={{ flexShrink: 0, color: '#fbbf24' }} />
+          <div style={{ flexGrow: 1 }}>
+            <strong style={{ fontSize: '0.9rem' }}>Stay in the loop — Enable Notifications</strong>
+            <div style={{ fontSize: '0.75rem', opacity: 0.85, marginTop: '0.15rem' }}>
+              Get instant alerts for attendance, exam results, fee reminders and more.
+            </div>
+          </div>
+          <button
+            className="btn"
+            style={{ background: '#fbbf24', color: '#1a1a1a', fontWeight: '700', fontSize: '0.8rem', padding: '0.4rem 1rem', borderRadius: '6px', flexShrink: 0, height: 'auto' }}
+            onClick={async () => {
+              await subscribeToPushNotifications();
+              setShowPushBanner(false);
+              sessionStorage.setItem('push_banner_dismissed', '1');
+            }}
+          >
+            Enable
+          </button>
+          <button
+            style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: '1.1rem', padding: '0 0.25rem', lineHeight: 1 }}
+            title="Dismiss"
+            onClick={() => {
+              setShowPushBanner(false);
+              sessionStorage.setItem('push_banner_dismissed', '1');
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="dashboard-col-1">

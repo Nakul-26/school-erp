@@ -39,6 +39,8 @@ import homework from './modules/homework/homework.routes';
 import library from './modules/library/library.routes';
 import transport from './modules/transport/transport.routes';
 import messaging from './modules/messaging/messaging.routes';
+import broadcasts from './modules/broadcasts/broadcasts.routes';
+import messageTemplates from './modules/message-templates/message-templates.routes';
 import { visitors, assets, alumni } from './modules/remaining.routes';
 
 
@@ -373,6 +375,8 @@ app.route('/homework', homework);
 app.route('/library', library);
 app.route('/transport', transport);
 app.route('/messaging', messaging);
+app.route('/broadcasts', broadcasts);
+app.route('/message-templates', messageTemplates);
 app.route('/visitors', visitors);
 app.route('/assets', assets);
 app.route('/alumni', alumni);
@@ -387,4 +391,19 @@ app.get('*', async (c) => {
   return c.json({ error: 'Not found' }, 404);
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  async scheduled(event: any, env: any, ctx: any) {
+    console.log('[Scheduled Worker] Checking for scheduled broadcasts...');
+    try {
+      const { BroadcastsRepository } = await import('./modules/broadcasts/broadcasts.repository');
+      const { BroadcastsService } = await import('./modules/broadcasts/broadcasts.service');
+      const repo = new BroadcastsRepository(env.DB);
+      const service = new BroadcastsService(repo);
+      await service.processScheduledBroadcasts(env);
+      console.log('[Scheduled Worker] Scheduled broadcasts processing completed.');
+    } catch (err) {
+      console.error('[Scheduled Worker] Failed to process scheduled broadcasts:', err);
+    }
+  }
+};

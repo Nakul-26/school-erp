@@ -361,39 +361,75 @@ fees.post('/reminder', requireRole('admin', 'super_admin', 'Principal', 'HOD', '
 
   // 2. Fetch parent/guardians
   const guardians = await c.env.DB.prepare(`
-    SELECT name, COALESCE(email, '') as email
-    FROM guardians
-    WHERE student_id = ? AND is_active = 1
-  `).bind(student_id).all<{ name: string; email: string }>();
+    SELECT g.name, COALESCE(g.email, u.email, '') as email, COALESCE(g.phone, u.phone, '') as phone, g.user_id
+    FROM guardians g
+    LEFT JOIN users u ON g.user_id = u.id
+    WHERE g.student_id = ? AND g.is_active = 1
+  `).bind(student_id).all<{ name: string; email: string; phone: string; user_id: string | null }>();
 
   if (!guardians.results || guardians.results.length === 0) {
     return c.json({ error: 'No parent or guardian linked to this student.' }, 404);
   }
 
-  const { sendEmail } = await import('../../utils/email');
+  const { BroadcastsRepository } = await import('../broadcasts/broadcasts.repository');
+  const { BroadcastsService } = await import('../broadcasts/broadcasts.service');
+  const { NotificationService: CentralNotifService } = await import('../broadcasts/notification.service');
+
+  const broadcastsRepo = new BroadcastsRepository(c.env.DB);
+  const broadcastsService = new BroadcastsService(broadcastsRepo);
+  const centralNotif = new CentralNotifService();
   let sentCount = 0;
 
   for (const guardian of guardians.results) {
-    if (guardian.email) {
+    const alertSubject = `Fee Outstanding Reminder: ${studentName}`;
+    const alertBody = `Dear ${guardian.name || 'Parent/Guardian'},\n\nThis is a friendly reminder that an outstanding amount of ₹${pending_amount.toLocaleString('en-IN')} is due for the fee component linked to your child, ${studentName} (Admission ID: ${student.admission_number}).\n\nWe request you to kindly clear the outstanding balance at your earliest convenience.\n\nRegards,\nAccounts Office`;
+
+    if (guardian.user_id) {
       try {
-        await sendEmail(c.env, {
-          to: guardian.email,
-          subject: `Fee Outstanding Reminder: ${studentName}`,
-          html: `
-            <div style="font-family: sans-serif; padding: 20px; line-height: 1.6; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <h2 style="color: #ea580c; margin-top: 0;">Fee Due Outstanding Reminder</h2>
-              <p>Dear ${guardian.name || 'Parent/Guardian'},</p>
-              <p>This is a friendly reminder that an outstanding amount of <strong>₹${pending_amount.toLocaleString('en-IN')}</strong> is due for the fee component linked to your child, <strong>${studentName}</strong> (Admission ID: ${student.admission_number}).</p>
-              <p>We request you to kindly clear the outstanding balance at your earliest convenience. You can view details or check invoices directly on your Parent Portal.</p>
-              <p>If you have already made this payment, please disregard this notice or contact the school finance department to verify the transaction.</p>
-              <hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 20px 0;" />
-              <p style="font-size: 0.8rem; color: #64748b;">This is an automated notification from your School ERP Portal.</p>
-            </div>
-          `
-        });
+        await broadcastsService.createBroadcast(
+          user.institution_id,
+          user.sub,
+          {
+            subject: alertSubject,
+            body: alertBody,
+            category: 'fees',
+            priority: 'normal',
+            recipient_type: 'custom',
+            recipient_filter: JSON.stringify({
+              type: 'custom',
+              userIds: [guardian.user_id]
+            }),
+            channel: 'erp,email,sms',
+            status: 'sent',
+            expires_at: null,
+            attachments: []
+          },
+          c.env
+        );
         sentCount++;
       } catch (err) {
-        console.error(`Failed to send fee reminder to ${guardian.email}:`, err);
+        console.error(`Failed to send fee broadcast reminder to ${guardian.email}:`, err);
+      }
+    } else {
+      // Fallback for guardians without user account (send direct email/SMS)
+      try {
+        await centralNotif.deliver(
+          c.env,
+          ['email', 'sms'],
+          [{
+            id: 'anonymous',
+            name: guardian.name,
+            email: guardian.email,
+            phone: guardian.phone
+          }],
+          {
+            subject: alertSubject,
+            body: alertBody
+          }
+        );
+        sentCount++;
+      } catch (err) {
+        console.error(`Failed to send direct fee notification to guardian without user account:`, err);
       }
     }
   }

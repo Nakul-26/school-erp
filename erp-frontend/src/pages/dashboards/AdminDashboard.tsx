@@ -1,7 +1,8 @@
 import './AdminDashboard.css';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Clock, IndianRupee, Award, CheckCircle } from 'lucide-react';
+import { Users, Clock, IndianRupee, Award, CheckCircle, BellRing, BellOff } from 'lucide-react';
+import { api } from '../../services/api';
 
 interface AdminDashboardProps {
   stats: any;
@@ -12,6 +13,29 @@ const formatCurrency = (val: number) => {
 };
 
 export default function AdminDashboard({ stats }: AdminDashboardProps) {
+  const [adoption, setAdoption] = useState<{ students: any; parents: any } | null>(null);
+
+  useEffect(() => {
+    api.get('/notifications/push/adoption')
+      .then(data => setAdoption(data))
+      .catch(() => setAdoption(null));
+  }, []);
+
+  const renderAdoptionBar = (label: string, enabled: number, total: number) => {
+    const pct = total > 0 ? Math.round((enabled / total) * 100) : 0;
+    return (
+      <div style={{ marginBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.3rem' }}>
+          <span style={{ fontWeight: '600' }}>{label}</span>
+          <span style={{ color: 'var(--text-secondary)' }}>{enabled}/{total} ({pct}%)</span>
+        </div>
+        <div style={{ background: 'var(--bg-subtle)', borderRadius: '4px', height: '8px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${pct}%`, background: pct >= 60 ? '#22c55e' : pct >= 30 ? '#f59e0b' : '#ef4444', borderRadius: '4px', transition: 'width 0.5s ease' }} />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="portal-dashboard">
       {/* Setup Checklist */}
@@ -99,6 +123,35 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* Notification Adoption Panel */}
+      {adoption && (
+        <div className="card" style={{ padding: '1.25rem', marginTop: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <BellRing size={18} style={{ color: 'var(--primary)' }} />
+            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700' }}>Push Notification Adoption</h3>
+          </div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
+            How many students and parents have enabled push notifications on their devices.
+          </p>
+          {renderAdoptionBar('Students', adoption.students.enabled, adoption.students.total)}
+          {renderAdoptionBar('Parents / Guardians', adoption.parents.enabled, adoption.parents.total)}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <BellRing size={12} style={{ color: '#22c55e' }} /> Students enabled: {adoption.students.enabled}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <BellOff size={12} style={{ color: '#ef4444' }} /> Students disabled: {adoption.students.disabled}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <BellRing size={12} style={{ color: '#22c55e' }} /> Parents enabled: {adoption.parents.enabled}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <BellOff size={12} style={{ color: '#ef4444' }} /> Parents disabled: {adoption.parents.disabled}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

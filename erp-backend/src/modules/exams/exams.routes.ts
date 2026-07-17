@@ -251,7 +251,7 @@ exams.post('/subjects/:id/marks', async (c) => {
     try {
       const notifRepo = new NotificationRepository(c.env.DB);
       const notifService = new NotificationService(notifRepo, c.env.DB);
-      await notifService.notifyResultPublished(user.institution_id, examSub.exam_id);
+      await notifService.notifyResultPublished(user.institution_id, examSub.exam_id, c.env);
     } catch (err) {
       console.error('Failed to trigger result publication notification:', err);
     }

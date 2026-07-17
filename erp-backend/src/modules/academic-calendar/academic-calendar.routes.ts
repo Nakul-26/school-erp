@@ -39,6 +39,43 @@ calendar.post('/', async (c) => {
   try {
     const id = await service.createCalendarEntry(user.institution_id, input, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'CREATE_CALENDAR_ENTRY', 'academic-calendar', id, `Created calendar entry: ${input.name} (${input.type})`);
+    
+    // Auto-create broadcast notification for the event
+    try {
+      const { BroadcastsRepository } = await import('../broadcasts/broadcasts.repository');
+      const { BroadcastsService } = await import('../broadcasts/broadcasts.service');
+      const broadcastsRepo = new BroadcastsRepository(c.env.DB);
+      const broadcastsService = new BroadcastsService(broadcastsRepo);
+      
+      const alertSubject = `New Calendar Event: ${input.name}`;
+      const alertBody = `Dear Student/Parent/Staff,\n\nA new calendar entry has been scheduled:\n\nEvent Name: ${input.name}\nType: ${input.type.toUpperCase()}\nDate: ${input.start_date}${input.end_date !== input.start_date ? ` to ${input.end_date}` : ''}\nDescription: ${input.description || 'No description provided'}.\n\nRegards,\nSchool Administration`;
+
+      await broadcastsService.createBroadcast(
+        user.institution_id,
+        user.sub,
+        {
+          subject: alertSubject,
+          body: alertBody,
+          category: 'events',
+          priority: input.type === 'holiday' ? 'normal' : 'important',
+          recipient_type: 'all',
+          recipient_filter: JSON.stringify({
+            type: 'all',
+            includeStudents: true,
+            includeParents: true,
+            includeTeachers: true
+          }),
+          channel: 'erp,email',
+          status: 'sent',
+          expires_at: null,
+          attachments: []
+        },
+        c.env
+      );
+    } catch (err) {
+      console.error('Failed to auto-create calendar event broadcast:', err);
+    }
+
     return c.json({ id }, 201);
   } catch (e: any) {
     return c.json({ error: e.message }, 400);

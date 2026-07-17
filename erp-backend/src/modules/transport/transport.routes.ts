@@ -118,6 +118,118 @@ transport.delete('/routes/:id', authMiddleware, async (c) => {
   return c.json({ success: true });
 });
 
+// 4.5 Send alert notification to all users allocated to route
+transport.post('/routes/:id/notify', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id');
+  const { message, priority } = await c.req.json();
+
+  if (!message) {
+    return c.json({ error: 'Message is required' }, 400);
+  }
+
+  await ensureTransportTables(c.env.DB);
+
+  // 1. Fetch route info
+  const route = await c.env.DB.prepare(`
+    SELECT route_name FROM transport_routes WHERE id = ? AND institution_id = ? AND is_active = 1
+  `).bind(id, user.institution_id).first<{ route_name: string }>();
+
+  if (!route) {
+    return c.json({ error: 'Route not found' }, 404);
+  }
+
+  // 2. Find students allocated to this route + their parent users
+  const allocations = await c.env.DB.prepare(`
+    SELECT DISTINCT 
+      s.user_id as student_user_id,
+      g.user_id as guardian_user_id,
+      g.name as guardian_name,
+      COALESCE(g.email, u.email, '') as guardian_email,
+      COALESCE(g.phone, u.phone, '') as guardian_phone
+    FROM transport_allocations ta
+    JOIN students s ON ta.student_id = s.id
+    LEFT JOIN guardians g ON s.id = g.student_id AND g.is_active = 1
+    LEFT JOIN users u ON g.user_id = u.id
+    WHERE ta.route_id = ? AND ta.is_active = 1 AND ta.institution_id = ? AND s.is_active = 1
+  `).bind(id, user.institution_id).all<{ student_user_id: string | null; guardian_user_id: string | null; guardian_name: string | null; guardian_email: string | null; guardian_phone: string | null }>();
+
+  if (!allocations.results || allocations.results.length === 0) {
+    return c.json({ message: 'No students allocated to this route to notify.' });
+  }
+
+  const userIdsSet = new Set<string>();
+  const directContacts: { id: string; name: string; email: string; phone?: string | null }[] = [];
+
+  for (const row of allocations.results) {
+    if (row.student_user_id) userIdsSet.add(row.student_user_id);
+    if (row.guardian_user_id) userIdsSet.add(row.guardian_user_id);
+    else if (row.guardian_email || row.guardian_phone) {
+      directContacts.push({
+        id: 'anonymous',
+        name: row.guardian_name || 'Parent/Guardian',
+        email: row.guardian_email || '',
+        phone: row.guardian_phone || ''
+      });
+    }
+  }
+
+  const targetUserIds = Array.from(userIdsSet);
+  const alertSubject = `Transport Alert: ${route.route_name}`;
+
+  if (targetUserIds.length > 0) {
+    const { BroadcastsRepository } = await import('../broadcasts/broadcasts.repository');
+    const { BroadcastsService } = await import('../broadcasts/broadcasts.service');
+    const broadcastsRepo = new BroadcastsRepository(c.env.DB);
+    const broadcastsService = new BroadcastsService(broadcastsRepo);
+
+    try {
+      await broadcastsService.createBroadcast(
+        user.institution_id,
+        user.sub,
+        {
+          subject: alertSubject,
+          body: message,
+          category: 'transport',
+          priority: priority || 'important',
+          recipient_type: 'custom',
+          recipient_filter: JSON.stringify({
+            type: 'custom',
+            userIds: targetUserIds
+          }),
+          channel: 'erp,email,sms',
+          status: 'sent',
+          expires_at: null,
+          attachments: []
+        },
+        c.env
+      );
+    } catch (err) {
+      console.error('Failed to create route broadcast:', err);
+    }
+  }
+
+  if (directContacts.length > 0) {
+    try {
+      const { NotificationService: CentralNotifService } = await import('../broadcasts/notification.service');
+      const centralNotif = new CentralNotifService();
+      await centralNotif.deliver(
+        c.env,
+        ['email', 'sms'],
+        directContacts,
+        {
+          subject: alertSubject,
+          body: message
+        }
+      );
+    } catch (err) {
+      console.error('Failed to send direct notifications for transport route:', err);
+    }
+  }
+
+  return c.json({ success: true, notified_count: targetUserIds.length + directContacts.length });
+});
+
 // 5. Get all transport allocations
 transport.get('/allocations', authMiddleware, async (c) => {
   const user = c.get('user');

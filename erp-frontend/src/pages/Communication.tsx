@@ -3,9 +3,10 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Megaphone, Bell, MessageSquare, Plus, Mail, CheckCircle2, ShieldAlert, 
-  HelpCircle, Eye, Activity, Sparkles, Send, RefreshCw
+  HelpCircle, Eye, Activity, Sparkles, Send, RefreshCw, Radio, FileText
 } from 'lucide-react';
 import { PageGuidance } from '../components/PageGuidance';
 
@@ -13,11 +14,19 @@ import { PageGuidance } from '../components/PageGuidance';
 import Announcements from './Announcements';
 import Messaging from './Messaging';
 import Notifications from './Notifications';
+import Broadcasts from './Broadcasts';
+import MessageTemplates from './MessageTemplates';
 
 export default function Communication() {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const activeTab = searchParams.get('tab') || 'overview';
+
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const isStaff = userRoles.some(r => 
+    ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal', 'HOD', 'hod', 'Teacher', 'teacher', 'Accountant', 'accountant'].includes(r)
+  );
 
   // Overall Statistics States
   const [loading, setLoading] = useState(true);
@@ -25,6 +34,7 @@ export default function Communication() {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [activeChattersCount, setActiveChattersCount] = useState(0);
+  const [unreadBroadcastsCount, setUnreadBroadcastsCount] = useState(0);
 
   const handleTabChange = (tab: string) => {
     setSearchParams({ tab });
@@ -38,15 +48,17 @@ export default function Communication() {
     try {
       setLoading(true);
       // Fetch basic metrics
-      const [announcements, contacts, notifications] = await Promise.all([
+      const [announcements, contacts, notifications, unreadBC] = await Promise.all([
         api.get('/announcements').catch(() => []),
         api.get('/messaging/contacts').catch(() => []),
-        api.get('/notifications').catch(() => [])
+        api.get('/notifications').catch(() => []),
+        api.get('/broadcasts/unread-count').catch(() => ({ count: 0 }))
       ]);
 
       setAnnouncementsCount(announcements?.length || 0);
       setActiveChattersCount(contacts?.length || 0);
       setNotificationsCount(notifications?.length || 0);
+      setUnreadBroadcastsCount(unreadBC?.count || 0);
 
       // Sum up unread messages from contacts list
       const totalUnread = (contacts || []).reduce((acc: number, curr: any) => acc + (curr.unreadCount || 0), 0);
@@ -101,7 +113,7 @@ export default function Communication() {
               Broadcast Scope: All Roles (Teachers, Students, Parents)
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Circular Notices</div>
               <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)' }}>{announcementsCount}</div>
@@ -109,7 +121,13 @@ export default function Communication() {
             <div>
               <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Unread Chats</div>
               <div style={{ fontSize: '1.15rem', fontWeight: '800', color: unreadMessagesCount > 0 ? 'var(--warning)' : 'var(--success)' }}>
-                {unreadMessagesCount} Messages
+                {unreadMessagesCount} Chats
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Unread Broadcasts</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: unreadBroadcastsCount > 0 ? 'var(--warning)' : 'var(--success)' }}>
+                {unreadBroadcastsCount} Msg
               </div>
             </div>
             <div>
@@ -130,7 +148,7 @@ export default function Communication() {
         <button className="btn btn-secondary" onClick={() => { handleTabChange('announcements'); navigate('?tab=announcements'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
           <Megaphone size={13} /> Broadcast Notice
         </button>
-        <button className="btn btn-secondary" onClick={() => { handleTabChange('messages'); navigate('?tab=messages'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+        <button className="btn btn-secondary" onClick={() => { handleTabChange('inbox'); navigate('?tab=inbox'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
           <MessageSquare size={13} /> Send Direct Message
         </button>
         <button className="btn btn-secondary" onClick={handleClearNotifications} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -142,12 +160,14 @@ export default function Communication() {
       <div className="communication-tabs" style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem' }}>
         {[
           { tab: 'overview', label: 'Overview', icon: Activity },
-          { tab: 'announcements', label: 'Announcements Board', icon: Megaphone },
-          { tab: 'messages', label: `Direct Chats (${unreadMessagesCount})`, icon: MessageSquare },
+          { tab: 'inbox', label: `Inbox (${unreadMessagesCount})`, icon: MessageSquare },
+          { tab: 'broadcasts', label: `Broadcasts${unreadBroadcastsCount > 0 ? ` (${unreadBroadcastsCount})` : ''}`, icon: Radio },
+          ...(isStaff ? [{ tab: 'templates', label: 'Templates', icon: FileText }] : []),
+          { tab: 'announcements', label: 'Notice Board', icon: Megaphone },
           { tab: 'notifications', label: 'System Alerts', icon: Bell }
         ].map(t => {
           const Icon = t.icon;
-          const isActive = activeTab === t.tab;
+          const isActive = activeTab === t.tab || (t.tab === 'inbox' && activeTab === 'messages');
           return (
             <button
               key={t.tab}
@@ -182,7 +202,7 @@ export default function Communication() {
         {activeTab === 'overview' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
               {/* Card 1: Message volume */}
               <div className="card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -191,23 +211,35 @@ export default function Communication() {
                 <div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '600' }}>Active Chat Channels</span>
                   <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '0.15rem' }}>{activeChattersCount} Conversations</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{unreadMessagesCount} unread items</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{unreadMessagesCount} unread chats</div>
                 </div>
               </div>
 
-              {/* Card 2: System Broadcasts */}
+              {/* Card 2: Broadcast Messages */}
+              <div className="card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Radio size={22} />
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '600' }}>Broadcast Messages</span>
+                  <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '0.15rem' }}>One-To-Many Alerts</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{unreadBroadcastsCount} unread broadcasts</div>
+                </div>
+              </div>
+
+              {/* Card 3: Notice Board Notices */}
               <div className="card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--success-soft)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Megaphone size={22} />
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '600' }}>Broadcast Notices</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '600' }}>Notice Board Notices</span>
                   <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '0.15rem' }}>{announcementsCount} Circulars</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Target: Students, Teachers, Parents</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>General Bulletin Notices</div>
                 </div>
               </div>
 
-              {/* Card 3: Alert Logs */}
+              {/* Card 4: Alert Logs */}
               <div className="card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--warning-soft)', color: 'var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Bell size={22} />
@@ -215,7 +247,7 @@ export default function Communication() {
                 <div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '600' }}>System Alert Logs</span>
                   <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '0.15rem' }}>{notificationsCount} Alerts</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Track academic updates & approvals</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Track academic updates</div>
                 </div>
               </div>
             </div>
@@ -237,12 +269,22 @@ export default function Communication() {
           <Announcements isSubComponent={true} />
         )}
 
-        {/* 3. MESSAGES TAB */}
-        {activeTab === 'messages' && (
+        {/* 3. MESSAGES / INBOX TAB */}
+        {(activeTab === 'messages' || activeTab === 'inbox') && (
           <Messaging isSubComponent={true} />
         )}
 
-        {/* 4. NOTIFICATIONS TAB */}
+        {/* 4. BROADCASTS TAB */}
+        {activeTab === 'broadcasts' && (
+          <Broadcasts isSubComponent={true} />
+        )}
+
+        {/* 5. TEMPLATES TAB */}
+        {activeTab === 'templates' && isStaff && (
+          <MessageTemplates isSubComponent={true} />
+        )}
+
+        {/* 6. NOTIFICATIONS TAB */}
         {activeTab === 'notifications' && (
           <Notifications isSubComponent={true} />
         )}

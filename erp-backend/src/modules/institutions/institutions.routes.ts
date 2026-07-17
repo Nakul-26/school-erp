@@ -3,6 +3,8 @@ import { Env, JwtPayload } from '../../types';
 import { InstitutionRepository } from './institutions.repository';
 import { InstitutionService } from './institutions.service';
 import { UserRepository } from '../users/users.repository';
+import { MessageTemplatesRepository } from '../message-templates/message-templates.repository';
+import { MessageTemplatesService } from '../message-templates/message-templates.service';
 import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 
@@ -57,6 +59,16 @@ institutions.post('/', async (c) => {
   const repo = new InstitutionRepository(c.env.DB);
   const service = new InstitutionService(repo);
   const id = await service.createInstitution(input, user.sub);
+
+  // Seed default templates for the new institution
+  try {
+    const templatesRepo = new MessageTemplatesRepository(c.env.DB);
+    const templatesService = new MessageTemplatesService(templatesRepo);
+    await templatesService.seedDefaultTemplates(id, user.sub);
+  } catch (err) {
+    console.error('Failed to seed templates for new institution:', err);
+  }
+
   await createAuditLog(c.env.DB, user.sub, 'CREATE_INSTITUTION', 'institutions', id, `Super Admin created institution ${input.name}`);
   return c.json({ id }, 201);
 });

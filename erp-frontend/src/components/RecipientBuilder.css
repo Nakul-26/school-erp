@@ -1,0 +1,313 @@
+.recipient-builder-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05));
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rb-title-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rb-icon-purple {
+  color: var(--primary, #6366f1);
+}
+
+.rb-heading {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rb-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border, #f1f5f9);
+  padding-bottom: 0.75rem;
+}
+
+.rb-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  background: var(--bg-subtle, #f8fafc);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rb-type-btn:hover {
+  background: var(--primary-soft, #f0f2ff);
+  color: var(--primary, #6366f1);
+  border-color: var(--primary-border, #c7d2fe);
+}
+
+.rb-type-btn.active {
+  background: var(--primary, #6366f1);
+  color: #ffffff;
+  border-color: var(--primary, #6366f1);
+  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+}
+
+.rb-content-body {
+  min-height: 120px;
+  max-height: 250px;
+  display: flex;
+  flex-direction: column;
+}
+
+.rb-section-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary, #475569);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.rb-meta-text {
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  font-style: italic;
+  text-align: center;
+  margin: auto 0;
+}
+
+.rb-meta-text-all {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #64748b);
+  background: var(--primary-soft, #f0f2ff);
+  border: 1px solid var(--primary-border, #c7d2fe);
+  border-radius: var(--radius-sm, 4px);
+  padding: 0.75rem 1rem;
+  margin: auto 0;
+  text-align: center;
+}
+
+.rb-scroll-box {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 0.25rem;
+}
+
+/* Custom Scrollbar */
+.rb-scroll-box::-webkit-scrollbar,
+.rb-scroll-box-custom::-webkit-scrollbar {
+  width: 4px;
+}
+.rb-scroll-box::-webkit-scrollbar-track,
+.rb-scroll-box-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+.rb-scroll-box::-webkit-scrollbar-thumb,
+.rb-scroll-box-custom::-webkit-scrollbar-thumb {
+  background: var(--border, #cbd5e1);
+  border-radius: 2px;
+}
+
+.rb-checkbox-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.rb-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-main, #334155);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.rb-checkbox-item:hover {
+  background: var(--bg-subtle, #f8fafc);
+  border-color: var(--border-hover, #cbd5e1);
+}
+
+.rb-checkbox-item.selected {
+  background: var(--primary-soft, #f0f2ff);
+  border-color: var(--primary-border, #c7d2fe);
+  color: var(--primary, #6366f1);
+}
+
+.rb-checkbox-item input[type="checkbox"] {
+  accent-color: var(--primary, #6366f1);
+  cursor: pointer;
+}
+
+/* Custom Search List */
+.rb-custom-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.rb-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.rb-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.rb-search-input {
+  width: 100%;
+  padding: 0.4rem 0.75rem 0.4rem 2rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-sm, 4px);
+  outline: none;
+  background: var(--bg-input, #ffffff);
+  color: var(--text-main, #0f172a);
+}
+
+.rb-search-input:focus {
+  border-color: var(--primary, #6366f1);
+}
+
+.rb-scroll-box-custom {
+  overflow-y: auto;
+  max-height: 150px;
+  flex: 1;
+  padding-right: 0.25rem;
+}
+
+.rb-contacts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.rb-contact-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.rb-contact-card:hover {
+  background: var(--bg-subtle, #f8fafc);
+}
+
+.rb-contact-card.selected {
+  background: var(--primary-soft, #f0f2ff);
+  border-color: var(--primary-border, #c7d2fe);
+}
+
+.rb-contact-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-subtle, #e2e8f0);
+  color: var(--text-secondary, #475569);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rb-contact-card.selected .rb-contact-avatar {
+  background: var(--primary, #6366f1);
+  color: #ffffff;
+}
+
+.rb-contact-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.rb-contact-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-main, #1e293b);
+}
+
+.rb-contact-role {
+  font-size: 0.65rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.rb-check-icon {
+  color: var(--primary, #6366f1);
+}
+
+.rb-custom-summary {
+  font-size: 0.7rem;
+  color: var(--text-secondary, #64748b);
+  text-align: right;
+}
+
+/* Audience checkboxes section */
+.rb-audience-section {
+  border-top: 1px solid var(--border, #f1f5f9);
+  padding-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rb-audience-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary, #475569);
+}
+
+.rb-audience-checkboxes {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.rb-audience-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  user-select: none;
+}
+
+.rb-audience-checkbox input[type="checkbox"] {
+  accent-color: var(--primary, #6366f1);
+  cursor: pointer;
+}
+
+.rb-audience-checkbox.active span {
+  color: var(--primary, #6366f1);
+}

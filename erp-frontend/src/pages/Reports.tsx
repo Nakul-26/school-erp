@@ -244,16 +244,12 @@ export default function Reports() {
           </div>
           <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Student Pass Rate</div>
-              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--success)' }}>91%</div>
-            </div>
-            <div>
               <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Fees Collected</div>
               <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--primary)' }}>{feeCollectedRate}%</div>
             </div>
             <div>
               <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Teacher Workload Avg</div>
-              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)' }}>16 hrs</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)' }}>{teacherAvgClasses.toFixed(1)} lectures</div>
             </div>
             <div>
               <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Critical Dues Defaulters</div>
@@ -331,8 +327,10 @@ export default function Reports() {
                 </div>
                 <div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '600' }}>Attendance Rate</span>
-                  <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '0.15rem' }}>88.4% Average</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Institute general attendance</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '0.15rem' }}>
+                    {attClassAverage > 0 ? `${attClassAverage.toFixed(1)}%` : '0.0%'} Average
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Selected section average</div>
                 </div>
               </div>
 

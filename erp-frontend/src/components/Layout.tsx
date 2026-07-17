@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import { Menu, X, ArrowDownToLine, Bell, BellOff, X as CloseIcon } from 'lucide-react';
 import BottomNav from './BottomNav';
 import { subscribeToPushNotifications, unsubscribeFromPushNotifications } from '../services/pushNotification';
+import { capturePwaInstallPrompt, canInstallPwa, triggerPwaInstall, isPwaInstalled } from '../services/pwaInstall';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,13 +35,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return () => { document.body.style.overflow = ''; };
   }, [sidebarOpen]);
 
-  // Listen for PWA install prompt
+  // Listen for PWA install prompt — store globally so Profile page can use it later
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
+      capturePwaInstallPrompt(e);
       setDeferredPrompt(e);
-      // Check if already installed
-      if (!window.matchMedia('(display-mode: standalone)').matches) {
+      // Only show auto-banner if not already installed
+      if (!isPwaInstalled()) {
         setShowInstallBanner(true);
       }
     };
@@ -65,14 +66,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      console.log('User accepted the PWA install prompt');
+    const outcome = await triggerPwaInstall();
+    if (outcome !== 'unavailable') {
+      setDeferredPrompt(null);
+      setShowInstallBanner(false);
     }
-    setDeferredPrompt(null);
-    setShowInstallBanner(false);
   };
 
   const handleSubscribePush = async () => {

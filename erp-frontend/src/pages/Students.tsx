@@ -103,6 +103,8 @@ export default function Students() {
   const [institutionType, setInstitutionType] = useState<string>('college');
   const [editTab, setEditTab] = useState<'personal' | 'academic' | 'guardian' | 'health'>('personal');
 
+  const canUseBulkActions = canEditStudent || canDeleteStudent;
+  
   const getProgramLabel = () => institutionType === 'school' ? 'Class' : 'Program';
   const getProgramsLabel = () => institutionType === 'school' ? 'Classes' : 'Programs';
 
@@ -557,15 +559,16 @@ export default function Students() {
                 </button>
               </div>
 
-              <button className="btn btn-outline" onClick={() => setShowImportModal(true)}>
-                Import Excel
-              </button>
-              {canCreateStudent ? (
-                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                  <Plus size={18} /> Admit Student
+              {canCreateStudent && (
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setShowImportModal(true)}
+                >
+                  Import Excel
                 </button>
-              ) : (
-                <button className="btn btn-primary" disabled title="You do not have permission to create students.">
+              )}
+              {canCreateStudent && (
+                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
                   <Plus size={18} /> Admit Student
                 </button>
               )}
@@ -602,27 +605,32 @@ export default function Students() {
                     <strong className="students-strong-51">{selectedStudentIds.length}</strong> {selectedStudentIds.length === 1 ? 'student' : 'students'} selected
                   </span>
                   <div className="students-row-83">
-                    <button onClick={() => setShowBulkSectionModal(true)} className="btn btn-sm btn-outline">
-                      Assign Section
-                    </button>
-                    <button onClick={() => handleBulkAction('promote_semester')} className="btn btn-sm btn-outline">
-                      Promote Semester
-                    </button>
-                    {showDeactivateBtn && (
-                      <button onClick={() => handleBulkAction('deactivate')} className="btn btn-sm btn-outline text-warning">
-                        <Archive size={14} /> Deactivate
+                    {canUseBulkActions && (
+                      // Bulk actions panel
+                      <>
+                        <button onClick={() => setShowBulkSectionModal(true)} className="btn btn-sm btn-outline">
+                        Assign Section
                       </button>
-                    )}
-                    {showReactivateBtn && (
-                      <button onClick={() => handleBulkAction('reactivate')} className="btn btn-sm btn-outline text-success">
-                        <Check size={14} /> Reactivate
+                      <button onClick={() => handleBulkAction('promote_semester')} className="btn btn-sm btn-outline">
+                        Promote Semester
                       </button>
+                      {showDeactivateBtn && (
+                        <button onClick={() => handleBulkAction('deactivate')} className="btn btn-sm btn-outline text-warning">
+                          <Archive size={14} /> Deactivate
+                        </button>
+                      )}
+                      {showReactivateBtn && (
+                        <button onClick={() => handleBulkAction('reactivate')} className="btn btn-sm btn-outline text-success">
+                          <Check size={14} /> Reactivate
+                        </button>
+                      )}
+                      <button onClick={() => handleBulkAction('delete')} className="btn btn-sm btn-danger">
+                        <Trash2 size={14} /> Delete
+                      </button>
+                      
+                      <div className="students-div-82" />  
+                      </>
                     )}
-                    <button onClick={() => handleBulkAction('delete')} className="btn btn-sm btn-danger">
-                      <Trash2 size={14} /> Delete
-                    </button>
-                    
-                    <div className="students-div-82" />
                     
                     <button onClick={() => handleBulkExport('xlsx')} className="btn btn-sm btn-outline">
                       Export Excel

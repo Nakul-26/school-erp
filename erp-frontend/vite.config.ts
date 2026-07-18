@@ -19,10 +19,10 @@ export default defineConfig({
     assetsDir: 'static',
   },
   preview: {
-    port: 3000,
+    port: 3001,
   },
   server: {
-    port: 3000,
+    port: 3001,
     proxy: {
       // Core
       '/auth': proxyConfig(),

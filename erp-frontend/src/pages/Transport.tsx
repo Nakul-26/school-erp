@@ -20,6 +20,7 @@ interface RouteType {
   driver_name: string;
   driver_phone: string;
   monthly_charge: number;
+  stops?: string;
 }
 
 interface AllocationType {
@@ -67,7 +68,8 @@ export default function Transport() {
     vehicle_number: '',
     driver_name: '',
     driver_phone: '',
-    monthly_charge: 0
+    monthly_charge: 0,
+    stops: ''
   });
 
   const [assignForm, setAssignForm] = useState({
@@ -134,7 +136,8 @@ export default function Transport() {
         vehicle_number: '',
         driver_name: '',
         driver_phone: '',
-        monthly_charge: 0
+        monthly_charge: 0,
+        stops: ''
       });
       fetchData();
     } catch (err) {
@@ -239,7 +242,7 @@ export default function Transport() {
             <button className="btn btn-outline" onClick={() => setShowAssignModal(true)}>
               <UserCheck size={16} /> Assign Student
             </button>
-            <button className="btn btn-primary" onClick={() => { setEditingRoute(null); setRouteForm({ route_name: '', start_location: '', end_location: '', vehicle_number: '', driver_name: '', driver_phone: '', monthly_charge: 0 }); setShowRouteModal(true); }}>
+            <button className="btn btn-primary" onClick={() => { setEditingRoute(null); setRouteForm({ route_name: '', start_location: '', end_location: '', vehicle_number: '', driver_name: '', driver_phone: '', monthly_charge: 0, stops: '' }); setShowRouteModal(true); }}>
               <Plus size={16} /> Add Bus Route
             </button>
           </div>
@@ -317,6 +320,12 @@ export default function Transport() {
                             <span><strong>Phone:</strong> {route.driver_phone}</span>
                           </div>
                         )}
+                        {route.stops && (
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', marginTop: '0.2rem' }}>
+                            <Layers size={14} style={{ opacity: 0.6, marginTop: '2px', flexShrink: 0 }} />
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}><strong>Stops:</strong> {route.stops}</span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="transport-div-28">
@@ -340,7 +349,7 @@ export default function Transport() {
 
                     {canManage && (
                       <div className="transport-row-32">
-                        <button className="btn btn-outline transport-btn" onClick={() => { setEditingRoute(route); setRouteForm({ route_name: route.route_name, start_location: route.start_location, end_location: route.end_location, vehicle_number: route.vehicle_number, driver_name: route.driver_name, driver_phone: route.driver_phone, monthly_charge: route.monthly_charge }); setShowRouteModal(true); }}>
+                        <button className="btn btn-outline transport-btn" onClick={() => { setEditingRoute(route); setRouteForm({ route_name: route.route_name, start_location: route.start_location || '', end_location: route.end_location || '', vehicle_number: route.vehicle_number || '', driver_name: route.driver_name || '', driver_phone: route.driver_phone || '', monthly_charge: route.monthly_charge, stops: route.stops || '' }); setShowRouteModal(true); }}>
                           <Edit size={14} /> Edit
                         </button>
                         <button className="btn btn-outline transport-btn" onClick={() => handleDeleteRoute(route.id)}>
@@ -535,6 +544,19 @@ export default function Transport() {
                     onChange={(e) => setRouteForm({ ...routeForm, driver_phone: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label>Intermediate Stops</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Central Station, Mall Plaza, Sector 4 (comma-separated)"
+                  value={routeForm.stops}
+                  onChange={(e) => setRouteForm({ ...routeForm, stops: e.target.value })}
+                />
+                <span className="transport-span-stops-help" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                  List transit stops along this route in order of arrival, separated by commas.
+                </span>
               </div>
 
               <div className="modal-actions transport-modal-actions">

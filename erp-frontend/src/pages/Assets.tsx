@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, Trash2, Edit2, Package, IndianRupee, MapPin, Wrench } from 'lucide-react';
+import { Plus, Trash2, Edit2, Package, IndianRupee, MapPin, Wrench, Calendar } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 
@@ -253,13 +253,16 @@ export default function Assets() {
       {/* Add Asset Modal */}
       {showAddModal && (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal assets-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content assets-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Log New Property Asset</h3>
               <button className="modal-close" onClick={() => setShowAddModal(false)}>×</button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body assets-modal-body">
+                <div className="assets-modal-section-title">
+                  <Package size={15} /> Asset Identification
+                </div>
                 <div className="form-group assets-form-group">
                   <label>Asset Name *</label>
                   <input
@@ -294,6 +297,10 @@ export default function Assets() {
                     onChange={e => setForm(f => ({ ...f, quantity: Number(e.target.value) }))}
                   />
                 </div>
+
+                <div className="assets-modal-section-title">
+                  <MapPin size={15} /> Placement & Condition
+                </div>
                 <div className="form-group">
                   <label>Room / Location</label>
                   <input
@@ -310,7 +317,7 @@ export default function Assets() {
                     placeholder="e.g. Lab Asst. Suresh"
                   />
                 </div>
-                <div className="form-group">
+                <div className="form-group assets-form-group">
                   <label>Condition *</label>
                   <select
                     value={form.condition}
@@ -322,6 +329,10 @@ export default function Assets() {
                     <option>Disposed</option>
                   </select>
                 </div>
+
+                <div className="assets-modal-section-title">
+                  <IndianRupee size={15} /> Procurement & Valuation
+                </div>
                 <div className="form-group">
                   <label>Purchase Price (Value in ₹)</label>
                   <input
@@ -331,7 +342,7 @@ export default function Assets() {
                     placeholder="e.g. 15000"
                   />
                 </div>
-                <div className="form-group assets-form-group">
+                <div className="form-group">
                   <label>Purchase Date</label>
                   <input
                     type="date"
@@ -354,13 +365,16 @@ export default function Assets() {
       {/* Edit Asset Modal */}
       {editingAsset && (
         <div className="modal-overlay" onClick={() => setEditingAsset(null)}>
-          <div className="modal assets-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content assets-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Edit Asset Details</h3>
               <button className="modal-close" onClick={() => setEditingAsset(null)}>×</button>
             </div>
             <form onSubmit={handleUpdate}>
               <div className="modal-body assets-modal-body">
+                <div className="assets-modal-section-title">
+                  <Package size={15} /> Asset Identification
+                </div>
                 <div className="form-group assets-form-group">
                   <label>Asset Name *</label>
                   <input
@@ -394,6 +408,10 @@ export default function Assets() {
                     onChange={e => setForm(f => ({ ...f, quantity: Number(e.target.value) }))}
                   />
                 </div>
+
+                <div className="assets-modal-section-title">
+                  <MapPin size={15} /> Placement & Condition
+                </div>
                 <div className="form-group">
                   <label>Room / Location</label>
                   <input
@@ -408,7 +426,7 @@ export default function Assets() {
                     onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value }))}
                   />
                 </div>
-                <div className="form-group">
+                <div className="form-group assets-form-group">
                   <label>Condition *</label>
                   <select
                     value={form.condition}
@@ -420,6 +438,10 @@ export default function Assets() {
                     <option>Disposed</option>
                   </select>
                 </div>
+
+                <div className="assets-modal-section-title">
+                  <IndianRupee size={15} /> Procurement & Valuation
+                </div>
                 <div className="form-group">
                   <label>Purchase Price (Value in ₹)</label>
                   <input
@@ -428,7 +450,7 @@ export default function Assets() {
                     onChange={e => setForm(f => ({ ...f, value: e.target.value }))}
                   />
                 </div>
-                <div className="form-group assets-form-group">
+                <div className="form-group">
                   <label>Purchase Date</label>
                   <input
                     type="date"

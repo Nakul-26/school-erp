@@ -46,6 +46,7 @@ export default function ManageUsers() {
   const [userViewMode, setUserViewMode] = useState<'table' | 'cards'>('table');
   const [roleViewMode, setRoleViewMode] = useState<'cards' | 'rows'>('cards');
   const [showModal, setShowModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'roles' | 'users'>('roles');
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -320,201 +321,225 @@ export default function ManageUsers() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-          <div>
-            <h3 style={{ marginBottom: '0.25rem' }}>Role Permission Templates</h3>
-            <p className="manage-users-text-1" style={{ margin: 0 }}>
-              System roles can keep their names locked while permissions remain editable.
-            </p>
-          </div>
-          <div style={{ display: 'inline-flex', border: '1px solid var(--border-color)', borderRadius: '999px', overflow: 'hidden' }}>
-            <button className="btn btn-secondary" style={{ borderRadius: 0 }} onClick={() => setRoleViewMode('cards')}>Cards</button>
-            <button className="btn btn-secondary" style={{ borderRadius: 0 }} onClick={() => setRoleViewMode('rows')}>Rows</button>
-          </div>
-        </div>
-        <div className="card filters" style={{ marginBottom: '1rem' }}>
-          <div className="search-container">
-            <Search size={18} />
-            <input
-              type="text"
-              placeholder="Search roles by name or description..."
-              value={roleSearch}
-              onChange={(e) => setRoleSearch(e.target.value)}
-            />
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="manage-users-tabs" style={{ marginBottom: '1.5rem' }}>
+        <button 
+          type="button" 
+          className={`manage-users-tab ${activeTab === 'roles' ? 'is-active' : ''}`} 
+          onClick={() => setActiveTab('roles')}
+        >
+          Role & Permissions
+        </button>
+        <button 
+          type="button" 
+          className={`manage-users-tab ${activeTab === 'users' ? 'is-active' : ''}`} 
+          onClick={() => setActiveTab('users')}
+        >
+          User Management
+        </button>
+      </div>
 
-        {roleViewMode === 'cards' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-            {filteredRoles.map(role => (
-              <div key={role.id} style={{ border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1rem', background: 'var(--bg-card)', minHeight: 'fit-content', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'start' }}>
-                  <div>
-                    <div style={{ fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
-                      {role.name}
-                      {role.isSystem && <span className="badge badge-secondary"><Lock size={10} /> System</span>}
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{role.description || 'Role template'}</div>
-                  </div>
-                  <span className="badge badge-secondary">{role.permissionCount || 0} / {totalPermissionCount} permissions</span>
-                </div>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', paddingBottom: '0.9rem', borderBottom: '1px solid var(--border-color)' }}>
-                  {Array.from(new Set(role.permissions || [])).map(permission => (
-                    <span key={permission} className="badge badge-secondary manage-users-badge">{permission}</span>
-                  ))}
-                  {(role.permissions || []).length === 0 && <span className="manage-users-span-4">No permissions assigned</span>}
-                </div>
-
-                <div style={{ marginTop: 'auto', paddingTop: '0.9rem', borderTop: '1px solid var(--border-color)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div className="manage-users-row-5" style={{ flexWrap: 'wrap', justifyContent: 'flex-end', gap: '0.45rem' }}>
-                      <button className="btn btn-sm btn-outline" onClick={() => openEditRole(role)}>
-                        <Edit size={12} /> Edit Permissions
-                      </button>
-                      <button className="btn btn-sm btn-outline" onClick={() => openDuplicateRole(role)}>
-                        <Copy size={12} /> Duplicate Role
-                      </button>
-                      <button className="btn btn-sm btn-outline" onClick={() => openAssignUsers(role)}>
-                        <Users size={12} /> Assign Users
-                      </button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDeleteRole(role)} disabled={role.isSystem}>
-                        <Trash2 size={12} /> Delete Role
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+      {activeTab === 'roles' && (
+        <div className="card" style={{ marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+            <div>
+              <h3 style={{ marginBottom: '0.25rem' }}>Role Permission Templates</h3>
+              <p className="manage-users-text-1" style={{ margin: 0 }}>
+                System roles can keep their names locked while permissions remain editable.
+              </p>
+            </div>
+            <div style={{ display: 'inline-flex', border: '1px solid var(--border-color)', borderRadius: '999px', overflow: 'hidden' }}>
+              <button className="btn btn-secondary" style={{ borderRadius: 0 }} onClick={() => setRoleViewMode('cards')}>Cards</button>
+              <button className="btn btn-secondary" style={{ borderRadius: 0 }} onClick={() => setRoleViewMode('rows')}>Rows</button>
+            </div>
           </div>
-        ) : (
-          <div className="table-shell manage-users-table-shell">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Role</th>
-                  <th>Type</th>
-                  <th>Permissions</th>
-                  <th>Users</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRoles.map(role => (
-                  <tr key={role.id}>
-                    <td>
-                      <strong>{role.name}</strong>
-                      <div className="manage-users-span-4">{role.description || 'Role template'}</div>
-                    </td>
-                    <td>{role.isSystem ? <span className="badge badge-secondary"><Lock size={10} /> System</span> : <span className="badge badge-success">Custom</span>}</td>
-                    <td>{role.permissionCount || 0} / {totalPermissionCount}</td>
-                    <td>{role.userCount || 0}</td>
-                    <td>
-                      <div className="manage-users-row-5" style={{ flexWrap: 'wrap' }}>
-                        <button className="btn btn-sm btn-outline" onClick={() => openEditRole(role)}><Edit size={12} /> Edit</button>
-                        <button className="btn btn-sm btn-outline" onClick={() => openDuplicateRole(role)}><Copy size={12} /> Duplicate</button>
-                        <button className="btn btn-sm btn-outline" onClick={() => openAssignUsers(role)}><Users size={12} /> Assign</button>
-                        <button className="btn btn-sm btn-danger" onClick={() => handleDeleteRole(role)} disabled={role.isSystem}>Delete</button>
+          <div className="card filters" style={{ marginBottom: '1rem' }}>
+            <div className="search-container">
+              <Search size={18} />
+              <input
+                type="text"
+                placeholder="Search roles by name or description..."
+                value={roleSearch}
+                onChange={(e) => setRoleSearch(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {roleViewMode === 'cards' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+              {filteredRoles.map(role => (
+                <div key={role.id} style={{ border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1rem', background: 'var(--bg-card)', minHeight: 'fit-content', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'start' }}>
+                    <div>
+                      <div style={{ fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                        {role.name}
+                        {role.isSystem && <span className="badge badge-secondary"><Lock size={10} /> System</span>}
                       </div>
-                    </td>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{role.description || 'Role template'}</div>
+                    </div>
+                    <span className="badge badge-secondary">{role.permissionCount || 0} / {totalPermissionCount} permissions</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', paddingBottom: '0.9rem', borderBottom: '1px solid var(--border-color)' }}>
+                    {Array.from(new Set(role.permissions || [])).map(permission => (
+                      <span key={permission} className="badge badge-secondary manage-users-badge">{permission}</span>
+                    ))}
+                    {(role.permissions || []).length === 0 && <span className="manage-users-span-4">No permissions assigned</span>}
+                  </div>
+
+                  <div style={{ marginTop: 'auto', paddingTop: '0.9rem', borderTop: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <div className="manage-users-row-5" style={{ flexWrap: 'wrap', justifyContent: 'flex-end', gap: '0.45rem' }}>
+                        <button className="btn btn-sm btn-outline" onClick={() => openEditRole(role)}>
+                          <Edit size={12} /> Edit Permissions
+                        </button>
+                        <button className="btn btn-sm btn-outline" onClick={() => openDuplicateRole(role)}>
+                          <Copy size={12} /> Duplicate Role
+                        </button>
+                        <button className="btn btn-sm btn-outline" onClick={() => openAssignUsers(role)}>
+                          <Users size={12} /> Assign Users
+                        </button>
+                        <button className="btn btn-sm btn-danger" onClick={() => handleDeleteRole(role)} disabled={role.isSystem}>
+                          <Trash2 size={12} /> Delete Role
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="table-shell manage-users-table-shell">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Role</th>
+                    <th>Type</th>
+                    <th>Permissions</th>
+                    <th>Users</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-                {filteredRoles.length === 0 && <tr><td colSpan={5} className="manage-users-td-6">No roles found.</td></tr>}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredRoles.map(role => (
+                    <tr key={role.id}>
+                      <td>
+                        <strong>{role.name}</strong>
+                        <div className="manage-users-span-4">{role.description || 'Role template'}</div>
+                      </td>
+                      <td>{role.isSystem ? <span className="badge badge-secondary"><Lock size={10} /> System</span> : <span className="badge badge-success">Custom</span>}</td>
+                      <td>{role.permissionCount || 0} / {totalPermissionCount}</td>
+                      <td>{role.userCount || 0}</td>
+                      <td>
+                        <div className="manage-users-row-5" style={{ flexWrap: 'wrap' }}>
+                          <button className="btn btn-sm btn-outline" onClick={() => openEditRole(role)}><Edit size={12} /> Edit</button>
+                          <button className="btn btn-sm btn-outline" onClick={() => openDuplicateRole(role)}><Copy size={12} /> Duplicate</button>
+                          <button className="btn btn-sm btn-outline" onClick={() => openAssignUsers(role)}><Users size={12} /> Assign</button>
+                          <button className="btn btn-sm btn-danger" onClick={() => handleDeleteRole(role)} disabled={role.isSystem}>Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredRoles.length === 0 && <tr><td colSpan={5} className="manage-users-td-6">No roles found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'users' && (
+        <>
+          <div className="card filters">
+            <div className="search-container">
+              <Search size={18} />
+              <input
+                type="text"
+                placeholder="Search users by name, username, or email..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div style={{ display: 'inline-flex', border: '1px solid var(--border-color)', borderRadius: '999px', overflow: 'hidden', marginTop: '0.75rem' }}>
+              <button className="btn btn-secondary" style={{ borderRadius: 0 }} onClick={() => setUserViewMode('table')}>Table</button>
+              <button className="btn btn-secondary" style={{ borderRadius: 0 }} onClick={() => setUserViewMode('cards')}>Cards</button>
+            </div>
           </div>
-        )}
-      </div>
 
-      <div className="card filters">
-        <div className="search-container">
-          <Search size={18} />
-          <input
-            type="text"
-            placeholder="Search users by name, username, or email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <div style={{ display: 'inline-flex', border: '1px solid var(--border-color)', borderRadius: '999px', overflow: 'hidden', marginTop: '0.75rem' }}>
-          <button className="btn btn-secondary" style={{ borderRadius: 0 }} onClick={() => setUserViewMode('table')}>Table</button>
-          <button className="btn btn-secondary" style={{ borderRadius: 0 }} onClick={() => setUserViewMode('cards')}>Cards</button>
-        </div>
-      </div>
-
-      <div className="card manage-users-table-shell">
-        {loading ? <p>Loading users...</p> : userViewMode === 'table' ? (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Roles</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map(user => (
-                <tr key={user.id}>
-                  <td><strong>{user.name}</strong></td>
-                  <td>{user.username}</td>
-                  <td>{user.email}</td>
-                  <td>
-                    <div className="manage-users-row-2">
+          <div className="card manage-users-table-shell">
+            {loading ? <p>Loading users...</p> : userViewMode === 'table' ? (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Roles</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map(user => (
+                    <tr key={user.id}>
+                      <td><strong>{user.name}</strong></td>
+                      <td>{user.username}</td>
+                      <td>{user.email}</td>
+                      <td>
+                        <div className="manage-users-row-2">
+                          {user.roles && user.roles.length > 0 ? user.roles.map(r => (
+                            <span key={r} className="badge badge-secondary manage-users-badge"><Shield size={10} /> {r}</span>
+                          )) : (
+                            <span className="badge badge-warning manage-users-badge"><AlertTriangle size={10} /> Unassigned</span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`badge ${user.is_active ? 'badge-success' : 'badge-danger'}`}>
+                          {user.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="manage-users-row-5">
+                          <button className="btn btn-sm btn-outline" onClick={() => handleOpenEdit(user)}><Edit size={12} /> Edit</button>
+                          <button className="btn btn-sm btn-danger" onClick={() => handleDelete(user.id)} disabled={user.email === 'admin@oxford.edu'}><Trash2 size={12} /> Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredUsers.length === 0 && <tr><td colSpan={6} className="manage-users-td-6">No users found.</td></tr>}
+                </tbody>
+              </table>
+            ) : (
+              <div className="manage-users-user-cards">
+                {filteredUsers.map(user => (
+                  <div key={user.id} className="manage-users-user-card">
+                    <div className="manage-users-user-card-top">
+                      <div>
+                        <div className="manage-users-user-card-name">{user.name}</div>
+                        <div className="manage-users-user-card-meta">{user.username} · {user.email}</div>
+                      </div>
+                      <span className={`badge ${user.is_active ? 'badge-success' : 'badge-danger'}`}>{user.is_active ? 'Active' : 'Inactive'}</span>
+                    </div>
+                    <div className="manage-users-row-2" style={{ marginTop: '0.75rem' }}>
                       {user.roles && user.roles.length > 0 ? user.roles.map(r => (
                         <span key={r} className="badge badge-secondary manage-users-badge"><Shield size={10} /> {r}</span>
                       )) : (
                         <span className="badge badge-warning manage-users-badge"><AlertTriangle size={10} /> Unassigned</span>
                       )}
                     </div>
-                  </td>
-                  <td>
-                    <span className={`badge ${user.is_active ? 'badge-success' : 'badge-danger'}`}>
-                      {user.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="manage-users-row-5">
+                    <div className="manage-users-row-5" style={{ marginTop: '1rem', flexWrap: 'wrap' }}>
                       <button className="btn btn-sm btn-outline" onClick={() => handleOpenEdit(user)}><Edit size={12} /> Edit</button>
                       <button className="btn btn-sm btn-danger" onClick={() => handleDelete(user.id)} disabled={user.email === 'admin@oxford.edu'}><Trash2 size={12} /> Delete</button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-              {filteredUsers.length === 0 && <tr><td colSpan={6} className="manage-users-td-6">No users found.</td></tr>}
-            </tbody>
-          </table>
-        ) : (
-          <div className="manage-users-user-cards">
-            {filteredUsers.map(user => (
-              <div key={user.id} className="manage-users-user-card">
-                <div className="manage-users-user-card-top">
-                  <div>
-                    <div className="manage-users-user-card-name">{user.name}</div>
-                    <div className="manage-users-user-card-meta">{user.username} · {user.email}</div>
                   </div>
-                  <span className={`badge ${user.is_active ? 'badge-success' : 'badge-danger'}`}>{user.is_active ? 'Active' : 'Inactive'}</span>
-                </div>
-                <div className="manage-users-row-2" style={{ marginTop: '0.75rem' }}>
-                  {user.roles && user.roles.length > 0 ? user.roles.map(r => (
-                    <span key={r} className="badge badge-secondary manage-users-badge"><Shield size={10} /> {r}</span>
-                  )) : (
-                    <span className="badge badge-warning manage-users-badge"><AlertTriangle size={10} /> Unassigned</span>
-                  )}
-                </div>
-                <div className="manage-users-row-5" style={{ marginTop: '1rem', flexWrap: 'wrap' }}>
-                  <button className="btn btn-sm btn-outline" onClick={() => handleOpenEdit(user)}><Edit size={12} /> Edit</button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(user.id)} disabled={user.email === 'admin@oxford.edu'}><Trash2 size={12} /> Delete</button>
-                </div>
+                ))}
+                {filteredUsers.length === 0 && <div className="manage-users-empty-state">No users found.</div>}
               </div>
-            ))}
-            {filteredUsers.length === 0 && <div className="manage-users-empty-state">No users found.</div>}
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {showRoleModal && (
         <div className="modal-overlay">

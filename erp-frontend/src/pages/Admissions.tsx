@@ -5,7 +5,8 @@ import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { 
   Plus, ArrowRight, Eye, UserPlus, CheckCircle, XCircle, ClipboardList,
-  Search, Calendar, User, Phone, Mail, FileText, ChevronRight, HelpCircle
+  Search, Calendar, User, Phone, Mail, FileText, ChevronRight, HelpCircle,
+  BookOpen, Users, Award
 } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
@@ -422,16 +423,18 @@ export default function Admissions() {
   // Apply filters
   const applyFilters = (cards: BoardCard[]) => {
     return cards.filter(card => {
+      const term = (searchTerm || '').trim().toLowerCase();
       const matchesSearch = 
-        card.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.subtitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.phone.includes(searchTerm) ||
-        card.email.toLowerCase().includes(searchTerm.toLowerCase());
+        !term ||
+        (card.title || '').toLowerCase().includes(term) ||
+        (card.subtitle || '').toLowerCase().includes(term) ||
+        (card.phone || '').toLowerCase().includes(term) ||
+        (card.email || '').toLowerCase().includes(term);
 
       const matchesClass = 
         classFilter === 'All' || 
         card.classValue === classFilter || 
-        card.classLabel.toLowerCase().includes(classFilter.toLowerCase());
+        (card.classLabel || '').toLowerCase().includes(classFilter.toLowerCase());
 
       const matchesYear = 
         yearFilter === 'All' || 
@@ -465,6 +468,7 @@ export default function Admissions() {
 
   return (
     <Layout>
+      <div className="admissions-page-wrap">
       <PageGuidance
         title="Admissions & Inquiry Workspace"
         description="Track candidate progress from their initial inquiry and campus walk-in to formal application reviews and final student admissions. Drag and drop cards across columns to progress candidate stages."
@@ -766,86 +770,97 @@ export default function Admissions() {
       {/* Add Inquiry Modal */}
       {inqShowAdd && (
         <div className="modal-overlay" onClick={() => setInqShowAdd(false)}>
-          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content admissions-modal" style={{ maxWidth: '540px' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Add Admission Inquiry</h3>
               <button className="modal-close" onClick={() => setInqShowAdd(false)}>×</button>
             </div>
             <form onSubmit={handleInqAddSubmit}>
-              <div className="modal-body admissions-modal-body">
-                <div className="form-group admissions-form-group">
-                  <label>Student Name *</label>
-                  <input
-                    required value={inqAddForm.student_name}
-                    onChange={e => setInqAddForm(f => ({ ...f, student_name: e.target.value }))}
-                    placeholder="Full name of the student"
-                  />
+              <div className="modal-body">
+                <div className="admissions-modal-section-title">
+                  <User size={15} /> Student & Parent Details
                 </div>
-                <div className="form-group">
-                  <label>Parent / Guardian Name *</label>
-                  <input
-                    required value={inqAddForm.parent_name}
-                    onChange={e => setInqAddForm(f => ({ ...f, parent_name: e.target.value }))}
-                    placeholder="Parent's full name"
-                  />
+                <div className="admissions-modal-grid">
+                  <div className="form-group admissions-modal-full-width">
+                    <label>Student Name *</label>
+                    <input
+                      required value={inqAddForm.student_name}
+                      onChange={e => setInqAddForm(f => ({ ...f, student_name: e.target.value }))}
+                      placeholder="Full name of the student"
+                    />
+                  </div>
+                  <div className="form-group admissions-modal-full-width">
+                    <label>Parent / Guardian Name *</label>
+                    <input
+                      required value={inqAddForm.parent_name}
+                      onChange={e => setInqAddForm(f => ({ ...f, parent_name: e.target.value }))}
+                      placeholder="Parent's full name"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Parent Phone *</label>
+                    <input
+                      required value={inqAddForm.parent_phone}
+                      onChange={e => setInqAddForm(f => ({ ...f, parent_phone: e.target.value }))}
+                      placeholder="+91 98765 43210"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Parent Email</label>
+                    <input
+                      type="email" value={inqAddForm.parent_email}
+                      onChange={e => setInqAddForm(f => ({ ...f, parent_email: e.target.value }))}
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Date of Birth</label>
+                    <input
+                      type="date" value={inqAddForm.date_of_birth}
+                      onChange={e => setInqAddForm(f => ({ ...f, date_of_birth: e.target.value }))}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Applying For Class *</label>
+                    <input
+                      required value={inqAddForm.applying_for_class}
+                      onChange={e => setInqAddForm(f => ({ ...f, applying_for_class: e.target.value }))}
+                      placeholder="e.g. Grade 5, Class X"
+                    />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>Parent Phone *</label>
-                  <input
-                    required value={inqAddForm.parent_phone}
-                    onChange={e => setInqAddForm(f => ({ ...f, parent_phone: e.target.value }))}
-                    placeholder="+91 98765 43210"
-                  />
+
+                <div className="admissions-modal-section-title">
+                  <BookOpen size={15} /> Academic & Source Details
                 </div>
-                <div className="form-group">
-                  <label>Parent Email</label>
-                  <input
-                    type="email" value={inqAddForm.parent_email}
-                    onChange={e => setInqAddForm(f => ({ ...f, parent_email: e.target.value }))}
-                    placeholder="email@example.com"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Date of Birth</label>
-                  <input
-                    type="date" value={inqAddForm.date_of_birth}
-                    onChange={e => setInqAddForm(f => ({ ...f, date_of_birth: e.target.value }))}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Applying For Class *</label>
-                  <input
-                    required value={inqAddForm.applying_for_class}
-                    onChange={e => setInqAddForm(f => ({ ...f, applying_for_class: e.target.value }))}
-                    placeholder="e.g. Grade 5, Class X"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Source</label>
-                  <select value={inqAddForm.source} onChange={e => setInqAddForm(f => ({ ...f, source: e.target.value }))}>
-                    <option>Walk-in</option>
-                    <option>Phone</option>
-                    <option>Website</option>
-                    <option>Referral</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Academic Year</label>
-                  <select value={inqAddForm.academic_year_id} onChange={e => setInqAddForm(f => ({ ...f, academic_year_id: e.target.value }))}>
-                    <option value="">— Select Year —</option>
-                    {academicYears.map(y => (
-                      <option key={y.id} value={y.id}>{y.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group admissions-form-group">
-                  <label>Notes</label>
-                  <textarea
-                    value={inqAddForm.notes}
-                    onChange={e => setInqAddForm(f => ({ ...f, notes: e.target.value }))}
-                    rows={3}
-                    placeholder="Any additional notes or observations..."
-                  />
+                <div className="admissions-modal-grid">
+                  <div className="form-group">
+                    <label>Source</label>
+                    <select value={inqAddForm.source} onChange={e => setInqAddForm(f => ({ ...f, source: e.target.value }))}>
+                      <option>Walk-in</option>
+                      <option>Phone</option>
+                      <option>Website</option>
+                      <option>Referral</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Academic Year</label>
+                    <select value={inqAddForm.academic_year_id} onChange={e => setInqAddForm(f => ({ ...f, academic_year_id: e.target.value }))}>
+                      <option value="">— Select Year —</option>
+                      {academicYears.map(y => (
+                        <option key={y.id} value={y.id}>{y.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group admissions-modal-full-width">
+                    <label>Notes</label>
+                    <textarea
+                      value={inqAddForm.notes}
+                      onChange={e => setInqAddForm(f => ({ ...f, notes: e.target.value }))}
+                      rows={3}
+                      placeholder="Any additional notes or observations..."
+                    />
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">
@@ -862,7 +877,7 @@ export default function Admissions() {
       {/* Convert Confirmation Modal */}
       {convertInquiry && (
         <div className="modal-overlay" onClick={() => setConvertInquiry(null)}>
-          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Convert to Application</h3>
               <button className="modal-close" onClick={() => setConvertInquiry(null)}>×</button>
@@ -888,7 +903,7 @@ export default function Admissions() {
       {/* Inquiry Detail Modal */}
       {detailInquiry && (
         <div className="modal-overlay" onClick={() => setDetailInquiry(null)}>
-          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Inquiry Details</h3>
               <button className="modal-close" onClick={() => setDetailInquiry(null)}>×</button>
@@ -940,28 +955,30 @@ export default function Admissions() {
       {/* Add Application Modal */}
       {appShowAdd && (
         <div className="modal-overlay" onClick={() => setAppShowAdd(false)}>
-          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content admissions-modal" style={{ maxWidth: '680px' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">New Admission Application</h3>
               <button className="modal-close" onClick={() => setAppShowAdd(false)}>×</button>
             </div>
             <form onSubmit={handleAppAddSubmit}>
               <div className="modal-body">
-                <p className="admissions-text-85">Student Information</p>
-                <div className="admissions-grid-86">
-                  <div className="form-group admissions-form-group">
+                <div className="admissions-modal-section-title">
+                  <User size={15} /> Student Information
+                </div>
+                <div className="admissions-modal-grid">
+                  <div className="form-group">
                     <label>First Name *</label>
                     <input required value={appAddForm.student_first_name} onChange={e => setAppAddForm(f => ({ ...f, student_first_name: e.target.value }))} placeholder="First name" />
                   </div>
-                  <div className="form-group admissions-form-group">
+                  <div className="form-group">
                     <label>Last Name *</label>
                     <input required value={appAddForm.student_last_name} onChange={e => setAppAddForm(f => ({ ...f, student_last_name: e.target.value }))} placeholder="Last name" />
                   </div>
-                  <div className="form-group admissions-form-group">
+                  <div className="form-group">
                     <label>Date of Birth</label>
                     <input type="date" value={appAddForm.date_of_birth} onChange={e => setAppAddForm(f => ({ ...f, date_of_birth: e.target.value }))} />
                   </div>
-                  <div className="form-group admissions-form-group">
+                  <div className="form-group">
                     <label>Gender</label>
                     <select value={appAddForm.gender} onChange={e => setAppAddForm(f => ({ ...f, gender: e.target.value }))}>
                       <option value="">— Select —</option>
@@ -972,16 +989,18 @@ export default function Admissions() {
                   </div>
                 </div>
 
-                <p className="admissions-text-91">Academic Details</p>
-                <div className="admissions-grid-92">
-                  <div className="form-group admissions-form-group">
+                <div className="admissions-modal-section-title">
+                  <BookOpen size={15} /> Academic Details
+                </div>
+                <div className="admissions-modal-grid">
+                  <div className="form-group">
                     <label>Applying For (Course / Program)</label>
                     <select value={appAddForm.applying_for_course_id} onChange={e => setAppAddForm(f => ({ ...f, applying_for_course_id: e.target.value }))}>
                       <option value="">— Select Program —</option>
                       {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
-                  <div className="form-group admissions-form-group">
+                  <div className="form-group">
                     <label>Academic Year *</label>
                     <select required value={appAddForm.academic_year_id} onChange={e => setAppAddForm(f => ({ ...f, academic_year_id: e.target.value }))}>
                       <option value="">— Select Year —</option>
@@ -990,29 +1009,33 @@ export default function Admissions() {
                   </div>
                 </div>
 
-                <p className="admissions-text-95">Parent / Guardian</p>
-                <div className="admissions-grid-96">
-                  <div className="form-group admissions-form-group">
+                <div className="admissions-modal-section-title">
+                  <Users size={15} /> Parent / Guardian Details
+                </div>
+                <div className="admissions-modal-grid">
+                  <div className="form-group admissions-modal-full-width">
                     <label>Parent Name *</label>
                     <input required value={appAddForm.parent_name} onChange={e => setAppAddForm(f => ({ ...f, parent_name: e.target.value }))} placeholder="Full name" />
                   </div>
-                  <div className="form-group admissions-form-group">
+                  <div className="form-group">
                     <label>Parent Phone *</label>
                     <input required value={appAddForm.parent_phone} onChange={e => setAppAddForm(f => ({ ...f, parent_phone: e.target.value }))} placeholder="+91 98765 43210" />
                   </div>
-                  <div className="form-group admissions-form-group">
+                  <div className="form-group">
                     <label>Parent Email</label>
                     <input type="email" value={appAddForm.parent_email} onChange={e => setAppAddForm(f => ({ ...f, parent_email: e.target.value }))} placeholder="email@example.com" />
                   </div>
                 </div>
 
-                <p className="admissions-text-100">Previous Education</p>
-                <div className="admissions-grid-101">
-                  <div className="form-group admissions-form-group">
+                <div className="admissions-modal-section-title">
+                  <Award size={15} /> Previous Education
+                </div>
+                <div className="admissions-modal-grid">
+                  <div className="form-group admissions-modal-full-width">
                     <label>Previous School</label>
                     <input value={appAddForm.previous_school} onChange={e => setAppAddForm(f => ({ ...f, previous_school: e.target.value }))} placeholder="Name of last school attended" />
                   </div>
-                  <div className="form-group admissions-form-group">
+                  <div className="form-group admissions-modal-full-width">
                     <label>Previous Class</label>
                     <input value={appAddForm.previous_class} onChange={e => setAppAddForm(f => ({ ...f, previous_class: e.target.value }))} placeholder="e.g. Class 9" />
                   </div>
@@ -1032,7 +1055,7 @@ export default function Admissions() {
       {/* Application Detail Modal */}
       {detailApp && (
         <div className="modal-overlay" onClick={() => setDetailApp(null)}>
-          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <h3 className="modal-title">Application Details</h3>
@@ -1086,7 +1109,7 @@ export default function Admissions() {
       {/* Approve Confirmation Modal */}
       {approveApp && (
         <div className="modal-overlay" onClick={() => setApproveApp(null)}>
-          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Approve Application</h3>
               <button className="modal-close" onClick={() => setApproveApp(null)}>×</button>
@@ -1101,7 +1124,7 @@ export default function Admissions() {
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setApproveApp(null)}>Cancel</button>
-              <button className="btn admissions-btn" onClick={handleApprove} disabled={approveLoading}>
+              <button className="btn btn-primary" onClick={handleApprove} disabled={approveLoading}>
                 {approveLoading ? 'Approving...' : 'Approve & Create Student'}
               </button>
             </div>
@@ -1112,7 +1135,7 @@ export default function Admissions() {
       {/* Reject Modal */}
       {rejectApp && (
         <div className="modal-overlay" onClick={() => setRejectApp(null)}>
-          <div className="modal admissions-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content admissions-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Reject Application</h3>
               <button className="modal-close" onClick={() => setRejectApp(null)}>×</button>
@@ -1133,13 +1156,14 @@ export default function Admissions() {
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setRejectApp(null)}>Cancel</button>
-              <button className="btn admissions-btn" onClick={handleReject} disabled={rejectLoading}>
+              <button className="btn btn-danger" onClick={handleReject} disabled={rejectLoading}>
                 {rejectLoading ? 'Rejecting...' : 'Reject Application'}
               </button>
             </div>
           </div>
         </div>
       )}
+      </div>
     </Layout>
   );
 }

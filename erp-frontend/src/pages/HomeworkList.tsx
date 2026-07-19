@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { BookOpen, Plus, Trash2, Calendar, Clipboard } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Calendar, Clipboard, FileText } from 'lucide-react';
 
 interface Homework {
   id: string;
@@ -224,16 +224,20 @@ export default function HomeworkList() {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal homework-list-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content homework-list-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Create Homework Assignment</h3>
-              <button onClick={() => setShowModal(false)}>✕</button>
+              <h3 className="modal-title">Create Homework Assignment</h3>
+              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                <div className="homework-list-grid-19">
+                
+                <div className="homework-list-modal-section-title">
+                  <BookOpen size={15} /> Academic Target
+                </div>
+                <div className="homework-list-modal-grid">
                   <div className="form-group">
-                    <label>Select Class / Section</label>
+                    <label>Select Class / Section *</label>
                     <select
                       value={form.section_id}
                       onChange={(e) => setForm({ ...form, section_id: e.target.value })}
@@ -245,7 +249,7 @@ export default function HomeworkList() {
                   </div>
 
                   <div className="form-group">
-                    <label>Select Subject</label>
+                    <label>Select Subject *</label>
                     <select
                       value={form.subject_id}
                       onChange={(e) => setForm({ ...form, subject_id: e.target.value })}
@@ -255,45 +259,56 @@ export default function HomeworkList() {
                       {subjects.map(s => <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>)}
                     </select>
                   </div>
+
+                  <div className="form-group homework-list-modal-full-width">
+                    <label>Assigning Teacher *</label>
+                    <select
+                      value={form.teacher_id}
+                      onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
+                      required
+                    >
+                      <option value="">-- Choose Staff --</option>
+                      {teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name} ({t.employee_id})</option>)}
+                    </select>
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Assigning Teacher</label>
-                  <select
-                    value={form.teacher_id}
-                    onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
-                    required
-                  >
-                    <option value="">-- Choose Staff --</option>
-                    {teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name} ({t.employee_id})</option>)}
-                  </select>
+                <div className="homework-list-modal-section-title">
+                  <FileText size={15} /> Assignment Details
+                </div>
+                <div className="homework-list-modal-grid">
+                  <div className="form-group homework-list-modal-full-width">
+                    <label>Homework Title *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Exercise 4.2 Questions 1-5"
+                      value={form.title}
+                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group homework-list-modal-full-width">
+                    <label>Detailed Instructions / Notes</label>
+                    <textarea rows={4} placeholder="Provide details about the homework task, references, textbooks, page numbers..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="homework-list-textarea-20"  />
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Homework Title</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Exercise 4.2 Questions 1-5"
-                    value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    required
-                  />
+                <div className="homework-list-modal-section-title">
+                  <Calendar size={15} /> Schedule
+                </div>
+                <div className="homework-list-modal-grid">
+                  <div className="form-group homework-list-modal-full-width">
+                    <label>Due Date *</label>
+                    <input
+                      type="date"
+                      value={form.due_date}
+                      onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                      required
+                    />
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Detailed Instructions / Notes</label>
-                  <textarea rows={4} placeholder="Provide details about the homework task, references, textbooks, page numbers..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="homework-list-textarea-20"  />
-                </div>
-
-                <div className="form-group">
-                  <label>Due Date</label>
-                  <input
-                    type="date"
-                    value={form.due_date}
-                    onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-                    required
-                  />
-                </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>

@@ -41,7 +41,12 @@
 }
 
 .assets-modal {
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-xl) !important;
+  border-radius: var(--radius-lg) !important;
+  background: var(--bg-card) !important;
   max-width: 520px;
+  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .assets-modal-body {
@@ -52,5 +57,24 @@
 
 .assets-form-group {
   grid-column: 1 / -1;
+}
+
+.assets-modal-section-title {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--brand) !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  margin: 1.25rem 0 0.5rem 0 !important;
+  padding-bottom: 0.35rem !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.assets-modal-section-title:first-of-type {
+  margin-top: 0 !important;
 }
 

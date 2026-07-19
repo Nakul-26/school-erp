@@ -769,8 +769,8 @@ export default function Classes() {
                         </td>
                         <td className="classes-td-67">
                           <div className="classes-row-68">
-                            <button className="btn btn-sm btn-outline classes-btn" onClick={() => handleOpenSectionDetails(cls)} title="View Section Dossier">
-                              <Info size={12} /> Dossier
+                            <button className="btn btn-sm btn-outline classes-btn" onClick={() => handleOpenSectionDetails(cls)} title="View Section Overview">
+                              <Info size={12} /> Overview
                             </button>
                             <button className="btn btn-sm btn-secondary classes-btn" onClick={() => navigate(`/classes/${cls.id}`)} title="Open Section Workspace">
                               <Eye size={14} />
@@ -1065,18 +1065,18 @@ export default function Classes() {
         </div>
       )}
 
-      {/* Modal B: Section Details Dossier Modal */}
+      {/* Modal B: Section Details Overview Modal */}
       {showSectionDetailModal && selectedSection && (
         <div className="modal-overlay classes-modal-overlay">
           <div className="modal-content classes-modal-content size-md">
             <div className="classes-row-150">
               <div>
-                <h3 className="classes-title-151">Section Dossier: {selectedSection.name}</h3>
+                <h3 className="classes-title-151">Section Overview: {selectedSection.name}</h3>
                 <span className="classes-span-152">
                   {selectedSection.course_name} • {selectedSection.academic_year_name}
                 </span>
               </div>
-              <button className="btn btn-secondary" onClick={() => setShowSectionDetailModal(false)}>Close Dossier</button>
+              <button className="btn btn-secondary" onClick={() => setShowSectionDetailModal(false)}>Close Overview</button>
             </div>
 
             {/* Tab Links */}
@@ -1112,7 +1112,7 @@ export default function Classes() {
             {sectionDetailLoading ? (
               <div className="classes-col-154">
                 <RefreshCw className="spinner classes-spinner" size={24}  />
-                <span className="classes-span-156">Retrieving dossier logs...</span>
+                <span className="classes-span-156">Retrieving overview logs...</span>
               </div>
             ) : (
               <div>

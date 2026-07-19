@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, Check, Clock, User, Phone, ArrowLeft, LogOut } from 'lucide-react';
+import { Plus, Check, Clock, User, Phone, ArrowLeft, LogOut, ClipboardList } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 
@@ -219,13 +219,17 @@ export default function Visitors() {
       {/* Add Visitor Modal */}
       {showAddModal && (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal visitors-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content visitors-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">New Visitor Registration</h3>
               <button className="modal-close" onClick={() => setShowAddModal(false)}>×</button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body visitors-modal-body">
+                
+                <div className="visitors-modal-section-title">
+                  <User size={15} /> Personal Details
+                </div>
                 <div className="form-group">
                   <label>Visitor Full Name *</label>
                   <input
@@ -243,6 +247,10 @@ export default function Visitors() {
                     onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                     placeholder="e.g. +91 98765 43210"
                   />
+                </div>
+
+                <div className="visitors-modal-section-title">
+                  <ClipboardList size={15} /> Visit Purpose & Host
                 </div>
                 <div className="form-group">
                   <label>Purpose of Visit *</label>
@@ -266,6 +274,10 @@ export default function Visitors() {
                     onChange={e => setForm(f => ({ ...f, host_name: e.target.value }))}
                     placeholder="e.g. Mr. Ram Prasad (Principal)"
                   />
+                </div>
+
+                <div className="visitors-modal-section-title">
+                  <Clock size={15} /> Timestamp
                 </div>
                 <div className="form-group">
                   <label>Entry Time (In Time)</label>

@@ -89,14 +89,42 @@
 }
 
 .homework-list-modal {
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-xl) !important;
+  border-radius: var(--radius-lg) !important;
+  background: var(--bg-card) !important;
   max-width: 600px;
   width: 90%;
+  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.homework-list-grid-19 {
+.homework-list-modal-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--brand) !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  margin: 1.5rem 0 0.85rem 0 !important;
+  padding-bottom: 0.35rem !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.homework-list-modal-section-title:first-of-type {
+  margin-top: 0 !important;
+}
+
+.homework-list-modal-grid {
   display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1.5rem !important;
+  grid-template-columns: 1fr 1fr !important;
+  margin-bottom: 1rem !important;
+}
+
+.homework-list-modal-full-width {
+  grid-column: 1 / -1 !important;
 }
 
 .homework-list-textarea-20 {
@@ -104,5 +132,11 @@
   border-radius: 4px;
   padding: 0.5rem;
   width: 100%;
+}
+
+@media (max-width: 576px) {
+  .homework-list-modal-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 

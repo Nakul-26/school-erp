@@ -17,10 +17,17 @@ async function ensureTransportTables(db: D1Database) {
       driver_name TEXT,
       driver_phone TEXT,
       monthly_charge REAL NOT NULL DEFAULT 0.0,
+      stops TEXT,
       is_active INTEGER NOT NULL DEFAULT 1,
       created_at TEXT DEFAULT (datetime('now'))
     )
   `).run();
+
+  try {
+    await db.prepare(`ALTER TABLE transport_routes ADD COLUMN stops TEXT`).run();
+  } catch (err) {
+    // Ignore error if column already exists
+  }
 
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS transport_allocations (
@@ -62,8 +69,8 @@ transport.post('/routes', authMiddleware, async (c) => {
 
   const id = crypto.randomUUID();
   await c.env.DB.prepare(`
-    INSERT INTO transport_routes (id, institution_id, route_name, start_location, end_location, vehicle_number, driver_name, driver_phone, monthly_charge)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO transport_routes (id, institution_id, route_name, start_location, end_location, vehicle_number, driver_name, driver_phone, monthly_charge, stops)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id,
     user.institution_id,
@@ -73,7 +80,8 @@ transport.post('/routes', authMiddleware, async (c) => {
     body.vehicle_number || '',
     body.driver_name || '',
     body.driver_phone || '',
-    Number(body.monthly_charge) || 0.0
+    Number(body.monthly_charge) || 0.0,
+    body.stops || ''
   ).run();
 
   return c.json({ success: true, id }, 201);
@@ -88,7 +96,7 @@ transport.put('/routes/:id', authMiddleware, async (c) => {
 
   await c.env.DB.prepare(`
     UPDATE transport_routes 
-    SET route_name = ?, start_location = ?, end_location = ?, vehicle_number = ?, driver_name = ?, driver_phone = ?, monthly_charge = ?
+    SET route_name = ?, start_location = ?, end_location = ?, vehicle_number = ?, driver_name = ?, driver_phone = ?, monthly_charge = ?, stops = ?
     WHERE id = ? AND institution_id = ?
   `).bind(
     body.route_name,
@@ -98,6 +106,7 @@ transport.put('/routes/:id', authMiddleware, async (c) => {
     body.driver_name || '',
     body.driver_phone || '',
     Number(body.monthly_charge) || 0.0,
+    body.stops || '',
     id,
     user.institution_id
   ).run();

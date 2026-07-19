@@ -182,6 +182,9 @@ export default function Reports() {
     return pct < 75;
   }).length;
 
+  const selectedSectionObj = attSections.find(s => s.id === attSelectedSectionId);
+  const selectedSectionName = selectedSectionObj ? `${selectedSectionObj.name} (Year ${selectedSectionObj.year_number})` : '';
+
   // ── Teacher handlers ───────────────────────────────────────────────────────
 
   const fetchTeacherReport = async () => {
@@ -248,8 +251,9 @@ export default function Reports() {
         ]}
       />
 
-      {/* Header */}
-      <div className="page-header" style={{ marginBottom: '1.5rem' }}>
+      <div id="printable-report-card">
+        {/* Header */}
+        <div className="page-header" style={{ marginBottom: '1.5rem' }}>
         <div>
           <h2>Analytics & Reports</h2>
           <p style={{ color: 'var(--text-secondary)' }}>
@@ -287,7 +291,7 @@ export default function Reports() {
       </div>
 
       {/* Quick Actions Panel */}
-      <div className="card quick-actions-panel" style={{ padding: '0.75rem 1rem', marginBottom: '1.5rem', background: 'var(--bg-subtle)', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+      <div className="card quick-actions-panel no-print" style={{ padding: '0.75rem 1rem', marginBottom: '1.5rem', background: 'var(--bg-subtle)', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
         <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginRight: '0.5rem', letterSpacing: '0.05em' }}>Quick Actions:</span>
         <button className="btn btn-secondary" onClick={handleExportPDF} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
           <Download size={13} /> Export PDF Report
@@ -305,7 +309,7 @@ export default function Reports() {
       </div>
 
       {/* Workspace Navigation Tabs */}
-      <div className="reports-tabs" style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem' }}>
+      <div className="reports-tabs no-print" style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem' }}>
         {[
           { tab: 'overview', label: 'Overview', icon: Activity },
           ...(showAttendanceTab ? [{ tab: 'attendance', label: 'Student Attendance', icon: ClipboardCheck }] : []),
@@ -339,6 +343,13 @@ export default function Reports() {
             </button>
           );
         })}
+      </div>
+
+      {/* Print-only Report Type Title */}
+      <div className="print-only" style={{ marginBottom: '1.5rem', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem' }}>
+        <h3 style={{ margin: 0, color: 'var(--text-main)' }}>
+          Report Type: {activeTab === 'overview' ? 'Overview' : activeTab === 'attendance' ? 'Student Attendance' : activeTab === 'teacher' ? 'Teacher Workloads' : 'Fee Collection Audit'}
+        </h3>
       </div>
 
       {/* Tab Contents */}
@@ -405,13 +416,20 @@ export default function Reports() {
           <>
             <div className="page-sub-header reports-page-sub-header" style={{ marginBottom: '1.25rem' }}>
               {attInitialLoading ? <p>Loading...</p> : (
-                <div className="form-group reports-form-group">
-                  <label className="reports-label-3" style={{ fontSize: '0.85rem', fontWeight: '600' }}>Select Class / Section:</label>
-                  <select value={attSelectedSectionId} onChange={(e) => setAttSelectedSectionId(e.target.value)} className="reports-select-4" style={{ marginLeft: '0.5rem', padding: '0.35rem 0.5rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-                    <option value="">-- Select Section --</option>
-                    {attSections.map(s => <option key={s.id} value={s.id}>{s.name} (Year {s.year_number})</option>)}
-                  </select>
-                </div>
+                <>
+                  <div className="form-group reports-form-group no-print">
+                    <label className="reports-label-3" style={{ fontSize: '0.85rem', fontWeight: '600' }}>Select Class / Section:</label>
+                    <select value={attSelectedSectionId} onChange={(e) => setAttSelectedSectionId(e.target.value)} className="reports-select-4" style={{ marginLeft: '0.5rem', padding: '0.35rem 0.5rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+                      <option value="">-- Select Section --</option>
+                      {attSections.map(s => <option key={s.id} value={s.id}>{s.name} (Year {s.year_number})</option>)}
+                    </select>
+                  </div>
+                  {selectedSectionObj && (
+                    <div className="print-only" style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+                      Selected Section: {selectedSectionName}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -685,6 +703,7 @@ export default function Reports() {
             )}
           </>
         )}
+      </div>
       </div>
     </Layout>
   );

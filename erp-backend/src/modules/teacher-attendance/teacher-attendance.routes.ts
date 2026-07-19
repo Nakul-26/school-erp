@@ -58,6 +58,20 @@ teacherAttendance.get('/history/:teacherId', requireRole('admin', 'super_admin',
     return c.json({ error: 'Teacher not found' }, 404);
   }
 
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isTeacher = userRoles.some(r => ['Teacher', 'teacher'].includes(r));
+  const isAdminOrHOD = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD'].includes(r));
+
+  if (isTeacher && !isAdminOrHOD) {
+    const currentTeacher = await c.env.DB.prepare(
+      'SELECT id FROM teachers WHERE user_id = ? AND institution_id = ? AND is_active = 1'
+    ).bind(user.sub, user.institution_id).first<{ id: string }>();
+
+    if (!currentTeacher || currentTeacher.id !== teacherId) {
+      return c.json({ error: 'Forbidden: You cannot access other teacher attendance logs' }, 403);
+    }
+  }
+
   const repo = new TeacherAttendanceRepository(c.env.DB);
   const service = new TeacherAttendanceService(repo);
   

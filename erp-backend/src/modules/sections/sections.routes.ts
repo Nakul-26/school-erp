@@ -4,14 +4,79 @@ import { SectionRepository } from './sections.repository';
 import { SectionService } from './sections.service';
 import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
+import { getTeacherIdForUser, isTeacherOnly, teacherHasSectionAccess } from '../../utils/teacher-scope';
+import { validateUploadedFile, sanitizeFileName } from '../../utils/file-upload';
 
 const sections = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 sections.use('*', authMiddleware);
 
+sections.use('*', async (c, next) => {
+  const user = c.get('user');
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isStaff = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher'].includes(r));
+  if (!isStaff) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+  await next();
+});
+
 sections.get('/', async (c) => {
   const user = c.get('user');
   const filters = c.req.query();
+
+  if (isTeacherOnly(user)) {
+    const teacherId = await getTeacherIdForUser(c.env.DB, user);
+    if (!teacherId) return c.json([]);
+
+    let query = `
+      SELECT DISTINCT
+        s.*,
+        (t.first_name || ' ' || t.last_name) AS class_teacher_name,
+        c.name AS course_name,
+        ay.name AS academic_year_name,
+        (
+          SELECT COUNT(*)
+          FROM student_enrollments se
+          JOIN students st ON se.student_id = st.id
+          WHERE se.section_id = s.id AND se.is_active = 1 AND st.is_active = 1
+        ) AS student_count
+      FROM sections s
+      LEFT JOIN teachers t ON s.class_teacher_id = t.id
+      LEFT JOIN courses c ON s.course_id = c.id
+      LEFT JOIN academic_years ay ON s.academic_year_id = ay.id
+      WHERE s.institution_id = ? AND s.is_active = 1
+        AND (
+          EXISTS (
+            SELECT 1 FROM teacher_subject_assignments tsa
+            WHERE tsa.teacher_id = ? AND tsa.section_id = s.id AND tsa.is_active = 1
+          )
+          OR EXISTS (
+            SELECT 1 FROM teaching_allocations ta
+            WHERE ta.teacher_id = ? AND ta.section_id = s.id AND ta.institution_id = ? AND LOWER(ta.status) = 'active'
+          )
+        )
+    `;
+    const params: any[] = [user.institution_id, teacherId, teacherId, user.institution_id];
+
+    if (filters.academic_year_id) {
+      query += ' AND s.academic_year_id = ?';
+      params.push(filters.academic_year_id);
+    }
+    if (filters.course_id) {
+      query += ' AND s.course_id = ?';
+      params.push(filters.course_id);
+    }
+    if (filters.search) {
+      query += ' AND (s.name LIKE ? OR s.room LIKE ?)';
+      params.push(`%${filters.search}%`, `%${filters.search}%`);
+    }
+
+    query += ' ORDER BY c.name ASC, s.name ASC';
+    const { results } = await c.env.DB.prepare(query).bind(...params).all();
+    return c.json(results || []);
+  }
+
   const repo = new SectionRepository(c.env.DB);
   const service = new SectionService(repo);
   const results = await service.listSections(user.institution_id, filters);
@@ -25,8 +90,11 @@ sections.get('/:id', async (c) => {
   const service = new SectionService(repo);
   const result = await service.getSection(id);
   
-  if (!result || result.institution_id !== user.institution_id) {
+  if (!result || result.institution_id !== user.institution_id || result.is_active !== 1) {
     return c.json({ error: 'Section not found' }, 404);
+  }
+  if (!(await teacherHasSectionAccess(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: section is outside your teaching assignment' }, 403);
   }
   return c.json(result);
 });
@@ -98,6 +166,9 @@ sections.get('/:id/timeline', async (c) => {
   if (!section || section.institution_id !== user.institution_id) {
     return c.json({ error: 'Section not found' }, 404);
   }
+  if (!(await teacherHasSectionAccess(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: section is outside your teaching assignment' }, 403);
+  }
   
   // Fetch all audit logs matching section actions or attendance sessions/announcements containing section ID
   const { results: logs } = await c.env.DB.prepare(`
@@ -129,18 +200,24 @@ sections.get('/:id/documents', async (c) => {
 
   const section = await c.env.DB.prepare('SELECT 1 FROM sections WHERE id = ? AND institution_id = ? AND is_active = 1').bind(sectionId, user.institution_id).first();
   if (!section) return c.json({ error: 'Section not found' }, 404);
+  if (!(await teacherHasSectionAccess(c.env.DB, user, sectionId))) {
+    return c.json({ error: 'Forbidden: section is outside your teaching assignment' }, 403);
+  }
 
   const { results } = await c.env.DB.prepare('SELECT * FROM documents WHERE entity_type = "section" AND entity_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(sectionId).all();
   return c.json(results || []);
 });
 
 // POST upload file to R2 + metadata to D1
-sections.post('/:id/documents/upload', async (c) => {
+sections.post('/:id/documents/upload', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const sectionId = c.req.param('id')!;
 
   const section = await c.env.DB.prepare('SELECT 1 FROM sections WHERE id = ? AND institution_id = ? AND is_active = 1').bind(sectionId, user.institution_id).first();
   if (!section) return c.json({ error: 'Section not found' }, 404);
+  if (!(await teacherHasSectionAccess(c.env.DB, user, sectionId))) {
+    return c.json({ error: 'Forbidden: section is outside your teaching assignment' }, 403);
+  }
 
   const body = await c.req.parseBody();
   const file = body['file'];
@@ -150,10 +227,17 @@ sections.post('/:id/documents/upload', async (c) => {
     return c.json({ error: 'No document file uploaded' }, 400);
   }
 
+  const validationError = validateUploadedFile(file);
+  if (validationError) {
+    return c.json({ error: validationError }, 400);
+  }
+
+  const safeName = sanitizeFileName(file.name);
+
   try {
     const bytes = await file.arrayBuffer();
     const docId = crypto.randomUUID();
-    const fileKey = `section_docs/${sectionId}/${docId}_${file.name}`;
+    const fileKey = `section_docs/${sectionId}/${docId}_${safeName}`;
     
     // Put file in R2 Bucket
     await c.env.FILES.put(fileKey, bytes, {
@@ -164,9 +248,9 @@ sections.post('/:id/documents/upload', async (c) => {
     await c.env.DB.prepare(`
       INSERT INTO documents (id, institution_id, entity_type, entity_id, name, folder, file_key, file_size, mime_type, uploaded_by)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(docId, user.institution_id, 'section', sectionId, file.name, folder, fileKey, file.size, file.type || 'application/octet-stream', user.sub).run();
+    `).bind(docId, user.institution_id, 'section', sectionId, safeName, folder, fileKey, file.size, file.type || 'application/octet-stream', user.sub).run();
 
-    await createAuditLog(c.env.DB, user.sub, 'UPLOAD_SECTION_DOCUMENT', 'sections', sectionId, `Uploaded document ${file.name} to folder ${folder}`);
+    await createAuditLog(c.env.DB, user.sub, 'UPLOAD_SECTION_DOCUMENT', 'sections', sectionId, `Uploaded document ${safeName} to folder ${folder}`);
 
     return c.json({ success: true, id: docId });
   } catch (err: any) {
@@ -182,6 +266,9 @@ sections.get('/:id/documents/:docId/download', async (c) => {
 
   const section = await c.env.DB.prepare('SELECT 1 FROM sections WHERE id = ? AND institution_id = ? AND is_active = 1').bind(sectionId, user.institution_id).first();
   if (!section) return c.json({ error: 'Section not found' }, 404);
+  if (!(await teacherHasSectionAccess(c.env.DB, user, sectionId))) {
+    return c.json({ error: 'Forbidden: section is outside your teaching assignment' }, 403);
+  }
 
   const metadata = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ? AND entity_type = "section" AND entity_id = ? AND is_active = 1')
     .bind(docId, sectionId).first<any>();
@@ -204,13 +291,16 @@ sections.get('/:id/documents/:docId/download', async (c) => {
 });
 
 // DELETE Document
-sections.delete('/:id/documents/:docId', async (c) => {
+sections.delete('/:id/documents/:docId', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const sectionId = c.req.param('id')!;
   const docId = c.req.param('docId')!;
 
   const section = await c.env.DB.prepare('SELECT 1 FROM sections WHERE id = ? AND institution_id = ? AND is_active = 1').bind(sectionId, user.institution_id).first();
   if (!section) return c.json({ error: 'Section not found' }, 404);
+  if (!(await teacherHasSectionAccess(c.env.DB, user, sectionId))) {
+    return c.json({ error: 'Forbidden: section is outside your teaching assignment' }, 403);
+  }
 
   const metadata = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ? AND entity_type = "section" AND entity_id = ? AND is_active = 1')
     .bind(docId, sectionId).first<any>();

@@ -26,6 +26,8 @@ export default function Dashboard() {
   const userPermissions = user?.permissions || [];
   const canCreateStudent = hasAnyPermission(userPermissions, ['student.create']);
   const canCreateTeacher = hasAnyPermission(userPermissions, ['teacher.create']);
+  const canManageAcademic = hasAnyPermission(userPermissions, ['academic.manage']);
+  const canAccessFinance = hasAnyPermission(userPermissions, ['finance.access']);
   
   // Dashboard data states
   const [stats, setStats] = useState<any>(null);
@@ -388,12 +390,16 @@ export default function Dashboard() {
               <Plus size={13} /> Add Teacher
             </button>
           )}
-          <button className="btn btn-secondary" onClick={() => navigate('/academic-setup?tab=assignments')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-            <Settings size={13} /> Subject Allocations
-          </button>
-          <button className="btn btn-secondary" onClick={() => navigate('/finance?tab=collection')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-            <IndianRupee size={13} /> Collect School Fee
-          </button>
+          {canManageAcademic && (
+            <button className="btn btn-secondary" onClick={() => navigate('/academic-setup?tab=assignments')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Settings size={13} /> Subject Allocations
+            </button>
+          )}
+          {canAccessFinance && (
+            <button className="btn btn-secondary" onClick={() => navigate('/finance?tab=collection')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <IndianRupee size={13} /> Collect School Fee
+            </button>
+          )}
           <button className="btn btn-secondary" onClick={() => navigate('/communication?tab=announcements')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
             <Megaphone size={13} /> Broadcast Circular
           </button>
@@ -514,6 +520,28 @@ export default function Dashboard() {
 
     if (role === 'student' || role === 'parent') {
       const parentNameStr = role === 'parent' ? `${stats?.children?.[selectedChildIndex]?.first_name || 'Child'}'s Portal` : 'Student Portal';
+      
+      const attendanceRate = (() => {
+        if (role === 'parent') {
+          const child = stats?.children?.[selectedChildIndex];
+          if (child && child.attendance) {
+            return typeof child.attendance === 'object' ? child.attendance.percentage : child.attendance;
+          }
+          return 100;
+        }
+        if (stats?.attendance) {
+          return typeof stats.attendance === 'object' ? stats.attendance.percentage : stats.attendance;
+        }
+        return 100;
+      })();
+
+      const feesDue = (() => {
+        if (role === 'parent') {
+          return stats?.children?.[selectedChildIndex]?.fees?.due || 0;
+        }
+        return stats?.fees?.due || 0;
+      })();
+
       return (
         <div className="card summary-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', background: 'var(--bg-card)', borderLeft: '4px solid var(--primary)', boxShadow: 'var(--shadow-sm)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
@@ -526,12 +554,12 @@ export default function Dashboard() {
             <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Attendance Rate</div>
-                <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--success)' }}>{stats?.attendance || 100}%</div>
+                <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--success)' }}>{attendanceRate}%</div>
               </div>
               <div>
                 <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Outstanding Fees Dues</div>
-                <div style={{ fontSize: '1.15rem', fontWeight: '800', color: stats?.fees?.due > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                  ₹{(stats?.fees?.due || 0).toLocaleString()}
+                <div style={{ fontSize: '1.15rem', fontWeight: '800', color: feesDue > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                  ₹{feesDue.toLocaleString()}
                 </div>
               </div>
               <div>
@@ -566,10 +594,10 @@ export default function Dashboard() {
           gap: '1rem',
           padding: '0.85rem 1.25rem',
           marginBottom: '1rem',
-          background: 'linear-gradient(135deg, #1a237e 0%, #283593 100%)',
+          background: 'linear-gradient(135deg, #6d5df6 0%, #8575fa 100%)',
           borderRadius: '10px',
           color: '#fff',
-          boxShadow: '0 4px 12px rgba(26,35,126,0.3)',
+          boxShadow: '0 4px 12px rgba(109, 93, 246, 0.25)',
         }}>
           <Bell size={22} style={{ flexShrink: 0, color: '#fbbf24' }} />
           <div style={{ flexGrow: 1 }}>

@@ -5,6 +5,7 @@ import { CreateAllocationInput, UpdateAllocationInput } from './allocations.type
 import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 import { isYearLockedOrArchived } from '../../utils/academic-year-lock';
+import { getTeacherIdForUser, isTeacherOnly } from '../../utils/teacher-scope';
 
 const allocations = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -15,6 +16,51 @@ allocations.get('/', async (c) => {
   const user = c.get('user');
   const query = c.req.query();
   const repo = new TeachingAllocationRepository(c.env.DB);
+
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isStaff = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher'].includes(r));
+
+  if (!isStaff) {
+    const sectionId = query.section_id;
+    if (!sectionId) {
+      return c.json({ error: 'Forbidden: non-staff users must specify a valid section_id' }, 403);
+    }
+    
+    // Verify student or parent belongs to sectionId
+    const isStudentEnrolled = await c.env.DB.prepare(`
+      SELECT 1 FROM student_enrollments se
+      JOIN students s ON se.student_id = s.id
+      WHERE s.user_id = ? AND se.section_id = ? AND se.is_active = 1 AND s.is_active = 1
+      LIMIT 1
+    `).bind(user.sub, sectionId).first();
+    
+    const isParentLinked = !isStudentEnrolled && await c.env.DB.prepare(`
+      SELECT 1 FROM student_enrollments se
+      JOIN guardians g ON se.student_id = g.student_id
+      WHERE g.user_id = ? AND se.section_id = ? AND se.is_active = 1 AND g.is_active = 1
+      LIMIT 1
+    `).bind(user.sub, sectionId).first();
+    
+    if (!isStudentEnrolled && !isParentLinked) {
+      return c.json({ error: 'Forbidden: You do not have access to this section\'s allocations' }, 403);
+    }
+  }
+
+  if (isTeacherOnly(user)) {
+    const teacherId = await getTeacherIdForUser(c.env.DB, user);
+    if (!teacherId) return c.json([]);
+
+    const list = await repo.list(user.institution_id, {
+      academic_year_id: query.academic_year_id,
+      department_id: query.department_id,
+      program_id: query.program_id,
+      teacher_id: teacherId,
+      section_id: query.section_id,
+      subject_id: query.subject_id
+    });
+
+    return c.json(list);
+  }
 
   const list = await repo.list(user.institution_id, {
     academic_year_id: query.academic_year_id,
@@ -38,6 +84,21 @@ allocations.get('/load/:teacherId', async (c) => {
     return c.json({ error: 'academic_year_id query parameter is required' }, 400);
   }
 
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isAdminOrHOD = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD'].includes(r));
+  const isTeacher = userRoles.some(r => ['Teacher', 'teacher'].includes(r));
+
+  if (!isAdminOrHOD && !isTeacher) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  if (isTeacher && !isAdminOrHOD) {
+    const teacherIdForUser = await getTeacherIdForUser(c.env.DB, user);
+    if (teacherIdForUser !== teacherId) {
+      return c.json({ error: 'Forbidden: Teachers can only view their own workload analysis' }, 403);
+    }
+  }
+
   const repo = new TeachingAllocationRepository(c.env.DB);
   
   // Verify teacher belongs to institution
@@ -57,6 +118,12 @@ allocations.get('/dashboard', async (c) => {
 
   if (!academicYearId) {
     return c.json({ error: 'academic_year_id parameter is required' }, 400);
+  }
+
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isAdminOrHOD = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD'].includes(r));
+  if (!isAdminOrHOD) {
+    return c.json({ error: 'Forbidden' }, 403);
   }
 
   // Count active allocations
@@ -135,6 +202,12 @@ allocations.get('/conflicts', async (c) => {
 
   if (!academicYearId) {
     return c.json({ error: 'academic_year_id parameter is required' }, 400);
+  }
+
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isAdminOrHOD = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD'].includes(r));
+  if (!isAdminOrHOD) {
+    return c.json({ error: 'Forbidden' }, 403);
   }
 
   const conflictsList: Array<{ type: 'error' | 'warning', message: string, record_id?: string, action_type?: string }> = [];
@@ -242,9 +315,23 @@ allocations.get('/:id', async (c) => {
   const id = c.req.param('id')!;
   const repo = new TeachingAllocationRepository(c.env.DB);
 
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isStaff = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher'].includes(r));
+  if (!isStaff) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
   const allocation = await repo.findById(id, user.institution_id);
   if (!allocation) {
     return c.json({ error: 'Allocation not found' }, 404);
+  }
+
+  const isAdminOrHOD = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD'].includes(r));
+  if (isStaff && !isAdminOrHOD) {
+    const teacherIdForUser = await getTeacherIdForUser(c.env.DB, user);
+    if (allocation.teacher_id !== teacherIdForUser) {
+      return c.json({ error: 'Forbidden' }, 403);
+    }
   }
 
   return c.json(allocation);

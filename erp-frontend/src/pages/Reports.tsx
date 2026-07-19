@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { hasAnyRole } from '../utils/accessControl';
 import {
   ClipboardCheck, Percent, Users, AlertTriangle,
   FileBarChart, BookOpen, Clock, Calendar,
@@ -66,8 +68,13 @@ interface FeeDefaulterRow {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Reports() {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'overview';
+  const roles = user?.roles || (user?.role ? [user.role] : []);
+  const showAttendanceTab = hasAnyRole(roles, ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']);
+  const showTeacherTab = hasAnyRole(roles, ['admin', 'super_admin', 'Principal', 'HOD']);
+  const showFeeTab = hasAnyRole(roles, ['admin', 'super_admin', 'Principal', 'HOD', 'Accountant']);
 
   const handleTabChange = (tab: string) => {
     setSearchParams({ tab });
@@ -92,6 +99,7 @@ export default function Reports() {
   const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
 
   const sendFeeReminder = async (studentId: string, pendingAmount: number) => {
+    if (!showFeeTab) return;
     try {
       setSendingReminderId(studentId);
       await api.post('/fees/reminder', { student_id: studentId, pending_amount: pendingAmount });
@@ -106,10 +114,27 @@ export default function Reports() {
   // ── Effects ───────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    fetchAttSections();
-    fetchTeacherReport();
-    fetchFeeReport();
-  }, []);
+    if (showAttendanceTab) fetchAttSections();
+    else setAttInitialLoading(false);
+
+    if (showTeacherTab) fetchTeacherReport();
+    else setTeacherLoading(false);
+
+    if (showFeeTab) fetchFeeReport();
+    else setFeeLoading(false);
+  }, [showAttendanceTab, showTeacherTab, showFeeTab]);
+
+  useEffect(() => {
+    const allowedTabs = [
+      'overview',
+      ...(showAttendanceTab ? ['attendance'] : []),
+      ...(showTeacherTab ? ['teacher'] : []),
+      ...(showFeeTab ? ['fees'] : [])
+    ];
+    if (!allowedTabs.includes(activeTab)) {
+      setSearchParams({ tab: 'overview' }, { replace: true });
+    }
+  }, [activeTab, showAttendanceTab, showTeacherTab, showFeeTab, setSearchParams]);
 
   useEffect(() => {
     if (attSelectedSectionId) {
@@ -267,21 +292,25 @@ export default function Reports() {
         <button className="btn btn-secondary" onClick={handleExportPDF} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
           <Download size={13} /> Export PDF Report
         </button>
-        <button className="btn btn-secondary" onClick={() => { handleTabChange('attendance'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-          <Eye size={13} /> View Attendance Summary
-        </button>
-        <button className="btn btn-secondary" onClick={() => { handleTabChange('fees'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-          <IndianRupee size={13} /> View Fee Defaulters
-        </button>
+        {showAttendanceTab && (
+          <button className="btn btn-secondary" onClick={() => { handleTabChange('attendance'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            <Eye size={13} /> View Attendance Summary
+          </button>
+        )}
+        {showFeeTab && (
+          <button className="btn btn-secondary" onClick={() => { handleTabChange('fees'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            <IndianRupee size={13} /> View Fee Defaulters
+          </button>
+        )}
       </div>
 
       {/* Workspace Navigation Tabs */}
       <div className="reports-tabs" style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem' }}>
         {[
           { tab: 'overview', label: 'Overview', icon: Activity },
-          { tab: 'attendance', label: 'Student Attendance', icon: ClipboardCheck },
-          { tab: 'teacher', label: 'Teacher Workloads', icon: FileBarChart },
-          { tab: 'fees', label: 'Fee Collection Audit', icon: BarChart3 }
+          ...(showAttendanceTab ? [{ tab: 'attendance', label: 'Student Attendance', icon: ClipboardCheck }] : []),
+          ...(showTeacherTab ? [{ tab: 'teacher', label: 'Teacher Workloads', icon: FileBarChart }] : []),
+          ...(showFeeTab ? [{ tab: 'fees', label: 'Fee Collection Audit', icon: BarChart3 }] : [])
         ].map(t => {
           const Icon = t.icon;
           const isActive = activeTab === t.tab;
@@ -372,7 +401,7 @@ export default function Reports() {
         )}
 
         {/* 2. ATTENDANCE TAB */}
-        {activeTab === 'attendance' && (
+        {activeTab === 'attendance' && showAttendanceTab && (
           <>
             <div className="page-sub-header reports-page-sub-header" style={{ marginBottom: '1.25rem' }}>
               {attInitialLoading ? <p>Loading...</p> : (
@@ -468,7 +497,7 @@ export default function Reports() {
         )}
 
         {/* 3. TEACHER TAB */}
-        {activeTab === 'teacher' && (
+        {activeTab === 'teacher' && showTeacherTab && (
           <>
             {!teacherLoading && teacherReport.length > 0 && (
               <div className="stats-grid reports-stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
@@ -551,7 +580,7 @@ export default function Reports() {
         )}
 
         {/* 4. FEES TAB */}
-        {activeTab === 'fees' && (
+        {activeTab === 'fees' && showFeeTab && (
           <>
             {feeLoading ? <p>Loading reports...</p> : (
               <>

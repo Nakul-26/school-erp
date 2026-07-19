@@ -5,12 +5,47 @@ import { TeacherService } from './teachers.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
 import { UserRepository } from '../users/users.repository';
 import { UserService } from '../users/users.service';
+import { validateUploadedFile, sanitizeFileName } from '../../utils/file-upload';
 
 const teachers = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 teachers.use('*', authMiddleware);
 
-teachers.get('/', async (c) => {
+function userRoles(user: JwtPayload): string[] {
+  return user.roles || (user.role ? [user.role] : []);
+}
+
+function isTeacherRole(user: JwtPayload): boolean {
+  return userRoles(user).some((role) => ['teacher', 'Teacher'].includes(role));
+}
+
+function isTeacherManager(user: JwtPayload): boolean {
+  return userRoles(user).some((role) => [
+    'admin',
+    'Admin',
+    'super_admin',
+    'Super Admin',
+    'role-super-admin',
+    'Principal',
+    'principal',
+    'HOD',
+    'hod'
+  ].includes(role));
+}
+
+async function teacherBelongsToUser(db: D1Database, user: JwtPayload, teacherId: string): Promise<boolean> {
+  const teacher = await db.prepare(
+    'SELECT id FROM teachers WHERE id = ? AND user_id = ? AND institution_id = ? AND is_active = 1'
+  ).bind(teacherId, user.sub, user.institution_id).first<{ id: string }>();
+  return Boolean(teacher);
+}
+
+async function canViewTeacher(db: D1Database, user: JwtPayload, teacherId: string): Promise<boolean> {
+  if (isTeacherManager(user)) return true;
+  return isTeacherRole(user) && await teacherBelongsToUser(db, user, teacherId);
+}
+
+teachers.get('/', requireRole('admin', 'super_admin', 'Principal', 'HOD'), async (c) => {
   const user = c.get('user');
   const repo = new TeacherRepository(c.env.DB);
   const service = new TeacherService(repo);
@@ -18,7 +53,7 @@ teachers.get('/', async (c) => {
   return c.json(results);
 });
 
-teachers.get('/reports/workload', async (c) => {
+teachers.get('/reports/workload', requireRole('admin', 'super_admin', 'Principal', 'HOD'), async (c) => {
   const user = c.get('user');
   const repo = new TeacherRepository(c.env.DB);
   const service = new TeacherService(repo);
@@ -35,6 +70,10 @@ teachers.get('/:id', async (c) => {
   
   if (!result || result.institution_id !== user.institution_id) {
     return c.json({ error: 'Teacher not found' }, 404);
+  }
+
+  if (!(await canViewTeacher(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden' }, 403);
   }
 
   // Count unique students enrolled in sections assigned to this teacher
@@ -132,7 +171,7 @@ teachers.post('/', requireRole('admin', 'super_admin'), async (c) => {
   }
 });
 
-teachers.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
+teachers.put('/:id', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const input = await c.req.json();
@@ -233,13 +272,16 @@ teachers.get('/:id/notes', async (c) => {
   // Verify teacher matches institution
   const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
   if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+  if (!(await canViewTeacher(c.env.DB, user, teacherId))) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   const { results } = await c.env.DB.prepare('SELECT * FROM notes WHERE entity_type = "teacher" AND entity_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(teacherId).all();
   return c.json(results || []);
 });
 
 // POST Note
-teachers.post('/:id/notes', async (c) => {
+teachers.post('/:id/notes', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
   const user = c.get('user');
   const teacherId = c.req.param('id')!;
   const { content } = await c.req.json();
@@ -261,13 +303,16 @@ teachers.post('/:id/notes', async (c) => {
 });
 
 // DELETE Note
-teachers.delete('/:id/notes/:noteId', async (c) => {
+teachers.delete('/:id/notes/:noteId', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
   const user = c.get('user');
   const teacherId = c.req.param('id')!;
   const noteId = c.req.param('noteId')!;
 
   const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
   if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+  if (!(await canViewTeacher(c.env.DB, user, teacherId))) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   await c.env.DB.prepare('UPDATE notes SET is_active = 0 WHERE id = ? AND entity_type = "teacher" AND entity_id = ?').bind(noteId, teacherId).run();
   return c.json({ success: true });
@@ -281,18 +326,24 @@ teachers.get('/:id/documents', async (c) => {
 
   const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
   if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+  if (!(await canViewTeacher(c.env.DB, user, teacherId))) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   const { results } = await c.env.DB.prepare('SELECT * FROM documents WHERE entity_type = "teacher" AND entity_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(teacherId).all();
   return c.json(results || []);
 });
 
 // POST upload file to R2 + metadata to D1
-teachers.post('/:id/documents/upload', async (c) => {
+teachers.post('/:id/documents/upload', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
   const user = c.get('user');
   const teacherId = c.req.param('id')!;
 
   const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
   if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+  if (!(await canViewTeacher(c.env.DB, user, teacherId))) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   const body = await c.req.parseBody();
   const file = body['file'];
@@ -302,10 +353,17 @@ teachers.post('/:id/documents/upload', async (c) => {
     return c.json({ error: 'No document file uploaded' }, 400);
   }
 
+  const validationError = validateUploadedFile(file);
+  if (validationError) {
+    return c.json({ error: validationError }, 400);
+  }
+
+  const safeName = sanitizeFileName(file.name);
+
   try {
     const bytes = await file.arrayBuffer();
     const docId = crypto.randomUUID();
-    const fileKey = `teacher_docs/${teacherId}/${docId}_${file.name}`;
+    const fileKey = `teacher_docs/${teacherId}/${docId}_${safeName}`;
     
     // Put file in R2 Bucket
     await c.env.FILES.put(fileKey, bytes, {
@@ -316,7 +374,7 @@ teachers.post('/:id/documents/upload', async (c) => {
     await c.env.DB.prepare(`
       INSERT INTO documents (id, institution_id, entity_type, entity_id, name, folder, file_key, file_size, mime_type, uploaded_by)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(docId, user.institution_id, 'teacher', teacherId, file.name, documentType, fileKey, file.size, file.type || 'application/octet-stream', user.sub).run();
+    `).bind(docId, user.institution_id, 'teacher', teacherId, safeName, documentType, fileKey, file.size, file.type || 'application/octet-stream', user.sub).run();
 
     return c.json({ success: true, id: docId });
   } catch (err: any) {
@@ -332,6 +390,9 @@ teachers.get('/:id/documents/:docId/download', async (c) => {
 
   const teacher = await c.env.DB.prepare('SELECT 1 FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1').bind(teacherId, user.institution_id).first();
   if (!teacher) return c.json({ error: 'Teacher not found' }, 404);
+  if (!(await canViewTeacher(c.env.DB, user, teacherId))) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   const metadata = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ? AND entity_type = "teacher" AND entity_id = ? AND is_active = 1')
     .bind(docId, teacherId).first<any>();
@@ -354,7 +415,7 @@ teachers.get('/:id/documents/:docId/download', async (c) => {
 });
 
 // DELETE Document
-teachers.delete('/:id/documents/:docId', async (c) => {
+teachers.delete('/:id/documents/:docId', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
   const user = c.get('user');
   const teacherId = c.req.param('id')!;
   const docId = c.req.param('docId')!;

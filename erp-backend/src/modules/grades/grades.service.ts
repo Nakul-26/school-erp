@@ -76,6 +76,7 @@ export class GradesService {
       }
 
       subjects.push({
+        subject_id: m.subject_id,
         subject_name: m.subject_name,
         subject_code: m.subject_code,
         max_marks: m.max_marks,

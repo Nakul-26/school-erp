@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 import { 
   Landmark, IndianRupee, CreditCard, Receipt, FileText, Plus, Search, Calendar, Play, 
   Activity, ArrowUpRight, ArrowDownRight, CheckCircle, AlertTriangle, TrendingUp, DollarSign, Wallet, Trash2,
@@ -39,12 +41,15 @@ export default function Finance() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const activeTab = searchParams.get('tab') || 'overview';
+  const { user } = useAuth();
 
-  const userStr = localStorage.getItem('erp_user');
-  const user = userStr ? JSON.parse(userStr) : null;
   const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
-  const normalizedRoles = roles.map(r => r.toLowerCase().replace(' ', '_').replace('role-', ''));
-  const canManageSalary = normalizedRoles.some(r => ['super_admin', 'admin', 'principal'].includes(r));
+  const permissions: string[] = user?.permissions || [];
+  const canManageSalary = hasAnyRole(roles, ['super_admin', 'admin', 'Principal']);
+  const canManageFees = hasAnyPermission(permissions, ['fees.collect']) ||
+    hasAnyRole(roles, ['super_admin', 'admin', 'Principal', 'HOD', 'Accountant']);
+  const canManageExpenses = canManageFees;
+  const canViewFinanceOverview = canManageFees || canManageSalary || canManageExpenses;
 
   // Overall Financial States
   const [loading, setLoading] = useState(true);
@@ -71,23 +76,31 @@ export default function Finance() {
   };
 
   useEffect(() => {
-    // Load expenses from localStorage
-    const saved = localStorage.getItem('erp_expenses');
-    if (saved) {
-      try {
-        setExpenses(JSON.parse(saved));
-      } catch (e) {
-        setExpenses(DEFAULT_EXPENSES);
-      }
-    } else {
-      setExpenses(DEFAULT_EXPENSES);
-      localStorage.setItem('erp_expenses', JSON.stringify(DEFAULT_EXPENSES));
+    const allowedTabs = [
+      ...(canViewFinanceOverview ? ['overview'] : []),
+      'collection',
+      ...(canManageFees ? ['structures', 'expenses'] : []),
+      ...(canManageSalary ? ['salary-structures', 'payroll'] : [])
+    ];
+    if (!allowedTabs.includes(activeTab)) {
+      setSearchParams({ tab: allowedTabs[0] || 'collection' }, { replace: true });
     }
+  }, [activeTab, canManageFees, canManageSalary, canViewFinanceOverview, setSearchParams]);
 
-    fetchFinancialSummary();
-  }, []);
+  useEffect(() => {
+    if (canViewFinanceOverview) {
+      fetchFinancialSummary();
+    } else {
+      setLoading(false);
+    }
+  }, [canViewFinanceOverview]);
 
   const fetchFinancialSummary = async () => {
+    if (!canViewFinanceOverview) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       // Fetch fee records to compute collection rates
@@ -102,20 +115,28 @@ export default function Finance() {
       }
 
       // Fetch latest payroll runs
-      const runs = await api.get('/payroll/runs').catch(() => []);
-      if (runs && runs.length > 0) {
-        const latest = runs[0];
-        setMonthlyPayrollSum(latest.total_net || 480000);
+      if (canManageSalary) {
+        const runs = await api.get('/payroll/runs').catch(() => []);
+        if (runs && runs.length > 0) {
+          const latest = runs[0];
+          setMonthlyPayrollSum(latest.total_net || 480000);
+        }
       }
 
       // Calculate today's fee collections
       const todayStr = new Date().toISOString().split('T')[0];
-      const payments = await api.get('/fees/payments').catch(() => []);
+      const payments = canManageFees ? await api.get('/fees/payments').catch(() => []) : [];
       const todayPayments = payments
         .filter((p: any) => p.payment_date && p.payment_date.startsWith(todayStr))
         .reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
 
-      setTodayCollections(todayPayments > 0 ? todayPayments : 68000); // fallback mock if 0
+      setTodayCollections(todayPayments);
+
+      // Load expenses from backend
+      if (canManageExpenses) {
+        const backendExpenses = await api.get('/fees/expenses').catch(() => []);
+        setExpenses(backendExpenses || []);
+      }
 
     } catch (e) {
       console.error('Error fetching financial summary:', e);
@@ -124,43 +145,46 @@ export default function Finance() {
     }
   };
 
-  const handleAddExpense = (e: React.FormEvent) => {
+  const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageExpenses) return;
     if (!expenseForm.description || !expenseForm.amount || Number(expenseForm.amount) <= 0) {
       alert('Please fill out all fields with valid data.');
       return;
     }
     setSubmittingExpense(true);
     try {
-      const newExp: Expense = {
-        id: Date.now().toString(),
-        date: (new Date().toISOString().split('T')[0] || ''),
+      const payload = {
+        date: new Date().toISOString().split('T')[0],
         category: expenseForm.category,
         description: expenseForm.description,
         amount: Number(expenseForm.amount),
         payment_method: expenseForm.payment_method,
-        recorded_by: 'Accountant',
+        recorded_by: user?.name || 'Accountant',
         status: expenseForm.status
       };
 
-      const updated = [newExp, ...expenses];
-      setExpenses(updated);
-      localStorage.setItem('erp_expenses', JSON.stringify(updated));
+      await api.post('/fees/expenses', payload);
+      await fetchFinancialSummary();
       setShowExpenseModal(false);
       setExpenseForm({ category: 'Utilities', description: '', amount: '', payment_method: 'UPI', status: 'PAID' });
       alert('Expense recorded successfully!');
-    } catch (err) {
-      alert('Failed to record expense.');
+    } catch (err: any) {
+      alert(err.message || 'Failed to record expense.');
     } finally {
       setSubmittingExpense(false);
     }
   };
 
-  const handleDeleteExpense = (expenseId: string) => {
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!canManageExpenses) return;
     if (!confirm('Are you sure you want to delete this expense?')) return;
-    const updated = expenses.filter(e => e.id !== expenseId);
-    setExpenses(updated);
-    localStorage.setItem('erp_expenses', JSON.stringify(updated));
+    try {
+      await api.delete(`/fees/expenses/${expenseId}`);
+      await fetchFinancialSummary();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete expense.');
+    }
   };
 
   // Math helper
@@ -190,6 +214,7 @@ export default function Finance() {
       </div>
 
       {/* Summary Card */}
+      {canViewFinanceOverview && (
       <div className="card summary-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', background: 'var(--bg-card)', borderLeft: '4px solid var(--primary)', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
@@ -218,38 +243,49 @@ export default function Finance() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Quick Actions Panel */}
+      {(canManageFees || canManageSalary || canManageExpenses) && (
       <div className="card quick-actions-panel" style={{ padding: '0.75rem 1rem', marginBottom: '1.5rem', background: 'var(--bg-subtle)', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
         <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginRight: '0.5rem', letterSpacing: '0.05em' }}>Quick Actions:</span>
-        <button className="btn btn-secondary" onClick={() => { handleTabChange('collection'); navigate('?tab=collection'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-          <IndianRupee size={13} /> Collect Student Fee
-        </button>
-        <button className="btn btn-secondary" onClick={() => setShowExpenseModal(true)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-          <Plus size={13} /> Record Expense Bill
-        </button>
-        <button className="btn btn-secondary" onClick={() => { handleTabChange('payroll'); navigate('?tab=payroll'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-          <Play size={13} /> Calculate Staff Payroll
-        </button>
-        <button className="btn btn-secondary" onClick={() => { handleTabChange('structures'); navigate('?tab=structures'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-          <Plus size={13} /> Add Fee Structure
-        </button>
-        {canManageSalary && (
-          <button className="btn btn-secondary" onClick={() => { handleTabChange('salary-structures'); navigate('?tab=salary-structures'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-            <FileSpreadsheet size={13} /> Manage Salary Structures
+        {canManageFees && (
+          <>
+            <button className="btn btn-secondary" onClick={() => { handleTabChange('collection'); navigate('?tab=collection'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <IndianRupee size={13} /> Collect Student Fee
+            </button>
+            <button className="btn btn-secondary" onClick={() => { handleTabChange('structures'); navigate('?tab=structures'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Plus size={13} /> Add Fee Structure
+            </button>
+          </>
+        )}
+        {canManageExpenses && (
+          <button className="btn btn-secondary" onClick={() => setShowExpenseModal(true)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            <Plus size={13} /> Record Expense Bill
           </button>
         )}
+        {canManageSalary && (
+          <>
+            <button className="btn btn-secondary" onClick={() => { handleTabChange('payroll'); navigate('?tab=payroll'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Play size={13} /> Calculate Staff Payroll
+            </button>
+            <button className="btn btn-secondary" onClick={() => { handleTabChange('salary-structures'); navigate('?tab=salary-structures'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <FileSpreadsheet size={13} /> Manage Salary Structures
+            </button>
+          </>
+        )}
       </div>
+      )}
 
       {/* Workspace Navigation Tabs */}
       <div className="finance-tabs" style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem' }}>
         {[
-          { tab: 'overview', label: 'Financial Overview', icon: Activity },
-          { tab: 'structures', label: 'Fee Structures', icon: Landmark },
+          ...(canViewFinanceOverview ? [{ tab: 'overview', label: 'Financial Overview', icon: Activity }] : []),
+          ...(canManageFees ? [{ tab: 'structures', label: 'Fee Structures', icon: Landmark }] : []),
           { tab: 'collection', label: 'Fee Collection Register', icon: CreditCard },
-          { tab: 'expenses', label: `Operating Expenses (${expenses.length})`, icon: Wallet },
+          ...(canManageExpenses ? [{ tab: 'expenses', label: `Operating Expenses (${expenses.length})`, icon: Wallet }] : []),
           ...(canManageSalary ? [{ tab: 'salary-structures', label: 'Salary Structures', icon: FileSpreadsheet }] : []),
-          { tab: 'payroll', label: 'Payroll Processing', icon: FileText }
+          ...(canManageSalary ? [{ tab: 'payroll', label: 'Payroll Processing', icon: FileText }] : [])
         ].map(t => {
           const Icon = t.icon;
           const isActive = activeTab === t.tab;
@@ -284,7 +320,7 @@ export default function Finance() {
       <div className="finance-tab-content">
         
         {/* 1. FINANCIAL OVERVIEW TAB */}
-        {activeTab === 'overview' && (
+        {activeTab === 'overview' && canViewFinanceOverview && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             
             {/* Visual KPI Cards Grid */}
@@ -402,7 +438,7 @@ export default function Finance() {
         )}
 
         {/* 2. FEE STRUCTURES TAB */}
-        {activeTab === 'structures' && (
+        {activeTab === 'structures' && canManageFees && (
           <FeeStructures isSubComponent={true} />
         )}
 
@@ -412,13 +448,15 @@ export default function Finance() {
         )}
 
         {/* 4. OPERATING EXPENSES TAB */}
-        {activeTab === 'expenses' && (
+        {activeTab === 'expenses' && canManageExpenses && (
           <div className="card" style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)' }}>Operating Expenditures Ledger</h4>
-              <button className="btn btn-primary" onClick={() => setShowExpenseModal(true)}>
-                <Plus size={15} /> Record Expense
-              </button>
+              {canManageExpenses && (
+                <button className="btn btn-primary" onClick={() => setShowExpenseModal(true)}>
+                  <Plus size={15} /> Record Expense
+                </button>
+              )}
             </div>
 
             <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
@@ -443,9 +481,11 @@ export default function Finance() {
                     <td style={{ padding: '0.65rem 0.5rem' }}>{exp.payment_method}</td>
                     <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right', fontWeight: '700', color: 'var(--danger)' }}>₹{exp.amount.toLocaleString()}</td>
                     <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right' }}>
-                      <button className="btn btn-danger" style={{ padding: '0.2rem 0.4rem', height: 'auto' }} onClick={() => handleDeleteExpense(exp.id)}>
-                        <Trash2 size={12} />
-                      </button>
+                      {canManageExpenses && (
+                        <button className="btn btn-danger" style={{ padding: '0.2rem 0.4rem', height: 'auto' }} onClick={() => handleDeleteExpense(exp.id)}>
+                          <Trash2 size={12} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -465,13 +505,13 @@ export default function Finance() {
         )}
 
         {/* 5. PAYROLL PROCESSING TAB */}
-        {activeTab === 'payroll' && (
+        {activeTab === 'payroll' && canManageSalary && (
           <PayrollRuns isSubComponent={true} />
         )}
       </div>
 
       {/* --- RECORD EXPENSE MODAL --- */}
-      {showExpenseModal && (
+      {showExpenseModal && canManageExpenses && (
         <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div className="card modal-content" style={{ width: '420px', padding: '1.5rem' }}>
             <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>Record Operational Expense</h3>

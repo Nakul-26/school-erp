@@ -43,6 +43,7 @@ interface PaymentRecord {
   remarks: string | null;
   fee_type: string;
   receipt_number: string | null;
+  verification_status?: string;
 }
 
 export default function StudentFees({ isSubComponent = false }: { isSubComponent?: boolean }) {
@@ -91,7 +92,10 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
 
   // Auth user check
   const userPermissions = user?.permissions || [];
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
   const canAccessFinance = hasAnyPermission(userPermissions, ['finance.access']);
+  const canManageFees = hasAnyPermission(userPermissions, ['fees.collect']) ||
+    userRoles.some((r: string) => ['admin', 'super_admin', 'Principal', 'HOD', 'Accountant'].includes(r));
 
   useEffect(() => {
     fetchStudentRecords();
@@ -252,6 +256,19 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
       alert(err.message || 'Error collecting payment');
     } finally {
       setPaying(false);
+    }
+  };
+
+  const handleVerifyPayment = async (paymentId: string, status: 'VERIFIED' | 'FAILED') => {
+    if (!confirm(`Are you sure you want to mark this online payment as ${status}?`)) return;
+    try {
+      await api.post(`/fees/payments/${paymentId}/verify`, { status });
+      alert(`Payment has been successfully ${status.toLowerCase()}!`);
+      if (selectedStudent) {
+        handleOpenLedger(selectedStudent);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to verify payment');
     }
   };
 
@@ -642,7 +659,19 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
                   <tbody>
                     {payments.map((p) => (
                       <tr key={p.id}>
-                        <td>{p.payment_date}</td>
+                        <td>
+                          {p.payment_date}
+                          {p.verification_status === 'PENDING' && (
+                            <div style={{ marginTop: '0.2rem' }}>
+                              <span className="badge badge-warning" style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem' }}>PENDING VERIFICATION</span>
+                            </div>
+                          )}
+                          {p.verification_status === 'FAILED' && (
+                            <div style={{ marginTop: '0.2rem' }}>
+                              <span className="badge badge-danger" style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem' }}>FAILED VERIFICATION</span>
+                            </div>
+                          )}
+                        </td>
                         <td>{p.fee_type}</td>
                         <td>
                           <strong>{p.payment_method}</strong>
@@ -650,9 +679,26 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
                         </td>
                         <td><strong>₹{p.amount.toLocaleString('en-IN')}</strong></td>
                         <td className="student-fees-td-29">
-                          <button className="btn btn-sm btn-outline student-fees-btn" onClick={() => handleOpenReceipt(p)}>
-                            <Printer size={12} /> Print
-                          </button>
+                          {p.verification_status === 'PENDING' ? (
+                            canManageFees ? (
+                              <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                <button className="btn btn-sm" onClick={() => handleVerifyPayment(p.id, 'VERIFIED')} style={{ padding: '0.2rem 0.5rem', height: 'auto', fontSize: '0.75rem', backgroundColor: 'var(--success-soft)', color: 'var(--success)', border: 'none' }}>
+                                  Approve
+                                </button>
+                                <button className="btn btn-sm" onClick={() => handleVerifyPayment(p.id, 'FAILED')} style={{ padding: '0.2rem 0.5rem', height: 'auto', fontSize: '0.75rem', backgroundColor: 'var(--danger-soft)', color: 'var(--danger)', border: 'none' }}>
+                                  Reject
+                                </button>
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Awaiting review</span>
+                            )
+                          ) : p.verification_status === 'FAILED' ? (
+                            <span style={{ fontSize: '0.8rem', color: 'var(--danger)', fontWeight: '600' }}>Rejected</span>
+                          ) : (
+                            <button className="btn btn-sm btn-outline student-fees-btn" onClick={() => handleOpenReceipt(p)}>
+                              <Printer size={12} /> Print
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}

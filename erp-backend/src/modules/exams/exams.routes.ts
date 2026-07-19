@@ -8,22 +8,94 @@ import { createAuditLog } from '../../utils/audit';
 import { NotificationRepository } from '../notifications/notifications.repository';
 import { NotificationService } from '../notifications/notifications.service';
 import { isYearLockedOrArchived, isExamYearLockedOrArchived } from '../../utils/academic-year-lock';
+import {
+  getTeacherIdForUser,
+  isTeacherOnly,
+  teacherCanAccessExam,
+  teacherCanAccessExamSubject,
+  teacherCanAccessStudent,
+  teacherHasSubjectAccess,
+} from '../../utils/teacher-scope';
 
 const exams = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 exams.use('*', authMiddleware);
 
+const ACADEMIC_STAFF_ROLES = new Set([
+  'admin',
+  'Admin',
+  'super_admin',
+  'Super Admin',
+  'Principal',
+  'principal',
+  'HOD',
+  'hod',
+  'Teacher',
+  'teacher',
+]);
+
+function hasAcademicStaffRole(user: JwtPayload): boolean {
+  const roles = user.roles || (user.role ? [user.role] : []);
+  return roles.some((role) => ACADEMIC_STAFF_ROLES.has(role));
+}
+
+function requireAcademicStaff(user: JwtPayload) {
+  return hasAcademicStaffRole(user) ? null : { error: 'Forbidden' };
+}
+
 // --- EXAMS CRUD ---
 exams.get('/', async (c) => {
   const user = c.get('user');
+  const forbidden = requireAcademicStaff(user);
+  if (forbidden) return c.json(forbidden, 403);
+
   const repo = new ExamsRepository(c.env.DB);
   const service = new ExamsService(repo);
+
+  if (isTeacherOnly(user)) {
+    const teacherId = await getTeacherIdForUser(c.env.DB, user);
+    if (!teacherId) return c.json([]);
+
+    const { results } = await c.env.DB.prepare(`
+      SELECT DISTINCT e.*,
+             ay.name AS academic_year_name,
+             c.name AS course_name,
+             c.course_code AS course_code
+      FROM exams e
+      LEFT JOIN academic_years ay ON e.academic_year_id = ay.id
+      LEFT JOIN courses c ON e.course_id = c.id
+      WHERE e.institution_id = ? AND e.is_active = 1
+        AND (
+          EXISTS (
+            SELECT 1 FROM teacher_subject_assignments tsa
+            WHERE tsa.teacher_id = ?
+              AND tsa.course_id = e.course_id
+              AND tsa.academic_year_id = e.academic_year_id
+              AND tsa.is_active = 1
+          )
+          OR EXISTS (
+            SELECT 1 FROM teaching_allocations ta
+            WHERE ta.teacher_id = ?
+              AND ta.program_id = e.course_id
+              AND ta.academic_year_id = e.academic_year_id
+              AND ta.institution_id = ?
+              AND LOWER(ta.status) = 'active'
+          )
+        )
+      ORDER BY e.start_date DESC
+    `).bind(user.institution_id, teacherId, teacherId, user.institution_id).all();
+    return c.json(results || []);
+  }
+
   const results = await service.listExams(user.institution_id);
   return c.json(results);
 });
 
 exams.get('/:id', async (c) => {
   const user = c.get('user');
+  const forbidden = requireAcademicStaff(user);
+  if (forbidden) return c.json(forbidden, 403);
+
   const id = c.req.param('id')!;
   const repo = new ExamsRepository(c.env.DB);
   const service = new ExamsService(repo);
@@ -31,6 +103,9 @@ exams.get('/:id', async (c) => {
   const result = await service.getExam(id);
   if (!result || result.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam not found' }, 404);
+  }
+  if (!(await teacherCanAccessExam(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: exam is outside your teaching assignment' }, 403);
   }
   return c.json(result);
 });
@@ -45,6 +120,26 @@ exams.post('/', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teacher
   }
   if (new Date(input.start_date) > new Date(input.end_date)) {
     return c.json({ error: 'start_date cannot be after end_date' }, 400);
+  }
+  if (isTeacherOnly(user)) {
+    const teacherId = await getTeacherIdForUser(c.env.DB, user);
+    if (!teacherId) return c.json({ error: 'Teacher profile not found for this user' }, 403);
+    const assignment = await c.env.DB.prepare(`
+      SELECT 1
+      FROM (
+        SELECT 1
+        FROM teacher_subject_assignments
+        WHERE teacher_id = ? AND course_id = ? AND academic_year_id = ? AND is_active = 1
+        UNION
+        SELECT 1
+        FROM teaching_allocations
+        WHERE teacher_id = ? AND program_id = ? AND academic_year_id = ? AND institution_id = ? AND LOWER(status) = 'active'
+      )
+      LIMIT 1
+    `).bind(teacherId, input.course_id, input.academic_year_id, teacherId, input.course_id, input.academic_year_id, user.institution_id).first();
+    if (!assignment) {
+      return c.json({ error: 'Forbidden: exam course/year is outside your teaching assignment' }, 403);
+    }
   }
 
   // Validate academic year is not locked/archived
@@ -88,6 +183,9 @@ exams.put('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teach
   const existing = await service.getExam(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam not found' }, 404);
+  }
+  if (!(await teacherCanAccessExam(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: exam is outside your teaching assignment' }, 403);
   }
 
   // Validate academic year is not locked/archived
@@ -143,6 +241,9 @@ exams.delete('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD'), as
 // --- EXAM SUBJECTS ---
 exams.get('/:id/subjects', async (c) => {
   const user = c.get('user');
+  const forbidden = requireAcademicStaff(user);
+  if (forbidden) return c.json(forbidden, 403);
+
   const id = c.req.param('id')!;
   const repo = new ExamsRepository(c.env.DB);
   const service = new ExamsService(repo);
@@ -151,13 +252,27 @@ exams.get('/:id/subjects', async (c) => {
   if (!exam || exam.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam not found' }, 404);
   }
+  if (!(await teacherCanAccessExam(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: exam is outside your teaching assignment' }, 403);
+  }
   
   const results = await service.listExamSubjects(id);
-  return c.json(results);
+  if (!isTeacherOnly(user)) return c.json(results);
+
+  const filtered = [];
+  for (const subject of results) {
+    if (await teacherHasSubjectAccess(c.env.DB, user, subject.subject_id, undefined, exam.course_id, exam.academic_year_id)) {
+      filtered.push(subject);
+    }
+  }
+  return c.json(filtered);
 });
 
 exams.post('/:id/subjects', async (c) => {
   const user = c.get('user');
+  const forbidden = requireAcademicStaff(user);
+  if (forbidden) return c.json(forbidden, 403);
+
   const id = c.req.param('id')!;
   const input = await c.req.json();
   const repo = new ExamsRepository(c.env.DB);
@@ -166,6 +281,9 @@ exams.post('/:id/subjects', async (c) => {
   const exam = await service.getExam(id);
   if (!exam || exam.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam not found' }, 404);
+  }
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, input.subject_id, undefined, exam.course_id, exam.academic_year_id))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment for this exam' }, 403);
   }
 
   // Validate academic year is not locked/archived
@@ -185,6 +303,9 @@ exams.post('/:id/subjects', async (c) => {
 
 exams.delete('/subjects/:id', async (c) => {
   const user = c.get('user');
+  const forbidden = requireAcademicStaff(user);
+  if (forbidden) return c.json(forbidden, 403);
+
   const id = c.req.param('id')!;
   const repo = new ExamsRepository(c.env.DB);
   const service = new ExamsService(repo);
@@ -192,6 +313,9 @@ exams.delete('/subjects/:id', async (c) => {
   const existing = await repo.findSubjectById(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam subject not found' }, 404);
+  }
+  if (!(await teacherCanAccessExamSubject(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: exam subject is outside your teaching assignment' }, 403);
   }
 
   // Validate academic year is not locked/archived
@@ -208,6 +332,9 @@ exams.delete('/subjects/:id', async (c) => {
 // --- MARKS ---
 exams.get('/subjects/:id/marks', async (c) => {
   const user = c.get('user');
+  const forbidden = requireAcademicStaff(user);
+  if (forbidden) return c.json(forbidden, 403);
+
   const id = c.req.param('id')!;
   const repo = new ExamsRepository(c.env.DB);
   const service = new ExamsService(repo);
@@ -216,10 +343,21 @@ exams.get('/subjects/:id/marks', async (c) => {
   if (!examSub || examSub.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam subject not found' }, 404);
   }
+  if (!(await teacherCanAccessExamSubject(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: exam subject is outside your teaching assignment' }, 403);
+  }
   
   try {
     const results = await service.getMarksheet(id);
-    return c.json(results);
+    if (!isTeacherOnly(user)) return c.json(results);
+
+    const filtered = [];
+    for (const row of results) {
+      if (await teacherHasSubjectAccess(c.env.DB, user, examSub.subject_id, row.section_id)) {
+        filtered.push(row);
+      }
+    }
+    return c.json(filtered);
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
   }
@@ -227,6 +365,9 @@ exams.get('/subjects/:id/marks', async (c) => {
 
 exams.post('/subjects/:id/marks', async (c) => {
   const user = c.get('user');
+  const forbidden = requireAcademicStaff(user);
+  if (forbidden) return c.json(forbidden, 403);
+
   const id = c.req.param('id')!;
   const input = await c.req.json();
   const repo = new ExamsRepository(c.env.DB);
@@ -235,6 +376,40 @@ exams.post('/subjects/:id/marks', async (c) => {
   const examSub = await repo.findSubjectById(id);
   if (!examSub || examSub.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam subject not found' }, 404);
+  }
+  if (!(await teacherCanAccessExamSubject(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: exam subject is outside your teaching assignment' }, 403);
+  }
+
+  const exam = await service.getExam(examSub.exam_id);
+  if (!exam || exam.institution_id !== user.institution_id) {
+    return c.json({ error: 'Exam not found' }, 404);
+  }
+  if (!Array.isArray(input)) {
+    return c.json({ error: 'Marks payload must be an array' }, 400);
+  }
+  for (const record of input) {
+    const enrollment = await c.env.DB.prepare(`
+      SELECT se.section_id
+      FROM student_enrollments se
+      JOIN students s ON s.id = se.student_id
+      WHERE se.student_id = ?
+        AND se.academic_year_id = ?
+        AND se.course_id = ?
+        AND se.semester = ?
+        AND se.is_active = 1
+        AND s.institution_id = ?
+        AND s.is_active = 1
+      LIMIT 1
+    `).bind(record.student_id, exam.academic_year_id, exam.course_id, exam.semester, user.institution_id).first<{ section_id: string }>();
+
+    if (
+      !enrollment ||
+      !(await teacherCanAccessStudent(c.env.DB, user, record.student_id)) ||
+      !(await teacherHasSubjectAccess(c.env.DB, user, examSub.subject_id, enrollment.section_id, exam.course_id, exam.academic_year_id))
+    ) {
+      return c.json({ error: 'Forbidden: marks include a student or subject outside your teaching assignment' }, 403);
+    }
   }
 
   // Validate academic year is not locked/archived
@@ -265,6 +440,9 @@ exams.post('/subjects/:id/marks', async (c) => {
 // --- RESULTS ---
 exams.get('/:id/results', async (c) => {
   const user = c.get('user');
+  const forbidden = requireAcademicStaff(user);
+  if (forbidden) return c.json(forbidden, 403);
+
   const id = c.req.param('id')!;
   const repo = new ExamsRepository(c.env.DB);
   const service = new ExamsService(repo);
@@ -273,9 +451,45 @@ exams.get('/:id/results', async (c) => {
   if (!exam || exam.institution_id !== user.institution_id) {
     return c.json({ error: 'Exam not found' }, 404);
   }
+  if (!(await teacherCanAccessExam(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: exam is outside your teaching assignment' }, 403);
+  }
   
   const results = await service.getExamResults(id);
-  return c.json(results);
+  if (!isTeacherOnly(user)) return c.json(results);
+
+  const filteredResults = [];
+  for (const result of results) {
+    if (!(await teacherCanAccessStudent(c.env.DB, user, result.student_id))) continue;
+
+    const enrollment = await c.env.DB.prepare(`
+      SELECT section_id FROM student_enrollments
+      WHERE student_id = ? AND academic_year_id = ? AND course_id = ? AND semester = ? AND is_active = 1
+      LIMIT 1
+    `).bind(result.student_id, exam.academic_year_id, exam.course_id, exam.semester).first<{ section_id: string }>();
+    if (!enrollment) continue;
+
+    const subjects = [];
+    for (const subject of result.subjects) {
+      if (await teacherHasSubjectAccess(c.env.DB, user, subject.subject_id, enrollment.section_id, exam.course_id, exam.academic_year_id)) {
+        subjects.push(subject);
+      }
+    }
+
+    if (subjects.length === 0) continue;
+
+    const totalObtained = subjects.reduce((sum, subject) => sum + Number(subject.marks_obtained || 0), 0);
+    const totalMax = subjects.reduce((sum, subject) => sum + Number(subject.max_marks || 0), 0);
+    filteredResults.push({
+      ...result,
+      subjects,
+      total_obtained: totalObtained,
+      total_max: totalMax,
+      percentage: totalMax > 0 ? Math.round((totalObtained / totalMax) * 10000) / 100 : 0,
+      result: subjects.some((subject) => subject.status === 'FAIL') ? 'FAIL' : 'PASS',
+    });
+  }
+  return c.json(filteredResults);
 });
 
 exams.get('/students/:studentId/results', async (c) => {
@@ -309,6 +523,9 @@ exams.get('/students/:studentId/results', async (c) => {
 
   if (!isStudent && !isParent && !isAdminOrStaff) {
     return c.json({ error: 'Forbidden' }, 403);
+  }
+  if (isTeacherOnly(user) && !(await teacherCanAccessStudent(c.env.DB, user, studentId))) {
+    return c.json({ error: 'Forbidden: student is outside your teaching assignment' }, 403);
   }
 
   const results = await service.listExamsForStudent(studentId);
@@ -347,6 +564,9 @@ exams.get('/students/:studentId/exams/:examId/result', async (c) => {
 
   if (!isStudent && !isParent && !isAdminOrStaff) {
     return c.json({ error: 'Forbidden' }, 403);
+  }
+  if (isTeacherOnly(user) && !(await teacherCanAccessStudent(c.env.DB, user, studentId))) {
+    return c.json({ error: 'Forbidden: student is outside your teaching assignment' }, 403);
   }
   
   const exam = await service.getExam(examId);

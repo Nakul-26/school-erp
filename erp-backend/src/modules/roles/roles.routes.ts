@@ -29,7 +29,7 @@ roles.get('/matrix', requirePermission('user.manage'), async (c) => {
       r.id AS role_id,
       r.name AS role_name,
       r.description AS role_description,
-      GROUP_CONCAT(p.code) AS permissions_csv,
+      GROUP_CONCAT(DISTINCT p.code) AS permissions_csv,
       COUNT(DISTINCT rp.permission_id) AS permission_count,
       COUNT(DISTINCT ur.user_id) AS user_count
     FROM roles r

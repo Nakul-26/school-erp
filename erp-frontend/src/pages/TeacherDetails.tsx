@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
 export default function TeacherDetails() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,15 @@ export default function TeacherDetails() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { success: toastSuccess, error: toastError, info: toastInfo } = useToast();
+  const userPermissions = user?.permissions || [];
+  const roles = user?.roles || (user?.role ? [user.role] : []);
+  const isTeacherRole = hasAnyRole(roles, ['Teacher', 'teacher']);
+  const isAdmin = hasAnyRole(roles, ['admin', 'super_admin', 'Principal']);
+  const isTeacherManager = hasAnyRole(roles, ['admin', 'super_admin', 'Principal', 'HOD']);
+  const canEditTeacher = hasAnyPermission(userPermissions, ['teacher.edit']) || isAdmin;
+  const canManageLogin = hasAnyPermission(userPermissions, ['teacher.create']) || isAdmin;
+  const canManageTeacherDocs = canEditTeacher;
+  const canWriteTimeline = canEditTeacher;
   const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [timelineForm, setTimelineForm] = useState({ title: '', desc: '' });
   
@@ -26,6 +36,10 @@ export default function TeacherDetails() {
 
   // Core States
   const [teacher, setTeacher] = useState<any>(null);
+  const isSelfTeacherProfile = Boolean(teacher && isTeacherRole && teacher.user_id === user?.id);
+  const canApplyLeave = isSelfTeacherProfile;
+  const canViewPayroll = hasAnyPermission(userPermissions, ['payroll.view', 'finance.access']) || isAdmin || isSelfTeacherProfile;
+  const canViewTeacherDocs = isTeacherManager || isSelfTeacherProfile;
   const [assignments, setAssignments] = useState<any[]>([]);
   const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [programs, setPrograms] = useState<any[]>([]);
@@ -50,44 +64,99 @@ export default function TeacherDetails() {
   const [teacherDocs, setTeacherDocs] = useState<any[]>([]);
   const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
   const [showHelp, setShowHelp] = useState(false);
- 
-  useEffect(() => {
+
+  const fetchDocumentsAndTimeline = async (canReadDocsAndTimeline: boolean, canSeedTimeline: boolean) => {
     if (!id) return;
-    
-    // Initialize documents
-    const savedDocs = localStorage.getItem(`teacher_docs_${id}`);
-    if (savedDocs) {
-      setTeacherDocs(JSON.parse(savedDocs));
-    } else {
+    try {
+      // 1. Fetch documents
       const initialDocs = [
-        { id: 'resume', label: 'Resume / Curriculum Vitae', fileName: 'sarah_resume_2026.pdf', status: 'UPLOADED', date: '2026-06-01' },
-        { id: 'degree', label: 'Post-Graduate Degree Certificate', fileName: 'msc_math_degree.pdf', status: 'UPLOADED', date: '2026-06-01' },
-        { id: 'pan', label: 'PAN Card Cardholder Copy', fileName: '', status: 'PENDING', date: '' },
-        { id: 'aadhar', label: 'Aadhar Card Copy (UIDAI)', fileName: 'aadhar_card_verified.pdf', status: 'UPLOADED', date: '2026-06-01' },
-        { id: 'joining_letter', label: 'Official Institution Joining Letter', fileName: 'joining_letter.pdf', status: 'UPLOADED', date: '2026-06-02' },
-        { id: 'contract', label: 'Annual Employment Contract Agreement', fileName: '', status: 'PENDING', date: '' },
-        { id: 'experience_certs', label: 'Previous Experience Certificates', fileName: '', status: 'PENDING', date: '' },
+        { id: 'resume', label: 'Resume / Curriculum Vitae', fileName: '', status: 'PENDING', date: '', backendId: '' },
+        { id: 'degree', label: 'Post-Graduate Degree Certificate', fileName: '', status: 'PENDING', date: '', backendId: '' },
+        { id: 'pan', label: 'PAN Card Cardholder Copy', fileName: '', status: 'PENDING', date: '', backendId: '' },
+        { id: 'aadhar', label: 'Aadhar Card Copy (UIDAI)', fileName: '', status: 'PENDING', date: '', backendId: '' },
+        { id: 'joining_letter', label: 'Official Institution Joining Letter', fileName: '', status: 'PENDING', date: '', backendId: '' },
+        { id: 'contract', label: 'Annual Employment Contract Agreement', fileName: '', status: 'PENDING', date: '', backendId: '' },
+        { id: 'experience_certs', label: 'Previous Experience Certificates', fileName: '', status: 'PENDING', date: '', backendId: '' },
       ];
-      setTeacherDocs(initialDocs);
-      localStorage.setItem(`teacher_docs_${id}`, JSON.stringify(initialDocs));
+
+      if (!canReadDocsAndTimeline) {
+        setTeacherDocs(initialDocs);
+        setTimelineEvents([]);
+        return;
+      }
+
+      const docs = await api.get(`/teachers/${id}/documents`).catch(() => []);
+      const mergedDocs = initialDocs.map(requiredDoc => {
+        const match = docs.find((d: any) => d.folder === requiredDoc.label);
+        if (match) {
+          return {
+            ...requiredDoc,
+            fileName: match.name,
+            status: 'UPLOADED',
+            date: match.created_at,
+            backendId: match.id
+          };
+        }
+        return requiredDoc;
+      });
+
+      const extraDocs = docs
+        .filter((d: any) => !initialDocs.some(req => req.label === d.folder))
+        .map((d: any) => ({
+          id: d.id,
+          label: d.folder || 'Other',
+          fileName: d.name,
+          status: 'UPLOADED',
+          date: d.created_at,
+          backendId: d.id
+        }));
+
+      setTeacherDocs([...mergedDocs, ...extraDocs]);
+
+      // 2. Fetch timeline events (stored as JSON in notes)
+      const notes = await api.get(`/teachers/${id}/notes`).catch(() => []);
+      const events = notes.map((n: any) => {
+        let title = n.content;
+        let desc = '';
+        try {
+          const parsed = JSON.parse(n.content);
+          title = parsed.title;
+          desc = parsed.desc;
+        } catch (e) {
+          // Fallback if not JSON
+        }
+        return {
+          id: n.id,
+          title,
+          desc,
+          date: n.created_at
+        };
+      });
+
+      // If no notes, load default initial timeline events
+      if (events.length === 0) {
+        const initialTimeline = [
+          { id: '1', title: 'Profile Created', desc: 'Teacher user profile initiated and synchronized.', date: '2026-06-01 10:00' },
+          { id: '2', title: 'Joining Letter Signed', desc: 'Joining letter document uploaded and archived.', date: '2026-06-02 11:30' },
+          { id: '3', title: 'Salary Structure Configured', desc: 'Monthly basic and allowances structural configuration applied.', date: '2026-06-15 14:00' },
+          { id: '4', title: 'Subject Mappings Created', desc: 'Curriculum allocations assigned in Academic Setup.', date: '2026-07-07 09:15' },
+          { id: '5', title: 'Applied Leave Request', desc: 'Leave application submitted for approval.', date: '2026-07-12 16:30' }
+        ];
+        // Populate backend with initial timeline events in background so it's persisted
+        if (canSeedTimeline) {
+          for (const evt of initialTimeline) {
+            api.post(`/teachers/${id}/notes`, { content: JSON.stringify({ title: evt.title, desc: evt.desc }) }).catch(() => {});
+          }
+        }
+        setTimelineEvents(initialTimeline);
+      } else {
+        setTimelineEvents(events);
+      }
+
+    } catch (err) {
+      console.error('Failed to load documents/notes:', err);
     }
- 
-    // Initialize timeline
-    const savedTimeline = localStorage.getItem(`teacher_timeline_${id}`);
-    if (savedTimeline) {
-      setTimelineEvents(JSON.parse(savedTimeline));
-    } else {
-      const initialTimeline = [
-        { id: '1', title: 'Profile Created', desc: 'Teacher user profile initiated and synchronized.', date: '2026-06-01 10:00' },
-        { id: '2', title: 'Joining Letter Signed', desc: 'Joining letter document uploaded and archived.', date: '2026-06-02 11:30' },
-        { id: '3', title: 'Salary Structure Configured', desc: 'Monthly basic and allowances structural configuration applied.', date: '2026-06-15 14:00' },
-        { id: '4', title: 'Subject Mappings Created', desc: 'Curriculum allocations assigned in Academic Setup.', date: '2026-07-07 09:15' },
-        { id: '5', title: 'Applied Leave Request', desc: 'Leave application submitted for approval.', date: '2026-07-12 16:30' }
-      ];
-      setTimelineEvents(initialTimeline);
-      localStorage.setItem(`teacher_timeline_${id}`, JSON.stringify(initialTimeline));
-    }
-  }, [id]);
+  };
 
   // Apply Leave Modal
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -141,8 +210,19 @@ export default function TeacherDetails() {
   }, [activeTab]);
 
   useEffect(() => {
+    if (
+      (activeTab === 'payroll' && !canViewPayroll) ||
+      (activeTab === 'documents' && !canViewTeacherDocs) ||
+      (activeTab === 'leave' && !canApplyLeave && !isTeacherManager) ||
+      (activeTab === 'timeline' && !canViewTeacherDocs)
+    ) {
+      setActiveTab('overview');
+    }
+  }, [activeTab, canViewPayroll, canViewTeacherDocs, canApplyLeave, isTeacherManager]);
+
+  useEffect(() => {
     fetchData();
-  }, [id]);
+  }, [id, isTeacherManager, isTeacherRole, isAdmin, canWriteTimeline]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -160,7 +240,7 @@ export default function TeacherDetails() {
         api.get('/subjects').catch(() => []),
         api.get('/timetable-slots').catch(() => []),
         api.get(`/weekly-timetable?teacher_id=${id}`).catch(() => []),
-        api.get('/teachers/reports/workload').catch(() => []),
+        isTeacherManager ? api.get('/teachers/reports/workload').catch(() => []) : Promise.resolve([]),
         api.get('/departments').catch(() => [])
       ]);
 
@@ -202,12 +282,20 @@ export default function TeacherDetails() {
       }
 
       const defaultYear = yearsData.find((y: any) => y.is_current)?.id || yearsData[0]?.id || '';
+      const isSelfTeacherData = Boolean(teacherData && isTeacherRole && teacherData.user_id === user?.id);
+      const canReadPayrollData = hasAnyPermission(userPermissions, ['payroll.view', 'finance.access']) || isAdmin || isSelfTeacherData;
+      const canReadDocsAndTimeline = isTeacherManager || isSelfTeacherData;
+      const canReadLeaveData = isTeacherManager || isSelfTeacherData;
 
       const [balancesData, leaveAppsData, salaryData, payslipsData, leaveTypesData] = await Promise.all([
-        defaultYear ? api.get(`/leave/balances?academic_year_id=${defaultYear}`).catch(() => []) : [],
-        api.get(`/leave/applications?teacher_id=${id}`).catch(() => []),
-        api.get(`/payroll/salary-structures/${id}`).catch(() => null),
-        api.get(`/payroll/teacher/${id}/payslips`).catch(() => []),
+        defaultYear && canReadLeaveData
+          ? (isSelfTeacherData ? api.get(`/leave/balances/my?academic_year_id=${defaultYear}`).catch(() => []) : api.get(`/leave/balances?academic_year_id=${defaultYear}`).catch(() => []))
+          : Promise.resolve([]),
+        canReadLeaveData
+          ? (isSelfTeacherData ? api.get('/leave/applications/my').catch(() => []) : api.get(`/leave/applications?teacher_id=${id}`).catch(() => []))
+          : Promise.resolve([]),
+        canReadPayrollData ? api.get(`/payroll/salary-structures/${id}`).catch(() => null) : Promise.resolve(null),
+        canReadPayrollData ? api.get(`/payroll/teacher/${id}/payslips`).catch(() => []) : Promise.resolve([]),
         api.get(`/leave/types`).catch(() => [])
       ]);
 
@@ -221,6 +309,8 @@ export default function TeacherDetails() {
         setLeaveForm(prev => ({ ...prev, leave_type_id: leaveTypesData[0].id }));
       }
 
+      await fetchDocumentsAndTimeline(canReadDocsAndTimeline, canWriteTimeline);
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -230,6 +320,10 @@ export default function TeacherDetails() {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEditTeacher) {
+      toastError('You do not have permission to edit teacher profiles.');
+      return;
+    }
     try {
       await api.put(`/teachers/${id}`, editForm);
       setShowEditModal(false);
@@ -242,6 +336,10 @@ export default function TeacherDetails() {
  
   const handleToggleStatus = async () => {
     if (!teacher) return;
+    if (!canEditTeacher) {
+      toastError('You do not have permission to change teacher status.');
+      return;
+    }
     const newStatus = teacher.status === 'ACTIVE' ? 'RESIGNED' : 'ACTIVE';
     if (!window.confirm(`Are you sure you want to change this teacher's status to ${newStatus}?`)) return;
     try {
@@ -258,6 +356,10 @@ export default function TeacherDetails() {
  
   const handleCreateLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageLogin) {
+      toastError('You do not have permission to link teacher login accounts.');
+      return;
+    }
     try {
       setCreatingLogin(true);
       const userRes = await api.post('/users', {
@@ -288,6 +390,10 @@ export default function TeacherDetails() {
  
   const handleApplyLeave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canApplyLeave) {
+      toastError('Leave applications must be submitted from your own teacher profile.');
+      return;
+    }
     setSubmittingLeave(true);
     try {
       const defaultYear = academicYears.find((y: any) => y.is_current)?.id || academicYears[0]?.id || '';
@@ -307,22 +413,85 @@ export default function TeacherDetails() {
     }
   };
  
-  const handleTimelineSubmit = (e: React.FormEvent) => {
+  const handleTimelineSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canWriteTimeline) {
+      toastError('You do not have permission to add teacher timeline events.');
+      return;
+    }
     if (!timelineForm.title.trim() || !timelineForm.desc.trim()) return;
-    const now = new Date();
-    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    const newEvt = {
-      id: String(Date.now()),
-      title: timelineForm.title.trim(),
-      desc: timelineForm.desc.trim(),
-      date: dateStr
+
+    try {
+      const payload = {
+        content: JSON.stringify({
+          title: timelineForm.title.trim(),
+          desc: timelineForm.desc.trim()
+        })
+      };
+
+      await api.post(`/teachers/${id}/notes`, payload);
+      await fetchDocumentsAndTimeline(canViewTeacherDocs, canWriteTimeline);
+      setShowTimelineModal(false);
+      toastSuccess('Timeline event added successfully!');
+    } catch (err: any) {
+      toastError(err.message || 'Failed to add timeline event');
+    }
+  };
+
+  const handleDownloadDocument = (doc: any) => {
+    if (!canViewTeacherDocs) {
+      toastError('You do not have permission to download teacher documents.');
+      return;
+    }
+    if (!doc.backendId) return;
+    const baseUrl = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8787' : '');
+    const token = localStorage.getItem('erp_token');
+    const downloadUrl = `${baseUrl}/teachers/${id}/documents/${doc.backendId}/download?token=${encodeURIComponent(token || '')}`;
+    window.open(downloadUrl, '_blank');
+  };
+
+  const handleDeleteDocument = async (doc: any) => {
+    if (!canManageTeacherDocs) {
+      toastError('You do not have permission to delete teacher documents.');
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to delete this document: ${doc.label}?`)) return;
+    if (!doc.backendId) return;
+    try {
+      await api.delete(`/teachers/${id}/documents/${doc.backendId}`);
+      toastSuccess(`${doc.label} deleted successfully`);
+      await fetchDocumentsAndTimeline(canViewTeacherDocs, canWriteTimeline);
+    } catch (err: any) {
+      toastError(err.message || 'Failed to delete document.');
+    }
+  };
+
+  const handleUploadDocument = (docId: string, label: string) => {
+    if (!canManageTeacherDocs) {
+      toastError('You do not have permission to upload teacher documents.');
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('document_type', label);
+
+      try {
+        toastInfo(`Uploading ${file.name}...`);
+        await api.upload(`/teachers/${id}/documents/upload`, formData);
+        toastSuccess(`${label} uploaded successfully!`);
+        await fetchDocumentsAndTimeline(canViewTeacherDocs, canWriteTimeline);
+      } catch (err: any) {
+        toastError(err.message || 'Failed to upload document.');
+      }
     };
-    const updated = [newEvt, ...timelineEvents];
-    setTimelineEvents(updated);
-    localStorage.setItem(`teacher_timeline_${id}`, JSON.stringify(updated));
-    setShowTimelineModal(false);
-    toastSuccess('Timeline event added successfully!');
+    input.click();
   };
 
   if (loading) {
@@ -351,11 +520,7 @@ export default function TeacherDetails() {
     );
   }
 
-  const isTeacherRole = (user?.roles || (user?.role ? [user.role] : [])).some(
-    (r: string) => ['teacher', 'Teacher'].includes(r)
-  );
-
-  if (isTeacherRole && teacher.user_id !== user?.id) {
+  if (isTeacherRole && !isSelfTeacherProfile) {
     return (
       <Layout>
         <div style={{ padding: '3rem', textAlign: 'center' }}>
@@ -422,9 +587,6 @@ export default function TeacherDetails() {
   const nextClassStr = getNextClassInfo();
   const pendingLeaveCount = leaveApplications.filter(l => l.status === 'PENDING').length;
 
-  const roles = user?.roles || (user?.role ? [user.role] : []);
-  const isAdmin = roles.some(r => ['admin', 'super_admin', 'Principal', 'Super Admin'].includes(r));
- 
   return (
     <Layout>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
@@ -479,19 +641,25 @@ export default function TeacherDetails() {
             </div>
           </div>
  
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn btn-secondary" onClick={handleToggleStatus}>
-              Change Status
-            </button>
-            {!teacher.user_id && (
-              <button className="btn btn-secondary" onClick={() => setShowLoginModal(true)}>
-                Link User Login
-              </button>
-            )}
-            <button className="btn btn-secondary" onClick={() => setShowEditModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Settings size={15} /> Edit Profile
-            </button>
-          </div>
+          {(canEditTeacher || canManageLogin) && (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {canEditTeacher && (
+                <button className="btn btn-secondary" onClick={handleToggleStatus}>
+                  Change Status
+                </button>
+              )}
+              {canManageLogin && !teacher.user_id && (
+                <button className="btn btn-secondary" onClick={() => setShowLoginModal(true)}>
+                  Link User Login
+                </button>
+              )}
+              {canEditTeacher && (
+                <button className="btn btn-secondary" onClick={() => setShowEditModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Settings size={15} /> Edit Profile
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
  
@@ -525,12 +693,14 @@ export default function TeacherDetails() {
                 {pendingLeaveCount} Requests
               </div>
             </div>
-            <div>
-              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Net Salary (Gross)</div>
-              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)' }}>
-                ₹{grossSalary.toLocaleString()}
+            {canViewPayroll && (
+              <div>
+                <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em' }}>Net Salary (Gross)</div>
+                <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-main)' }}>
+                  ₹{grossSalary.toLocaleString()}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -538,23 +708,24 @@ export default function TeacherDetails() {
       {/* Role-based Quick Actions Panel */}
       <div className="card quick-actions-panel" style={{ padding: '0.75rem 1rem', marginBottom: '1.5rem', background: 'var(--bg-subtle)', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
         <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginRight: '0.5rem', letterSpacing: '0.05em' }}>Quick Actions:</span>
-        {isAdmin ? (
+        {isTeacherManager ? (
           <>
-            <button className="btn btn-secondary" onClick={() => setShowEditModal(true)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-              <Settings size={13} /> Edit Teacher
-            </button>
+            {canEditTeacher && (
+              <button className="btn btn-secondary" onClick={() => setShowEditModal(true)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Settings size={13} /> Edit Teacher
+              </button>
+            )}
             <button className="btn btn-secondary" onClick={() => navigate('/academic-setup?tab=assignments')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
               <Settings size={13} /> Assign Subject
             </button>
             <button className="btn btn-secondary" onClick={() => { setActiveTab('timetable'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
               <Calendar size={13} /> View Timetable
             </button>
-            <button className="btn btn-secondary" onClick={() => setShowLeaveModal(true)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-              <Plus size={13} /> Apply Leave
-            </button>
-            <button className="btn btn-secondary" onClick={() => navigate('/finance?tab=payroll')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-              <FileText size={13} /> Generate Payslip
-            </button>
+            {canViewPayroll && (
+              <button className="btn btn-secondary" onClick={() => navigate('/finance?tab=payroll')} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                <FileText size={13} /> Generate Payslip
+              </button>
+            )}
           </>
         ) : (
           <>
@@ -567,12 +738,16 @@ export default function TeacherDetails() {
             <button className="btn btn-secondary" onClick={() => { setActiveTab('timetable'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
               <Calendar size={13} /> Today's Timetable
             </button>
-            <button className="btn btn-secondary" onClick={() => setShowLeaveModal(true)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-              <Plus size={13} /> Apply Leave
-            </button>
-            <button className="btn btn-secondary" onClick={() => { setActiveTab('payroll'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-              <Download size={13} /> Download Payslip
-            </button>
+            {canApplyLeave && (
+              <button className="btn btn-secondary" onClick={() => setShowLeaveModal(true)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Plus size={13} /> Apply Leave
+              </button>
+            )}
+            {canViewPayroll && (
+              <button className="btn btn-secondary" onClick={() => { setActiveTab('payroll'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Download size={13} /> Download Payslip
+              </button>
+            )}
           </>
         )}
       </div>
@@ -585,11 +760,11 @@ export default function TeacherDetails() {
           { tab: 'classes', label: `Assigned Classes`, icon: Users },
           { tab: 'timetable', label: 'Work Timetable', icon: Calendar },
           { tab: 'workload', label: 'Teacher Workload', icon: Activity },
-          { tab: 'leave', label: 'Leaves Register', icon: Clipboard },
-          { tab: 'payroll', label: 'Payroll & Payslips', icon: FileText },
-          { tab: 'documents', label: 'HR Documents', icon: FileText },
-          { tab: 'timeline', label: 'Action Timeline', icon: Clock }
-        ].map(t => {
+          { tab: 'leave', label: 'Leaves Register', icon: Clipboard, show: canApplyLeave || isTeacherManager },
+          { tab: 'payroll', label: 'Payroll & Payslips', icon: FileText, show: canViewPayroll },
+          { tab: 'documents', label: 'HR Documents', icon: FileText, show: canViewTeacherDocs },
+          { tab: 'timeline', label: 'Action Timeline', icon: Clock, show: canViewTeacherDocs }
+        ].filter(t => t.show !== false).map(t => {
           const Icon = t.icon;
           const isActive = activeTab === t.tab;
           return (
@@ -633,10 +808,12 @@ export default function TeacherDetails() {
                 <div><span style={{ color: 'var(--text-secondary)' }}>Staff Designation:</span> <strong style={{ color: 'var(--text-main)' }}>{teacher.designation || 'Classroom Teacher'}</strong></div>
                 <div><span style={{ color: 'var(--text-secondary)' }}>System User Portal Login:</span> {teacher.user_id ? (
                   <span style={{ color: 'var(--success)', fontWeight: '700' }}>Active & Linked ✓</span>
-                ) : (
+                ) : canManageLogin ? (
                   <button className="btn btn-secondary btn-sm" onClick={() => setShowLoginModal(true)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', height: 'auto', display: 'inline-flex' }}>
                     Provision Portal Login
                   </button>
+                ) : (
+                  <span style={{ color: 'var(--text-secondary)' }}>Not linked</span>
                 )}</div>
               </div>
             </div>
@@ -867,13 +1044,15 @@ export default function TeacherDetails() {
         )}
 
         {/* 5. LEAVE TAB */}
-        {activeTab === 'leave' && (
+        {activeTab === 'leave' && (canApplyLeave || isTeacherManager) && (
           <div className="card" style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)' }}>Leave Balances & Applications</h4>
-              <button className="btn btn-primary" onClick={() => setShowLeaveModal(true)}>
-                Apply Leave
-              </button>
+              {canApplyLeave && (
+                <button className="btn btn-primary" onClick={() => setShowLeaveModal(true)}>
+                  Apply Leave
+                </button>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', alignItems: 'start' }}>
@@ -931,7 +1110,7 @@ export default function TeacherDetails() {
         )}
 
         {/* 6. PAYROLL TAB */}
-        {activeTab === 'payroll' && (
+        {activeTab === 'payroll' && canViewPayroll && (
           <div className="card" style={{ padding: '1.25rem' }}>
             <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1.25rem' }}>Salary Structure & Payslip Archives</h4>
 
@@ -1033,7 +1212,7 @@ export default function TeacherDetails() {
         )}
  
         {/* 7. DOCUMENTS TAB */}
-        {activeTab === 'documents' && (
+        {activeTab === 'documents' && canViewTeacherDocs && (
           <div className="card teacher-tab-panel-card">
             <h4 className="teacher-details-title-66" style={{ marginBottom: '0.25rem' }}>HR Documents Checklist</h4>
             <p className="teacher-details-text-35" style={{ marginBottom: '1.5rem' }}>
@@ -1072,39 +1251,32 @@ export default function TeacherDetails() {
                             <button 
                               className="btn btn-secondary btn-sm" 
                               style={{ height: 'auto', padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
-                              onClick={() => toastInfo(`Downloading ${doc.fileName}...`)}
+                              onClick={() => handleDownloadDocument(doc)}
                             >
                               <Download size={12} /> Download
                             </button>
-                            <button 
-                              className="btn btn-sm" 
-                              style={{ height: 'auto', padding: '0.2rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'var(--danger-soft)', color: 'var(--danger)', border: 'none' }}
-                              onClick={() => {
-                                if (!window.confirm('Are you sure you want to delete this document?')) return;
-                                const updated = teacherDocs.map(d => d.id === doc.id ? { ...d, fileName: '', status: 'PENDING', date: '' } : d);
-                                setTeacherDocs(updated);
-                                localStorage.setItem(`teacher_docs_${id}`, JSON.stringify(updated));
-                                toastSuccess(`${doc.label} deleted successfully`);
-                              }}
-                            >
-                              <Trash2 size={12} /> Delete
-                            </button>
+                            {canManageTeacherDocs && (
+                              <button 
+                                className="btn btn-sm" 
+                                style={{ height: 'auto', padding: '0.2rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'var(--danger-soft)', color: 'var(--danger)', border: 'none' }}
+                                onClick={() => handleDeleteDocument(doc)}
+                              >
+                                <Trash2 size={12} /> Delete
+                              </button>
+                            )}
                           </div>
                         ) : (
-                          <button 
-                            className="btn btn-primary btn-sm" 
-                            style={{ height: 'auto', padding: '0.2rem 0.5rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                            onClick={() => {
-                              const dummyName = `${doc.id}_verified_${new Date().getFullYear()}.pdf`;
-                              const todayStr = new Date().toISOString().split('T')[0];
-                              const updated = teacherDocs.map(d => d.id === doc.id ? { ...d, fileName: dummyName, status: 'UPLOADED', date: todayStr } : d);
-                              setTeacherDocs(updated);
-                              localStorage.setItem(`teacher_docs_${id}`, JSON.stringify(updated));
-                              toastSuccess(`${doc.label} uploaded successfully!`);
-                            }}
-                          >
-                            <Upload size={12} /> Upload File
-                          </button>
+                          canManageTeacherDocs ? (
+                            <button 
+                              className="btn btn-primary btn-sm" 
+                              style={{ height: 'auto', padding: '0.2rem 0.5rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                              onClick={() => handleUploadDocument(doc.id, doc.label)}
+                            >
+                              <Upload size={12} /> Upload File
+                            </button>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Pending</span>
+                          )
                         )}
                       </td>
                     </tr>
@@ -1116,19 +1288,21 @@ export default function TeacherDetails() {
         )}
  
         {/* 8. TIMELINE TAB */}
-        {activeTab === 'timeline' && (
+        {activeTab === 'timeline' && canViewTeacherDocs && (
           <div className="card teacher-tab-panel-card">
             <div className="teacher-details-timeline-header-row">
               <h4 className="teacher-details-title-66 teacher-details-timeline-title">Action Audit Timeline</h4>
-              <button 
-                className="btn btn-secondary btn-sm" 
-                onClick={() => {
-                  setTimelineForm({ title: '', desc: '' });
-                  setShowTimelineModal(true);
-                }}
-              >
-                + Add Event Log
-              </button>
+              {canWriteTimeline && (
+                <button 
+                  className="btn btn-secondary btn-sm" 
+                  onClick={() => {
+                    setTimelineForm({ title: '', desc: '' });
+                    setShowTimelineModal(true);
+                  }}
+                >
+                  + Add Event Log
+                </button>
+              )}
             </div>
  
             <div className="teacher-details-timeline-log-list">
@@ -1149,7 +1323,7 @@ export default function TeacherDetails() {
       </div>
 
       {/* --- APPLY LEAVE MODAL --- */}
-      {showLeaveModal && (
+      {showLeaveModal && canApplyLeave && (
         <div className="teacher-details-modal-overlay">
           <div className="card modal-content teacher-details-modal-card">
             <h3 className="teacher-details-modal-title">Apply for Leave</h3>
@@ -1228,7 +1402,7 @@ export default function TeacherDetails() {
       )}
 
       {/* --- EDIT PROFILE MODAL --- */}
-      {showEditModal && (
+      {showEditModal && canEditTeacher && (
         <div className="teacher-details-modal-overlay">
           <div className="card modal-content teacher-details-modal-card-wide">
             <h3 className="teacher-details-modal-title">Edit Teacher Profile</h3>
@@ -1308,7 +1482,7 @@ export default function TeacherDetails() {
       )}
 
       {/* --- CREATE LOGIN ACCOUNT MODAL --- */}
-      {showLoginModal && (
+      {showLoginModal && canManageLogin && (
         <div className="teacher-details-modal-overlay">
           <div className="card modal-content teacher-details-modal-card">
             <h3 className="teacher-details-modal-title">Link Login Credentials</h3>
@@ -1338,7 +1512,7 @@ export default function TeacherDetails() {
       )}
 
       {/* --- ADD TIMELINE EVENT MODAL --- */}
-      {showTimelineModal && (
+      {showTimelineModal && canWriteTimeline && (
         <div className="teacher-details-modal-overlay">
           <div className="card modal-content teacher-details-modal-card">
             <h3 className="teacher-details-modal-title">Add Timeline Audit Log</h3>
@@ -1378,7 +1552,7 @@ export default function TeacherDetails() {
       )}
 
       {/* --- PAYSLIP PREVIEW MODAL --- */}
-      {showSlipModal && selectedPayslip && (
+      {showSlipModal && selectedPayslip && canViewPayroll && (
         <div className="teacher-details-modal-overlay no-print" onClick={() => { setShowSlipModal(false); setSelectedPayslip(null); }}>
           <div className="card modal-content teacher-details-payslip-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">

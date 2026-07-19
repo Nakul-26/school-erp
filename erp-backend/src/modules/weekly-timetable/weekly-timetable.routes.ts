@@ -5,6 +5,7 @@ import { WeeklyTimetableService } from './weekly-timetable.service';
 import { authMiddleware } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 import { isYearLockedOrArchived } from '../../utils/academic-year-lock';
+import { isTeacherOnly, getTeacherIdForUser, teacherHasSectionAccess } from '../../utils/teacher-scope';
 
 const timetable = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -12,12 +13,30 @@ timetable.use('*', authMiddleware);
 
 timetable.get('/', async (c) => {
   const user = c.get('user');
-  const sectionId = c.req.query('section_id');
-  const teacherId = c.req.query('teacher_id');
+  let sectionId = c.req.query('section_id');
+  let teacherId = c.req.query('teacher_id');
   
-  const repo = new WeeklyTimetableRepository(c.env.DB);
+  const db = c.env.DB;
+  const repo = new WeeklyTimetableRepository(db);
   const service = new WeeklyTimetableService(repo);
   
+  if (isTeacherOnly(user)) {
+    const assignedTeacherId = await getTeacherIdForUser(db, user);
+    if (!assignedTeacherId) return c.json([]);
+
+    if (sectionId) {
+      if (!(await teacherHasSectionAccess(db, user, sectionId))) {
+        return c.json({ error: 'Forbidden: Section is outside your teaching assignment' }, 403);
+      }
+    } else if (teacherId) {
+      if (teacherId !== assignedTeacherId) {
+        return c.json({ error: 'Forbidden: You can only view your own timetable entries' }, 403);
+      }
+    } else {
+      teacherId = assignedTeacherId;
+    }
+  }
+
   let results;
   if (sectionId) {
     results = await service.listEntriesBySection(user.institution_id, sectionId);
@@ -33,18 +52,29 @@ timetable.get('/', async (c) => {
 timetable.get('/:id', async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
-  const repo = new WeeklyTimetableRepository(c.env.DB);
+  const db = c.env.DB;
+  const repo = new WeeklyTimetableRepository(db);
   const service = new WeeklyTimetableService(repo);
   const result = await service.getEntry(id);
   
   if (!result || result.institution_id !== user.institution_id) {
     return c.json({ error: 'Timetable entry not found' }, 404);
   }
+
+  if (isTeacherOnly(user)) {
+    if (!(await teacherHasSectionAccess(db, user, result.section_id))) {
+      return c.json({ error: 'Forbidden: Section is outside your teaching assignment' }, 403);
+    }
+  }
+
   return c.json(result);
 });
 
 timetable.post('/', async (c) => {
   const user = c.get('user');
+  if (isTeacherOnly(user)) {
+    return c.json({ error: 'Forbidden: Teachers cannot modify timetable entries' }, 403);
+  }
   const input = await c.req.json();
   const repo = new WeeklyTimetableRepository(c.env.DB);
   const service = new WeeklyTimetableService(repo);
@@ -91,6 +121,9 @@ timetable.post('/', async (c) => {
 
 timetable.put('/:id', async (c) => {
   const user = c.get('user');
+  if (isTeacherOnly(user)) {
+    return c.json({ error: 'Forbidden: Teachers cannot modify timetable entries' }, 403);
+  }
   const id = c.req.param('id')!;
   const input = await c.req.json();
   const repo = new WeeklyTimetableRepository(c.env.DB);
@@ -149,6 +182,9 @@ timetable.put('/:id', async (c) => {
 
 timetable.delete('/:id', async (c) => {
   const user = c.get('user');
+  if (isTeacherOnly(user)) {
+    return c.json({ error: 'Forbidden: Teachers cannot modify timetable entries' }, 403);
+  }
   const id = c.req.param('id')!;
   const repo = new WeeklyTimetableRepository(c.env.DB);
   const service = new WeeklyTimetableService(repo);

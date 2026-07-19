@@ -4,11 +4,17 @@ import type { Env, JwtPayload } from '../types';
 import { UserRepository } from '../modules/users/users.repository';
 
 export async function authMiddleware(c: Context<{ Bindings: Env; Variables: { user: JwtPayload } }>, next: Next) {
+  let token = '';
   const authHeader = c.req.header('Authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return c.json({ error: 'Missing or invalid Authorization header' }, 401);
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else {
+    token = c.req.query('token') || '';
   }
-  const token = authHeader.slice(7);
+
+  if (!token) {
+    return c.json({ error: 'Missing or invalid Authorization header or token param' }, 401);
+  }
   try {
     const payload = (await verify(token, c.env.JWT_SECRET, 'HS256')) as unknown as JwtPayload;
     if (!payload.sub || !payload.institution_id) {

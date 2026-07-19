@@ -5,12 +5,13 @@ import { Menu, X, ArrowDownToLine, Bell, BellOff, X as CloseIcon } from 'lucide-
 import BottomNav from './BottomNav';
 import { subscribeToPushNotifications, unsubscribeFromPushNotifications } from '../services/pushNotification';
 import { capturePwaInstallPrompt, canInstallPwa, triggerPwaInstall, isPwaInstalled } from '../services/pwaInstall';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const userStr = localStorage.getItem('erp_user');
-  const user = userStr ? JSON.parse(userStr) : null;
+  const { user } = useAuth();
   const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
+  const permissions: string[] = user?.permissions || [];
 
   // PWA Install Prompt state
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -173,7 +174,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Bottom Navigation for Mobile */}
-      <BottomNav roles={roles} />
+      <BottomNav roles={roles} permissions={permissions} />
     </div>
   );
 }

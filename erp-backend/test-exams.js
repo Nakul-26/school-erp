@@ -63,10 +63,31 @@ async function runTests() {
 
   // 2. Exams CRUD
   console.log('📝 [1/5] Testing Exams CRUD...');
+  
+  // Fetch active academic year, course, section, and subject dynamically to avoid foreign key failures
+  const yearsRes = await request('/academic-years');
+  const coursesRes = await request('/programs');
+  const sectionsRes = await request('/sections');
+  const subjectsRes = await request('/subjects');
+  
+  if (
+    !yearsRes.ok || yearsRes.data.length === 0 ||
+    !coursesRes.ok || coursesRes.data.length === 0 ||
+    !sectionsRes.ok || sectionsRes.data.length === 0 ||
+    !subjectsRes.ok || subjectsRes.data.length === 0
+  ) {
+    throw new Error('Could not fetch academic years, programs, sections, or subjects to run exam tests.');
+  }
+  
+  const activeYearId = yearsRes.data[0].id;
+  const activeCourseId = coursesRes.data[0].id;
+  const activeSectionId = sectionsRes.data[0].id;
+  const activeSubjectId = subjectsRes.data[0].id;
+
   const examPayload = {
     name: 'Internal Test 1',
-    academic_year_id: 'year-2026',
-    course_id: 'prog-cse',
+    academic_year_id: activeYearId,
+    course_id: activeCourseId,
     semester: 3,
     start_date: '2026-07-01',
     end_date: '2026-07-03',
@@ -98,7 +119,7 @@ async function runTests() {
   // 3. Exam Subjects
   console.log('📚 [2/5] Testing Exam Subjects configuration...');
   const examSubjectPayload = {
-    subject_id: 'sub-ds', // Data Structures (seeded, Course prog-cse, Sem 3)
+    subject_id: activeSubjectId, 
     exam_date: '2026-07-01',
     start_time: '09:00',
     end_time: '12:00',
@@ -112,7 +133,7 @@ async function runTests() {
   });
   if (addSubjectRes.status !== 201) throw new Error(`Add exam subject failed: ${JSON.stringify(addSubjectRes.data)}`);
   const examSubjectId = addSubjectRes.data.id;
-  console.log(`- Added Subject sub-ds to Exam. ExamSubject ID: ${examSubjectId}`);
+  console.log(`- Added Subject ${activeSubjectId} to Exam. ExamSubject ID: ${examSubjectId}`);
 
   const getSubjects = await request(`/exams/${examId}/subjects`);
   if (!getSubjects.ok || getSubjects.data.length !== 1) throw new Error('List exam subjects failed');
@@ -138,12 +159,12 @@ async function runTests() {
   const studentId = createStudent.data.id;
   console.log(`- Seeded student: ${studentPayload.first_name} ${studentPayload.last_name} with ID: ${studentId}`);
 
-  // Enroll student in Course prog-cse, Semester 3 (to make them eligible for the exam!)
+  // Enroll student in Course, Semester 3 (to make them eligible for the exam!)
   const enrollPayload = {
     student_id: studentId,
-    academic_year_id: 'year-2026',
-    course_id: 'prog-cse',
-    section_id: 'sec-cse-a',
+    academic_year_id: activeYearId,
+    course_id: activeCourseId,
+    section_id: activeSectionId,
     semester: 3
   };
   const enrollStudent = await request('/enrollments', {
@@ -151,7 +172,7 @@ async function runTests() {
     body: enrollPayload
   });
   if (enrollStudent.status !== 201) throw new Error(`Enrollment failed: ${JSON.stringify(enrollStudent.data)}`);
-  console.log(`- Enrolled student alice in course prog-cse semester 3`);
+  console.log(`- Enrolled student alice in course ${activeCourseId} semester 3`);
 
   // Fetch empty marksheet
   const getMarksheet = await request(`/exams/subjects/${examSubjectId}/marks`);

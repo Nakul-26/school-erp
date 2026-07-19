@@ -9,6 +9,14 @@ const broadcasts = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>(
 
 broadcasts.use('*', authMiddleware);
 
+function userRoles(user: JwtPayload): string[] {
+  return user.roles || (user.role ? [user.role] : []);
+}
+
+function isBroadcastAdmin(user: JwtPayload): boolean {
+  return userRoles(user).some((role) => ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal'].includes(role));
+}
+
 // 1. Get broadcasts received by current user (inbox)
 broadcasts.get('/inbox', async (c) => {
   const user = c.get('user');
@@ -60,6 +68,15 @@ broadcasts.get('/:id', async (c) => {
   if (!result || result.institution_id !== user.institution_id) {
     return c.json({ error: 'Broadcast not found' }, 404);
   }
+
+  const recipient = await c.env.DB.prepare(
+    'SELECT 1 FROM broadcast_recipients WHERE broadcast_id = ? AND user_id = ?'
+  ).bind(id, user.sub).first();
+  const isCreator = result.created_by === user.sub;
+  if (!isBroadcastAdmin(user) && !isCreator && !(result.status === 'sent' && recipient)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
   return c.json(result);
 });
 

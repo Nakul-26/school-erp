@@ -42,6 +42,36 @@
   gap: 0.5rem;
 }
 
+.manage-users-tabs {
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.manage-users-tab {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 0.45rem;
+  padding: 0.75rem 0.15rem;
+}
+
+.manage-users-tab:hover {
+  color: var(--text-main);
+}
+
+.manage-users-tab.is-active {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+}
+
 .manage-users-td-6 {
   padding: 2rem;
   text-align: center;
@@ -186,4 +216,3 @@
   font-weight: 600;
   gap: 0.5rem;
 }
-

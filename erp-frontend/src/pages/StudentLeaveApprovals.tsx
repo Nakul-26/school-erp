@@ -4,6 +4,8 @@ import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { Calendar, Check, X } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { hasAnyRole } from '../utils/accessControl';
 
 interface StudentLeaveRecord {
   id: string;
@@ -23,6 +25,9 @@ interface StudentLeaveRecord {
 }
 
 export default function StudentLeaveApprovals() {
+  const { user } = useAuth();
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const canReviewStudentLeaves = hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher']);
   const [leaves, setLeaves] = useState<StudentLeaveRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'Pending' | 'Approved' | 'Rejected'>('Pending');
@@ -47,6 +52,10 @@ export default function StudentLeaveApprovals() {
   };
 
   const handleApprove = async (id: string) => {
+    if (!canReviewStudentLeaves) {
+      alert('You do not have permission to review student leave requests.');
+      return;
+    }
     if (!confirm('Approve this student leave request?')) return;
     try {
       await api.patch(`/student-leaves/${id}/approve`, { remarks: 'Approved' });
@@ -58,6 +67,10 @@ export default function StudentLeaveApprovals() {
   };
 
   const handleRejectClick = (id: string) => {
+    if (!canReviewStudentLeaves) {
+      alert('You do not have permission to review student leave requests.');
+      return;
+    }
     setSelectedLeaveId(id);
     setReviewRemarks('');
     setShowRejectModal(true);
@@ -65,6 +78,10 @@ export default function StudentLeaveApprovals() {
 
   const handleRejectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canReviewStudentLeaves) {
+      alert('You do not have permission to review student leave requests.');
+      return;
+    }
     if (!selectedLeaveId || !reviewRemarks.trim()) return;
     try {
       await api.patch(`/student-leaves/${selectedLeaveId}/reject`, { remarks: reviewRemarks });
@@ -119,7 +136,7 @@ export default function StudentLeaveApprovals() {
                 <th>Days</th>
                 <th>Reason / Applied By</th>
                 <th>Status</th>
-                {activeTab === 'Pending' && <th className="student-leave-approvals-th-4">Actions</th>}
+                {activeTab === 'Pending' && canReviewStudentLeaves && <th className="student-leave-approvals-th-4">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -148,7 +165,7 @@ export default function StudentLeaveApprovals() {
                     </span>
                     {l.remarks && <div className="student-leave-approvals-div-9">Notes: {l.remarks}</div>}
                   </td>
-                  {activeTab === 'Pending' && (
+                  {activeTab === 'Pending' && canReviewStudentLeaves && (
                     <td className="student-leave-approvals-td-10">
                       <div className="student-leave-approvals-row-11">
                         <button className="btn btn-sm btn-success" onClick={() => handleApprove(l.id)}>
@@ -164,7 +181,7 @@ export default function StudentLeaveApprovals() {
               ))}
               {filteredLeaves.length === 0 && (
                 <tr>
-                  <td colSpan={activeTab === 'Pending' ? 7 : 6} className="student-leave-approvals-td-12">
+                  <td colSpan={activeTab === 'Pending' && canReviewStudentLeaves ? 7 : 6} className="student-leave-approvals-td-12">
                     No {activeTab.toLowerCase()} leave requests found.
                   </td>
                 </tr>
@@ -174,7 +191,7 @@ export default function StudentLeaveApprovals() {
         )}
       </div>
 
-      {showRejectModal && (
+      {showRejectModal && canReviewStudentLeaves && (
         <div className="modal-overlay">
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">

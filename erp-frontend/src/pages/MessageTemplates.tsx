@@ -346,7 +346,7 @@ export default function MessageTemplates({ isSubComponent = false }: { isSubComp
               </div>
             </div>
           ) : (
-            <div className="tpl-select-prompt">
+            <div className="tpl-choose-prompt">
               <FileText size={48} className="tpl-prompt-icon" />
               <h3>Choose a Template</h3>
               <p>Select a message template from the left list to view details or edit it.</p>

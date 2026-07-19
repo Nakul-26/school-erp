@@ -46,7 +46,24 @@ import { visitors, assets, alumni } from './modules/remaining.routes';
 
 const app = new Hono<{ Bindings: Env }>();
 
-app.use('*', cors());
+app.use('*', async (c, next) => {
+  const corsMiddleware = cors({
+    origin: (origin) => {
+      const allowed = [
+        c.env.FRONTEND_ORIGIN,
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'http://localhost:3001',
+      ].filter(Boolean);
+      return allowed.includes(origin) ? origin : (c.env.FRONTEND_ORIGIN || 'http://localhost:3001');
+    },
+    allowHeaders: ['Content-Type', 'Authorization'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
+    maxAge: 86400,
+  });
+  return corsMiddleware(c, next);
+});
 
 app.use('*', async (c, next) => {
   const method = c.req.method;
@@ -335,7 +352,7 @@ app.get('/dashboard/stats', authMiddleware, async (c) => {
     });
   }
 
-  return c.json({ role: 'unknown', stats: {} });
+  return c.json({ error: 'Forbidden: unrecognized role' }, 403);
 });
 
 app.route('/auth', auth);
@@ -344,6 +361,7 @@ app.route('/users', users);
 app.route('/academic-years', academicYears);
 app.route('/programs', programs);
 app.route('/sections', sections);
+app.route('/classes', sections);
 app.route('/subjects', subjects);
 app.route('/students', students);
 app.route('/guardians', guardians);

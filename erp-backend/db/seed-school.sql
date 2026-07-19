@@ -90,6 +90,24 @@ INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-att-vie
 INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-fees-collect', 'fees.collect', 'Collect student fees');
 INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-fees-view', 'fees.view', 'View fee structures and payments');
 INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-finance-access', 'finance.access', 'Access the finance workspace');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-communication-access', 'communication.access', 'Access the communication workspace');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-announcements-view', 'announcements.view', 'View notice board announcements');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-announcements-manage', 'announcements.manage', 'Create, update, and delete notice board announcements');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-messaging-access', 'messaging.access', 'Use direct messaging');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-broadcasts-manage', 'broadcasts.manage', 'Create and manage broadcast messages');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-reports-access', 'reports.access', 'Access analytics and reports workspace');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-reports-attendance', 'reports.attendance', 'View student attendance reports');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-reports-teacher', 'reports.teacher', 'View teacher workload reports');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-reports-fees', 'reports.fees', 'View finance and fee collection reports');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-payroll-view', 'payroll.view', 'View payroll and payslip information');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-payroll-manage', 'payroll.manage', 'Manage salary structures and payroll runs');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-leave-apply', 'leave.apply', 'Apply for leave');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-leave-manage', 'leave.manage', 'Manage leave types and balances');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-leave-review', 'leave.review', 'Review staff leave applications');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-student-leave-review', 'student_leave.review', 'Review student leave applications');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-exams-view', 'exams.view', 'View exams and results');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-exams-manage', 'exams.manage', 'Create and manage exams');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-results-manage', 'results.manage', 'Enter and manage student results');
 
 -- 4. Role Permissions Mapping
 -- Super Admin / Principal gets all permissions
@@ -110,6 +128,7 @@ INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-s
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-super-admin', 'perm-fees-collect');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-super-admin', 'perm-fees-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-super-admin', 'perm-finance-access');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-super-admin', id FROM permissions WHERE code IN ('communication.access', 'announcements.view', 'announcements.manage', 'messaging.access', 'broadcasts.manage', 'reports.access', 'reports.attendance', 'reports.teacher', 'reports.fees', 'payroll.view', 'payroll.manage', 'leave.apply', 'leave.manage', 'leave.review', 'student_leave.review', 'exams.view', 'exams.manage', 'results.manage');
 
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-principal', permission_id FROM role_permissions WHERE role_id = 'role-super-admin';
 
@@ -122,29 +141,70 @@ INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-h
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-hod', 'perm-att-mark');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-hod', 'perm-att-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-hod', 'perm-finance-access');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-hod', id FROM permissions WHERE code IN ('communication.access', 'announcements.view', 'announcements.manage', 'messaging.access', 'broadcasts.manage', 'reports.access', 'reports.attendance', 'reports.teacher', 'reports.fees', 'leave.manage', 'leave.review', 'student_leave.review', 'exams.view', 'exams.manage', 'results.manage', 'fees.view');
 
 -- Teacher gets attendance and student/teacher viewing
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-teacher', 'perm-student-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-teacher', 'perm-teacher-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-teacher', 'perm-att-mark');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-teacher', 'perm-att-view');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-teacher', id FROM permissions WHERE code IN ('communication.access', 'announcements.view', 'announcements.manage', 'messaging.access', 'broadcasts.manage', 'reports.access', 'reports.attendance', 'leave.apply', 'student_leave.review', 'exams.view', 'exams.manage', 'results.manage', 'payroll.view');
 
 -- Student gets self records view
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-student', 'perm-student-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-student', 'perm-att-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-student', 'perm-fees-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-student', 'perm-finance-access');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-student', id FROM permissions WHERE code IN ('communication.access', 'announcements.view', 'messaging.access', 'leave.apply', 'exams.view');
 
 -- Accountant gets fees collection and view
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-accountant', 'perm-fees-collect');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-accountant', 'perm-fees-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-accountant', 'perm-student-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-accountant', 'perm-finance-access');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-accountant', id FROM permissions WHERE code IN ('communication.access', 'announcements.view', 'messaging.access', 'reports.access', 'reports.fees', 'leave.apply');
 
 -- Parent gets child records view
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-parent', 'perm-student-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-parent', 'perm-att-view');
 INSERT OR REPLACE INTO role_permissions (role_id, permission_id) VALUES ('role-parent', 'perm-fees-view');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-parent', id FROM permissions WHERE code IN ('finance.access', 'communication.access', 'announcements.view', 'messaging.access', 'leave.apply', 'exams.view');
+
+-- Supplemental module-level permissions for Access Control visibility.
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-dashboard-access', 'dashboard.access', 'Access the dashboard');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-profile-access', 'profile.access', 'Access own profile');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-notifications-view', 'notifications.view', 'View notifications');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-calendar-view', 'calendar.view', 'View academic calendar');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-calendar-manage', 'calendar.manage', 'Manage academic calendar');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-timetable-view', 'timetable.view', 'View timetable');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-timetable-manage', 'timetable.manage', 'Manage timetable');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-teacher-attendance-view', 'teacher_attendance.view', 'View teacher attendance');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-teacher-attendance-manage', 'teacher_attendance.manage', 'Manage teacher attendance');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-homework-view', 'homework.view', 'View homework');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-homework-manage', 'homework.manage', 'Create and manage homework');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-library-access', 'library.access', 'Access library workspace');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-library-manage', 'library.manage', 'Manage library records');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-transport-view', 'transport.view', 'View transport assignments');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-transport-manage', 'transport.manage', 'Manage transport routes, assignments, and billing');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-certificates-view', 'certificates.view', 'View certificates');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-certificates-manage', 'certificates.manage', 'Create and manage certificates');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-admissions-view', 'admissions.view', 'View admissions');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-admissions-manage', 'admissions.manage', 'Manage inquiries and admissions');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-approvals-view', 'approvals.view', 'View approvals inbox');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-approvals-manage', 'approvals.manage', 'Review and manage approvals');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-setup-manage', 'setup.manage', 'Manage school setup');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-data-tools-manage', 'data_tools.manage', 'Use import, export, and data tools');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-visitors-manage', 'visitors.manage', 'Manage visitor records');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-assets-manage', 'assets.manage', 'Manage school assets');
+INSERT OR REPLACE INTO permissions (id, code, description) VALUES ('perm-alumni-manage', 'alumni.manage', 'Manage alumni records');
+
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-super-admin', id FROM permissions WHERE code IN ('dashboard.access', 'profile.access', 'notifications.view', 'calendar.view', 'calendar.manage', 'timetable.view', 'timetable.manage', 'teacher_attendance.view', 'teacher_attendance.manage', 'homework.view', 'homework.manage', 'library.access', 'library.manage', 'transport.view', 'transport.manage', 'certificates.view', 'certificates.manage', 'admissions.view', 'admissions.manage', 'approvals.view', 'approvals.manage', 'setup.manage', 'data_tools.manage', 'visitors.manage', 'assets.manage', 'alumni.manage');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-principal', permission_id FROM role_permissions WHERE role_id = 'role-super-admin';
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-hod', id FROM permissions WHERE code IN ('dashboard.access', 'profile.access', 'notifications.view', 'calendar.view', 'calendar.manage', 'timetable.view', 'timetable.manage', 'teacher_attendance.view', 'teacher_attendance.manage', 'homework.view', 'homework.manage', 'library.access', 'transport.view', 'certificates.view', 'certificates.manage', 'admissions.view', 'admissions.manage', 'approvals.view', 'approvals.manage', 'setup.manage', 'visitors.manage', 'alumni.manage');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-teacher', id FROM permissions WHERE code IN ('dashboard.access', 'profile.access', 'notifications.view', 'calendar.view', 'timetable.view', 'homework.view', 'homework.manage', 'library.access', 'certificates.view', 'certificates.manage');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-accountant', id FROM permissions WHERE code IN ('dashboard.access', 'profile.access', 'notifications.view', 'transport.view', 'transport.manage', 'library.access');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-student', id FROM permissions WHERE code IN ('dashboard.access', 'profile.access', 'notifications.view', 'calendar.view', 'timetable.view', 'homework.view', 'library.access', 'transport.view');
+INSERT OR REPLACE INTO role_permissions (role_id, permission_id) SELECT 'role-parent', id FROM permissions WHERE code IN ('dashboard.access', 'profile.access', 'notifications.view', 'calendar.view', 'timetable.view', 'homework.view', 'library.access', 'transport.view');
 
 -- 5. Create Users (Password: admin123)
 -- Admin User (Principal)

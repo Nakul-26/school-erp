@@ -58,6 +58,7 @@ export default function Attendance() {
 
   const roles = user?.roles || (user?.role ? [user.role] : []);
   const canManageTeachers = roles.some(r => ['super_admin', 'Admin', 'admin', 'Principal', 'HOD', 'hod'].includes(r));
+  const isTeacherOnly = roles.some(r => ['Teacher', 'teacher'].includes(r)) && !canManageTeachers;
 
   // Determine active tab: students vs teachers
   const [activeTab, setActiveTab] = useState<'students' | 'teachers'>(
@@ -132,7 +133,7 @@ export default function Attendance() {
       const allocatedSubjectIds = allocations.map(a => a.subject_id);
       const validSubjects = classSubjects.filter(s => allocatedSubjectIds.includes(s.id));
       
-      const defaultSubject = validSubjects[0] || classSubjects[0];
+      const defaultSubject = validSubjects[0] || (isTeacherOnly ? null : classSubjects[0]);
       const defaultSubjectId = defaultSubject?.id || '';
       
       const subAllocations = allocations.filter(a => a.subject_id === defaultSubjectId);
@@ -145,7 +146,7 @@ export default function Attendance() {
         slot_id: ''
       }));
     }
-  }, [sessionForm.section_id, allocations, stdSections, stdSubjects]);
+  }, [sessionForm.section_id, allocations, stdSections, stdSubjects, isTeacherOnly]);
 
   // Auto-match Subject and Teacher with the weekly timetable
   useEffect(() => {
@@ -208,7 +209,7 @@ export default function Attendance() {
       setSessionForm(f => ({
         ...f,
         section_id: initialSectionId,
-        subject_id: subjectsData.length > 0 ? subjectsData[0].id : '',
+        subject_id: isTeacherOnly ? '' : (subjectsData.length > 0 ? subjectsData[0].id : ''),
         teacher_id: teachersData.length > 0 ? teachersData[0].id : '',
         slot_id: slotsData.length > 0 ? slotsData[0].id : ''
       }));
@@ -529,7 +530,11 @@ export default function Attendance() {
                     
                     const allocatedSubjectIds = allocations.map(a => a.subject_id);
                     const validSubjects = classSubjects.filter(s => allocatedSubjectIds.includes(s.id));
-                    const listToUse = validSubjects.length > 0 ? validSubjects : classSubjects;
+                    const listToUse = validSubjects.length > 0 ? validSubjects : (isTeacherOnly ? [] : classSubjects);
+
+                    if (listToUse.length === 0) {
+                      return <option value="">No assigned subjects for this section</option>;
+                    }
 
                     return listToUse.map(s => (
                       <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>
@@ -538,39 +543,41 @@ export default function Attendance() {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>Teacher</label>
-                <select
-                  value={sessionForm.teacher_id}
-                  onChange={(e) => setSessionForm({ ...sessionForm, teacher_id: e.target.value })}
-                  required
-                >
-                  {(() => {
-                    // Check if slot has scheduled class
-                    const dayOfWeek = getDayOfWeek(sessionForm.date);
-                    const matchedEntry = sessionForm.slot_id
-                      ? sectionTimetable.find((entry: any) => entry.day_of_week === dayOfWeek && entry.slot_id === sessionForm.slot_id)
-                      : null;
+              {!isTeacherOnly && (
+                <div className="form-group">
+                  <label>Teacher</label>
+                  <select
+                    value={sessionForm.teacher_id}
+                    onChange={(e) => setSessionForm({ ...sessionForm, teacher_id: e.target.value })}
+                    required
+                  >
+                    {(() => {
+                      // Check if slot has scheduled class
+                      const dayOfWeek = getDayOfWeek(sessionForm.date);
+                      const matchedEntry = sessionForm.slot_id
+                        ? sectionTimetable.find((entry: any) => entry.day_of_week === dayOfWeek && entry.slot_id === sessionForm.slot_id)
+                        : null;
 
-                    if (matchedEntry) {
-                      const matchedTeacher = stdTeachers.find(t => t.id === matchedEntry.teacher_id);
-                      if (matchedTeacher) {
-                        return <option value={matchedTeacher.id}>{matchedTeacher.first_name} {matchedTeacher.last_name} [Scheduled]</option>;
+                      if (matchedEntry) {
+                        const matchedTeacher = stdTeachers.find(t => t.id === matchedEntry.teacher_id);
+                        if (matchedTeacher) {
+                          return <option value={matchedTeacher.id}>{matchedTeacher.first_name} {matchedTeacher.last_name} [Scheduled]</option>;
+                        }
                       }
-                    }
 
-                    // Otherwise show allocated teachers for this subject, or fall back to all teachers
-                    const subAllocations = allocations.filter(a => a.subject_id === sessionForm.subject_id);
-                    const allocatedTeacherIds = subAllocations.map(a => a.teacher_id);
-                    const validTeachers = stdTeachers.filter(t => allocatedTeacherIds.includes(t.id));
-                    const listToUse = validTeachers.length > 0 ? validTeachers : stdTeachers;
+                      // Otherwise show allocated teachers for this subject, or fall back to all teachers
+                      const subAllocations = allocations.filter(a => a.subject_id === sessionForm.subject_id);
+                      const allocatedTeacherIds = subAllocations.map(a => a.teacher_id);
+                      const validTeachers = stdTeachers.filter(t => allocatedTeacherIds.includes(t.id));
+                      const listToUse = validTeachers.length > 0 ? validTeachers : stdTeachers;
 
-                    return listToUse.map(t => (
-                      <option key={t.id} value={t.id}>{t.first_name} {t.last_name}{validTeachers.length > 0 ? '' : ' (Not Allocated)'}</option>
-                    ));
-                  })()}
-                </select>
-              </div>
+                      return listToUse.map(t => (
+                        <option key={t.id} value={t.id}>{t.first_name} {t.last_name}{validTeachers.length > 0 ? '' : ' (Not Allocated)'}</option>
+                      ));
+                    })()}
+                  </select>
+                </div>
+              )}
 
               <div className="form-group">
                 <label>Class Period (Optional)</label>

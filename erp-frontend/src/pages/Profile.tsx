@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../services/api';
+import { api, getAuthenticatedUrl } from '../services/api';
 import { 
   Camera, User, Mail, Phone, Lock, Save, AlertCircle, CheckCircle, 
   Smartphone, Trash2, Bell, ShieldAlert, Laptop, Info, Download, CheckCircle2
@@ -202,10 +202,7 @@ export default function Profile() {
   };
 
   const getPhotoUrl = (photoPath?: string) => {
-    if (!photoPath) return '';
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
-    const path = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
-    return `${baseUrl}${path}`;
+    return getAuthenticatedUrl(photoPath || '');
   };
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {

@@ -118,10 +118,10 @@ function App() {
           <Route path="/academic-setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']} allowedPermissions={['academic.manage']}><AcademicSetup /></ProtectedRoute>} />
 
           {/* ── Finance ── */}
-          <Route path="/finance" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant', 'Student', 'Parent']} allowedPermissions={['finance.access']}><Finance /></ProtectedRoute>} />
+          <Route path="/finance" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Accountant', 'Student', 'Parent', 'Guardian']} allowedPermissions={['finance.access']}><Finance /></ProtectedRoute>} />
 
           {/* ── Communication ── */}
-          <Route path="/communication" element={<ProtectedRoute><Communication /></ProtectedRoute>} />
+          <Route path="/communication" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher', 'Accountant', 'Student', 'Parent', 'Guardian']}><Communication /></ProtectedRoute>} />
 
           {/* ── Academics ───────────────────────────────────────────────── */}
           <Route path="/academic-years" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><AcademicYears /></ProtectedRoute>} />
@@ -171,7 +171,7 @@ function App() {
           <Route path="/student-leaves/approvals" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher']}><StudentLeaveApprovals /></ProtectedRoute>} />
 
           {/* ── Reports (V2 merged) ──────────────────────────────────────── */}
-          <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Reports /></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'Accountant']}><Reports /></ProtectedRoute>} />
           {/* Legacy redirects */}
           <Route path="/attendance-reports" element={<Navigate to="/reports?tab=attendance" replace />} />
           <Route path="/teacher-reports" element={<Navigate to="/reports?tab=teacher" replace />} />

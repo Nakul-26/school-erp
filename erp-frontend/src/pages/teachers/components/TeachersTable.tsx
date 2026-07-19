@@ -1,4 +1,5 @@
 import React from 'react';
+import { getAuthenticatedUrl } from '../../../services/api';
 import { Link } from 'react-router-dom';
 import { Eye, Edit3, Trash2, Check, Archive } from 'lucide-react';
 
@@ -71,9 +72,11 @@ export const TeachersTable: React.FC<TeachersTableProps> = ({
                   <div className="teachers-table-avatar-circle">
                     {t.photo ? (
                       <img 
-                        src={t.photo.startsWith('data:image') || t.photo.startsWith('/api') || t.photo.startsWith('http')
-                          ? t.photo 
-                          : `/api/teachers/photo/${t.id}`} 
+                        src={getAuthenticatedUrl(
+                          t.photo.startsWith('data:image') || t.photo.startsWith('/api') || t.photo.startsWith('http')
+                            ? t.photo 
+                            : `/api/teachers/photo/${t.id}`
+                        )} 
                         alt="" 
                         className="teachers-table-avatar-circle-img" 
                       />

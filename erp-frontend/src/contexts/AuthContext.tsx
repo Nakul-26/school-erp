@@ -8,6 +8,7 @@ export interface User {
   role?: string;
   permissions?: string[];
   institution_id: string;
+  institution_name?: string;
   profile_photo?: string;
   username?: string;
 }
@@ -33,7 +34,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedUser = localStorage.getItem('erp_user');
     if (savedToken && savedUser) {
       setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+
+      const baseUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:8787' : '');
+      fetch(`${baseUrl}/auth/me`, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${savedToken}`
+        }
+      })
+        .then(async (res) => {
+          if (res.status === 401) {
+            throw new Error('unauthorized');
+          }
+          if (!res.ok) return;
+          const data = await res.json();
+          const refreshedUser = { ...parsedUser, ...(data.user || {}) };
+          setUser(refreshedUser);
+          localStorage.setItem('erp_user', JSON.stringify(refreshedUser));
+        })
+        .catch((err) => {
+          if (err instanceof Error && err.message === 'unauthorized') {
+            setToken(null);
+            setUser(null);
+            localStorage.removeItem('erp_token');
+            localStorage.removeItem('erp_user');
+          }
+        });
     }
     setLoading(false);
   }, []);

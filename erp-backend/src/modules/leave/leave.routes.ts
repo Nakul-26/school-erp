@@ -149,6 +149,12 @@ leave.get('/balances/my', async (c) => {
 
 leave.post('/applications', async (c) => {
   const user = c.get('user');
+  const roles = user.roles || (user.role ? [user.role] : []);
+  const isTeacher = roles.some((role) => ['teacher', 'Teacher'].includes(role));
+  if (!isTeacher) {
+    return c.json({ error: 'Forbidden: leave applications must be submitted by a teacher account' }, 403);
+  }
+
   const body = await c.req.json();
 
   const teacherId = await resolveTeacherId(c.env.DB, user.sub, user.institution_id);

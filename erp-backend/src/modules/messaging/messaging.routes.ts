@@ -19,6 +19,52 @@ async function ensureMessagingTables(db: D1Database) {
   `).run();
 }
 
+function getUserRoles(user: any): string[] {
+  return user.roles || (user.role ? [user.role] : []);
+}
+
+function hasAnyRole(user: any, roles: string[]): boolean {
+  return getUserRoles(user).some((role) => roles.includes(role));
+}
+
+async function canMessageContact(db: D1Database, user: any, contactId: string): Promise<boolean> {
+  const contact = await db.prepare(
+    'SELECT id, role, institution_id FROM users WHERE id = ? AND institution_id = ? AND is_active = 1'
+  ).bind(contactId, user.institution_id).first<{ id: string; role: string | null; institution_id: string }>();
+  if (!contact || contact.id === user.sub) return false;
+
+  const isStudent = hasAnyRole(user, ['Student', 'student']);
+  const isParent = hasAnyRole(user, ['Parent', 'parent', 'Guardian', 'guardian']);
+  const isTeacherOrStaff = hasAnyRole(user, ['Teacher', 'teacher', 'HOD', 'hod', 'Principal', 'admin', 'Admin', 'super_admin', 'Super Admin']);
+  const contactRole = contact.role || '';
+
+  if (isStudent) {
+    const teacherOrAdmin = await db.prepare(`
+      SELECT 1 FROM teachers WHERE user_id = ? AND institution_id = ? AND is_active = 1
+      UNION
+      SELECT 1 FROM users WHERE id = ? AND institution_id = ? AND is_active = 1 AND (role = 'admin' OR role = 'super_admin' OR name = 'Principal')
+      LIMIT 1
+    `).bind(contactId, user.institution_id, contactId, user.institution_id).first();
+    return Boolean(teacherOrAdmin);
+  }
+
+  if (isParent) {
+    const teacherOrAdmin = await db.prepare(`
+      SELECT 1 FROM teachers WHERE user_id = ? AND institution_id = ? AND is_active = 1
+      UNION
+      SELECT 1 FROM users WHERE id = ? AND institution_id = ? AND is_active = 1 AND (role = 'admin' OR role = 'super_admin' OR name = 'Principal')
+      LIMIT 1
+    `).bind(contactId, user.institution_id, contactId, user.institution_id).first();
+    return Boolean(teacherOrAdmin);
+  }
+
+  if (isTeacherOrStaff) {
+    return ['parent', 'Parent', 'guardian', 'Guardian', 'teacher', 'Teacher', 'admin', 'super_admin'].includes(contactRole) || Boolean(contactRole);
+  }
+
+  return false;
+}
+
 // 1. Get contacts list
 messaging.get('/contacts', authMiddleware, async (c) => {
   const user = c.get('user');
@@ -26,12 +72,13 @@ messaging.get('/contacts', authMiddleware, async (c) => {
 
   const userRoles = user.roles || (user.role ? [user.role] : []);
   const isParent = userRoles.some((r: string) => ['Parent', 'parent', 'Guardian', 'guardian'].includes(r));
+  const isStudent = userRoles.some((r: string) => ['Student', 'student'].includes(r));
   const isTeacher = userRoles.some((r: string) => ['Teacher', 'HOD', 'teacher', 'hod', 'Principal'].includes(r));
   const isAdmin = userRoles.some((r: string) => ['super_admin', 'Super Admin', 'admin', 'Admin'].includes(r));
 
   let query = '';
-  if (isParent) {
-    // Parents can message teachers and admins
+  if (isStudent || isParent) {
+    // Students and parents can message teachers and admins. They never receive the guardian directory.
     query = `
       SELECT id, name, role FROM (
         SELECT user_id as id, first_name || ' ' || last_name as name, 'Teacher' as role 
@@ -45,7 +92,7 @@ messaging.get('/contacts', authMiddleware, async (c) => {
     `;
     const { results } = await c.env.DB.prepare(query).bind(user.institution_id, user.institution_id, user.sub).all();
     return c.json(results);
-  } else {
+  } else if (isTeacher || isAdmin) {
     // Teachers and admins can message parents and staff
     query = `
       SELECT id, name, role FROM (
@@ -67,6 +114,8 @@ messaging.get('/contacts', authMiddleware, async (c) => {
     const { results } = await c.env.DB.prepare(query).bind(user.institution_id, user.institution_id, user.sub, user.institution_id, user.sub).all();
     return c.json(results);
   }
+
+  return c.json([]);
 });
 
 // 2. Get message history with a contact
@@ -74,6 +123,14 @@ messaging.get('/history/:contactId', authMiddleware, async (c) => {
   const user = c.get('user');
   const contactId = c.req.param('contactId');
   await ensureMessagingTables(c.env.DB);
+
+  if (!contactId) {
+    return c.json({ error: 'Contact ID is required' }, 400);
+  }
+
+  if (!(await canMessageContact(c.env.DB, user, contactId))) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   const { results } = await c.env.DB.prepare(`
     SELECT * FROM direct_messages 
@@ -95,6 +152,10 @@ messaging.post('/send', authMiddleware, async (c) => {
 
   if (!receiver_id || !message) {
     return c.json({ error: 'Receiver ID and message content are required' }, 400);
+  }
+
+  if (!(await canMessageContact(c.env.DB, user, receiver_id))) {
+    return c.json({ error: 'Forbidden' }, 403);
   }
 
   const id = crypto.randomUUID();

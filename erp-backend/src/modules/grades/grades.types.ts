@@ -14,6 +14,7 @@ export interface GradeScale {
 }
 
 export interface ReportCardSubject {
+  subject_id: string;
   subject_name: string;
   subject_code: string;
   max_marks: number;

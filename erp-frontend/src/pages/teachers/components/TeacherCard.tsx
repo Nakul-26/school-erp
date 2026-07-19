@@ -1,4 +1,5 @@
 import React from 'react';
+import { getAuthenticatedUrl } from '../../../services/api';
 import { Link } from 'react-router-dom';
 import { Edit2, Calendar, Mail, Phone, Trash2, Check, Archive } from 'lucide-react';
 
@@ -68,9 +69,11 @@ export const TeacherCard: React.FC<TeacherCardProps> = ({
         <div className="teachers-card-avatar">
           {teacher.photo ? (
             <img 
-              src={teacher.photo.startsWith('data:image') || teacher.photo.startsWith('/api') || teacher.photo.startsWith('http')
-                ? teacher.photo 
-                : `/api/teachers/photo/${teacher.id}`} 
+              src={getAuthenticatedUrl(
+                teacher.photo.startsWith('data:image') || teacher.photo.startsWith('/api') || teacher.photo.startsWith('http')
+                  ? teacher.photo 
+                  : `/api/teachers/photo/${teacher.id}`
+              )} 
               alt="" 
             />
           ) : (

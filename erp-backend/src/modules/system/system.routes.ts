@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { Env, JwtPayload } from '../../types';
 import { authMiddleware, requireRole } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
+import { validateUploadedFile, sanitizeFileName } from '../../utils/file-upload';
 
 const system = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -165,6 +166,13 @@ system.post('/settings/logo', requireRole('admin', 'super_admin', 'Principal'), 
     return c.json({ error: 'No image file provided' }, 400);
   }
 
+  const validationError = validateUploadedFile(file, { photoOnly: true });
+  if (validationError) {
+    return c.json({ error: validationError }, 400);
+  }
+
+  const safeName = sanitizeFileName(file.name);
+
   try {
     const bytes = await file.arrayBuffer();
     const key = `logos/${user.institution_id}`;
@@ -190,6 +198,13 @@ system.post('/imports/students', requireRole('admin', 'super_admin', 'Principal'
   if (!file || !(file instanceof File)) {
     return c.json({ error: 'No CSV file uploaded' }, 400);
   }
+
+  const validationError = validateUploadedFile(file);
+  if (validationError) {
+    return c.json({ error: validationError }, 400);
+  }
+
+  const safeName = sanitizeFileName(file.name);
 
   const text = await file.text();
   const rows = parseCSV(text);
@@ -314,6 +329,13 @@ system.post('/imports/teachers', requireRole('admin', 'super_admin', 'Principal'
     return c.json({ error: 'No CSV file uploaded' }, 400);
   }
 
+  const validationError = validateUploadedFile(file);
+  if (validationError) {
+    return c.json({ error: validationError }, 400);
+  }
+
+  const safeName = sanitizeFileName(file.name);
+
   const text = await file.text();
   const rows = parseCSV(text);
   if (rows.length < 2) {
@@ -436,6 +458,13 @@ system.post('/imports/subjects', requireRole('admin', 'super_admin', 'Principal'
   if (!file || !(file instanceof File)) {
     return c.json({ error: 'No CSV file uploaded' }, 400);
   }
+
+  const validationError = validateUploadedFile(file);
+  if (validationError) {
+    return c.json({ error: validationError }, 400);
+  }
+
+  const safeName = sanitizeFileName(file.name);
 
   const text = await file.text();
   const rows = parseCSV(text);

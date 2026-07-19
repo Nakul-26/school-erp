@@ -9,6 +9,37 @@ const payroll = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 payroll.use('*', authMiddleware);
 
+function userRoles(user: JwtPayload): string[] {
+  return user.roles || (user.role ? [user.role] : []);
+}
+
+function canManagePayroll(user: JwtPayload): boolean {
+  return userRoles(user).some((role) => [
+    'admin',
+    'Admin',
+    'super_admin',
+    'Super Admin',
+    'role-super-admin',
+    'Principal',
+    'principal'
+  ].includes(role));
+}
+
+function isTeacherRole(user: JwtPayload): boolean {
+  return userRoles(user).some((role) => ['teacher', 'Teacher'].includes(role));
+}
+
+async function getTeacherForPayrollAccess(db: D1Database, user: JwtPayload, teacherId: string) {
+  const teacher = await db.prepare(
+    'SELECT id, user_id, institution_id FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1'
+  ).bind(teacherId, user.institution_id).first<{ id: string; user_id: string | null; institution_id: string }>();
+
+  if (!teacher) return { allowed: false, found: false };
+  if (canManagePayroll(user)) return { allowed: true, found: true };
+  if (isTeacherRole(user) && teacher.user_id === user.sub) return { allowed: true, found: true };
+  return { allowed: false, found: true };
+}
+
 // --- SALARY STRUCTURES ---
 payroll.get('/salary-structures', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
   const user = c.get('user');
@@ -33,7 +64,12 @@ payroll.post('/salary-structures', requireRole('admin', 'super_admin', 'Principa
 });
 
 payroll.get('/salary-structures/:teacherId', async (c) => {
+  const user = c.get('user');
   const teacherId = c.req.param('teacherId')!;
+  const access = await getTeacherForPayrollAccess(c.env.DB, user, teacherId);
+  if (!access.found) return c.json({ error: 'Teacher not found' }, 404);
+  if (!access.allowed) return c.json({ error: 'Forbidden' }, 403);
+
   const repo = new PayrollRepository(c.env.DB);
   const service = new PayrollService(repo);
   const result = await service.getSalaryStructure(teacherId);
@@ -54,7 +90,12 @@ payroll.delete('/salary-structures/:teacherId', requireRole('admin', 'super_admi
 });
 
 payroll.get('/teacher/:teacherId/payslips', async (c) => {
+  const user = c.get('user');
   const teacherId = c.req.param('teacherId')!;
+  const access = await getTeacherForPayrollAccess(c.env.DB, user, teacherId);
+  if (!access.found) return c.json({ error: 'Teacher not found' }, 404);
+  if (!access.allowed) return c.json({ error: 'Forbidden' }, 403);
+
   const repo = new PayrollRepository(c.env.DB);
   const slips = await repo.getPayslipsForTeacher(teacherId);
   return c.json(slips);

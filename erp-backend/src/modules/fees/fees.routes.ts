@@ -10,6 +10,46 @@ const fees = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 fees.use('*', authMiddleware);
 
+function userRoles(user: JwtPayload): string[] {
+  return user.roles || (user.role ? [user.role] : []);
+}
+
+function hasRole(user: JwtPayload, roles: string[]): boolean {
+  return userRoles(user).some((role) => roles.includes(role));
+}
+
+function isFeeStaff(user: JwtPayload): boolean {
+  return hasRole(user, ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal', 'HOD', 'Accountant', 'accountant']);
+}
+
+async function canAccessStudentFeeData(db: D1Database, user: JwtPayload, studentId: string): Promise<boolean> {
+  if (isFeeStaff(user)) return true;
+
+  if (hasRole(user, ['student', 'Student'])) {
+    const student = await db.prepare(
+      'SELECT 1 FROM students WHERE id = ? AND user_id = ? AND institution_id = ? AND is_active = 1'
+    ).bind(studentId, user.sub, user.institution_id).first();
+    return Boolean(student);
+  }
+
+  if (hasRole(user, ['parent', 'Parent', 'guardian', 'Guardian'])) {
+    const linked = await db.prepare(`
+      SELECT 1
+      FROM guardians g
+      JOIN students s ON s.id = g.student_id
+      WHERE g.user_id = ? AND g.student_id = ? AND g.is_active = 1
+        AND s.institution_id = ? AND s.is_active = 1
+    `).bind(user.sub, studentId, user.institution_id).first();
+    return Boolean(linked);
+  }
+
+  return false;
+}
+
+async function canAccessFeeRecord(db: D1Database, user: JwtPayload, record: { student_id: string; institution_id: string }): Promise<boolean> {
+  return record.institution_id === user.institution_id && await canAccessStudentFeeData(db, user, record.student_id);
+}
+
 // --- FEE STRUCTURES ---
 fees.get('/structures', async (c) => {
   const user = c.get('user');
@@ -164,7 +204,39 @@ fees.post('/generate-ledger', requireRole('admin', 'super_admin', 'Principal', '
 fees.get('/payments', async (c) => {
   const user = c.get('user');
   const studentId = c.req.query('student_id');
-  const repo = new FeesRepository(c.env.DB);
+  const db = c.env.DB;
+
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isAdminOrStaff = userRoles.some(r =>
+    ['super_admin', 'admin', 'Principal', 'HOD', 'Accountant'].includes(r)
+  );
+
+  if (!isAdminOrStaff) {
+    if (!studentId) {
+      return c.json({ error: 'Forbidden: student_id is required' }, 403);
+    }
+    
+    // Verify student belongs to the same institution
+    const student = await db.prepare('SELECT user_id, institution_id FROM students WHERE id = ? AND is_active = 1').bind(studentId).first<{ user_id: string; institution_id: string }>();
+    if (!student || student.institution_id !== user.institution_id) {
+      return c.json({ error: 'Student not found' }, 404);
+    }
+
+    // Verify student ownership
+    if (userRoles.some((role) => ['student', 'Student'].includes(role)) && student.user_id !== user.sub) {
+      return c.json({ error: 'Forbidden: cannot access other student\'s ledger' }, 403);
+    }
+
+    // Verify parent linkage
+    if (userRoles.some((role) => ['parent', 'Parent', 'guardian', 'Guardian'].includes(role))) {
+      const parentLinked = await db.prepare('SELECT 1 FROM guardians WHERE student_id = ? AND user_id = ? AND is_active = 1').bind(studentId, user.sub).first();
+      if (!parentLinked) {
+        return c.json({ error: 'Forbidden: student is not linked to this parent account' }, 403);
+      }
+    }
+  }
+
+  const repo = new FeesRepository(db);
   const service = new FeesService(repo);
   const results = await service.listPayments(user.institution_id, studentId);
   return c.json(results);
@@ -207,7 +279,18 @@ fees.get('/receipts', async (c) => {
   const repo = new FeesRepository(c.env.DB);
   const service = new FeesService(repo);
   const results = await service.listReceipts(user.institution_id);
-  return c.json(results);
+
+  if (isFeeStaff(user)) {
+    return c.json(results);
+  }
+
+  const allowed: any[] = [];
+  for (const receipt of results) {
+    if (await canAccessStudentFeeData(c.env.DB, user, receipt.student_id)) {
+      allowed.push(receipt);
+    }
+  }
+  return c.json(allowed);
 });
 
 fees.get('/receipts/:id', async (c) => {
@@ -225,6 +308,16 @@ fees.get('/receipts/:id', async (c) => {
   const instCheck = await c.env.DB.prepare('SELECT 1 FROM fee_receipts WHERE id = ? AND institution_id = ?').bind(id, user.institution_id).first();
   if (!instCheck) {
     return c.json({ error: 'Receipt not found' }, 404);
+  }
+
+  const receiptStudent = await c.env.DB.prepare(`
+    SELECT fp.student_id
+    FROM fee_receipts fr
+    JOIN fee_payments fp ON fp.id = fr.payment_id
+    WHERE fr.id = ? AND fr.institution_id = ? AND fr.is_active = 1 AND fp.is_active = 1
+  `).bind(id, user.institution_id).first<{ student_id: string }>();
+  if (!receiptStudent || !(await canAccessStudentFeeData(c.env.DB, user, receiptStudent.student_id))) {
+    return c.json({ error: 'Forbidden' }, 403);
   }
 
   return c.json(result);
@@ -263,6 +356,9 @@ fees.get('/records/:id/concessions', async (c) => {
   const service = new FeesService(repo);
   const record = await repo.getRecordById(id);
   if (!record || record.institution_id !== user.institution_id) return c.json({ error: 'Not found' }, 404);
+  if (!(await canAccessFeeRecord(c.env.DB, user, record))) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
   const concessions = await service.listConcessions(id);
   return c.json(concessions);
 });
@@ -304,6 +400,9 @@ fees.get('/records/:id/installments', async (c) => {
   const service = new FeesService(repo);
   const record = await repo.getRecordById(id);
   if (!record || record.institution_id !== user.institution_id) return c.json({ error: 'Not found' }, 404);
+  if (!(await canAccessFeeRecord(c.env.DB, user, record))) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
   const installments = await service.listInstallments(id);
   return c.json(installments);
 });
@@ -466,23 +565,38 @@ fees.post('/records/:id/pay-online', async (c) => {
     return c.json({ error: 'Fee ledger record not found' }, 404);
   }
 
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const isStudent = userRoles.some(r => ['student', 'Student'].includes(r));
+  const isParent = userRoles.some(r => ['parent', 'Parent', 'guardian', 'Guardian'].includes(r));
+  const isStaff = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD', 'Accountant', 'accountant'].includes(r));
+
+  if (!isStaff) {
+    if (isStudent) {
+      const student = await db.prepare('SELECT 1 FROM students WHERE user_id = ? AND id = ? AND is_active = 1').bind(user.sub, record.student_id).first();
+      if (!student) return c.json({ error: 'Forbidden: Cannot pay another student\'s fee record' }, 403);
+    } else if (isParent) {
+      const linked = await db.prepare('SELECT 1 FROM guardians WHERE user_id = ? AND student_id = ? AND is_active = 1').bind(user.sub, record.student_id).first();
+      if (!linked) return c.json({ error: 'Forbidden: Cannot pay a fee record for a student who is not your child' }, 403);
+    } else {
+      return c.json({ error: 'Forbidden' }, 403);
+    }
+  }
+
   const remaining = record.total_amount - record.paid_amount;
   if (amount > remaining) {
     return c.json({ error: `Amount ₹${amount} exceeds the remaining balance ₹${remaining}` }, 400);
   }
 
-  const newPaidAmount = record.paid_amount + amount;
-  const newStatus = newPaidAmount >= record.total_amount ? 'PAID' : 'PARTIAL';
-
-  // 2. Insert fee payment
+  // 2. Insert fee payment as PENDING verification
   const paymentId = crypto.randomUUID();
   const today = new Date().toISOString().split('T')[0];
   await db.prepare(`
-    INSERT INTO fee_payments (id, institution_id, student_fee_record_id, amount_paid, payment_date, payment_method, transaction_reference, remarks)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 'Self-service online payment')
+    INSERT INTO fee_payments (id, institution_id, student_id, student_fee_record_id, amount, payment_date, payment_method, transaction_reference, remarks, verification_status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Self-service online payment', 'PENDING')
   `).bind(
     paymentId,
     user.institution_id,
+    record.student_id,
     id,
     amount,
     today,
@@ -490,32 +604,162 @@ fees.post('/records/:id/pay-online', async (c) => {
     transaction_reference || `TXN-${Date.now()}`
   ).run();
 
-  // 3. Generate receipt
-  const receiptId = crypto.randomUUID();
-  const receiptNo = `REC-${Date.now().toString().slice(-8)}`;
-  await db.prepare(`
-    INSERT INTO fee_receipts (id, institution_id, student_fee_record_id, payment_id, receipt_number, receipt_date, amount)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).bind(
-    receiptId,
-    user.institution_id,
-    id,
-    paymentId,
-    receiptNo,
-    today,
-    amount
-  ).run();
+  await createAuditLog(db, user.sub, 'PAY_FEE_ONLINE_PENDING', 'fees', id, `Initiated online payment of ₹${amount} via ${payment_method} (Pending verification)`);
 
-  // 4. Update student fee record ledger
-  await db.prepare(`
-    UPDATE student_fee_records 
-    SET paid_amount = ?, status = ?, updated_at = (datetime('now'))
-    WHERE id = ?
-  `).bind(newPaidAmount, newStatus, id).run();
+  return c.json({ success: true, message: 'Payment recorded and pending accountant verification.', payment_id: paymentId });
+});
 
-  await createAuditLog(db, user.sub, 'PAY_FEE_ONLINE', 'fees', id, `Self paid ₹${amount} online via ${payment_method}`);
+// Verify a pending online payment (Accountant-only)
+fees.post('/payments/:id/verify', requireRole('admin', 'super_admin', 'Principal', 'Accountant'), async (c) => {
+  const user = c.get('user');
+  const paymentId = c.req.param('id')!;
+  const { status } = await c.req.json(); // 'VERIFIED' or 'FAILED'
 
-  return c.json({ success: true, receipt_number: receiptNo });
+  if (!['VERIFIED', 'FAILED'].includes(status)) {
+    return c.json({ error: 'Invalid verification status' }, 400);
+  }
+
+  const db = c.env.DB;
+
+  const payment = await db.prepare(`
+    SELECT * FROM fee_payments WHERE id = ? AND institution_id = ? AND is_active = 1
+  `).bind(paymentId, user.institution_id).first<{
+    id: string;
+    student_id: string;
+    student_fee_record_id: string;
+    amount: number;
+    payment_date: string;
+    payment_method: string;
+    verification_status: string;
+  }>();
+
+  if (!payment) {
+    return c.json({ error: 'Payment record not found' }, 404);
+  }
+
+  if (payment.verification_status !== 'PENDING') {
+    return c.json({ error: `Payment is already ${payment.verification_status}` }, 400);
+  }
+
+  try {
+    if (status === 'VERIFIED') {
+      const record = await db.prepare(`
+        SELECT total_amount, paid_amount FROM student_fee_records WHERE id = ?
+      `).bind(payment.student_fee_record_id).first<{ total_amount: number; paid_amount: number }>();
+
+      if (!record) {
+        return c.json({ error: 'Student fee record not found' }, 404);
+      }
+
+      const newPaidAmount = record.paid_amount + payment.amount;
+      const newStatus = newPaidAmount >= record.total_amount ? 'PAID' : 'PARTIAL';
+
+      const receiptId = crypto.randomUUID();
+      const receiptNo = `REC-${Date.now().toString().slice(-8)}`;
+
+      const stmts = [
+        db.prepare('UPDATE fee_payments SET verification_status = "VERIFIED", updated_at = (datetime(\'now\')), updated_by = ? WHERE id = ?')
+          .bind(user.sub, paymentId),
+        db.prepare(`
+          INSERT INTO fee_receipts (id, institution_id, student_fee_record_id, payment_id, receipt_number, receipt_date, amount)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(receiptId, user.institution_id, payment.student_fee_record_id, paymentId, receiptNo, payment.payment_date, payment.amount),
+        db.prepare(`
+          UPDATE student_fee_records 
+          SET paid_amount = ?, status = ?, updated_at = (datetime(\'now\'))
+          WHERE id = ?
+        `).bind(newPaidAmount, newStatus, payment.student_fee_record_id)
+      ];
+
+      await db.batch(stmts);
+      await createAuditLog(db, user.sub, 'VERIFY_PAYMENT_SUCCESS', 'fees', paymentId, `Verified payment of ₹${payment.amount}. Receipt: ${receiptNo}`);
+
+      return c.json({ success: true, status: 'VERIFIED', receipt_number: receiptNo });
+    } else {
+      await db.prepare('UPDATE fee_payments SET verification_status = "FAILED", updated_at = (datetime(\'now\')), updated_by = ? WHERE id = ?')
+        .bind(user.sub, paymentId).run();
+      await createAuditLog(db, user.sub, 'VERIFY_PAYMENT_FAILED', 'fees', paymentId, `Payment verification failed for payment ID: ${paymentId}`);
+
+      return c.json({ success: true, status: 'FAILED' });
+    }
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// --- EXPENSES ---
+fees.get('/expenses', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+  try {
+    const { results } = await db.prepare(
+      'SELECT * FROM expenses WHERE institution_id = ? AND is_active = 1 ORDER BY date DESC, created_at DESC'
+    ).bind(user.institution_id).all();
+    return c.json(results || []);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+fees.post('/expenses', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+  const input = await c.req.json();
+
+  if (!input.date || !input.category || !input.description || !input.amount || !input.payment_method) {
+    return c.json({ error: 'Missing required expense fields' }, 400);
+  }
+
+  const id = crypto.randomUUID();
+  try {
+    await db.prepare(`
+      INSERT INTO expenses (id, institution_id, date, category, description, amount, payment_method, recorded_by, status, created_by, updated_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id,
+      user.institution_id,
+      input.date,
+      input.category,
+      input.description,
+      input.amount,
+      input.payment_method,
+      input.recorded_by || 'Staff',
+      input.status || 'PAID',
+      user.sub,
+      user.sub
+    ).run();
+
+    await createAuditLog(db, user.sub, 'CREATE_EXPENSE', 'fees', id, `Recorded expense of ₹${input.amount} for ${input.category}: ${input.description}`);
+
+    return c.json({ success: true, id }, 201);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+fees.delete('/expenses/:id', requireRole('admin', 'super_admin', 'Principal', 'Accountant'), async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+  const id = c.req.param('id')!;
+
+  try {
+    const existing = await db.prepare(
+      'SELECT institution_id FROM expenses WHERE id = ? AND is_active = 1'
+    ).bind(id).first<{ institution_id: string }>();
+
+    if (!existing || existing.institution_id !== user.institution_id) {
+      return c.json({ error: 'Expense not found' }, 404);
+    }
+
+    await db.prepare('UPDATE expenses SET is_active = 0, updated_at = (datetime(\'now\')), updated_by = ? WHERE id = ?')
+      .bind(user.sub, id).run();
+
+    await createAuditLog(db, user.sub, 'DELETE_EXPENSE', 'fees', id, 'Deleted expense record');
+
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
 export default fees;

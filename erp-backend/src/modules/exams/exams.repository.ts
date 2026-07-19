@@ -119,12 +119,15 @@ export class ExamsRepository {
         (s.first_name || ' ' || s.last_name) AS student_name,
         s.roll_number,
         s.admission_number,
+        se.section_id,
+        sec.name AS section_name,
         sm.id AS mark_id,
         sm.marks_obtained,
         sm.max_marks,
         sm.remarks
       FROM student_enrollments se
       JOIN students s ON se.student_id = s.id
+      LEFT JOIN sections sec ON sec.id = se.section_id
       LEFT JOIN student_marks sm ON sm.student_id = s.id AND sm.exam_subject_id = ? AND sm.is_active = 1
       WHERE se.academic_year_id = ? AND se.course_id = ? AND se.semester = ? AND se.is_active = 1 AND s.is_active = 1
       ORDER BY s.first_name ASC, s.last_name ASC

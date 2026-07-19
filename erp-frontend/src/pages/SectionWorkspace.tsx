@@ -4,6 +4,7 @@ import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 import {
   BookOpen, Users, Calendar, Clock, BarChart2, Bell, FolderOpen,
   Settings, Activity, Plus, ArrowLeft, Upload, Trash2, CheckCircle2,
@@ -36,6 +37,15 @@ export default function SectionWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const userPermissions = user?.permissions || [];
+  const canManageAcademic = hasAnyPermission(userPermissions, ['academic.manage']) ||
+    hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD']);
+  const canCreateStudent = hasAnyPermission(userPermissions, ['student.create']) || canManageAcademic;
+  const canMarkAttendance = hasAnyPermission(userPermissions, ['attendance.mark']) ||
+    canManageAcademic ||
+    hasAnyRole(userRoles, ['Teacher']);
+  const canAssignHomework = canManageAcademic || hasAnyRole(userRoles, ['Teacher']);
 
   const activeTab = searchParams.get('tab') || 'students';
 
@@ -244,9 +254,11 @@ export default function SectionWorkspace() {
           </p>
         </div>
 
-        <button className="btn btn-secondary" onClick={() => setShowSettingsModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-          <Settings size={15} /> Class Settings
-        </button>
+        {canManageAcademic && (
+          <button className="btn btn-secondary" onClick={() => setShowSettingsModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            <Settings size={15} /> Class Settings
+          </button>
+        )}
       </div>
 
       {/* Summary Card */}
@@ -294,18 +306,24 @@ export default function SectionWorkspace() {
       {/* Quick Actions Panel */}
       <div className="card quick-actions-panel" style={{ padding: '0.75rem 1rem', marginBottom: '1.5rem', background: 'var(--bg-subtle)', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
         <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginRight: '0.5rem', letterSpacing: '0.05em' }}>Quick Actions:</span>
-        <button className="btn btn-secondary" onClick={() => navigate(`/students?showAdd=true&section_id=${id}`)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-          <Plus size={13} /> Enroll Student
-        </button>
-        <button className="btn btn-secondary" onClick={() => navigate(`/attendance?section_id=${id}`)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-          <ClipboardCheck size={13} /> Mark Attendance
-        </button>
+        {canCreateStudent && (
+          <button className="btn btn-secondary" onClick={() => navigate(`/students?showAdd=true&section_id=${id}`)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            <Plus size={13} /> Enroll Student
+          </button>
+        )}
+        {canMarkAttendance && (
+          <button className="btn btn-secondary" onClick={() => navigate(`/attendance?section_id=${id}`)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            <ClipboardCheck size={13} /> Mark Attendance
+          </button>
+        )}
         <button className="btn btn-secondary" onClick={() => { setActiveTab('timetable'); navigate('?tab=timetable'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
           <Calendar size={13} /> View Timetable
         </button>
-        <button className="btn btn-secondary" onClick={() => navigate(`/homework`)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-          <BookOpen size={13} /> Assign Homework
-        </button>
+        {canAssignHomework && (
+          <button className="btn btn-secondary" onClick={() => navigate(`/homework`)} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            <BookOpen size={13} /> Assign Homework
+          </button>
+        )}
       </div>
 
       {/* Workspace Navigation Tabs */}
@@ -457,9 +475,11 @@ export default function SectionWorkspace() {
               <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '500' }}>
                 ℹ️ Subject assignments are managed centrally. Edit allocations under academic setup.
               </span>
-              <Link to="/academic-setup?tab=assignments" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--primary)' }} className="hover-underline">
-                Go to Subject Assignments →
-              </Link>
+              {canManageAcademic && (
+                <Link to="/academic-setup?tab=assignments" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--primary)' }} className="hover-underline">
+                  Go to Subject Assignments →
+                </Link>
+              )}
             </div>
 
             <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)', marginBottom: '1rem' }}>Mapped Curriculum Subjects</h4>
@@ -505,9 +525,11 @@ export default function SectionWorkspace() {
               <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '500' }}>
                 ℹ️ Class teaching staff assignments are managed centrally.
               </span>
-              <Link to="/academic-setup?tab=assignments" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--primary)' }} className="hover-underline">
-                Go to Subject Assignments →
-              </Link>
+              {canManageAcademic && (
+                <Link to="/academic-setup?tab=assignments" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--primary)' }} className="hover-underline">
+                  Go to Subject Assignments →
+                </Link>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
@@ -572,9 +594,11 @@ export default function SectionWorkspace() {
           <div className="card" style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)' }}>Weekly Timetable Schedule</h4>
-              <Link to="/timetable" className="btn btn-secondary" style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto' }}>
-                Open Timetable Editor
-              </Link>
+              {canManageAcademic && (
+                <Link to="/timetable" className="btn btn-secondary" style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto' }}>
+                  Open Timetable Editor
+                </Link>
+              )}
             </div>
 
             <div style={{ overflowX: 'auto' }}>
@@ -622,9 +646,11 @@ export default function SectionWorkspace() {
           <div className="card" style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-main)' }}>Attendance Register sessions</h4>
-              <button className="btn btn-primary" onClick={() => navigate(`/attendance?section_id=${id}`)}>
-                Mark Daily Attendance
-              </button>
+              {canMarkAttendance && (
+                <button className="btn btn-primary" onClick={() => navigate(`/attendance?section_id=${id}`)}>
+                  Mark Daily Attendance
+                </button>
+              )}
             </div>
 
             {attendanceSessions.length === 0 ? (
@@ -700,7 +726,7 @@ export default function SectionWorkspace() {
       </div>
 
       {/* --- CLASS SETTINGS MODAL --- */}
-      {showSettingsModal && (
+      {showSettingsModal && canManageAcademic && (
         <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div className="card modal-content" style={{ width: '440px', padding: '1.5rem' }}>
             <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1.25rem' }}>Edit Class Configuration</h3>

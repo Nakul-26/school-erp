@@ -2,7 +2,7 @@ import './Teachers.css';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { Plus, Grid, List, Trash2, Archive, Check, ShieldAlert } from 'lucide-react';
+import { Plus, Grid, List, Trash2, Archive, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { hasAnyPermission } from '../utils/accessControl';
@@ -527,6 +527,10 @@ export default function Teachers() {
 
   const handleBulkExport = (format: 'csv' | 'xlsx') => {
     if (selectedTeacherIds.length === 0) return;
+    if (!canViewTeacher) {
+      toast.error('You do not have permission to export teacher data.');
+      return;
+    }
     const selectedTeachers = teachers.filter(t => selectedTeacherIds.includes(t.id));
     if (format === 'xlsx') {
       exportHelpers.exportTeachersExcel(selectedTeachers);
@@ -577,13 +581,6 @@ export default function Teachers() {
           nextStep={nextStep}
           setShowModal={setShowModal}
         />
-      ) : showModal ? (
-        <div className="card teachers-empty-card">
-          <div className="teachers-empty-icon"><ShieldAlert size={28} /></div>
-          <p className="teachers-empty-title">Teacher creation is restricted</p>
-          <p className="teachers-empty-subtitle">You do not have permission to create teacher records.</p>
-          <button className="btn btn-primary" onClick={() => setShowModal(false)}>Back to Teachers</button>
-        </div>
       ) : (
         <>
           <div className="page-header teachers-page-header">
@@ -611,12 +608,16 @@ export default function Teachers() {
                 </button>
               </div>
 
-              <button className="btn btn-outline" onClick={() => setShowImportModal(true)} disabled={!canCreateTeacher} title={!canCreateTeacher ? 'Requires teacher.create' : 'Import Excel'}>
-                Import Excel
-              </button>
-              <button className="btn btn-primary" onClick={handleAddTeacherClick} disabled={!canCreateTeacher} title={!canCreateTeacher ? 'Requires teacher.create' : 'Add Teacher'}>
-                <Plus size={18} /> Add Teacher
-              </button>
+              {canCreateTeacher && (
+                <>
+                  <button className="btn btn-outline" onClick={() => setShowImportModal(true)} title="Import Excel">
+                    Import Excel
+                  </button>
+                  <button className="btn btn-primary" onClick={handleAddTeacherClick} title="Add Teacher">
+                    <Plus size={18} /> Add Teacher
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -646,9 +647,11 @@ export default function Teachers() {
                     <strong>{selectedTeacherIds.length}</strong> {selectedTeacherIds.length === 1 ? 'teacher' : 'teachers'} selected
                   </span>
                   <div className="teachers-bulk-actions">
-                    <button onClick={() => setShowBulkDeptModal(true)} className="btn btn-sm btn-outline" disabled={!canEditTeacher} title={!canEditTeacher ? 'Requires teacher.edit' : 'Assign Department'}>
-                      Assign Department
-                    </button>
+                    {canEditTeacher && (
+                      <button onClick={() => setShowBulkDeptModal(true)} className="btn btn-sm btn-outline" title="Assign Department">
+                        Assign Department
+                      </button>
+                    )}
                     {showDeactivateBtn && canEditTeacher && (
                       <button onClick={() => handleBulkAction('deactivate')} className="btn btn-sm btn-outline text-warning">
                         <Archive size={14} /> Deactivate

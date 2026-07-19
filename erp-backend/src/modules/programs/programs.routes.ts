@@ -9,6 +9,34 @@ const programs = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 programs.use('*', authMiddleware);
 
+const STAFF_ROLES = new Set([
+  'admin',
+  'Admin',
+  'super_admin',
+  'Super Admin',
+  'Principal',
+  'principal',
+  'HOD',
+  'hod',
+  'Teacher',
+  'teacher',
+  'Accountant',
+  'accountant',
+]);
+
+function hasStaffRole(user: JwtPayload): boolean {
+  const roles = user.roles || (user.role ? [user.role] : []);
+  return roles.some((role) => STAFF_ROLES.has(role));
+}
+
+programs.use('*', async (c, next) => {
+  const user = c.get('user');
+  if (!hasStaffRole(user)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+  await next();
+});
+
 programs.get('/', async (c) => {
   const user = c.get('user');
   const includeArchived = c.req.query('include_archived') === 'true';

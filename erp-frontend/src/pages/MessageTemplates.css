@@ -163,7 +163,7 @@
   flex: 1;
 }
 
-.tpl-select-prompt {
+.tpl-choose-prompt {
   background: var(--bg-card, #ffffff);
   border: 1px dashed var(--border, #cbd5e1);
   border-radius: var(--radius-lg, 12px);
@@ -176,13 +176,13 @@
   margin-bottom: 1rem;
 }
 
-.tpl-select-prompt h3 {
+.tpl-choose-prompt h3 {
   font-size: 1rem;
   color: var(--text-main, #0f172a);
   margin: 0 0 0.25rem 0;
 }
 
-.tpl-select-prompt p {
+.tpl-choose-prompt p {
   font-size: 0.8rem;
   color: var(--text-secondary, #64748b);
   margin: 0;

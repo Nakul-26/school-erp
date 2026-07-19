@@ -361,7 +361,7 @@ export default function ManageUsers() {
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', paddingBottom: '0.9rem', borderBottom: '1px solid var(--border-color)' }}>
-                  {(role.permissions || []).map(permission => (
+                  {Array.from(new Set(role.permissions || [])).map(permission => (
                     <span key={permission} className="badge badge-secondary manage-users-badge">{permission}</span>
                   ))}
                   {(role.permissions || []).length === 0 && <span className="manage-users-span-4">No permissions assigned</span>}

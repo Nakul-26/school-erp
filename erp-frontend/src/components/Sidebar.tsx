@@ -11,14 +11,14 @@ import {
   Library, Bus, MessageSquare, Package
 } from 'lucide-react';
 import { isAllowedNav } from '../config/roleNav';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
   onNavigate?: () => void;
 }
 
 export default function Sidebar({ onNavigate }: SidebarProps) {
-  const userStr = localStorage.getItem('erp_user');
-  const user = userStr ? JSON.parse(userStr) : null;
+  const { user } = useAuth();
   const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
   const permissions: string[] = user?.permissions || [];
   const navigate = useNavigate();
@@ -113,31 +113,67 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
 
   const allGroups: Group[] = [
     {
-      key: '__flat1', label: '', always: true,
+      key: 'core', label: 'Core', always: true,
       links: [
         { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { to: '/communication', label: 'Communication', icon: MessageSquare, badge: unreadMessages + unreadCount },
+        { to: '/reports', label: 'Reports', icon: BarChart3 },
+      ],
+    },
+    {
+      key: 'people', label: 'People',
+      links: [
+        { to: '/admissions', label: 'Admissions', icon: UserPlus },
         { to: '/students', label: 'Students', icon: Users },
         { to: '/teachers', label: 'Teachers', icon: UserCheck },
+        { to: '/alumni', label: 'Alumni', icon: GraduationCap },
+      ],
+    },
+    {
+      key: 'academics', label: 'Academics',
+      links: [
+        { to: '/academic-setup', label: 'Academic Setup', icon: Layers },
         { to: '/classes', label: 'Classes', icon: School },
         { to: '/subjects', label: 'Subjects', icon: BookOpen },
-        { to: '/academic-setup', label: 'Academic Setup', icon: Layers },
-      ],
-    },
-    {
-      key: '__flat2', label: '', always: true,
-      links: [
+        { to: '/timetable', label: 'Timetable', icon: CalendarDays },
         { to: '/attendance', label: 'Attendance', icon: ClipboardCheck },
+        { to: '/teacher-attendance', label: 'Teacher Attendance', icon: ClipboardList },
         { to: '/exams', label: 'Exams & Results', icon: Award },
-        { to: '/finance', label: 'Finance', icon: IndianRupee },
-        { to: '/communication', label: 'Communication', icon: MessageSquare, badge: unreadMessages + unreadCount },
+        { to: '/homework', label: 'Homework', icon: Clipboard },
+        { to: '/calendar', label: 'Calendar', icon: Calendar },
       ],
     },
     {
-      key: '__flat3', label: '', always: true,
+      key: 'finance', label: 'Finance & Operations',
       links: [
-        { to: '/access-control', label: 'Access Control', icon: UserCog },
-        { to: '/reports', label: 'Reports', icon: BarChart3 },
+        { to: '/finance', label: 'Finance', icon: IndianRupee },
+        { to: '/library', label: 'Library', icon: Library },
+        { to: '/transport', label: 'Transport', icon: Bus },
+        { to: '/certificates', label: 'Certificates', icon: Award },
+        { to: '/visitors', label: 'Visitors', icon: UserPlus },
+        { to: '/assets', label: 'Assets', icon: Package },
+      ],
+    },
+    {
+      key: 'leave', label: 'Leave & Approvals',
+      links: [
+        { to: '/leave/my', label: 'My Leave', icon: CalendarDays },
+        { to: '/leave/types', label: 'Leave Types', icon: ClipboardList },
+        { to: '/leave/approvals', label: 'Leave Approvals', icon: CheckSquare },
+        { to: '/student-leaves/approvals', label: 'Student Leave', icon: ClipboardCheck },
+        { to: '/approvals', label: 'Approvals Inbox', icon: CheckSquare },
+      ],
+    },
+    {
+      key: 'admin', label: 'Administration',
+      links: [
         { to: '/setup', label: 'School Setup', icon: Settings },
+        { to: '/institution-setup', label: 'Institution Setup', icon: Building2 },
+        { to: '/settings', label: 'Settings', icon: Settings },
+        { to: '/settings/grades', label: 'Grade Settings', icon: Award },
+        { to: '/data-tools', label: 'Data Tools', icon: FileSpreadsheet },
+        { to: '/audit-logs', label: 'Audit Logs', icon: ClipboardList },
+        { to: '/access-control', label: 'Access Control', icon: UserCog },
       ],
     },
   ];

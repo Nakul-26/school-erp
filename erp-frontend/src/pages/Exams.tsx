@@ -3,7 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, Trash2, Calendar, ClipboardCheck, ArrowLeft, Check, X, ShieldAlert, Award, FileSpreadsheet, Layers } from 'lucide-react';
+import { Plus, Trash2, ClipboardCheck, ArrowLeft, Award, FileSpreadsheet, Layers } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
 interface Exam {
   id: string;
@@ -44,6 +46,13 @@ interface StudentMarkRecord {
 }
 
 export default function Exams() {
+  const { user } = useAuth();
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const userPermissions = user?.permissions || [];
+  const canManageExamSetup = hasAnyPermission(userPermissions, ['academic.manage']) ||
+    hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD']);
+  const canEnterMarks = canManageExamSetup || hasAnyRole(userRoles, ['Teacher']);
+
   const [view, setView] = useState<'list' | 'subjects' | 'marks' | 'results'>('list');
   const [exams, setExams] = useState<Exam[]>([]);
   const [academicYears, setAcademicYears] = useState<any[]>([]);
@@ -323,9 +332,11 @@ export default function Exams() {
                 Track exam events, configure schedules, and aggregate grade metrics
               </p>
             </div>
-            <button className="btn btn-primary" onClick={() => setShowExamModal(true)}>
-              <Plus size={18} /> Add Exam Event
-            </button>
+            {canManageExamSetup && (
+              <button className="btn btn-primary" onClick={() => setShowExamModal(true)}>
+                <Plus size={18} /> Add Exam Event
+              </button>
+            )}
           </div>
 
           <div className="card">
@@ -364,15 +375,19 @@ export default function Exams() {
                             <Award size={12} /> Results
                           </button>
                           
-                          <select value={ex.status} onChange={(e) => handleStatusChange(ex, e.target.value as any)} className="exams-select-5">
-                            <option value="DRAFT">DRAFT</option>
-                            <option value="PUBLISHED">PUBLISHED</option>
-                            <option value="COMPLETED">COMPLETED</option>
-                          </select>
+                          {canManageExamSetup && (
+                            <select value={ex.status} onChange={(e) => handleStatusChange(ex, e.target.value as any)} className="exams-select-5">
+                              <option value="DRAFT">DRAFT</option>
+                              <option value="PUBLISHED">PUBLISHED</option>
+                              <option value="COMPLETED">COMPLETED</option>
+                            </select>
+                          )}
 
-                          <button className="btn btn-sm btn-danger" onClick={(e) => handleDeleteExam(ex.id, e)}>
-                            <Trash2 size={12} />
-                          </button>
+                          {canManageExamSetup && (
+                            <button className="btn btn-sm btn-danger" onClick={(e) => handleDeleteExam(ex.id, e)}>
+                              <Trash2 size={12} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -489,9 +504,11 @@ export default function Exams() {
                 </p>
               </div>
             </div>
-            <button className="btn btn-primary" onClick={() => setShowSubjectModal(true)}>
-              <Plus size={18} /> Add Subject to Exam
-            </button>
+            {canManageExamSetup && (
+              <button className="btn btn-primary" onClick={() => setShowSubjectModal(true)}>
+                <Plus size={18} /> Add Subject to Exam
+              </button>
+            )}
           </div>
 
           <div className="card">
@@ -519,12 +536,16 @@ export default function Exams() {
                       <td>{es.min_marks}</td>
                       <td className="exams-td-14">
                         <div className="exams-row-15">
-                          <button className="btn btn-sm btn-primary" onClick={() => handleOpenMarksheet(es)}>
-                            <FileSpreadsheet size={12} /> Enter Marks
-                          </button>
-                          <button className="btn btn-sm btn-danger" onClick={() => handleRemoveSubject(es.id)}>
-                            <Trash2 size={12} /> Remove
-                          </button>
+                          {canEnterMarks && (
+                            <button className="btn btn-sm btn-primary" onClick={() => handleOpenMarksheet(es)}>
+                              <FileSpreadsheet size={12} /> Enter Marks
+                            </button>
+                          )}
+                          {canManageExamSetup && (
+                            <button className="btn btn-sm btn-danger" onClick={() => handleRemoveSubject(es.id)}>
+                              <Trash2 size={12} /> Remove
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -646,9 +667,11 @@ export default function Exams() {
                 </p>
               </div>
             </div>
-            <button className="btn btn-primary" onClick={handleSaveMarks} disabled={loading}>
-              Save Marks Sheet
-            </button>
+            {canEnterMarks && (
+              <button className="btn btn-primary" onClick={handleSaveMarks} disabled={loading}>
+                Save Marks Sheet
+              </button>
+            )}
           </div>
 
           <div className="card">
@@ -669,13 +692,13 @@ export default function Exams() {
                       <td><strong>{rec.roll_number || '-'}</strong></td>
                       <td>{rec.student_name}</td>
                       <td>
-                        <input type="number" value={rec.marks_obtained ?? ''} onChange={(e) => handleMarkChange(rec.student_id, e.target.value)} placeholder="Marks obtained" max={selectedExamSubject.max_marks} min={0} className="exams-input-24"  />
+                        <input type="number" value={rec.marks_obtained ?? ''} onChange={(e) => handleMarkChange(rec.student_id, e.target.value)} placeholder="Marks obtained" max={selectedExamSubject.max_marks} min={0} className="exams-input-24" disabled={!canEnterMarks}  />
                       </td>
                       <td>
                         <span className="exams-span-25">{selectedExamSubject.max_marks}</span>
                       </td>
                       <td>
-                        <input type="text" value={rec.remarks || ''} onChange={(e) => handleRemarksChange(rec.student_id, e.target.value)} placeholder="e.g. Medical leave, Absent" className="exams-input-26"  />
+                        <input type="text" value={rec.remarks || ''} onChange={(e) => handleRemarksChange(rec.student_id, e.target.value)} placeholder="e.g. Medical leave, Absent" className="exams-input-26" disabled={!canEnterMarks}  />
                       </td>
                     </tr>
                   ))}

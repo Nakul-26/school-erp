@@ -4,7 +4,7 @@ import { PageGuidance } from '../components/PageGuidance';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { 
+import {
   Plus, 
   Search, 
   Eye, 
@@ -27,6 +27,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
 export default function Classes() {
   const navigate = useNavigate();
@@ -52,6 +53,10 @@ export default function Classes() {
 
   // Terminology & Auth States
   const { user } = useAuth();
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const userPermissions = user?.permissions || [];
+  const canManageAcademic = hasAnyPermission(userPermissions, ['academic.manage']) ||
+    hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD']);
   const [institutionType, setInstitutionType] = useState<string>('college');
 
   // Terminology helpers
@@ -530,17 +535,19 @@ export default function Classes() {
             Manage school courses, classes, sections, and classroom allocations.
           </p>
         </div>
-        <div>
-          {activeMainTab === 'sections' ? (
-            <button className="btn btn-primary classes-btn" onClick={handleOpenCreateSection}>
-              <Plus size={18} /> Add {institutionType === 'school' ? 'Section' : 'Class/Section'}
-            </button>
-          ) : (
-            <button className="btn btn-primary classes-btn" onClick={() => setShowAddProgramModal(true)}>
-              <Plus size={18} /> Add {getProgramLabel()}
-            </button>
-          )}
-        </div>
+        {canManageAcademic && (
+          <div>
+            {activeMainTab === 'sections' ? (
+              <button className="btn btn-primary classes-btn" onClick={handleOpenCreateSection}>
+                <Plus size={18} /> Add {institutionType === 'school' ? 'Section' : 'Class/Section'}
+              </button>
+            ) : (
+              <button className="btn btn-primary classes-btn" onClick={() => setShowAddProgramModal(true)}>
+                <Plus size={18} /> Add {getProgramLabel()}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 3. Pill Tabs Switcher */}
@@ -768,13 +775,17 @@ export default function Classes() {
                             <button className="btn btn-sm btn-secondary classes-btn" onClick={() => navigate(`/classes/${cls.id}`)} title="Open Section Workspace">
                               <Eye size={14} />
                             </button>
-                            <button className="btn btn-sm btn-secondary classes-btn" onClick={() => handleOpenEditSection(cls)} title="Edit details">
-                              <Edit2 size={14} />
-                            </button>
-                            <button className="btn btn-sm btn-secondary classes-btn" onClick={() => handleToggleSectionStatus(cls)} title={cls.is_active ? 'Archive section' : 'Restore section'}>
-                              <Archive size={14} />
-                            </button>
-                            {!cls.is_active && (
+                            {canManageAcademic && (
+                              <button className="btn btn-sm btn-secondary classes-btn" onClick={() => handleOpenEditSection(cls)} title="Edit details">
+                                <Edit2 size={14} />
+                              </button>
+                            )}
+                            {canManageAcademic && (
+                              <button className="btn btn-sm btn-secondary classes-btn" onClick={() => handleToggleSectionStatus(cls)} title={cls.is_active ? 'Archive section' : 'Restore section'}>
+                                <Archive size={14} />
+                              </button>
+                            )}
+                            {canManageAcademic && !cls.is_active && (
                               <button className="btn btn-sm btn-danger classes-btn" onClick={() => handleDeleteSection(cls.id)} title="Delete permanently">
                                 <Trash2 size={14} />
                               </button>
@@ -915,17 +926,21 @@ export default function Classes() {
                             <button onClick={() => openProgramDetailModal(prog)} className="btn btn-sm btn-outline classes-btn">
                               <Eye size={12} /> View
                             </button>
-                            <button onClick={() => openEditProgramModal(prog)} className="btn btn-sm btn-secondary classes-btn">
-                              <Edit3 size={12} /> Edit
-                            </button>
-                            {prog.is_active === 1 ? (
-                              <button onClick={() => handleArchiveProgram(prog.id)} className="btn btn-sm btn-outline-danger classes-btn">
-                                <Trash2 size={12} /> Archive
+                            {canManageAcademic && (
+                              <button onClick={() => openEditProgramModal(prog)} className="btn btn-sm btn-secondary classes-btn">
+                                <Edit3 size={12} /> Edit
                               </button>
-                            ) : (
-                              <button onClick={() => handleRestoreProgram(prog.id)} className="btn btn-sm btn-outline-success classes-btn">
-                                <RefreshCw size={12} /> Restore
-                              </button>
+                            )}
+                            {canManageAcademic && (
+                              prog.is_active === 1 ? (
+                                <button onClick={() => handleArchiveProgram(prog.id)} className="btn btn-sm btn-outline-danger classes-btn">
+                                  <Trash2 size={12} /> Archive
+                                </button>
+                              ) : (
+                                <button onClick={() => handleRestoreProgram(prog.id)} className="btn btn-sm btn-outline-success classes-btn">
+                                  <RefreshCw size={12} /> Restore
+                                </button>
+                              )
                             )}
                           </div>
                         </td>
@@ -938,9 +953,11 @@ export default function Classes() {
                             <Shield size={48} color="#cbd5e1" />
                             <h4 className="classes-title-132">No {getProgramsLabel()} Found</h4>
                             <p className="classes-text-133">Try adjusting filters or add a new {getProgramLabel().toLowerCase()}.</p>
-                            <button className="btn btn-primary btn-sm classes-btn" onClick={() => setShowAddProgramModal(true)}>
-                              Add {getProgramLabel()}
-                            </button>
+                            {canManageAcademic && (
+                              <button className="btn btn-primary btn-sm classes-btn" onClick={() => setShowAddProgramModal(true)}>
+                                Add {getProgramLabel()}
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -958,7 +975,7 @@ export default function Classes() {
          ---------------------------------------------------- */}
 
       {/* Modal A: Add / Edit Section */}
-      {showSectionFormModal && (
+      {showSectionFormModal && canManageAcademic && (
         <div className="modal-overlay classes-modal-overlay">
           <div className="modal-content classes-modal-content size-sm">
             <h3 className="classes-title-137">
@@ -1266,7 +1283,7 @@ export default function Classes() {
       )}
 
       {/* Modal C: Add Program */}
-      {showAddProgramModal && (
+      {showAddProgramModal && canManageAcademic && (
         <div className="modal classes-modal">
           <div className="modal-content classes-modal-content size-sm">
             <h3 className="classes-title-215">Add New {getProgramLabel()}</h3>
@@ -1351,7 +1368,7 @@ export default function Classes() {
       )}
 
       {/* Modal D: Edit Program */}
-      {showEditProgramModal && (
+      {showEditProgramModal && canManageAcademic && (
         <div className="modal classes-modal">
           <div className="modal-content classes-modal-content size-sm">
             <h3 className="classes-title-237">Edit {getProgramLabel()}</h3>

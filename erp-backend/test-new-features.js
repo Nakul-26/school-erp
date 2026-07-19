@@ -144,12 +144,32 @@ async function runTests() {
   // 4. Weekly Timetable (Create a teacher and student, enroll student in section-a, and assign timetable)
   console.log('🗓️ [4/5] Testing Weekly Timetable assignment...');
   
+  // Fetch active academic year, course, section, and subject dynamically to avoid foreign key failures
+  const yearsRes = await request('/academic-years');
+  const coursesRes = await request('/programs');
+  const sectionsRes = await request('/sections');
+  const subjectsRes = await request('/subjects');
+  
+  if (
+    !yearsRes.ok || yearsRes.data.length === 0 ||
+    !coursesRes.ok || coursesRes.data.length === 0 ||
+    !sectionsRes.ok || sectionsRes.data.length === 0 ||
+    !subjectsRes.ok || subjectsRes.data.length === 0
+  ) {
+    throw new Error('Could not fetch academic years, programs, sections, or subjects to run timetable tests.');
+  }
+  
+  const activeYearId = yearsRes.data[0].id;
+  const activeCourseId = coursesRes.data[0].id;
+  const activeSectionId = sectionsRes.data[0].id;
+  const activeSubjectId = subjectsRes.data[0].id;
+
   // Create teacher
   const teacherInput = {
-    employee_id: 'EMP_T_1001',
+    employee_id: 'EMP_T_1001_' + Date.now(),
     first_name: 'John',
     last_name: 'Doe',
-    email: 'doe@oxford.edu',
+    email: 'doe_' + Date.now() + '@oxford.edu',
     status: 'ACTIVE'
   };
   const createTeacher = await request('/teachers', {
@@ -162,7 +182,7 @@ async function runTests() {
 
   // Create student
   const studentInput = {
-    admission_number: 'ADM_S_1001',
+    admission_number: 'ADM_S_1001_' + Date.now(),
     roll_number: 'CSE-001',
     first_name: 'Bob',
     last_name: 'Sponge',
@@ -176,12 +196,12 @@ async function runTests() {
   const studentId = createStudent.data.id;
   console.log(`- Seeded student for attendance. ID: ${studentId}`);
 
-  // Enroll student in Section A
+  // Enroll student in Section
   const enrollInput = {
     student_id: studentId,
-    academic_year_id: 'year-2026',
-    course_id: 'prog-cse',
-    section_id: 'sec-cse-a',
+    academic_year_id: activeYearId,
+    course_id: activeCourseId,
+    section_id: activeSectionId,
     semester: 1
   };
   const enrollStudent = await request('/enrollments', {
@@ -189,13 +209,13 @@ async function runTests() {
     body: enrollInput
   });
   if (enrollStudent.status !== 201) throw new Error(`Enrollment failed: ${JSON.stringify(enrollStudent.data)}`);
-  console.log(`- Enrolled student bob into section sec-cse-a`);
+  console.log(`- Enrolled student bob into section ${activeSectionId}`);
 
   // Assign slot to timetable
   const assignment = {
-    academic_year_id: 'year-2026',
-    section_id: 'sec-cse-a',
-    subject_id: 'sub-ds',
+    academic_year_id: activeYearId,
+    section_id: activeSectionId,
+    subject_id: activeSubjectId,
     teacher_id: teacherId,
     slot_id: slot1Id,
     day_of_week: 'Monday'
@@ -209,9 +229,9 @@ async function runTests() {
   const wtId = createAssign.data.id;
   console.log(`- Assigned Weekly Timetable Entry. ID: ${wtId}`);
 
-  const getTimetable = await request(`/weekly-timetable?section_id=sec-cse-a`);
+  const getTimetable = await request(`/weekly-timetable?section_id=${activeSectionId}`);
   if (!getTimetable.ok) throw new Error('Get timetable failed');
-  console.log(`- Weekly timetable count for section sec-cse-a: ${getTimetable.data.length}`);
+  console.log(`- Weekly timetable count for section ${activeSectionId}: ${getTimetable.data.length}`);
   
   const hasAssign = getTimetable.data.some(entry => entry.id === wtId);
   if (!hasAssign) throw new Error('Timetable entry not found in list');
@@ -221,8 +241,8 @@ async function runTests() {
   console.log('📝 [5/5] Testing Attendance Session & Marking Attendance...');
   
   const sessionInput = {
-    section_id: 'sec-cse-a',
-    subject_id: 'sub-ds',
+    section_id: activeSectionId,
+    subject_id: activeSubjectId,
     teacher_id: teacherId,
     slot_id: slot1Id,
     date: '2026-06-20'

@@ -3,16 +3,26 @@ import { Env, JwtPayload } from '../../types';
 import { StudentRepository } from './students.repository';
 import { StudentService } from './students.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
+import { getTeacherIdForUser, isTeacherOnly, teacherCanAccessStudent } from '../../utils/teacher-scope';
+import { validateUploadedFile, sanitizeFileName } from '../../utils/file-upload';
 
 const students = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
-// GET photo (Public route so <img> can load it directly without Authorization headers)
+students.use('*', authMiddleware);
+
+// GET photo (Protected route, token can be in header or query parameter)
 students.get('/photo/:id', async (c) => {
+  const user = c.get('user');
   const id = c.req.param('id')!;
   try {
-    const student = await c.env.DB.prepare('SELECT photo FROM students WHERE id = ? AND is_active = 1').bind(id).first<{ photo: string }>();
+    const student = await c.env.DB.prepare('SELECT photo, institution_id FROM students WHERE id = ? AND is_active = 1').bind(id).first<{ photo: string; institution_id: string }>();
     if (!student || !student.photo) {
       return c.json({ error: 'Photo not found' }, 404);
+    }
+
+    // Verify institution isolation
+    if (student.institution_id !== user.institution_id) {
+      return c.json({ error: 'Forbidden: unauthorized resource access' }, 403);
     }
     
     if (student.photo.startsWith('data:image')) {
@@ -44,8 +54,6 @@ students.get('/photo/:id', async (c) => {
   }
 });
 
-students.use('*', authMiddleware);
-
 students.get('/', async (c) => {
   const user = c.get('user');
   const repo = new StudentRepository(c.env.DB);
@@ -53,6 +61,19 @@ students.get('/', async (c) => {
   const userRoles = user.roles || (user.role ? [user.role] : []);
   const isStudent = userRoles.some(r => ['student', 'Student'].includes(r));
   const isParent = userRoles.some(r => ['parent', 'Parent', 'guardian', 'Guardian'].includes(r));
+  const isStaff = userRoles.some(r => [
+    'admin',
+    'Admin',
+    'super_admin',
+    'Super Admin',
+    'role-super-admin',
+    'Principal',
+    'principal',
+    'HOD',
+    'hod',
+    'Teacher',
+    'teacher'
+  ].includes(r));
 
   if (isStudent) {
     // Return only their own student record
@@ -146,6 +167,129 @@ students.get('/', async (c) => {
   const limit = limitVal ? parseInt(limitVal, 10) : undefined;
   const offset = offsetVal ? parseInt(offsetVal, 10) : undefined;
 
+  if (isTeacherOnly(user)) {
+    const teacherId = await getTeacherIdForUser(c.env.DB, user);
+    if (!teacherId) {
+      return limit !== undefined || offset !== undefined ? c.json({ students: [], total: 0 }) : c.json([]);
+    }
+
+    let whereClause = `
+      WHERE s.institution_id = ? AND s.is_active = 1
+        AND (
+          EXISTS (
+            SELECT 1 FROM teacher_subject_assignments tsa
+            WHERE tsa.teacher_id = ? AND tsa.section_id = se.section_id AND tsa.is_active = 1
+          )
+          OR EXISTS (
+            SELECT 1 FROM teaching_allocations ta
+            WHERE ta.teacher_id = ? AND ta.section_id = se.section_id AND ta.institution_id = ? AND LOWER(ta.status) = 'active'
+          )
+        )
+    `;
+    const params: any[] = [user.institution_id, teacherId, teacherId, user.institution_id];
+
+    if (status) {
+      whereClause += ' AND s.status = ?';
+      params.push(status);
+    }
+    if (academic_year_id) {
+      whereClause += ' AND se.academic_year_id = ?';
+      params.push(academic_year_id);
+    }
+    if (program_id) {
+      whereClause += ' AND se.course_id = ?';
+      params.push(program_id);
+    }
+    if (section_id) {
+      whereClause += ' AND se.section_id = ?';
+      params.push(section_id);
+    }
+    if (search) {
+      whereClause += ` AND (
+        s.first_name LIKE ?
+        OR s.last_name LIKE ?
+        OR s.admission_number LIKE ?
+        OR (s.roll_number IS NOT NULL AND s.roll_number LIKE ?)
+      )`;
+      const searchPattern = `%${search}%`;
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+    }
+
+    const joinLatestEnrollment = `
+      LEFT JOIN student_enrollments se ON se.id = (
+        SELECT id FROM student_enrollments
+        WHERE student_id = s.id AND is_active = 1
+        ORDER BY created_at DESC LIMIT 1
+      )
+    `;
+
+    const countResult = await c.env.DB.prepare(`
+      SELECT COUNT(DISTINCT s.id) as count
+      FROM students s
+      ${joinLatestEnrollment}
+      ${whereClause}
+    `).bind(...params).first<{ count: number }>();
+
+    let selectQuery = `
+      SELECT
+        s.*,
+        se.academic_year_id,
+        se.course_id,
+        se.section_id,
+        se.semester,
+        c.name AS program_name,
+        c.course_code AS program_code,
+        sec.name AS section_name,
+        ay.name AS academic_year_name,
+        (
+          SELECT CASE
+            WHEN COUNT(status) > 0 THEN ROUND(100.0 * COUNT(CASE WHEN status IN ('present', 'late') THEN 1 END) / COUNT(status), 0)
+            ELSE 100
+          END
+          FROM student_attendance
+          WHERE student_id = s.id AND is_active = 1
+        ) AS attendance_percentage,
+        (
+          SELECT COALESCE(SUM(total_amount - paid_amount), 0)
+          FROM student_fee_records
+          WHERE student_id = s.id AND is_active = 1
+        ) AS fee_due,
+        g.name AS guardian_name,
+        g.relationship AS guardian_relationship,
+        g.phone AS guardian_phone,
+        g.email AS guardian_email
+      FROM students s
+      ${joinLatestEnrollment}
+      LEFT JOIN courses c ON c.id = se.course_id AND c.is_active = 1
+      LEFT JOIN sections sec ON sec.id = se.section_id AND sec.is_active = 1
+      LEFT JOIN academic_years ay ON ay.id = se.academic_year_id AND ay.is_active = 1
+      LEFT JOIN guardians g ON g.id = (
+        SELECT id FROM guardians
+        WHERE student_id = s.id AND is_active = 1
+        ORDER BY created_at DESC LIMIT 1
+      )
+      ${whereClause}
+      ORDER BY s.created_at DESC
+    `;
+    const selectParams = [...params];
+    if (typeof limit === 'number') {
+      selectQuery += ' LIMIT ?';
+      selectParams.push(limit);
+      if (typeof offset === 'number') {
+        selectQuery += ' OFFSET ?';
+        selectParams.push(offset);
+      }
+    }
+
+    const { results } = await c.env.DB.prepare(selectQuery).bind(...selectParams).all<any>();
+    const payload = { students: results || [], total: countResult?.count || 0 };
+    return limit !== undefined || offset !== undefined ? c.json(payload) : c.json(payload.students);
+  }
+
+  if (!isStaff) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
   const service = new StudentService(repo);
 
   if (limit !== undefined || offset !== undefined) {
@@ -202,6 +346,10 @@ students.get('/:id', async (c) => {
 
   if (!isStudent && !isParent && !isAdminOrStaff) {
     return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  if (isTeacherOnly(user) && !(await teacherCanAccessStudent(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: student is outside your teaching assignment' }, 403);
   }
 
   return c.json(result);
@@ -354,6 +502,9 @@ students.get('/:id/notes', async (c) => {
   // Verify student matches institution
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
+  if (!(await teacherCanAccessStudent(c.env.DB, user, studentId))) {
+    return c.json({ error: 'Forbidden: student is outside your teaching assignment' }, 403);
+  }
 
   const { results } = await c.env.DB.prepare('SELECT * FROM notes WHERE entity_type = "student" AND entity_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(studentId).all();
   return c.json(results || []);
@@ -371,6 +522,9 @@ students.post('/:id/notes', async (c) => {
 
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
+  if (!(await teacherCanAccessStudent(c.env.DB, user, studentId))) {
+    return c.json({ error: 'Forbidden: student is outside your teaching assignment' }, 403);
+  }
 
   const noteId = crypto.randomUUID();
   const authorName = user.name || 'Staff member';
@@ -389,6 +543,9 @@ students.delete('/:id/notes/:noteId', async (c) => {
 
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
+  if (!(await teacherCanAccessStudent(c.env.DB, user, studentId))) {
+    return c.json({ error: 'Forbidden: student is outside your teaching assignment' }, 403);
+  }
 
   await c.env.DB.prepare('UPDATE notes SET is_active = 0 WHERE id = ? AND entity_type = "student" AND entity_id = ?').bind(noteId, studentId).run();
   return c.json({ success: true });
@@ -402,6 +559,9 @@ students.get('/:id/documents', async (c) => {
 
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
+  if (!(await teacherCanAccessStudent(c.env.DB, user, studentId))) {
+    return c.json({ error: 'Forbidden: student is outside your teaching assignment' }, 403);
+  }
 
   const { results } = await c.env.DB.prepare('SELECT * FROM documents WHERE entity_type = "student" AND entity_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(studentId).all();
   return c.json(results || []);
@@ -414,6 +574,9 @@ students.post('/:id/documents/upload', async (c) => {
 
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
+  if (!(await teacherCanAccessStudent(c.env.DB, user, studentId))) {
+    return c.json({ error: 'Forbidden: student is outside your teaching assignment' }, 403);
+  }
 
   const body = await c.req.parseBody();
   const file = body['file'];
@@ -423,10 +586,17 @@ students.post('/:id/documents/upload', async (c) => {
     return c.json({ error: 'No document file uploaded' }, 400);
   }
 
+  const validationError = validateUploadedFile(file);
+  if (validationError) {
+    return c.json({ error: validationError }, 400);
+  }
+
+  const safeName = sanitizeFileName(file.name);
+
   try {
     const bytes = await file.arrayBuffer();
     const docId = crypto.randomUUID();
-    const fileKey = `student_docs/${studentId}/${docId}_${file.name}`;
+    const fileKey = `student_docs/${studentId}/${docId}_${safeName}`;
     
     // Put file in R2 Bucket
     await c.env.FILES.put(fileKey, bytes, {
@@ -437,7 +607,7 @@ students.post('/:id/documents/upload', async (c) => {
     await c.env.DB.prepare(`
       INSERT INTO documents (id, institution_id, entity_type, entity_id, name, folder, file_key, file_size, mime_type, uploaded_by)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(docId, user.institution_id, 'student', studentId, file.name, documentType, fileKey, file.size, file.type || 'application/octet-stream', user.sub).run();
+    `).bind(docId, user.institution_id, 'student', studentId, safeName, documentType, fileKey, file.size, file.type || 'application/octet-stream', user.sub).run();
 
     return c.json({ success: true, id: docId });
   } catch (err: any) {
@@ -453,6 +623,9 @@ students.get('/:id/documents/:docId/download', async (c) => {
 
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
+  if (!(await teacherCanAccessStudent(c.env.DB, user, studentId))) {
+    return c.json({ error: 'Forbidden: student is outside your teaching assignment' }, 403);
+  }
 
   const metadata = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ? AND entity_type = "student" AND entity_id = ? AND is_active = 1')
     .bind(docId, studentId).first<any>();
@@ -483,6 +656,10 @@ students.delete('/:id/documents/:docId', async (c) => {
   const student = await c.env.DB.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(studentId, user.institution_id).first();
   if (!student) return c.json({ error: 'Student not found' }, 404);
 
+  if (!(await teacherCanAccessStudent(c.env.DB, user, studentId))) {
+    return c.json({ error: 'Forbidden: student is outside your teaching assignment' }, 403);
+  }
+
   const metadata = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ? AND entity_type = "student" AND entity_id = ? AND is_active = 1')
     .bind(docId, studentId).first<any>();
 
@@ -502,7 +679,7 @@ students.delete('/:id/documents/:docId', async (c) => {
 });
 
 // POST upload photo to R2
-students.post('/:id/photo', async (c) => {
+students.post('/:id/photo', requireRole('admin', 'super_admin'), async (c) => {
   const user = c.get('user');
   const studentId = c.req.param('id')!;
 
@@ -516,9 +693,16 @@ students.post('/:id/photo', async (c) => {
     return c.json({ error: 'No photo file uploaded' }, 400);
   }
 
+  const validationError = validateUploadedFile(file, { photoOnly: true });
+  if (validationError) {
+    return c.json({ error: validationError }, 400);
+  }
+
+  const safeName = sanitizeFileName(file.name);
+
   try {
     const bytes = await file.arrayBuffer();
-    const fileKey = `student_photos/${studentId}_${Date.now()}_${file.name}`;
+    const fileKey = `student_photos/${studentId}_${Date.now()}_${safeName}`;
     
     await c.env.FILES.put(fileKey, bytes, {
       httpMetadata: { contentType: file.type || 'image/jpeg' }

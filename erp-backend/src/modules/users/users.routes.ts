@@ -4,14 +4,27 @@ import { UserRepository } from './users.repository';
 import { UserService } from './users.service';
 import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
+import { validateUploadedFile, sanitizeFileName } from '../../utils/file-upload';
 
 const users = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
-// GET profile photo (Public route so <img> can load it directly without Authorization headers)
+users.use('*', authMiddleware);
+
+// GET profile photo (Protected route, token can be in header or query parameter)
 users.get('/profile-photo/:userId', async (c) => {
-  const userId = c.req.param('userId');
+  const user = c.get('user');
+  const userId = c.req.param('userId')!;
   const key = `profile-photos/${userId}`;
   try {
+    // Verify institution isolation
+    const dbUser = await c.env.DB.prepare('SELECT institution_id FROM users WHERE id = ? AND is_active = 1').bind(userId).first<{ institution_id: string }>();
+    if (!dbUser) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+    if (dbUser.institution_id !== user.institution_id) {
+      return c.json({ error: 'Forbidden: unauthorized resource access' }, 403);
+    }
+
     const file = await c.env.FILES.get(key);
     if (!file) {
       return c.json({ error: 'Photo not found' }, 404);
@@ -23,8 +36,6 @@ users.get('/profile-photo/:userId', async (c) => {
     return c.json({ error: err.message }, 500);
   }
 });
-
-users.use('*', authMiddleware);
 
 users.get('/', requirePermission('user.manage'), async (c) => {
   const user = c.get('user');
@@ -95,7 +106,12 @@ users.put('/:id', async (c) => {
     return c.json({ error: 'Unauthorized' }, 403);
   }
   
-  await service.updateUser(id, input, user.sub);
+  const payload = { ...input };
+  if (!hasUserManage) {
+    delete payload.roles;
+  }
+
+  await service.updateUser(id, payload, user.sub);
   await createAuditLog(c.env.DB, user.sub, 'UPDATE_USER', 'users', id, `Updated user ${targetUser.email} details/roles`);
   return c.json({ success: true });
 });
@@ -172,6 +188,13 @@ users.post('/profile-photo', async (c) => {
   if (!file || !(file instanceof File)) {
     return c.json({ error: 'No image file provided' }, 400);
   }
+
+  const validationError = validateUploadedFile(file, { photoOnly: true });
+  if (validationError) {
+    return c.json({ error: validationError }, 400);
+  }
+
+  const safeName = sanitizeFileName(file.name);
 
   const repo = new UserRepository(c.env.DB);
   const targetUser = await repo.findById(user.sub);

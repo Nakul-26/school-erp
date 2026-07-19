@@ -11,7 +11,7 @@ export class StudentLeavesService {
   }
 
   async listApplicationsForReview(institutionId: string, userRoles: string[], userId: string, db: D1Database): Promise<any[]> {
-    const isAdmin = userRoles.some(r => ['admin', 'super_admin', 'Principal'].includes(r));
+    const isAdmin = userRoles.some(r => ['admin', 'Admin', 'super_admin', 'Super Admin', 'role-super-admin', 'Principal', 'principal', 'HOD', 'hod'].includes(r));
     if (isAdmin) {
       return await this.repo.listApplicationsForAdmin(institutionId);
     }

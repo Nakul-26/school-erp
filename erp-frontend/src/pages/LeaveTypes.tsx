@@ -4,6 +4,8 @@ import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { BookOpen, Plus, Trash2, Edit, RefreshCw, X } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { hasAnyRole } from '../utils/accessControl';
 
 interface LeaveType {
   id: string;
@@ -18,6 +20,10 @@ interface AcademicYear {
 }
 
 export default function LeaveTypes() {
+  const { user } = useAuth();
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const canManageLeaveTypes = hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD']);
+  const canSeedLeaveBalances = hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal']);
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +62,10 @@ export default function LeaveTypes() {
   };
 
   const openAddModal = () => {
+    if (!canManageLeaveTypes) {
+      alert('You do not have permission to manage leave types.');
+      return;
+    }
     setEditingType(null);
     setFormName('');
     setFormCode('');
@@ -64,6 +74,10 @@ export default function LeaveTypes() {
   };
 
   const openEditModal = (lt: LeaveType) => {
+    if (!canManageLeaveTypes) {
+      alert('You do not have permission to manage leave types.');
+      return;
+    }
     setEditingType(lt);
     setFormName(lt.name);
     setFormCode(lt.code);
@@ -72,6 +86,10 @@ export default function LeaveTypes() {
   };
 
   const handleSave = async () => {
+    if (!canManageLeaveTypes) {
+      alert('You do not have permission to manage leave types.');
+      return;
+    }
     if (!formName.trim() || !formCode.trim() || !formDays) {
       alert('All fields are required.');
       return;
@@ -93,6 +111,10 @@ export default function LeaveTypes() {
   };
 
   const handleDelete = async (lt: LeaveType) => {
+    if (!canManageLeaveTypes) {
+      alert('You do not have permission to manage leave types.');
+      return;
+    }
     if (!window.confirm(`Delete leave type "${lt.name}"? This cannot be undone.`)) return;
     try {
       await api.delete(`/leave/types/${lt.id}`);
@@ -103,6 +125,10 @@ export default function LeaveTypes() {
   };
 
   const handleSeedBalances = async () => {
+    if (!canSeedLeaveBalances) {
+      alert('You do not have permission to seed leave balances.');
+      return;
+    }
     if (!seedYearId) {
       alert('Please select an academic year.');
       return;
@@ -133,16 +159,22 @@ export default function LeaveTypes() {
             Manage leave categories and seed annual balances for all teaching staff.
           </p>
         </div>
-        <div className="leave-types-row-3">
-          <button className="btn btn-outline" onClick={() => setShowSeedModal(true)}>
-            <RefreshCw size={16} className="leave-types-RefreshCw-4"  />
-            Give Leave Balance
-          </button>
-          <button className="btn btn-primary" onClick={openAddModal}>
-            <Plus size={16} className="leave-types-Plus-5"  />
-            Add Leave Type
-          </button>
-        </div>
+        {(canSeedLeaveBalances || canManageLeaveTypes) && (
+          <div className="leave-types-row-3">
+            {canSeedLeaveBalances && (
+              <button className="btn btn-outline" onClick={() => setShowSeedModal(true)}>
+                <RefreshCw size={16} className="leave-types-RefreshCw-4"  />
+                Give Leave Balance
+              </button>
+            )}
+            {canManageLeaveTypes && (
+              <button className="btn btn-primary" onClick={openAddModal}>
+                <Plus size={16} className="leave-types-Plus-5"  />
+                Add Leave Type
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       
@@ -157,7 +189,7 @@ export default function LeaveTypes() {
                 <th>Code</th>
                 <th>Name</th>
                 <th>Days / Year</th>
-                <th className="leave-types-th-7">Actions</th>
+                {canManageLeaveTypes && <th className="leave-types-th-7">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -166,21 +198,23 @@ export default function LeaveTypes() {
                   <td><span className="badge leave-types-badge">{lt.code}</span></td>
                   <td><strong>{lt.name}</strong></td>
                   <td>{lt.days_per_year}</td>
-                  <td>
-                    <div className="leave-types-row-9">
-                      <button className="btn btn-sm btn-outline" onClick={() => openEditModal(lt)} title="Edit">
-                        <Edit size={14} />
-                      </button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(lt)} title="Delete">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
+                  {canManageLeaveTypes && (
+                    <td>
+                      <div className="leave-types-row-9">
+                        <button className="btn btn-sm btn-outline" onClick={() => openEditModal(lt)} title="Edit">
+                          <Edit size={14} />
+                        </button>
+                        <button className="btn btn-sm btn-danger" onClick={() => handleDelete(lt)} title="Delete">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
               {leaveTypes.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="leave-types-td-10">
+                  <td colSpan={canManageLeaveTypes ? 4 : 3} className="leave-types-td-10">
                     <BookOpen size={32} className="leave-types-BookOpen-11"  />
                     No leave types defined yet. Click "Add Leave Type" to get started.
                   </td>
@@ -192,7 +226,7 @@ export default function LeaveTypes() {
       </div>
 
       {/* Add / Edit Modal */}
-      {showModal && (
+      {showModal && canManageLeaveTypes && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -243,7 +277,7 @@ export default function LeaveTypes() {
       )}
 
       {/* Seed Balances Modal */}
-      {showSeedModal && (
+      {showSeedModal && canSeedLeaveBalances && (
         <div className="modal-overlay" onClick={() => setShowSeedModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">

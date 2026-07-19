@@ -4,6 +4,7 @@ import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 import {
   BookOpen, Users, Calendar, Clock, FolderOpen, Settings, Activity, Plus, ArrowLeft,
   Upload, Trash2, CheckCircle2, AlertTriangle, Search, FileText, Check, X, Clipboard,
@@ -46,6 +47,10 @@ export default function SubjectWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const userPermissions = user?.permissions || [];
+  const canManageAcademic = hasAnyPermission(userPermissions, ['academic.manage']) ||
+    hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD']);
 
   const activeTab = searchParams.get('tab') || 'teachers';
 
@@ -379,9 +384,11 @@ export default function SubjectWorkspace() {
           </p>
         </div>
 
-        <button className="btn btn-secondary" onClick={() => setShowSettingsModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-          <Settings size={15} /> Subject Settings
-        </button>
+        {canManageAcademic && (
+          <button className="btn btn-secondary" onClick={() => setShowSettingsModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            <Settings size={15} /> Subject Settings
+          </button>
+        )}
       </div>
 
       {/* Summary Card */}
@@ -915,7 +922,7 @@ export default function SubjectWorkspace() {
       )}
 
       {/* --- SUBJECT SETTINGS MODAL --- */}
-      {showSettingsModal && (
+      {showSettingsModal && canManageAcademic && (
         <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div className="card modal-content" style={{ width: '480px', padding: '1.5rem' }}>
             <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1.25rem' }}>Subject Configurations</h3>

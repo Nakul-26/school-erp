@@ -1,8 +1,19 @@
 const BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:8787' : '');
 
 async function parseResponse(res: Response) {
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (typeof window !== 'undefined') {
+      if (res.status === 401) {
+        localStorage.removeItem('erp_token');
+        localStorage.removeItem('erp_user');
+        if (!window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+      }
+    }
+    throw new Error(data.error || 'Request failed');
+  }
   return data;
 }
 
@@ -65,3 +76,13 @@ export const api = {
     return parseResponse(res);
   }
 };
+
+export function getAuthenticatedUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('data:')) return path;
+  const token = localStorage.getItem('erp_token');
+  const url = path.startsWith('http') ? path : `${BASE_URL}${path}`;
+  if (!token) return url;
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}token=${encodeURIComponent(token)}`;
+}

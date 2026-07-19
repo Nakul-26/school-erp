@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 import { Plus, Trash2, Calendar, BookOpen, Layers, IndianRupee } from 'lucide-react';
 
 interface FeeStructureRow {
@@ -16,12 +18,17 @@ interface FeeStructureRow {
 }
 
 export default function FeeStructures({ isSubComponent = false }: { isSubComponent?: boolean }) {
+  const { user } = useAuth();
   const [structures, setStructures] = useState<FeeStructureRow[]>([]);
   const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const userPermissions = user?.permissions || [];
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const canManageFeeStructures = hasAnyPermission(userPermissions, ['fees.collect']) ||
+    hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD', 'Accountant']);
 
   const [form, setForm] = useState({
     academic_year_id: '',
@@ -59,6 +66,7 @@ export default function FeeStructures({ isSubComponent = false }: { isSubCompone
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageFeeStructures) return;
     if (!form.amount || Number(form.amount) <= 0) {
       return alert('Please enter a valid amount');
     }
@@ -84,6 +92,7 @@ export default function FeeStructures({ isSubComponent = false }: { isSubCompone
   };
 
   const handleDelete = async (id: string) => {
+    if (!canManageFeeStructures) return;
     if (!confirm('Are you sure you want to delete this fee structure? This will not affect already generated student ledgers.')) return;
     try {
       await api.delete(`/fees/structures/${id}`);
@@ -109,9 +118,11 @@ export default function FeeStructures({ isSubComponent = false }: { isSubCompone
             Configure and define billing structures for academic courses by year
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          <Plus size={18} /> Add Fee Config
-        </button>
+        {canManageFeeStructures && (
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            <Plus size={18} /> Add Fee Config
+          </button>
+        )}
       </div>
 
       <div className="card">
@@ -129,7 +140,7 @@ export default function FeeStructures({ isSubComponent = false }: { isSubCompone
                 <th>Year</th>
                 <th>Fee Head</th>
                 <th>Amount</th>
-                <th className="fee-structures-th-4">Actions</th>
+                {canManageFeeStructures && <th className="fee-structures-th-4">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -146,11 +157,13 @@ export default function FeeStructures({ isSubComponent = false }: { isSubCompone
                     </span>
                   </td>
                   <td><strong>₹{s.amount.toLocaleString('en-IN')}</strong></td>
-                  <td className="fee-structures-td-6">
-                    <button className="btn btn-sm btn-outline fee-structures-btn" onClick={() => handleDelete(s.id)}>
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  </td>
+                  {canManageFeeStructures && (
+                    <td className="fee-structures-td-6">
+                      <button className="btn btn-sm btn-outline fee-structures-btn" onClick={() => handleDelete(s.id)}>
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -158,7 +171,7 @@ export default function FeeStructures({ isSubComponent = false }: { isSubCompone
         )}
       </div>
 
-      {showModal && (
+      {showModal && canManageFeeStructures && (
         <div className="modal">
           <div className="modal-content fee-structures-modal-content">
             <h3>Add Fee Config</h3>

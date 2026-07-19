@@ -206,7 +206,7 @@ export class FeesRepository {
 
   async listReceipts(institutionId: string): Promise<any[]> {
     const { results } = await this.db.prepare(`
-      SELECT fr.*, fp.amount, fp.payment_date, s.first_name, s.last_name, s.admission_number, sfr.fee_type
+      SELECT fr.*, fp.student_id, fp.amount, fp.payment_date, s.first_name, s.last_name, s.admission_number, sfr.fee_type
       FROM fee_receipts fr
       JOIN fee_payments fp ON fr.payment_id = fp.id
       JOIN students s ON fp.student_id = s.id

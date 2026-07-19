@@ -27,6 +27,9 @@ export default function Communication() {
   const isStaff = userRoles.some(r => 
     ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal', 'HOD', 'hod', 'Teacher', 'teacher', 'Accountant', 'accountant'].includes(r)
   );
+  const canPublishAnnouncements = userRoles.some(r =>
+    ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal', 'HOD', 'hod', 'Teacher', 'teacher'].includes(r)
+  );
 
   // Overall Statistics States
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,20 @@ export default function Communication() {
   const handleTabChange = (tab: string) => {
     setSearchParams({ tab });
   };
+
+  useEffect(() => {
+    const allowedTabs = [
+      'overview',
+      'inbox',
+      'messages',
+      'announcements',
+      'notifications',
+      ...(isStaff ? ['broadcasts', 'templates'] : [])
+    ];
+    if (!allowedTabs.includes(activeTab)) {
+      setSearchParams({ tab: 'overview' }, { replace: true });
+    }
+  }, [activeTab, isStaff, setSearchParams]);
 
   useEffect(() => {
     fetchCommunicationSummary();
@@ -145,9 +162,11 @@ export default function Communication() {
       {/* Quick Actions Panel */}
       <div className="card quick-actions-panel" style={{ padding: '0.75rem 1rem', marginBottom: '1.5rem', background: 'var(--bg-subtle)', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
         <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginRight: '0.5rem', letterSpacing: '0.05em' }}>Quick Actions:</span>
-        <button className="btn btn-secondary" onClick={() => { handleTabChange('announcements'); navigate('?tab=announcements'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-          <Megaphone size={13} /> Broadcast Notice
-        </button>
+        {canPublishAnnouncements && (
+          <button className="btn btn-secondary" onClick={() => { handleTabChange('announcements'); navigate('?tab=announcements'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            <Megaphone size={13} /> Broadcast Notice
+          </button>
+        )}
         <button className="btn btn-secondary" onClick={() => { handleTabChange('inbox'); navigate('?tab=inbox'); }} style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
           <MessageSquare size={13} /> Send Direct Message
         </button>
@@ -161,7 +180,7 @@ export default function Communication() {
         {[
           { tab: 'overview', label: 'Overview', icon: Activity },
           { tab: 'inbox', label: `Inbox (${unreadMessagesCount})`, icon: MessageSquare },
-          { tab: 'broadcasts', label: `Broadcasts${unreadBroadcastsCount > 0 ? ` (${unreadBroadcastsCount})` : ''}`, icon: Radio },
+          ...(isStaff ? [{ tab: 'broadcasts', label: `Broadcasts${unreadBroadcastsCount > 0 ? ` (${unreadBroadcastsCount})` : ''}`, icon: Radio }] : []),
           ...(isStaff ? [{ tab: 'templates', label: 'Templates', icon: FileText }] : []),
           { tab: 'announcements', label: 'Notice Board', icon: Megaphone },
           { tab: 'notifications', label: 'System Alerts', icon: Bell }
@@ -275,7 +294,7 @@ export default function Communication() {
         )}
 
         {/* 4. BROADCASTS TAB */}
-        {activeTab === 'broadcasts' && (
+        {activeTab === 'broadcasts' && isStaff && (
           <Broadcasts isSubComponent={true} />
         )}
 

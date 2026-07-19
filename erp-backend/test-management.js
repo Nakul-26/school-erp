@@ -64,9 +64,20 @@ async function runTests() {
   if (!listSubjectsBefore.ok) throw new Error(`List subjects failed: ${JSON.stringify(listSubjectsBefore.data)}`);
   console.log(`- Current subjects count: ${listSubjectsBefore.data.length}`);
   
+  // Fetch active academic year and course dynamically to avoid foreign key failures
+  const yearsRes = await request('/academic-years');
+  const coursesRes = await request('/programs');
+  
+  if (!yearsRes.ok || yearsRes.data.length === 0 || !coursesRes.ok || coursesRes.data.length === 0) {
+    throw new Error('Could not fetch academic years or programs to run management tests.');
+  }
+  
+  const activeYearId = yearsRes.data[0].id;
+  const activeCourseId = coursesRes.data[0].id;
+
   // POST create
   const newSubject = {
-    course_id: 'prog-cse',
+    course_id: activeCourseId,
     subject_code: 'CS_TEST_101',
     subject_name: 'Introduction to Testing',
     credits: 3,
@@ -128,8 +139,8 @@ async function runTests() {
   
   // POST create
   const newSection = {
-    academic_year_id: 'year-2026',
-    course_id: 'prog-cse',
+    academic_year_id: activeYearId,
+    course_id: activeCourseId,
     name: 'Section B (Test)',
     year_number: 1,
   };
@@ -189,10 +200,10 @@ async function runTests() {
   
   // POST create
   const newTeacher = {
-    employee_id: 'EMP_TEST_007',
+    employee_id: 'EMP_TEST_007_' + Date.now(),
     first_name: 'Dr. Evelyn',
     last_name: 'Miller',
-    email: 'evelyn.miller@oxford.edu',
+    email: 'evelyn.miller_' + Date.now() + '@oxford.edu',
     phone: '555-0199',
     joining_date: '2026-06-01',
     designation: 'Associate Professor',
@@ -255,13 +266,13 @@ async function runTests() {
   
   // POST create
   const newStudent = {
-    admission_number: 'ADM_TEST_999',
+    admission_number: 'ADM_TEST_999_' + Date.now(),
     roll_number: 'CS999',
     first_name: 'Bob',
     last_name: 'Sponge',
     gender: 'Male',
     date_of_birth: '2004-10-10',
-    email: 'bob.sponge@oxford.edu',
+    email: 'bob.sponge_' + Date.now() + '@oxford.edu',
     phone: '555-9876',
     admission_date: '2026-06-19',
     status: 'ACTIVE',

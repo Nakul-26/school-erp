@@ -4,14 +4,100 @@ import { SubjectRepository } from './subjects.repository';
 import { SubjectService } from './subjects.service';
 import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
+import { getTeacherIdForUser, isTeacherOnly, teacherHasSubjectAccess } from '../../utils/teacher-scope';
+import { validateUploadedFile, sanitizeFileName } from '../../utils/file-upload';
 
 const subjects = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 subjects.use('*', authMiddleware);
 
+const ACADEMIC_STAFF_ROLES = new Set([
+  'admin',
+  'Admin',
+  'super_admin',
+  'Super Admin',
+  'Principal',
+  'principal',
+  'HOD',
+  'hod',
+  'Teacher',
+  'teacher',
+]);
+
+const ACADEMIC_MANAGER_ROLES = new Set([
+  'admin',
+  'Admin',
+  'super_admin',
+  'Super Admin',
+  'Principal',
+  'principal',
+  'HOD',
+  'hod',
+]);
+
+function rolesFor(user: JwtPayload): string[] {
+  return user.roles || (user.role ? [user.role] : []);
+}
+
+function hasAcademicStaffRole(user: JwtPayload): boolean {
+  return rolesFor(user).some((role) => ACADEMIC_STAFF_ROLES.has(role));
+}
+
+function hasAcademicManagerRole(user: JwtPayload): boolean {
+  return rolesFor(user).some((role) => ACADEMIC_MANAGER_ROLES.has(role));
+}
+
+async function canManageSubjectContent(db: D1Database, user: JwtPayload, subjectId: string): Promise<boolean> {
+  return hasAcademicManagerRole(user) || (await teacherHasSubjectAccess(db, user, subjectId));
+}
+
+subjects.use('*', async (c, next) => {
+  const user = c.get('user');
+  if (!hasAcademicStaffRole(user)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+  await next();
+});
+
 subjects.get('/', async (c) => {
   const user = c.get('user');
   const filters = c.req.query();
+
+  if (isTeacherOnly(user)) {
+    const teacherId = await getTeacherIdForUser(c.env.DB, user);
+    if (!teacherId) return c.json([]);
+
+    let query = `
+      SELECT DISTINCT sub.*
+      FROM subjects sub
+      WHERE sub.institution_id = ? AND sub.is_active = 1
+        AND (
+          EXISTS (
+            SELECT 1 FROM teacher_subject_assignments tsa
+            WHERE tsa.teacher_id = ? AND tsa.subject_id = sub.id AND tsa.is_active = 1
+          )
+          OR EXISTS (
+            SELECT 1 FROM teaching_allocations ta
+            WHERE ta.teacher_id = ? AND ta.subject_id = sub.id AND ta.institution_id = ? AND LOWER(ta.status) = 'active'
+          )
+        )
+    `;
+    const params: any[] = [user.institution_id, teacherId, teacherId, user.institution_id];
+
+    if (filters.course_id) {
+      query += ' AND sub.course_id = ?';
+      params.push(filters.course_id);
+    }
+    if (filters.semester) {
+      query += ' AND sub.semester = ?';
+      params.push(parseInt(filters.semester, 10));
+    }
+
+    query += ' ORDER BY sub.subject_name ASC';
+    const { results } = await c.env.DB.prepare(query).bind(...params).all();
+    return c.json(results || []);
+  }
+
   const repo = new SubjectRepository(c.env.DB);
   const service = new SubjectService(repo);
   const results = await service.listSubjects(user.institution_id, {
@@ -39,6 +125,9 @@ subjects.get('/:id', async (c) => {
   
   if (!result || result.institution_id !== user.institution_id) {
     return c.json({ error: 'Subject not found' }, 404);
+  }
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, id))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
   }
   return c.json(result);
 });
@@ -102,7 +191,11 @@ subjects.get('/:id/teaching', async (c) => {
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
+  const teacherId = isTeacherOnly(user) ? await getTeacherIdForUser(c.env.DB, user) : null;
   const { results } = await c.env.DB.prepare(`
     SELECT 
       tsa.id,
@@ -119,7 +212,8 @@ subjects.get('/:id/teaching', async (c) => {
     JOIN sections s ON s.id = tsa.section_id
     JOIN academic_years y ON y.id = tsa.academic_year_id
     WHERE tsa.subject_id = ? AND tsa.is_active = 1 AND t.is_active = 1 AND s.is_active = 1
-  `).bind(subjectId).all();
+      ${teacherId ? 'AND tsa.teacher_id = ?' : ''}
+  `).bind(...(teacherId ? [subjectId, teacherId] : [subjectId])).all();
 
   return c.json(results || []);
 });
@@ -131,6 +225,12 @@ subjects.get('/:id/students', async (c) => {
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
+
+  const teacherId = isTeacherOnly(user) ? await getTeacherIdForUser(c.env.DB, user) : null;
+  if (isTeacherOnly(user) && !teacherId) return c.json([]);
 
   // Get enrolled students & attendance stats
   const { results: students } = await c.env.DB.prepare(`
@@ -147,13 +247,20 @@ subjects.get('/:id/students', async (c) => {
     FROM student_enrollments se
     JOIN students s ON s.id = se.student_id
     JOIN sections sec ON sec.id = se.section_id
-    JOIN teacher_subject_assignments tsa ON tsa.section_id = se.section_id AND tsa.subject_id = ? AND tsa.is_active = 1
+    LEFT JOIN teacher_subject_assignments tsa ON tsa.section_id = se.section_id AND tsa.subject_id = ? AND tsa.is_active = 1
+    LEFT JOIN teaching_allocations ta ON ta.section_id = se.section_id AND ta.subject_id = ? AND ta.institution_id = ? AND LOWER(ta.status) = 'active'
     LEFT JOIN attendance_sessions att_sess ON att_sess.subject_id = ? AND att_sess.section_id = se.section_id AND att_sess.is_active = 1
     LEFT JOIN student_attendance sa ON sa.session_id = att_sess.id AND sa.student_id = s.id AND sa.is_active = 1
-    WHERE se.is_active = 1 AND s.is_active = 1 AND tsa.is_active = 1
+    WHERE se.is_active = 1 AND s.is_active = 1
+      AND (
+        ${teacherId ? '(tsa.teacher_id = ? OR ta.teacher_id = ?)' : '(tsa.id IS NOT NULL OR ta.id IS NOT NULL)'}
+      )
     GROUP BY s.id, sec.id
     ORDER BY sec.name, s.first_name, s.last_name
-  `).bind(subjectId, subjectId).all<any>();
+  `).bind(...(teacherId
+    ? [subjectId, subjectId, user.institution_id, subjectId, teacherId, teacherId]
+    : [subjectId, subjectId, user.institution_id, subjectId]
+  )).all<any>();
 
   // Fetch all marks for this subject
   const { results: marks } = await c.env.DB.prepare(`
@@ -195,6 +302,9 @@ subjects.get('/:id/lesson-plan', async (c) => {
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const { results } = await c.env.DB.prepare(`
     SELECT * FROM subject_lesson_plans 
@@ -205,7 +315,7 @@ subjects.get('/:id/lesson-plan', async (c) => {
   return c.json(results || []);
 });
 
-subjects.post('/:id/lesson-plan', requirePermission('academic.manage'), async (c) => {
+subjects.post('/:id/lesson-plan', async (c) => {
   const user = c.get('user');
   const subjectId = c.req.param('id')!;
   const body = await c.req.json();
@@ -216,6 +326,9 @@ subjects.post('/:id/lesson-plan', requirePermission('academic.manage'), async (c
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await canManageSubjectContent(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const id = crypto.randomUUID();
   await c.env.DB.prepare(`
@@ -228,11 +341,17 @@ subjects.post('/:id/lesson-plan', requirePermission('academic.manage'), async (c
   return c.json({ success: true, id }, 201);
 });
 
-subjects.patch('/:id/lesson-plan/:topicId', requirePermission('academic.manage'), async (c) => {
+subjects.patch('/:id/lesson-plan/:topicId', async (c) => {
   const user = c.get('user');
   const subjectId = c.req.param('id')!;
   const topicId = c.req.param('topicId')!;
   const body = await c.req.json();
+
+  const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
+  if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await canManageSubjectContent(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const topic = await c.env.DB.prepare('SELECT * FROM subject_lesson_plans WHERE id = ? AND subject_id = ? AND is_active = 1').bind(topicId, subjectId).first<any>();
   if (!topic) return c.json({ error: 'Lesson plan topic not found' }, 404);
@@ -252,10 +371,46 @@ subjects.patch('/:id/lesson-plan/:topicId', requirePermission('academic.manage')
   return c.json({ success: true });
 });
 
-subjects.delete('/:id/lesson-plan/:topicId', requirePermission('academic.manage'), async (c) => {
+subjects.put('/:id/lesson-plan/:topicId', async (c) => {
   const user = c.get('user');
   const subjectId = c.req.param('id')!;
   const topicId = c.req.param('topicId')!;
+  const body = await c.req.json();
+
+  const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
+  if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await canManageSubjectContent(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
+
+  const topic = await c.env.DB.prepare('SELECT * FROM subject_lesson_plans WHERE id = ? AND subject_id = ? AND is_active = 1').bind(topicId, subjectId).first<any>();
+  if (!topic) return c.json({ error: 'Lesson plan topic not found' }, 404);
+
+  const status = body.status || topic.status;
+  const completedHours = body.completed_hours !== undefined ? body.completed_hours : topic.completed_hours;
+  const completedAt = status === 'completed' ? (body.completed_at || new Date().toISOString().split('T')[0]) : null;
+
+  await c.env.DB.prepare(`
+    UPDATE subject_lesson_plans 
+    SET status = ?, completed_hours = ?, completed_at = ?, updated_at = datetime('now')
+    WHERE id = ? AND subject_id = ?
+  `).bind(status, completedHours, completedAt, topicId, subjectId).run();
+
+  await createAuditLog(c.env.DB, user.sub, 'UPDATE_LESSON_PLAN', 'subjects', subjectId, `Updated lesson plan topic ${topic.topic_title} to status ${status}`);
+
+  return c.json({ success: true });
+});
+
+subjects.delete('/:id/lesson-plan/:topicId', async (c) => {
+  const user = c.get('user');
+  const subjectId = c.req.param('id')!;
+  const topicId = c.req.param('topicId')!;
+
+  const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
+  if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await canManageSubjectContent(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const topic = await c.env.DB.prepare('SELECT 1 FROM subject_lesson_plans WHERE id = ? AND subject_id = ? AND is_active = 1').bind(topicId, subjectId).first();
   if (!topic) return c.json({ error: 'Lesson plan topic not found' }, 404);
@@ -273,6 +428,9 @@ subjects.get('/:id/assessments', async (c) => {
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const { results } = await c.env.DB.prepare(`
     SELECT * FROM subject_assessments 
@@ -283,7 +441,7 @@ subjects.get('/:id/assessments', async (c) => {
   return c.json(results || []);
 });
 
-subjects.post('/:id/assessments', requirePermission('academic.manage'), async (c) => {
+subjects.post('/:id/assessments', async (c) => {
   const user = c.get('user');
   const subjectId = c.req.param('id')!;
   const body = await c.req.json();
@@ -294,6 +452,9 @@ subjects.post('/:id/assessments', requirePermission('academic.manage'), async (c
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await canManageSubjectContent(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const id = crypto.randomUUID();
   await c.env.DB.prepare(`
@@ -306,10 +467,16 @@ subjects.post('/:id/assessments', requirePermission('academic.manage'), async (c
   return c.json({ success: true, id }, 201);
 });
 
-subjects.delete('/:id/assessments/:assessmentId', requirePermission('academic.manage'), async (c) => {
+subjects.delete('/:id/assessments/:assessmentId', async (c) => {
   const user = c.get('user');
   const subjectId = c.req.param('id')!;
   const assessmentId = c.req.param('assessmentId')!;
+
+  const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
+  if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await canManageSubjectContent(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const assessment = await c.env.DB.prepare('SELECT 1 FROM subject_assessments WHERE id = ? AND subject_id = ? AND is_active = 1').bind(assessmentId, subjectId).first();
   if (!assessment) return c.json({ error: 'Assessment not found' }, 404);
@@ -327,6 +494,9 @@ subjects.get('/:id/documents', async (c) => {
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const { results } = await c.env.DB.prepare('SELECT * FROM documents WHERE entity_type = "subject" AND entity_id = ? AND is_active = 1 ORDER BY created_at DESC').bind(subjectId).all();
   return c.json(results || []);
@@ -338,6 +508,9 @@ subjects.post('/:id/documents/upload', async (c) => {
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const body = await c.req.parseBody();
   const file = body['file'];
@@ -347,10 +520,17 @@ subjects.post('/:id/documents/upload', async (c) => {
     return c.json({ error: 'No document file uploaded' }, 400);
   }
 
+  const validationError = validateUploadedFile(file);
+  if (validationError) {
+    return c.json({ error: validationError }, 400);
+  }
+
+  const safeName = sanitizeFileName(file.name);
+
   try {
     const bytes = await file.arrayBuffer();
     const docId = crypto.randomUUID();
-    const fileKey = `subject_docs/${subjectId}/${docId}_${file.name}`;
+    const fileKey = `subject_docs/${subjectId}/${docId}_${safeName}`;
     
     // Put file in R2 Bucket
     await c.env.FILES.put(fileKey, bytes, {
@@ -361,9 +541,9 @@ subjects.post('/:id/documents/upload', async (c) => {
     await c.env.DB.prepare(`
       INSERT INTO documents (id, institution_id, entity_type, entity_id, name, folder, file_key, file_size, mime_type, uploaded_by)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(docId, user.institution_id, 'subject', subjectId, file.name, folder, fileKey, file.size, file.type || 'application/octet-stream', user.sub).run();
+    `).bind(docId, user.institution_id, 'subject', subjectId, safeName, folder, fileKey, file.size, file.type || 'application/octet-stream', user.sub).run();
 
-    await createAuditLog(c.env.DB, user.sub, 'UPLOAD_SUBJECT_DOCUMENT', 'subjects', subjectId, `Uploaded document: ${file.name} to folder ${folder}`);
+    await createAuditLog(c.env.DB, user.sub, 'UPLOAD_SUBJECT_DOCUMENT', 'subjects', subjectId, `Uploaded document: ${safeName} to folder ${folder}`);
 
     return c.json({ success: true, id: docId });
   } catch (err: any) {
@@ -378,6 +558,9 @@ subjects.get('/:id/documents/:docId/download', async (c) => {
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const metadata = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ? AND entity_type = "subject" AND entity_id = ? AND is_active = 1')
     .bind(docId, subjectId).first<any>();
@@ -406,6 +589,9 @@ subjects.delete('/:id/documents/:docId', async (c) => {
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const metadata = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ? AND entity_type = "subject" AND entity_id = ? AND is_active = 1')
     .bind(docId, subjectId).first<any>();
@@ -434,6 +620,9 @@ subjects.get('/:id/timeline', async (c) => {
 
   const subject = await c.env.DB.prepare('SELECT 1 FROM subjects WHERE id = ? AND institution_id = ? AND is_active = 1').bind(subjectId, user.institution_id).first();
   if (!subject) return c.json({ error: 'Subject not found' }, 404);
+  if (!(await teacherHasSubjectAccess(c.env.DB, user, subjectId))) {
+    return c.json({ error: 'Forbidden: subject is outside your teaching assignment' }, 403);
+  }
 
   const { results } = await c.env.DB.prepare(`
     SELECT al.id, al.action, al.description, al.timestamp, u.name as user_name, u.email as user_email

@@ -40,7 +40,7 @@ export default function Announcements({ isSubComponent = false }: { isSubCompone
 
   const userRoles = user?.roles || (user?.role ? [user.role] : []);
   const canPublish = userRoles.some(r => 
-    ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal', 'HOD', 'hod', 'Teacher', 'teacher', 'Accountant', 'accountant'].includes(r)
+    ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal', 'HOD', 'hod', 'Teacher', 'teacher'].includes(r)
   );
 
   useEffect(() => {
@@ -93,6 +93,7 @@ export default function Announcements({ isSubComponent = false }: { isSubCompone
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canPublish) return;
     if (!form.title || !form.content) return alert('Title and content are required');
 
     try {
@@ -135,6 +136,7 @@ export default function Announcements({ isSubComponent = false }: { isSubCompone
   };
 
   const handleDelete = async (id: string) => {
+    if (!canPublish) return;
     if (!confirm('Are you sure you want to delete this announcement?')) return;
     try {
       await api.delete(`/announcements/${id}`);

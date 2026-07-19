@@ -1,4 +1,5 @@
 import React from 'react';
+import { getAuthenticatedUrl } from '../../../services/api';
 
 interface EditStudentModalProps {
   editForm: any;
@@ -128,9 +129,11 @@ export const EditStudentModal: React.FC<EditStudentModalProps> = ({
                   {editForm.photo && (
                     <div className="students-preview-box">
                       <img 
-                        src={editForm.photo.startsWith('data:image') || editForm.photo.startsWith('/api') || editForm.photo.startsWith('http')
-                          ? editForm.photo 
-                          : `/api/students/photo/${editForm.id}`} 
+                        src={getAuthenticatedUrl(
+                          editForm.photo.startsWith('data:image') || editForm.photo.startsWith('/api') || editForm.photo.startsWith('http')
+                            ? editForm.photo 
+                            : `/api/students/photo/${editForm.id}`
+                        )} 
                         alt="Preview" 
                         className="students-preview-img" 
                       />

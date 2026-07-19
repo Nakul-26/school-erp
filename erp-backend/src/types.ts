@@ -8,6 +8,8 @@ export interface Env {
   VAPID_PRIVATE_KEY?: string;
   VAPID_SUBJECT?: string;
   FRONTEND_URL?: string;
+  FRONTEND_ORIGIN?: string;
+  INSTITUTION_INVITE_SECRET?: string;
 }
 
 export interface JwtPayload extends Record<string, unknown> {

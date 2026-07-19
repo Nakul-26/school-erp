@@ -3,13 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { api } from '../services/api';
+import { api, getAuthenticatedUrl } from '../services/api';
 import { 
   Plus, Calendar, GraduationCap, FileText, User, 
   TrendingUp, IndianRupee, Clock, ArrowLeft, Upload, Trash2, 
   CheckCircle2, Heart, MessageSquare, ShieldAlert, Phone, Mail
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
 export default function StudentDetails() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +26,12 @@ export default function StudentDetails() {
 
   // Institution & Terminology States
   const { user } = useAuth();
+  const userPermissions = user?.permissions || [];
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const canEditStudent = hasAnyPermission(userPermissions, ['student.edit']) || hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD']);
+  const canViewFees = hasAnyPermission(userPermissions, ['fees.view', 'fee.view', 'finance.access']) || hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD', 'Accountant']);
+  const canManageDocs = canEditStudent;
+  const canWriteNotes = canEditStudent;
   const [institutionType, setInstitutionType] = useState<string>('college');
 
   const getProgramLabel = () => institutionType === 'school' ? 'Class' : 'Program';
@@ -86,6 +93,16 @@ export default function StudentDetails() {
   };
 
   useEffect(() => {
+    if (
+      (activeTab === 'fees' && !canViewFees) ||
+      (activeTab === 'notes' && !canWriteNotes) ||
+      (activeTab === 'documents' && !canManageDocs)
+    ) {
+      setActiveTab('overview');
+    }
+  }, [activeTab, canViewFees, canWriteNotes, canManageDocs]);
+
+  useEffect(() => {
     if (activeTab === 'results') {
       fetchExams();
     }
@@ -126,7 +143,7 @@ export default function StudentDetails() {
 
   useEffect(() => {
     fetchData();
-  }, [id]);
+  }, [id, canViewFees, canManageDocs, canWriteNotes]);
 
   const fetchData = async () => {
     try {
@@ -142,10 +159,10 @@ export default function StudentDetails() {
         api.get('/programs'),
         api.get('/sections'),
         api.get(`/attendance/student/${id}`).catch(() => null),
-        api.get(`/fees/ledger/${id}`).catch(() => []),
-        api.get(`/fees/payments?student_id=${id}`).catch(() => []),
-        api.get(`/students/${id}/documents`).catch(() => []),
-        api.get(`/students/${id}/notes`).catch(() => []),
+        canViewFees ? api.get(`/fees/ledger/${id}`).catch(() => []) : Promise.resolve([]),
+        canViewFees ? api.get(`/fees/payments?student_id=${id}`).catch(() => []) : Promise.resolve([]),
+        canManageDocs ? api.get(`/students/${id}/documents`).catch(() => []) : Promise.resolve([]),
+        canWriteNotes ? api.get(`/students/${id}/notes`).catch(() => []) : Promise.resolve([]),
         api.get('/transport/routes').catch(() => []),
         api.get('/transport/allocations').catch(() => [])
       ]);
@@ -221,6 +238,10 @@ export default function StudentDetails() {
   // Notes actions
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canWriteNotes) {
+      alert('You do not have permission to add student notes.');
+      return;
+    }
     if (!newNote.trim()) return;
     try {
       setAddingNote(true);
@@ -237,6 +258,10 @@ export default function StudentDetails() {
   };
 
   const handleDeleteNote = async (noteId: string) => {
+    if (!canWriteNotes) {
+      alert('You do not have permission to delete student notes.');
+      return;
+    }
     if (!confirm('Are you sure you want to delete this note?')) return;
     try {
       await api.delete(`/students/${id}/notes/${noteId}`);
@@ -249,6 +274,10 @@ export default function StudentDetails() {
 
   const handleTransportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEditStudent) {
+      alert('You do not have permission to manage student transport assignments.');
+      return;
+    }
     if (!transportForm.route_id) return;
     try {
       setSubmittingTransport(true);
@@ -271,6 +300,10 @@ export default function StudentDetails() {
   };
 
   const handleRemoveTransport = async () => {
+    if (!canEditStudent) {
+      alert('You do not have permission to manage student transport assignments.');
+      return;
+    }
     if (!confirm('Are you sure you want to remove this student from the transport route?')) return;
     try {
       setSubmittingTransport(true);
@@ -289,6 +322,10 @@ export default function StudentDetails() {
   // Documents actions
   const handleDocUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageDocs) {
+      alert('You do not have permission to upload student documents.');
+      return;
+    }
     if (!selectedFile) {
       alert('Please select a file to upload');
       return;
@@ -344,6 +381,10 @@ export default function StudentDetails() {
   };
 
   const handleDocDelete = async (docId: string) => {
+    if (!canManageDocs) {
+      alert('You do not have permission to delete student documents.');
+      return;
+    }
     if (!confirm('Are you sure you want to delete this document?')) return;
     try {
       await api.delete(`/students/${id}/documents/${docId}`);
@@ -357,6 +398,10 @@ export default function StudentDetails() {
   // Health Card actions
   const handleHealthSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEditStudent) {
+      alert('You do not have permission to edit student health details.');
+      return;
+    }
     try {
       setSavingHealth(true);
       await api.put(`/students/${id}`, healthForm);
@@ -373,6 +418,10 @@ export default function StudentDetails() {
   // Enrollment actions
   const handleTransferSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEditStudent) {
+      alert('You do not have permission to update student enrollment.');
+      return;
+    }
     try {
       setLoading(true);
       await api.put(`/students/${id}`, {
@@ -393,6 +442,10 @@ export default function StudentDetails() {
 
   const handlePromoteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEditStudent) {
+      alert('You do not have permission to update student enrollment.');
+      return;
+    }
     try {
       setLoading(true);
       await api.put(`/students/${id}`, {
@@ -413,6 +466,10 @@ export default function StudentDetails() {
 
   const handleChangeSectionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEditStudent) {
+      alert('You do not have permission to update student enrollment.');
+      return;
+    }
     try {
       setLoading(true);
       const currentEnroll = enrollments[0];
@@ -520,6 +577,19 @@ export default function StudentDetails() {
     }
   ];
 
+  const visibleTabs = [
+    { id: 'overview', label: 'Overview', icon: User },
+    { id: 'academic', label: 'Academic', icon: GraduationCap },
+    { id: 'attendance', label: 'Attendance', icon: Clock },
+    { id: 'results', label: 'Results', icon: TrendingUp },
+    { id: 'fees', label: 'Fees', icon: IndianRupee, show: canViewFees },
+    { id: 'timeline', label: 'Timeline', icon: Calendar },
+    { id: 'health', label: 'Health Card', icon: Heart },
+    { id: 'notes', label: 'Notes', icon: MessageSquare, show: canWriteNotes },
+    { id: 'documents', label: 'Documents', icon: FileText, show: canManageDocs },
+    { id: 'guardians', label: 'Guardians', icon: User }
+  ].filter(tab => tab.show !== false);
+
   return (
     <Layout>
       {/* Back button */}
@@ -536,9 +606,11 @@ export default function StudentDetails() {
           <div className="student-details-row-7">
             {student.photo ? (
               <img 
-                src={student.photo.startsWith('data:image') || student.photo.startsWith('/api') || student.photo.startsWith('http')
-                  ? student.photo 
-                  : `/api/students/photo/${student.id}`} 
+                src={getAuthenticatedUrl(
+                  student.photo.startsWith('data:image') || student.photo.startsWith('/api') || student.photo.startsWith('http')
+                    ? student.photo 
+                    : `/api/students/photo/${student.id}`
+                )} 
                 alt="Student Photo" 
                 className="student-details-avatar-img" 
               />
@@ -584,18 +656,7 @@ export default function StudentDetails() {
 
       {/* Redesigned Profile Tabs Header */}
       <div className="tabs student-details-tabs">
-        {[
-          { id: 'overview', label: 'Overview', icon: User },
-          { id: 'academic', label: 'Academic', icon: GraduationCap },
-          { id: 'attendance', label: 'Attendance', icon: Clock },
-          { id: 'results', label: 'Results', icon: TrendingUp },
-          { id: 'fees', label: 'Fees', icon: IndianRupee },
-          { id: 'timeline', label: 'Timeline', icon: Calendar },
-          { id: 'health', label: 'Health Card', icon: Heart },
-          { id: 'notes', label: 'Notes', icon: MessageSquare },
-          { id: 'documents', label: 'Documents', icon: FileText },
-          { id: 'guardians', label: 'Guardians', icon: User }
-        ].map(t => {
+        {visibleTabs.map(t => {
           const Icon = t.icon;
           const isSelected = activeTab === t.id;
           return (
@@ -714,32 +775,36 @@ export default function StudentDetails() {
                 </div>
                 
                 {/* Actions group */}
-                <div className="student-details-col-60">
-                  <button className="btn btn-primary btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setTransferForm({ academic_year_id: currentEnroll.academic_year_id || '', course_id: currentEnroll.course_id || '', section_id: currentEnroll.section_id || '', semester: currentEnroll.semester || 1 }); setShowTransferModal(true); }}>
-                    Transfer Student
-                  </button>
-                  <button className="btn btn-outline btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setPromoteForm({ academic_year_id: currentEnroll.academic_year_id || '', course_id: currentEnroll.course_id || '', section_id: currentEnroll.section_id || '', semester: (currentEnroll.semester || 1) + 1 }); setShowPromoteModal(true); }}>
-                    Promote Student
-                  </button>
-                  <button className="btn btn-secondary btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setChangeSectionForm({ section_id: currentEnroll.section_id || '' }); setShowChangeSectionModal(true); }}>
-                    Change Section
-                  </button>
-                </div>
+                {canEditStudent && (
+                  <div className="student-details-col-60">
+                    <button className="btn btn-primary btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setTransferForm({ academic_year_id: currentEnroll.academic_year_id || '', course_id: currentEnroll.course_id || '', section_id: currentEnroll.section_id || '', semester: currentEnroll.semester || 1 }); setShowTransferModal(true); }}>
+                      Transfer Student
+                    </button>
+                    <button className="btn btn-outline btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setPromoteForm({ academic_year_id: currentEnroll.academic_year_id || '', course_id: currentEnroll.course_id || '', section_id: currentEnroll.section_id || '', semester: (currentEnroll.semester || 1) + 1 }); setShowPromoteModal(true); }}>
+                      Promote Student
+                    </button>
+                    <button className="btn btn-secondary btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setChangeSectionForm({ section_id: currentEnroll.section_id || '' }); setShowChangeSectionModal(true); }}>
+                      Change Section
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="student-details-div-64">
                 <p className="student-details-text-65">This student is not enrolled in any academic year/class.</p>
-                <button className="btn btn-primary btn-sm" onClick={() => {
-                  setTransferForm({
-                    academic_year_id: academicYears[0]?.id || '',
-                    course_id: programs[0]?.id || '',
-                    section_id: '',
-                    semester: 1
-                  });
-                  setShowTransferModal(true);
-                }}>
-                  Enroll Student
-                </button>
+                {canEditStudent && (
+                  <button className="btn btn-primary btn-sm" onClick={() => {
+                    setTransferForm({
+                      academic_year_id: academicYears[0]?.id || '',
+                      course_id: programs[0]?.id || '',
+                      section_id: '',
+                      semester: 1
+                    });
+                    setShowTransferModal(true);
+                  }}>
+                    Enroll Student
+                  </button>
+                )}
               </div>
             )}
 
@@ -798,12 +863,14 @@ export default function StudentDetails() {
                     Manage bus routing and pick-up/drop-off settings for this student profile.
                   </p>
                 </div>
-                <button 
-                  className="btn btn-outline btn-sm"
-                  onClick={() => setShowTransportModal(true)}
-                >
-                  {allocation ? 'Change Bus Route' : 'Assign Bus Route'}
-                </button>
+                {canEditStudent && (
+                  <button 
+                    className="btn btn-outline btn-sm"
+                    onClick={() => setShowTransportModal(true)}
+                  >
+                    {allocation ? 'Change Bus Route' : 'Assign Bus Route'}
+                  </button>
+                )}
               </div>
 
               {allocation ? (
@@ -1001,7 +1068,7 @@ export default function StudentDetails() {
         )}
 
         {/* FEES PANEL */}
-        {activeTab === 'fees' && (
+        {activeTab === 'fees' && canViewFees && (
           <div>
             <h3 className="student-details-title-119">Financial Fee Ledger</h3>
             
@@ -1142,14 +1209,14 @@ export default function StudentDetails() {
           <div>
             <div className="student-details-row-144">
               <h3 className="student-details-title-145">Student Health Profile</h3>
-              {!showHealthEdit && (
+              {!showHealthEdit && canEditStudent && (
                 <button className="btn btn-sm btn-outline" onClick={() => setShowHealthEdit(true)}>
                   Edit Health Card
                 </button>
               )}
             </div>
 
-            {showHealthEdit ? (
+            {showHealthEdit && canEditStudent ? (
               <form onSubmit={handleHealthSave} className="student-details-form-146">
                 <div className="form-group">
                   <label>Blood Group</label>
@@ -1209,7 +1276,7 @@ export default function StudentDetails() {
         )}
 
         {/* NOTES PANEL (NEW) */}
-        {activeTab === 'notes' && (
+        {activeTab === 'notes' && canWriteNotes && (
           <div>
             <h3 className="student-details-title-160">Internal Student Notes</h3>
             
@@ -1240,9 +1307,11 @@ export default function StudentDetails() {
                     <span>Author: <strong>{note.author_name}</strong></span>
                     <span>Posted: {note.created_at?.split('.')[0] || note.created_at}</span>
                   </div>
-                  <button onClick={() => handleDeleteNote(note.id)} className="student-details-btn-167" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
-                    <Trash2 size={16} />
-                  </button>
+                  {canWriteNotes && (
+                    <button onClick={() => handleDeleteNote(note.id)} className="student-details-btn-167" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               ))}
               {notes.length === 0 && (
@@ -1255,13 +1324,15 @@ export default function StudentDetails() {
         )}
 
         {/* DOCUMENTS VAULT PANEL */}
-        {activeTab === 'documents' && (
+        {activeTab === 'documents' && canManageDocs && (
           <div>
             <div className="student-details-row-170">
               <h3 className="student-details-title-171">Digital Documents Vault</h3>
-              <button className="btn btn-sm btn-primary" onClick={() => setShowUploadModal(true)}>
-                <Upload size={14} /> Upload Document
-              </button>
+              {canManageDocs && (
+                <button className="btn btn-sm btn-primary" onClick={() => setShowUploadModal(true)}>
+                  <Upload size={14} /> Upload Document
+                </button>
+              )}
             </div>
 
             {documents.length > 0 ? (
@@ -1282,18 +1353,22 @@ export default function StudentDetails() {
                         Uploaded: {doc.uploaded_at?.split(' ')[0]}
                       </p>
                     </div>
-                    <button onClick={() => handleDocDelete(doc.id)} className="student-details-btn-179" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
-                      <Trash2 size={16} />
-                    </button>
+                    {canManageDocs && (
+                      <button onClick={() => handleDocDelete(doc.id)} className="student-details-btn-179" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
             ) : (
               <div className="student-details-div-180">
                 <p className="student-details-text-181">No documents uploaded yet.</p>
-                <button className="btn btn-outline btn-sm" onClick={() => setShowUploadModal(true)}>
-                  <Upload size={14} /> Upload First Document
-                </button>
+                {canManageDocs && (
+                  <button className="btn btn-outline btn-sm" onClick={() => setShowUploadModal(true)}>
+                    <Upload size={14} /> Upload First Document
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1347,7 +1422,7 @@ export default function StudentDetails() {
       </div>
 
       {/* Real Upload Document Modal */}
-      {showUploadModal && (
+      {showUploadModal && canManageDocs && (
         <div className="modal student-details-modal">
           <div className="modal-content student-details-modal-content">
             <h3 className="student-details-title-203">Upload Student Document</h3>
@@ -1382,7 +1457,7 @@ export default function StudentDetails() {
       )}
 
       {/* Transfer Student Modal */}
-      {showTransferModal && (
+      {showTransferModal && canEditStudent && (
         <div className="modal student-details-modal">
           <div className="modal-content student-details-modal-content">
             <h3 className="student-details-title-209">Transfer Student</h3>
@@ -1467,7 +1542,7 @@ export default function StudentDetails() {
       )}
 
       {/* Promote Student Modal */}
-      {showPromoteModal && (
+      {showPromoteModal && canEditStudent && (
         <div className="modal student-details-modal">
           <div className="modal-content student-details-modal-content">
             <h3 className="student-details-title-217">Promote Student</h3>
@@ -1552,7 +1627,7 @@ export default function StudentDetails() {
       )}
 
       {/* Change Section Modal */}
-      {showChangeSectionModal && enrollments.length > 0 && (
+      {showChangeSectionModal && canEditStudent && enrollments.length > 0 && (
         <div className="modal student-details-modal">
           <div className="modal-content student-details-modal-content">
             <h3 className="student-details-title-225">Change Section</h3>
@@ -1602,7 +1677,7 @@ export default function StudentDetails() {
       )}
 
       {/* Assign Transport Route Modal */}
-      {showTransportModal && (
+      {showTransportModal && canEditStudent && (
         <div className="modal student-details-modal">
           <div className="modal-content student-details-modal-content">
             <h3 className="student-details-title-233">

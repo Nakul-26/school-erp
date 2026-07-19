@@ -6,6 +6,7 @@ import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Search, Plus, Edit2, Trash2, Eye, RefreshCw, Info } from 'lucide-react';
 import { PageGuidance } from '../components/PageGuidance';
+import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
 interface Program {
   id: string;
@@ -39,7 +40,9 @@ export default function Subjects() {
   const { user } = useAuth();
   
   const roles = user?.roles || (user?.role ? [user.role] : []);
-  const isAdminOrHOD = roles.some(r => ['admin', 'super_admin', 'Principal', 'HOD', 'Super Admin'].includes(r));
+  const userPermissions = user?.permissions || [];
+  const canManageAcademic = hasAnyPermission(userPermissions, ['academic.manage']) ||
+    hasAnyRole(roles, ['admin', 'super_admin', 'Principal', 'HOD']);
 
   // Core Data States
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -233,7 +236,7 @@ export default function Subjects() {
             Manage subject curriculum directory.
           </p>
         </div>
-        {isAdminOrHOD && (
+        {canManageAcademic && (
           <button className="btn btn-primary" onClick={() => {
             setEditingSubjectId(null);
             setSubjectForm({ 
@@ -418,7 +421,7 @@ export default function Subjects() {
                       <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', height: 'auto' }} onClick={() => navigate(`/subjects/${subject.id}`)} title="Open Subject Workspace">
                         <Eye size={13} />
                       </button>
-                      {isAdminOrHOD && (
+                      {canManageAcademic && (
                         <>
                           <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', height: 'auto' }} onClick={() => handleSubjectEditClick(subject)} title="Edit Subject">
                             <Edit2 size={13} />
@@ -443,7 +446,7 @@ export default function Subjects() {
       </div>
 
       {/* ── Add/Edit Subject Modal ── */}
-      {showSubjectModal && (
+      {showSubjectModal && canManageAcademic && (
         <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div className="card modal-content" style={{ width: '460px', padding: '1.5rem' }}>
             <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '1rem' }}>

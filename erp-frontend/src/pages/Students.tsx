@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { 
   Plus, ChevronLeft, ChevronRight, 
-  Grid, List, Trash2, Archive, Check, ShieldAlert 
+  Grid, List, Trash2, Archive, Check 
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -264,6 +264,10 @@ export default function Students() {
 
   const handleBulkAction = async (action: 'assign_section' | 'promote_semester' | 'deactivate' | 'reactivate' | 'delete', payload?: any) => {
     if (selectedStudentIds.length === 0) return;
+    if ((action === 'delete' && !canDeleteStudent) || (action !== 'delete' && !canEditStudent)) {
+      showToast('You do not have permission to perform this action.', 'error');
+      return;
+    }
     if (action === 'deactivate' && !confirm(`Are you sure you want to deactivate ${selectedStudentIds.length} students?`)) return;
     if (action === 'reactivate' && !confirm(`Are you sure you want to reactivate ${selectedStudentIds.length} students?`)) return;
     if (action === 'promote_semester' && !confirm(`Are you sure you want to promote ${selectedStudentIds.length} students?`)) return;
@@ -347,6 +351,10 @@ export default function Students() {
 
   const handleBulkExport = (format: 'csv' | 'xlsx') => {
     if (selectedStudentIds.length === 0) return;
+    if (!canViewStudent) {
+      showToast('You do not have permission to export student data.', 'error');
+      return;
+    }
     const selectedStudents = students.filter(s => selectedStudentIds.includes(s.id));
     if (format === 'xlsx') {
       exportHelpers.exportStudentsExcel(selectedStudents);
@@ -499,21 +507,7 @@ export default function Students() {
 
   return (
     <Layout>
-      {showAddModal ? (
-        !canCreateStudent ? (
-          <div className="card" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-            <div style={{ maxWidth: '560px', textAlign: 'center' }}>
-              <ShieldAlert size={56} style={{ color: 'var(--danger)', marginBottom: '1rem' }} />
-              <h2 style={{ marginBottom: '0.5rem' }}>Access Denied</h2>
-              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                You do not have permission to create students. The admission form is hidden until the student.create permission is granted.
-              </p>
-              <button className="btn btn-primary" onClick={() => setShowAddModal(false)} style={{ marginTop: '1rem' }}>
-                Go Back
-              </button>
-            </div>
-          </div>
-        ) : (
+      {showAddModal && canCreateStudent ? (
         <AddStudentWizard
           step={step}
           setStep={setStep}
@@ -531,7 +525,6 @@ export default function Students() {
           setShowAddModal={setShowAddModal}
           resetAddForm={resetAddForm}
         />
-        )
       ) : (
         <>
           <div className="page-header students-page-header">
@@ -605,32 +598,32 @@ export default function Students() {
                     <strong className="students-strong-51">{selectedStudentIds.length}</strong> {selectedStudentIds.length === 1 ? 'student' : 'students'} selected
                   </span>
                   <div className="students-row-83">
-                    {canUseBulkActions && (
-                      // Bulk actions panel
+                    {canEditStudent && (
                       <>
                         <button onClick={() => setShowBulkSectionModal(true)} className="btn btn-sm btn-outline">
-                        Assign Section
-                      </button>
-                      <button onClick={() => handleBulkAction('promote_semester')} className="btn btn-sm btn-outline">
-                        Promote Semester
-                      </button>
-                      {showDeactivateBtn && (
-                        <button onClick={() => handleBulkAction('deactivate')} className="btn btn-sm btn-outline text-warning">
-                          <Archive size={14} /> Deactivate
+                          Assign Section
                         </button>
-                      )}
-                      {showReactivateBtn && (
-                        <button onClick={() => handleBulkAction('reactivate')} className="btn btn-sm btn-outline text-success">
-                          <Check size={14} /> Reactivate
+                        <button onClick={() => handleBulkAction('promote_semester')} className="btn btn-sm btn-outline">
+                          Promote Semester
                         </button>
-                      )}
+                        {showDeactivateBtn && (
+                          <button onClick={() => handleBulkAction('deactivate')} className="btn btn-sm btn-outline text-warning">
+                            <Archive size={14} /> Deactivate
+                          </button>
+                        )}
+                        {showReactivateBtn && (
+                          <button onClick={() => handleBulkAction('reactivate')} className="btn btn-sm btn-outline text-success">
+                            <Check size={14} /> Reactivate
+                          </button>
+                        )}
+                      </>
+                    )}
+                    {canDeleteStudent && (
                       <button onClick={() => handleBulkAction('delete')} className="btn btn-sm btn-danger">
                         <Trash2 size={14} /> Delete
                       </button>
-                      
-                      <div className="students-div-82" />  
-                      </>
                     )}
+                    {canUseBulkActions && <div className="students-div-82" />}
                     
                     <button onClick={() => handleBulkExport('xlsx')} className="btn btn-sm btn-outline">
                       Export Excel

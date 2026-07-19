@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, Trash2, ClipboardCheck, ArrowLeft, Award, FileSpreadsheet, Layers } from 'lucide-react';
+import { Plus, Trash2, ClipboardCheck, ArrowLeft, Award, FileSpreadsheet, Layers, Search, Info } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
@@ -73,7 +73,22 @@ export default function Exams() {
   const [selectedReportCard, setSelectedReportCard] = useState<any | null>(null);
   const [showReportCardModal, setShowReportCardModal] = useState(false);
   const [loadingReportCard, setLoadingReportCard] = useState(false);
-  
+
+  // --- SEARCH & FILTER STATES ---
+  const [examSearchQuery, setExamSearchQuery] = useState('');
+  const [examYearFilter, setExamYearFilter] = useState('All');
+  const [examProgramFilter, setExamProgramFilter] = useState('All');
+  const [examStatusFilter, setExamStatusFilter] = useState('All');
+
+  const [subjectSearchQuery, setSubjectSearchQuery] = useState('');
+  const [subjectDateFilter, setSubjectDateFilter] = useState('');
+
+  const [marksSearchQuery, setMarksSearchQuery] = useState('');
+  const [marksStatusFilter, setMarksStatusFilter] = useState('All'); // 'All', 'Unmarked', 'Marked'
+
+  const [resultsSearchQuery, setResultsSearchQuery] = useState('');
+  const [resultsGradeFilter, setResultsGradeFilter] = useState('All');
+
   // Forms
   const [examForm, setExamForm] = useState({
     name: '',
@@ -307,6 +322,40 @@ export default function Exams() {
     }
   };
 
+  const filteredExams = exams.filter(ex => {
+    const matchesSearch = ex.name.toLowerCase().includes(examSearchQuery.toLowerCase()) ||
+                          (ex.course_name || '').toLowerCase().includes(examSearchQuery.toLowerCase()) ||
+                          (ex.course_code || '').toLowerCase().includes(examSearchQuery.toLowerCase());
+    const matchesYear = examYearFilter === 'All' || ex.academic_year_id === examYearFilter;
+    const matchesProgram = examProgramFilter === 'All' || ex.course_id === examProgramFilter;
+    const matchesStatus = examStatusFilter === 'All' || ex.status === examStatusFilter;
+    return matchesSearch && matchesYear && matchesProgram && matchesStatus;
+  });
+
+  const filteredExamSubjects = examSubjects.filter(es => {
+    const matchesSearch = (es.subject_name || '').toLowerCase().includes(subjectSearchQuery.toLowerCase()) ||
+                          (es.subject_code || '').toLowerCase().includes(subjectSearchQuery.toLowerCase());
+    const matchesDate = !subjectDateFilter || es.exam_date === subjectDateFilter;
+    return matchesSearch && matchesDate;
+  });
+
+  const filteredStudentMarks = studentMarks.filter(rec => {
+    const matchesSearch = rec.student_name.toLowerCase().includes(marksSearchQuery.toLowerCase()) ||
+                          (rec.roll_number || '').toLowerCase().includes(marksSearchQuery.toLowerCase()) ||
+                          rec.admission_number.toLowerCase().includes(marksSearchQuery.toLowerCase());
+    const matchesStatus = marksStatusFilter === 'All' || 
+                          (marksStatusFilter === 'Unmarked' && (rec.marks_obtained === null || rec.marks_obtained === '')) ||
+                          (marksStatusFilter === 'Marked' && rec.marks_obtained !== null && rec.marks_obtained !== '');
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredExamResults = examResults.filter(res => {
+    const matchesSearch = res.student_name.toLowerCase().includes(resultsSearchQuery.toLowerCase()) ||
+                          (res.roll_number || '').toLowerCase().includes(resultsSearchQuery.toLowerCase());
+    const matchesGrade = resultsGradeFilter === 'All' || res.grade === resultsGradeFilter || res.result === resultsGradeFilter;
+    return matchesSearch && matchesGrade;
+  });
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'DRAFT': return 'badge-secondary';
@@ -339,6 +388,61 @@ export default function Exams() {
             )}
           </div>
 
+          {/* Exams List Filters Bar */}
+          <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+            <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+              <Search size={14} />
+              <input
+                type="text"
+                placeholder="Search exam events..."
+                value={examSearchQuery}
+                onChange={e => setExamSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <select
+                value={examYearFilter}
+                onChange={e => setExamYearFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+              >
+                <option value="All">All Years</option>
+                {academicYears.map(y => (
+                  <option key={y.id} value={y.id}>{y.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <select
+                value={examProgramFilter}
+                onChange={e => setExamProgramFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+              >
+                <option value="All">All Programs</option>
+                {programs.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <select
+                value={examStatusFilter}
+                onChange={e => setExamStatusFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+              >
+                <option value="All">All Statuses</option>
+                <option value="DRAFT">Draft</option>
+                <option value="PUBLISHED">Published</option>
+                <option value="COMPLETED">Completed</option>
+              </select>
+            </div>
+          </div>
+
           <div className="card">
             {loading ? <p>Loading exams...</p> : (
               <table className="table">
@@ -354,7 +458,7 @@ export default function Exams() {
                   </tr>
                 </thead>
                 <tbody>
-                  {exams.map((ex) => (
+                  {filteredExams.map((ex) => (
                     <tr key={ex.id}>
                       <td><strong>{ex.name}</strong></td>
                       <td>{ex.academic_year_name}</td>
@@ -392,11 +496,11 @@ export default function Exams() {
                       </td>
                     </tr>
                   ))}
-                  {exams.length === 0 && (
+                  {filteredExams.length === 0 && (
                     <tr>
                       <td colSpan={7} className="exams-td-6">
                         <ClipboardCheck size={32} className="exams-ClipboardCheck-7"  />
-                        <p className="exams-text-8">No exam events scheduled yet.</p>
+                        <p className="exams-text-8">{exams.length === 0 ? "No exam events scheduled yet." : "No exam events match the selected filters."}</p>
                       </td>
                     </tr>
                   )}
@@ -511,6 +615,39 @@ export default function Exams() {
             )}
           </div>
 
+          {/* Subjects Filters Bar */}
+          <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+            <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+              <Search size={14} />
+              <input
+                type="text"
+                placeholder="Search subject..."
+                value={subjectSearchQuery}
+                onChange={e => setSubjectSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Exam Date:</span>
+              <input
+                type="date"
+                value={subjectDateFilter}
+                onChange={e => setSubjectDateFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', height: 'auto', minWidth: '150px' }}
+              />
+              {subjectDateFilter && (
+                <button
+                  onClick={() => setSubjectDateFilter('')}
+                  className="btn btn-sm btn-outline"
+                  style={{ padding: '0.4rem', height: 'auto' }}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="card">
             {loading ? <p>Loading subjects...</p> : (
               <table className="table">
@@ -526,7 +663,7 @@ export default function Exams() {
                   </tr>
                 </thead>
                 <tbody>
-                  {examSubjects.map((es) => (
+                  {filteredExamSubjects.map((es) => (
                     <tr key={es.id}>
                       <td><strong>{es.subject_code}</strong></td>
                       <td>{es.subject_name}</td>
@@ -550,10 +687,10 @@ export default function Exams() {
                       </td>
                     </tr>
                   ))}
-                  {examSubjects.length === 0 && (
+                  {filteredExamSubjects.length === 0 && (
                     <tr>
                       <td colSpan={7} className="exams-td-16">
-                        <p className="exams-text-17">No subjects mapped to this exam event yet.</p>
+                        <p className="exams-text-17">{examSubjects.length === 0 ? "No subjects mapped to this exam event yet." : "No exam subjects match the selected filters."}</p>
                       </td>
                     </tr>
                   )}
@@ -674,6 +811,32 @@ export default function Exams() {
             )}
           </div>
 
+          {/* Student Marks Entry Filters Bar */}
+          <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+            <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+              <Search size={14} />
+              <input
+                type="text"
+                placeholder="Search students..."
+                value={marksSearchQuery}
+                onChange={e => setMarksSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <select
+                value={marksStatusFilter}
+                onChange={e => setMarksStatusFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+              >
+                <option value="All">All Students</option>
+                <option value="Unmarked">Unmarked Only</option>
+                <option value="Marked">Graded Only</option>
+              </select>
+            </div>
+          </div>
+
           <div className="card">
             {loading ? <p>Loading student marksheet...</p> : (
               <table className="table">
@@ -687,7 +850,7 @@ export default function Exams() {
                   </tr>
                 </thead>
                 <tbody>
-                  {studentMarks.map((rec) => (
+                  {filteredStudentMarks.map((rec) => (
                     <tr key={rec.student_id}>
                       <td><strong>{rec.roll_number || '-'}</strong></td>
                       <td>{rec.student_name}</td>
@@ -702,10 +865,10 @@ export default function Exams() {
                       </td>
                     </tr>
                   ))}
-                  {studentMarks.length === 0 && (
+                  {filteredStudentMarks.length === 0 && (
                     <tr>
                       <td colSpan={5} className="exams-td-27">
-                        No eligible students found enrolled in this program/semester.
+                        {studentMarks.length === 0 ? "No eligible students found enrolled in this program/semester." : "No students match the selected filters."}
                       </td>
                     </tr>
                   )}
@@ -732,6 +895,37 @@ export default function Exams() {
             </div>
           </div>
 
+          {/* Exam Results Filters Bar */}
+          <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+            <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+              <Search size={14} />
+              <input
+                type="text"
+                placeholder="Search students..."
+                value={resultsSearchQuery}
+                onChange={e => setResultsSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <select
+                value={resultsGradeFilter}
+                onChange={e => setResultsGradeFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+              >
+                <option value="All">All Results</option>
+                <option value="PASS">Pass Only</option>
+                <option value="FAIL">Fail Only</option>
+                <option value="A">Grade A Only</option>
+                <option value="B">Grade B Only</option>
+                <option value="C">Grade C Only</option>
+                <option value="D">Grade D Only</option>
+                <option value="F">Grade F Only</option>
+              </select>
+            </div>
+          </div>
+
           <div className="card">
             {loading ? <p>Loading results overview...</p> : (
               <table className="table">
@@ -747,7 +941,7 @@ export default function Exams() {
                   </tr>
                 </thead>
                 <tbody>
-                  {examResults.map((res) => (
+                  {filteredExamResults.map((res) => (
                     <tr key={res.student_id}>
                       <td><strong>{res.roll_number || '-'}</strong></td>
                       <td>{res.student_name}</td>
@@ -773,10 +967,10 @@ export default function Exams() {
                       </td>
                     </tr>
                   ))}
-                  {examResults.length === 0 && (
+                  {filteredExamResults.length === 0 && (
                     <tr>
                       <td colSpan={7} className="exams-td-34">
-                        <p className="exams-text-35">No marks have been graded for this exam event yet.</p>
+                        <p className="exams-text-35">{examResults.length === 0 ? "No marks have been graded for this exam event yet." : "No results match the selected filters."}</p>
                       </td>
                     </tr>
                   )}

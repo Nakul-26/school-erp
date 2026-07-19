@@ -4,7 +4,7 @@ import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { Landmark, Calendar, Play, Trash2, FileSpreadsheet } from 'lucide-react';
+import { Landmark, Calendar, Play, Trash2, FileSpreadsheet, Search } from 'lucide-react';
 
 interface PayrollRun {
   id: string;
@@ -18,6 +18,9 @@ interface PayrollRun {
 
 export default function PayrollRuns({ isSubComponent = false }: { isSubComponent?: boolean }) {
   const [runs, setRuns] = useState<PayrollRun[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [yearFilter, setYearFilter] = useState('All');
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const navigate = useNavigate();
@@ -83,6 +86,15 @@ export default function PayrollRuns({ isSubComponent = false }: { isSubComponent
     const dates = new Date(2000, monthNum - 1, 1);
     return dates.toLocaleString('default', { month: 'long' });
   };
+
+  const filteredRuns = runs.filter(r => {
+    const monthName = getMonthName(r.month).toLowerCase();
+    const matchesSearch = monthName.includes(searchQuery.toLowerCase()) || 
+                          String(r.year).includes(searchQuery);
+    const matchesStatus = statusFilter === 'All' || r.status === statusFilter;
+    const matchesYear = yearFilter === 'All' || String(r.year) === yearFilter;
+    return matchesSearch && matchesStatus && matchesYear;
+  });
 
   const content = (
     <>
@@ -154,6 +166,47 @@ export default function PayrollRuns({ isSubComponent = false }: { isSubComponent
         {/* Right runs history card */}
         <div className="card payroll-runs-card">
           <h3 className="payroll-runs-title-8">Run Logs History</h3>
+
+          {/* Filters Bar */}
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="search-container" style={{ flex: 1, maxWidth: '180px' }}>
+              <Search size={14} />
+              <input
+                type="text"
+                placeholder="Search month..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.35rem 0.55rem', fontSize: '0.8rem', cursor: 'pointer', height: 'auto', minWidth: '110px' }}
+              >
+                <option value="All">All Statuses</option>
+                <option value="Draft">Draft</option>
+                <option value="Finalized">Finalized</option>
+              </select>
+            </div>
+
+            <div>
+              <select
+                value={yearFilter}
+                onChange={e => setYearFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.35rem 0.55rem', fontSize: '0.8rem', cursor: 'pointer', height: 'auto', minWidth: '100px' }}
+              >
+                <option value="All">All Years</option>
+                {[2025, 2026, 2027, 2028].map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {loading ? <p>Loading history...</p> : (
             <table className="table">
               <thead>
@@ -166,7 +219,7 @@ export default function PayrollRuns({ isSubComponent = false }: { isSubComponent
                 </tr>
               </thead>
               <tbody>
-                {runs.map((r) => (
+                {filteredRuns.map((r) => (
                   <tr key={r.id}>
                     <td>
                       <div className="payroll-runs-row-10">
@@ -193,11 +246,11 @@ export default function PayrollRuns({ isSubComponent = false }: { isSubComponent
                     </td>
                   </tr>
                 ))}
-                {runs.length === 0 && (
+                {filteredRuns.length === 0 && (
                   <tr>
                     <td colSpan={5} className="payroll-runs-td-13">
                       <Landmark size={32} className="payroll-runs-Landmark-14"  />
-                      <p>No payroll runs found. Initiate your first run from the form on the left.</p>
+                      <p>{runs.length === 0 ? "No payroll runs found. Initiate your first run from the form on the left." : "No payroll run logs match the selected filters."}</p>
                     </td>
                   </tr>
                 )}

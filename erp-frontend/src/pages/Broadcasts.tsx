@@ -91,6 +91,10 @@ export default function Broadcasts({ isSubComponent = false }: { isSubComponent?
   const [analyticsData, setAnalyticsData] = useState<any | null>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState('');
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
+  const [historyCategoryFilter, setHistoryCategoryFilter] = useState('All');
+  const [historyPriorityFilter, setHistoryPriorityFilter] = useState('All');
+  const [historyStatusFilter, setHistoryStatusFilter] = useState('All');
 
   const userRoles = user?.roles || (user?.role ? [user.role] : []);
   const canCompose = userRoles.some(r => 
@@ -346,6 +350,21 @@ export default function Broadcasts({ isSubComponent = false }: { isSubComponent?
       // Fallback: sort by date
       const dateA = new Date(a.sent_at || a.sent_at || 0).getTime();
       const dateB = new Date(b.sent_at || b.sent_at || 0).getTime();
+      return dateB - dateA;
+    });
+
+  const filteredHistory = sentBroadcasts
+    .filter(b => {
+      const matchCat = historyCategoryFilter === 'All' || b.category.toLowerCase() === historyCategoryFilter.toLowerCase();
+      const matchPriority = historyPriorityFilter === 'All' || b.priority.toLowerCase() === historyPriorityFilter.toLowerCase();
+      const matchStatus = historyStatusFilter === 'All' || b.status.toLowerCase() === historyStatusFilter.toLowerCase();
+      const matchSearch = b.subject.toLowerCase().includes(historySearchQuery.toLowerCase()) || 
+                          b.body.toLowerCase().includes(historySearchQuery.toLowerCase());
+      return matchCat && matchPriority && matchStatus && matchSearch;
+    })
+    .sort((a, b) => {
+      const dateA = a.sent_at ? new Date(a.sent_at).getTime() : 0;
+      const dateB = b.sent_at ? new Date(b.sent_at).getTime() : 0;
       return dateB - dateA;
     });
 
@@ -850,57 +869,131 @@ export default function Broadcasts({ isSubComponent = false }: { isSubComponent?
                     <p>You haven't composed and sent any broadcasts yet.</p>
                   </div>
                 ) : (
-                  <div className="bc-history-table-wrapper">
-                    <table className="bc-history-table">
-                      <thead>
-                        <tr>
-                          <th>Subject Title</th>
-                          <th>Category</th>
-                          <th>Priority</th>
-                          <th>Total Targets</th>
-                          <th>Read count</th>
-                          <th>Sent date</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sentBroadcasts.map(b => (
-                          <tr key={b.id}>
-                            <td className="bc-history-subject-cell">
-                              <strong>{b.subject}</strong>
-                              {b.status === 'draft' && <span className="bc-draft-badge">Draft</span>}
-                              <p className="bc-item-snippet">{b.body.slice(0, 50)}{b.body.length > 50 ? '...' : ''}</p>
-                            </td>
-                            <td>
-                              <span className={`bc-cat-dot bc-cat-${b.category}`} />
-                              <span>{getCategoryLabel(b.category)}</span>
-                            </td>
-                            <td>{b.priority === 'normal' ? '🟢 Normal' : b.priority === 'important' ? '🟠 Important' : '🔴 Urgent'}</td>
-                            <td>{b.status === 'draft' ? '—' : `${b.total_recipients} resolved`}</td>
-                            <td>{b.status === 'draft' ? '—' : `${b.read_count} read (${b.total_recipients > 0 ? Math.round((b.read_count / b.total_recipients) * 100) : 0}%)`}</td>
-                            <td>{b.sent_at ? new Date(b.sent_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
-                            <td>
-                              {b.status === 'draft' ? (
-                                <button 
-                                  className="bc-action-btn edit-draft-btn"
-                                  onClick={() => handleEditDraft(b)}
-                                >
-                                  Edit &amp; Send Draft &rarr;
-                                </button>
-                              ) : (
-                                <button 
-                                  className="bc-action-btn"
-                                  onClick={() => handleViewAnalytics(b.id)}
-                                >
-                                  View Analytics &rarr;
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <>
+                    {/* Search & Filters */}
+                    <div className="bc-history-filters">
+                      <div className="bc-search-wrapper">
+                        <Search size={14} className="bc-search-icon" />
+                        <input
+                          type="text"
+                          placeholder="Search sent broadcasts..."
+                          value={historySearchQuery}
+                          onChange={e => setHistorySearchQuery(e.target.value)}
+                          className="bc-search-input"
+                        />
+                      </div>
+
+                      <div className="bc-filters-group">
+                        <div className="bc-filter-item">
+                          <span className="bc-filter-label">Category:</span>
+                          <select
+                            value={historyCategoryFilter}
+                            onChange={e => setHistoryCategoryFilter(e.target.value)}
+                            className="bc-filter-select"
+                          >
+                            <option value="All">All Categories</option>
+                            <option value="general">General Notice</option>
+                            <option value="academic">Academic / Course</option>
+                            <option value="fees">Fees Ledger</option>
+                            <option value="attendance">Attendance / Absentee</option>
+                            <option value="events">Events & Activities</option>
+                            <option value="transport">Transport / Bus</option>
+                            <option value="hostel">Hostellers</option>
+                            <option value="placement">Placement Cell</option>
+                            <option value="examination">Examination Schedule</option>
+                            <option value="emergency">Emergency / Alert</option>
+                          </select>
+                        </div>
+
+                        <div className="bc-filter-item">
+                          <span className="bc-filter-label">Priority:</span>
+                          <select
+                            value={historyPriorityFilter}
+                            onChange={e => setHistoryPriorityFilter(e.target.value)}
+                            className="bc-filter-select"
+                          >
+                            <option value="All">All Priorities</option>
+                            <option value="normal">Normal</option>
+                            <option value="important">Important</option>
+                            <option value="urgent">Urgent</option>
+                          </select>
+                        </div>
+
+                        <div className="bc-filter-item">
+                          <span className="bc-filter-label">Status:</span>
+                          <select
+                            value={historyStatusFilter}
+                            onChange={e => setHistoryStatusFilter(e.target.value)}
+                            className="bc-filter-select"
+                          >
+                            <option value="All">All Statuses</option>
+                            <option value="sent">Sent</option>
+                            <option value="draft">Draft</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {filteredHistory.length === 0 ? (
+                      <div className="bc-empty-state">
+                        <Radio size={40} className="bc-empty-icon" />
+                        <h4>No Matches Found</h4>
+                        <p>No sent broadcasts match your search or filter options.</p>
+                      </div>
+                    ) : (
+                      <div className="bc-history-table-wrapper">
+                        <table className="bc-history-table">
+                          <thead>
+                            <tr>
+                              <th>Subject Title</th>
+                              <th>Category</th>
+                              <th>Priority</th>
+                              <th>Total Targets</th>
+                              <th>Read count</th>
+                              <th>Sent date</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredHistory.map(b => (
+                              <tr key={b.id}>
+                                <td className="bc-history-subject-cell">
+                                  <strong>{b.subject}</strong>
+                                  {b.status === 'draft' && <span className="bc-draft-badge">Draft</span>}
+                                  <p className="bc-item-snippet">{b.body.slice(0, 50)}{b.body.length > 50 ? '...' : ''}</p>
+                                </td>
+                                <td>
+                                  <span className={`bc-cat-dot bc-cat-${b.category}`} />
+                                  <span>{getCategoryLabel(b.category)}</span>
+                                </td>
+                                <td>{b.priority === 'normal' ? '🟢 Normal' : b.priority === 'important' ? '🟠 Important' : '🔴 Urgent'}</td>
+                                <td>{b.status === 'draft' ? '—' : `${b.total_recipients} resolved`}</td>
+                                <td>{b.status === 'draft' ? '—' : `${b.read_count} read (${b.total_recipients > 0 ? Math.round((b.read_count / b.total_recipients) * 100) : 0}%)`}</td>
+                                <td>{b.sent_at ? new Date(b.sent_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                                <td>
+                                  {b.status === 'draft' ? (
+                                    <button 
+                                      className="bc-action-btn edit-draft-btn"
+                                      onClick={() => handleEditDraft(b)}
+                                    >
+                                      Edit &amp; Send Draft &rarr;
+                                    </button>
+                                  ) : (
+                                    <button 
+                                      className="bc-action-btn"
+                                      onClick={() => handleViewAnalytics(b.id)}
+                                    >
+                                      View Analytics &rarr;
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

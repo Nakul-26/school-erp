@@ -2,13 +2,39 @@ import { Hono } from 'hono';
 import { Env, JwtPayload } from '../../types';
 import { HomeworkRepository } from './homework.repository';
 import { HomeworkService } from './homework.service';
-import { authMiddleware, requireRole } from '../../middleware/auth';
+import { authMiddleware } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
-import { isTeacherOnly, teacherHasSectionAccess, teacherHasSubjectAccess } from '../../utils/teacher-scope';
+import { isTeacherOnly, teacherHasSectionAccess, teacherHasSubjectAccess, getTeacherIdForUser } from '../../utils/teacher-scope';
 
 const homework = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 homework.use('*', authMiddleware);
+
+// Helper for homework management authority validation (permission + resource scope check)
+async function checkHomeworkManageAccess(db: D1Database, user: JwtPayload, sectionId: string, subjectId: string, teacherIdToCheck?: string): Promise<boolean> {
+  const roles = (user.roles || (user.role ? [user.role] : [])).map(r => r.toLowerCase().replace(' ', '_').replace('role-', ''));
+  const isPrivileged = roles.some(r => ['super_admin', 'admin', 'principal'].includes(r));
+  if (isPrivileged) return true;
+
+  // 1. Check permission
+  const { UserRepository } = await import('../users/users.repository');
+  const userRepo = new UserRepository(db);
+  const userPermissions = await userRepo.getUserPermissions(user.sub);
+  if (!userPermissions.includes('homework.manage')) {
+    return false;
+  }
+
+  // 2. Check if owner/creator
+  const currentTeacherId = await getTeacherIdForUser(db, user);
+  if (teacherIdToCheck && currentTeacherId && teacherIdToCheck === currentTeacherId) {
+    return true;
+  }
+
+  // 3. Check section & subject access
+  const hasSection = await teacherHasSectionAccess(db, user, sectionId);
+  const hasSubject = await teacherHasSubjectAccess(db, user, subjectId, sectionId);
+  return hasSection && hasSubject;
+}
 
 homework.get('/', async (c) => {
   const user = c.get('user');
@@ -16,34 +42,128 @@ homework.get('/', async (c) => {
   const subjectId = c.req.query('subject_id');
   const db = c.env.DB;
 
-  if (isTeacherOnly(user)) {
-    if (sectionId && !(await teacherHasSectionAccess(db, user, sectionId))) {
-      return c.json({ error: 'Forbidden: Section is outside your teaching assignment' }, 403);
+  const roles = (user.roles || (user.role ? [user.role] : [])).map(r => r.toLowerCase().replace(' ', '_').replace('role-', ''));
+  
+  const isPrivileged = roles.some(r => ['super_admin', 'admin', 'principal'].includes(r));
+  const isTeacher = roles.some(r => ['teacher', 'hod'].includes(r));
+  const isStudent = roles.some(r => ['student'].includes(r));
+  const isParent = roles.some(r => ['parent', 'guardian'].includes(r));
+
+  let results: any[] = [];
+  
+  if (isPrivileged) {
+    // See all homework, optionally filtered by sectionId / subjectId
+    const repo = new HomeworkRepository(db);
+    const service = new HomeworkService(repo);
+    results = await service.list(user.institution_id, sectionId, subjectId);
+  } else if (isTeacher) {
+    // See homework they created or homework for their assigned classes/subjects
+    const teacherId = await getTeacherIdForUser(db, user);
+    if (!teacherId) return c.json([]);
+
+    let query = `
+      SELECT h.*, s.subject_name, s.subject_code, t.first_name as teacher_first, t.last_name as teacher_last, sec.name as section_name
+      FROM homework h
+      JOIN subjects s ON h.subject_id = s.id
+      JOIN teachers t ON h.teacher_id = t.id
+      JOIN sections sec ON h.section_id = sec.id
+      WHERE h.institution_id = ? AND h.is_active = 1
+        AND (
+          h.teacher_id = ?
+          OR EXISTS (
+            SELECT 1 FROM teacher_subject_assignments tsa
+            WHERE tsa.teacher_id = ? AND tsa.section_id = h.section_id AND tsa.subject_id = h.subject_id AND tsa.is_active = 1
+          )
+          OR EXISTS (
+            SELECT 1 FROM teaching_allocations ta
+            WHERE ta.teacher_id = ? AND ta.section_id = h.section_id AND ta.subject_id = h.subject_id AND ta.institution_id = ? AND LOWER(ta.status) = 'active'
+          )
+        )
+    `;
+    const params: any[] = [user.institution_id, teacherId, teacherId, teacherId, user.institution_id];
+    if (sectionId) {
+      query += ` AND h.section_id = ?`;
+      params.push(sectionId);
     }
-    if (subjectId && !(await teacherHasSubjectAccess(db, user, subjectId, sectionId || undefined))) {
-      return c.json({ error: 'Forbidden: Subject is outside your teaching assignment' }, 403);
+    if (subjectId) {
+      query += ` AND h.subject_id = ?`;
+      params.push(subjectId);
     }
+    query += ` ORDER BY h.due_date ASC, h.created_at DESC`;
+    const { results: qRes } = await db.prepare(query).bind(...params).all<any>();
+    results = qRes || [];
+  } else if (isStudent) {
+    // See only homework assigned to: Their class/section, Their enrolled subjects
+    const enrollment = await db.prepare(`
+      SELECT se.section_id
+      FROM student_enrollments se
+      JOIN students s ON se.student_id = s.id
+      WHERE s.user_id = ? AND se.is_active = 1 AND s.is_active = 1
+      LIMIT 1
+    `).bind(user.sub).first<{ section_id: string }>();
+
+    if (!enrollment) return c.json([]);
+
+    let query = `
+      SELECT h.*, s.subject_name, s.subject_code, t.first_name as teacher_first, t.last_name as teacher_last, sec.name as section_name
+      FROM homework h
+      JOIN subjects s ON h.subject_id = s.id
+      JOIN teachers t ON h.teacher_id = t.id
+      JOIN sections sec ON h.section_id = sec.id
+      WHERE h.institution_id = ? AND h.is_active = 1 AND h.section_id = ?
+    `;
+    const params: any[] = [user.institution_id, enrollment.section_id];
+    if (subjectId) {
+      query += ` AND h.subject_id = ?`;
+      params.push(subjectId);
+    }
+    query += ` ORDER BY h.due_date ASC, h.created_at DESC`;
+    const { results: qRes } = await db.prepare(query).bind(...params).all<any>();
+    results = qRes || [];
+  } else if (isParent) {
+    // See only homework for their linked child(ren)
+    const { results: childEnrollments } = await db.prepare(`
+      SELECT DISTINCT se.section_id
+      FROM student_enrollments se
+      JOIN guardians g ON se.student_id = g.student_id
+      WHERE g.user_id = ? AND se.is_active = 1 AND g.is_active = 1
+    `).bind(user.sub).all<{ section_id: string }>();
+
+    const sectionIds = (childEnrollments || []).map(e => e.section_id);
+    if (sectionIds.length === 0) return c.json([]);
+
+    const placeholders = sectionIds.map(() => '?').join(', ');
+    let query = `
+      SELECT h.*, s.subject_name, s.subject_code, t.first_name as teacher_first, t.last_name as teacher_last, sec.name as section_name
+      FROM homework h
+      JOIN subjects s ON h.subject_id = s.id
+      JOIN teachers t ON h.teacher_id = t.id
+      JOIN sections sec ON h.section_id = sec.id
+      WHERE h.institution_id = ? AND h.is_active = 1 AND h.section_id IN (${placeholders})
+    `;
+    const params: any[] = [user.institution_id, ...sectionIds];
+    if (subjectId) {
+      query += ` AND h.subject_id = ?`;
+      params.push(subjectId);
+    }
+    query += ` ORDER BY h.due_date ASC, h.created_at DESC`;
+    const { results: qRes } = await db.prepare(query).bind(...params).all<any>();
+    results = qRes || [];
+  } else {
+    return c.json([]);
   }
 
-  const repo = new HomeworkRepository(db);
-  const service = new HomeworkService(repo);
-  
-  const list = await service.list(user.institution_id, sectionId, subjectId);
-  return c.json(list);
+  return c.json(results);
 });
 
-homework.post('/', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teacher'), async (c) => {
+homework.post('/', async (c) => {
   const user = c.get('user');
   const body = await c.req.json();
   const db = c.env.DB;
 
-  if (isTeacherOnly(user)) {
-    if (!(await teacherHasSectionAccess(db, user, body.section_id))) {
-      return c.json({ error: 'Forbidden: Section is outside your teaching assignment' }, 403);
-    }
-    if (!(await teacherHasSubjectAccess(db, user, body.subject_id, body.section_id))) {
-      return c.json({ error: 'Forbidden: Subject is outside your teaching assignment for this section' }, 403);
-    }
+  const hasAccess = await checkHomeworkManageAccess(db, user, body.section_id, body.subject_id);
+  if (!hasAccess) {
+    return c.json({ error: 'Forbidden: You do not have permission to manage homework' }, 403);
   }
 
   const repo = new HomeworkRepository(db);
@@ -83,11 +203,12 @@ homework.post('/', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teac
   }
 });
 
-homework.put('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teacher'), async (c) => {
+homework.put('/:id', async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
-  const body = await c.req.json(); // { title, description, due_date }
-  const repo = new HomeworkRepository(c.env.DB);
+  const body = await c.req.json();
+  const db = c.env.DB;
+  const repo = new HomeworkRepository(db);
   const service = new HomeworkService(repo);
   
   try {
@@ -96,13 +217,9 @@ homework.put('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Te
       return c.json({ error: 'Homework not found' }, 404);
     }
 
-    if (isTeacherOnly(user)) {
-      if (!(await teacherHasSectionAccess(c.env.DB, user, existing.section_id))) {
-        return c.json({ error: 'Forbidden: Section is outside your teaching assignment' }, 403);
-      }
-      if (!(await teacherHasSubjectAccess(c.env.DB, user, existing.subject_id, existing.section_id))) {
-        return c.json({ error: 'Forbidden: Subject is outside your teaching assignment for this section' }, 403);
-      }
+    const hasAccess = await checkHomeworkManageAccess(db, user, existing.section_id, existing.subject_id, existing.teacher_id);
+    if (!hasAccess) {
+      return c.json({ error: 'Forbidden: You do not have permission to manage this homework' }, 403);
     }
     
     await service.update(id, body.title, body.description, body.due_date, user.sub);
@@ -113,10 +230,11 @@ homework.put('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Te
   }
 });
 
-homework.delete('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teacher'), async (c) => {
+homework.delete('/:id', async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
-  const repo = new HomeworkRepository(c.env.DB);
+  const db = c.env.DB;
+  const repo = new HomeworkRepository(db);
   const service = new HomeworkService(repo);
   
   try {
@@ -125,13 +243,9 @@ homework.delete('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 
       return c.json({ error: 'Homework not found' }, 404);
     }
 
-    if (isTeacherOnly(user)) {
-      if (!(await teacherHasSectionAccess(c.env.DB, user, existing.section_id))) {
-        return c.json({ error: 'Forbidden: Section is outside your teaching assignment' }, 403);
-      }
-      if (!(await teacherHasSubjectAccess(c.env.DB, user, existing.subject_id, existing.section_id))) {
-        return c.json({ error: 'Forbidden: Subject is outside your teaching assignment for this section' }, 403);
-      }
+    const hasAccess = await checkHomeworkManageAccess(db, user, existing.section_id, existing.subject_id, existing.teacher_id);
+    if (!hasAccess) {
+      return c.json({ error: 'Forbidden: You do not have permission to manage this homework' }, 403);
     }
     
     await service.delete(id, user.sub);

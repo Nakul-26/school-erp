@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Landmark, Save, Trash2 } from 'lucide-react';
+import { Landmark, Save, Trash2, Search } from 'lucide-react';
 
 interface TeacherSalary {
   teacher_id: string;
@@ -23,6 +23,8 @@ interface TeacherSalary {
 
 export default function SalaryStructures({ isSubComponent = false }: { isSubComponent?: boolean }) {
   const [teachers, setTeachers] = useState<TeacherSalary[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [designationFilter, setDesignationFilter] = useState('All');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -64,9 +66,9 @@ export default function SalaryStructures({ isSubComponent = false }: { isSubComp
     }
   };
 
-  const handleValueChange = (index: number, field: keyof TeacherSalary, val: any) => {
-    setTeachers(prev => prev.map((t, idx) => {
-      if (idx === index) {
+  const handleValueChange = (teacherId: string, field: keyof TeacherSalary, val: any) => {
+    setTeachers(prev => prev.map((t) => {
+      if (t.teacher_id === teacherId) {
         return {
           ...t,
           [field]: field === 'effective_from' ? val : Number(val)
@@ -112,6 +114,15 @@ export default function SalaryStructures({ isSubComponent = false }: { isSubComp
     }
   };
 
+  const uniqueDesignations = Array.from(new Set(teachers.map(t => t.designation).filter(Boolean)));
+
+  const filteredTeachers = teachers.filter(t => {
+    const matchesSearch = `${t.first_name} ${t.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          t.employee_id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesDesignation = designationFilter === 'All' || t.designation === designationFilter;
+    return matchesSearch && matchesDesignation;
+  });
+
   const content = (
     <>
       {!isSubComponent && (
@@ -131,6 +142,33 @@ export default function SalaryStructures({ isSubComponent = false }: { isSubComp
       </div>
 
       <div className="card salary-structures-card">
+        {/* Filters Bar */}
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+          <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+            <Search size={14} />
+            <input
+              type="text"
+              placeholder="Search staff by name or ID..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <select
+              value={designationFilter}
+              onChange={e => setDesignationFilter(e.target.value)}
+              className="input"
+              style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+            >
+              <option value="All">All Designations</option>
+              {uniqueDesignations.map(desig => (
+                <option key={desig} value={desig}>{desig}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {loading ? <p>Loading staff salary details...</p> : (
           <div className="salary-structures-table-wrapper">
             <table className="table salary-structures-table">
@@ -149,35 +187,35 @@ export default function SalaryStructures({ isSubComponent = false }: { isSubComp
                 </tr>
               </thead>
               <tbody>
-                {teachers.map((t, idx) => (
+                {filteredTeachers.map((t) => (
                   <tr key={t.teacher_id}>
                     <td className="salary-structures-td-teacher">
                       <strong>{t.first_name} {t.last_name}</strong>
                       <div className="salary-structures-div-5">{t.employee_id} ({t.designation})</div>
                     </td>
                     <td className="salary-structures-td-numeric">
-                      <input type="number" value={t.basic_salary} onChange={(e) => handleValueChange(idx, 'basic_salary', e.target.value)} className="salary-structures-input-6"  />
+                      <input type="number" value={t.basic_salary} onChange={(e) => handleValueChange(t.teacher_id, 'basic_salary', e.target.value)} className="salary-structures-input-6"  />
                     </td>
                     <td className="salary-structures-td-numeric">
-                      <input type="number" value={t.da} onChange={(e) => handleValueChange(idx, 'da', e.target.value)} className="salary-structures-input-7"  />
+                      <input type="number" value={t.da} onChange={(e) => handleValueChange(t.teacher_id, 'da', e.target.value)} className="salary-structures-input-7"  />
                     </td>
                     <td className="salary-structures-td-numeric">
-                      <input type="number" value={t.hra} onChange={(e) => handleValueChange(idx, 'hra', e.target.value)} className="salary-structures-input-8"  />
+                      <input type="number" value={t.hra} onChange={(e) => handleValueChange(t.teacher_id, 'hra', e.target.value)} className="salary-structures-input-8"  />
                     </td>
                     <td className="salary-structures-td-numeric">
-                      <input type="number" value={t.other_allowances} onChange={(e) => handleValueChange(idx, 'other_allowances', e.target.value)} className="salary-structures-input-9"  />
+                      <input type="number" value={t.other_allowances} onChange={(e) => handleValueChange(t.teacher_id, 'other_allowances', e.target.value)} className="salary-structures-input-9"  />
                     </td>
                     <td className="salary-structures-td-numeric">
-                      <input type="number" value={t.pf_deduction} onChange={(e) => handleValueChange(idx, 'pf_deduction', e.target.value)} className="salary-structures-input-10"  />
+                      <input type="number" value={t.pf_deduction} onChange={(e) => handleValueChange(t.teacher_id, 'pf_deduction', e.target.value)} className="salary-structures-input-10"  />
                     </td>
                     <td className="salary-structures-td-numeric">
-                      <input type="number" value={t.tds_deduction} onChange={(e) => handleValueChange(idx, 'tds_deduction', e.target.value)} className="salary-structures-input-11"  />
+                      <input type="number" value={t.tds_deduction} onChange={(e) => handleValueChange(t.teacher_id, 'tds_deduction', e.target.value)} className="salary-structures-input-11"  />
                     </td>
                     <td className="salary-structures-td-numeric">
-                      <input type="number" value={t.other_deductions} onChange={(e) => handleValueChange(idx, 'other_deductions', e.target.value)} className="salary-structures-input-12"  />
+                      <input type="number" value={t.other_deductions} onChange={(e) => handleValueChange(t.teacher_id, 'other_deductions', e.target.value)} className="salary-structures-input-12"  />
                     </td>
                     <td className="salary-structures-td-date">
-                      <input type="date" value={t.effective_from} onChange={(e) => handleValueChange(idx, 'effective_from', e.target.value)} className="salary-structures-input-13"  />
+                      <input type="date" value={t.effective_from} onChange={(e) => handleValueChange(t.teacher_id, 'effective_from', e.target.value)} className="salary-structures-input-13"  />
                     </td>
                     <td className="salary-structures-td-actions">
                       <div className="salary-structures-actions-wrapper">
@@ -199,11 +237,11 @@ export default function SalaryStructures({ isSubComponent = false }: { isSubComp
                     </td>
                   </tr>
                 ))}
-              {teachers.length === 0 && (
+              {filteredTeachers.length === 0 && (
                 <tr>
                   <td colSpan={10} className="salary-structures-td-15">
                     <Landmark size={32} className="salary-structures-Landmark-16"  />
-                    <p>No teachers registered in the system yet.</p>
+                    <p>{teachers.length === 0 ? "No teachers registered in the system yet." : "No staff match the selected filters."}</p>
                   </td>
                 </tr>
               )}

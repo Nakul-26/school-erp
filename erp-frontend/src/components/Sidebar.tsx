@@ -13,6 +13,19 @@ import {
 import { isAllowedNav } from '../config/roleNav';
 import { useAuth } from '../contexts/AuthContext';
 
+const FEATURES = {
+  homework: true,
+  library: false,
+  transport: false,
+  certificates: false,
+  alumni: false,
+  visitors: false,
+  assets: false,
+  calendar: false,
+  leave: false,
+  approvals: false,
+};
+
 interface SidebarProps {
   onNavigate?: () => void;
 }
@@ -108,7 +121,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const initials = displayName.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
   const roleLabel = roles[0] || 'Staff';
 
-  type Link = { to: string; label: string; icon: any; badge?: number };
+  type Link = { to: string; label: string; icon: any; badge?: number; feature?: keyof typeof FEATURES };
   type Group = { key: string; label: string; links: Link[]; always?: boolean };
 
   const allGroups: Group[] = [
@@ -126,7 +139,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/admissions', label: 'Admissions', icon: UserPlus },
         { to: '/students', label: 'Students', icon: Users },
         { to: '/teachers', label: 'Teachers', icon: UserCheck },
-        { to: '/alumni', label: 'Alumni', icon: GraduationCap },
+        { to: '/alumni', label: 'Alumni', icon: GraduationCap, feature: 'alumni' },
       ],
     },
     {
@@ -139,29 +152,29 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/attendance', label: 'Attendance', icon: ClipboardCheck },
         { to: '/teacher-attendance', label: 'Teacher Attendance', icon: ClipboardList },
         { to: '/exams', label: 'Exams & Results', icon: Award },
-        { to: '/homework', label: 'Homework', icon: Clipboard },
-        { to: '/calendar', label: 'Calendar', icon: Calendar },
+        { to: '/homework', label: 'Homework', icon: Clipboard, feature: 'homework' },
+        { to: '/calendar', label: 'Calendar', icon: Calendar, feature: 'calendar' },
       ],
     },
     {
       key: 'finance', label: 'Finance & Operations',
       links: [
         { to: '/finance', label: 'Finance', icon: IndianRupee },
-        { to: '/library', label: 'Library', icon: Library },
-        { to: '/transport', label: 'Transport', icon: Bus },
-        { to: '/certificates', label: 'Certificates', icon: Award },
-        { to: '/visitors', label: 'Visitors', icon: UserPlus },
-        { to: '/assets', label: 'Assets', icon: Package },
+        { to: '/library', label: 'Library', icon: Library, feature: 'library' },
+        { to: '/transport', label: 'Transport', icon: Bus, feature: 'transport' },
+        { to: '/certificates', label: 'Certificates', icon: Award, feature: 'certificates' },
+        { to: '/visitors', label: 'Visitors', icon: UserPlus, feature: 'visitors' },
+        { to: '/assets', label: 'Assets', icon: Package, feature: 'assets' },
       ],
     },
     {
       key: 'leave', label: 'Leave & Approvals',
       links: [
-        { to: '/leave/my', label: 'My Leave', icon: CalendarDays },
-        { to: '/leave/types', label: 'Leave Types', icon: ClipboardList },
-        { to: '/leave/approvals', label: 'Leave Approvals', icon: CheckSquare },
-        { to: '/student-leaves/approvals', label: 'Student Leave', icon: ClipboardCheck },
-        { to: '/approvals', label: 'Approvals Inbox', icon: CheckSquare },
+        { to: '/leave/my', label: 'My Leave', icon: CalendarDays, feature: 'leave' },
+        { to: '/leave/types', label: 'Leave Types', icon: ClipboardList, feature: 'leave' },
+        { to: '/leave/approvals', label: 'Leave Approvals', icon: CheckSquare, feature: 'leave' },
+        { to: '/student-leaves/approvals', label: 'Student Leave', icon: ClipboardCheck, feature: 'leave' },
+        { to: '/approvals', label: 'Approvals Inbox', icon: CheckSquare, feature: 'approvals' },
       ],
     },
     {
@@ -180,6 +193,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
 
   const groups: Group[] = allGroups.map(group => {
     const filteredLinks = group.links.filter(link => {
+      if (link.feature && !FEATURES[link.feature]) return false;
       if (link.to === '/dashboard') return true;
       const pathOnly = link.to.split('?')[0] || '';
       return isAllowedNav(roles, permissions, pathOnly);

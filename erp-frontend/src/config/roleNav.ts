@@ -43,7 +43,7 @@ export const ROUTE_POLICIES: Record<string, AccessPolicy> = {
   '/attendance': { roles: STAFF_ROLES, permissions: ['attendance.view', 'attendance.mark'] },
   '/teacher-attendance': { roles: ACADEMIC_MANAGER_ROLES, permissions: ['teacher_attendance.view', 'teacher_attendance.manage'] },
   '/exams': { roles: STAFF_ROLES, permissions: ['exams.view', 'exams.manage', 'results.manage'] },
-  '/homework': { roles: ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'Student', 'Parent', 'Guardian'], permissions: ['homework.view', 'homework.manage'] },
+  '/homework': { roles: ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'Student', 'Parent', 'Guardian'], permissions: ['homework.view'] },
 
   '/communication': { roles: PORTAL_ROLES, permissions: ['communication.access'] },
   '/announcements': { roles: PORTAL_ROLES, permissions: ['announcements.view', 'announcements.manage'] },

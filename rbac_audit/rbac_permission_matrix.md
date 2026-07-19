@@ -56,7 +56,7 @@ These modules are implemented and now visible in navigation when permissions all
 | Messaging | Via Communication | Pass | `messaging.access` | Pass: send/history/contact access scoped | Pass | Pass | N/A | Pending | Partial |
 | Reports | Pass | Pass | `reports.access` | Partial: report tabs use specific permissions; export/download needs final audit | Pass | Pass | N/A | Pending | Partial |
 | Exams & Results | Pass | Pass | `exams.view` | Pass: exam/result actions require `exams.manage` / `results.manage` | Pass | Pass | N/A | Pending | Partial |
-| Homework | Pass | Pass | `homework.view` | Partial: create/update/delete/submit actions need final audit | Partial | Partial | N/A | Pending | Partial |
+| Homework | Pass | Pass | `homework.view` | Pass | Pass | Pass | N/A | Pending | Pass |
 | Timetable | Pass | Pass | `timetable.view` | Partial: manage actions need final audit | Partial | Partial | N/A | Pending | Partial |
 | Calendar | Pass | Pass | `calendar.view` | Partial: event manage actions need final audit | Partial | Partial | N/A | Pending | Partial |
 | Teacher Attendance | Pass | Pass | `teacher_attendance.view` | Partial: mark/update/delete actions need final audit | Partial | Partial | N/A | Pending | Partial |
@@ -205,6 +205,23 @@ Applies to Institution Setup, Settings, Grade Settings, Audit Logs, Academic Set
 | Export/reset/danger actions hidden unless explicitly permitted | Pending |
 | Backend rejects unauthorized direct requests | Pending |
 | Audit Logs remain read-only for `audit.view` users | Pending |
+
+### Homework
+
+| Check | Result |
+|---|---:|
+| Sidebar hidden without `homework.view` | Pass |
+| Route blocked without `homework.view` | Pass |
+| Homework list filtered by class/section | Pass |
+| Student sees only assigned homework | Pass |
+| Parent sees only linked child's homework | Pass |
+| Teacher sees only assigned classes/subjects | Pass |
+| Create hidden without `homework.manage` | Pass |
+| Edit hidden without `homework.manage` | Pass |
+| Delete hidden without `homework.manage` | Pass |
+| Publish hidden without `homework.manage` | Pass |
+| Backend rejects unauthorized CRUD | Pass |
+| Backend filters homework by scope | Pass |
 
 ## Route Parameter Checklist
 

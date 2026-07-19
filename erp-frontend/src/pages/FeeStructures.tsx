@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
-import { Plus, Trash2, Calendar, BookOpen, Layers, IndianRupee } from 'lucide-react';
+import { Plus, Trash2, Calendar, BookOpen, Layers, IndianRupee, Search } from 'lucide-react';
 
 interface FeeStructureRow {
   id: string;
@@ -20,6 +20,10 @@ interface FeeStructureRow {
 export default function FeeStructures({ isSubComponent = false }: { isSubComponent?: boolean }) {
   const { user } = useAuth();
   const [structures, setStructures] = useState<FeeStructureRow[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [yearFilter, setYearFilter] = useState('All');
+  const [courseFilter, setCourseFilter] = useState('All');
+  const [typeFilter, setTypeFilter] = useState('All');
   const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +106,20 @@ export default function FeeStructures({ isSubComponent = false }: { isSubCompone
     }
   };
 
+  const uniqueYears = Array.from(new Set(structures.map(s => s.academic_year_name).filter(Boolean)));
+  const uniqueCourses = Array.from(new Set(structures.map(s => s.course_name).filter(Boolean)));
+  const uniqueTypes = Array.from(new Set(structures.map(s => s.fee_type).filter(Boolean)));
+
+  const filteredStructures = structures.filter(s => {
+    const matchesSearch = s.course_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          s.course_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          s.fee_type.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesYear = yearFilter === 'All' || s.academic_year_name === yearFilter;
+    const matchesCourse = courseFilter === 'All' || s.course_name === courseFilter;
+    const matchesType = typeFilter === 'All' || s.fee_type === typeFilter;
+    return matchesSearch && matchesYear && matchesCourse && matchesType;
+  });
+
   const content = (
     <>
       {!isSubComponent && (
@@ -125,11 +143,66 @@ export default function FeeStructures({ isSubComponent = false }: { isSubCompone
         )}
       </div>
 
+      {/* Filters Bar */}
+      <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+        <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+          <Search size={14} />
+          <input
+            type="text"
+            placeholder="Search course or fee head..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <select
+            value={yearFilter}
+            onChange={e => setYearFilter(e.target.value)}
+            className="input"
+            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+          >
+            <option value="All">All Academic Years</option>
+            {uniqueYears.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <select
+            value={courseFilter}
+            onChange={e => setCourseFilter(e.target.value)}
+            className="input"
+            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+          >
+            <option value="All">All Courses</option>
+            {uniqueCourses.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <select
+            value={typeFilter}
+            onChange={e => setTypeFilter(e.target.value)}
+            className="input"
+            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+          >
+            <option value="All">All Fee Heads</option>
+            {uniqueTypes.map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div className="card">
-        {loading ? <p>Loading fee structures...</p> : structures.length === 0 ? (
+        {loading ? <p>Loading fee structures...</p> : filteredStructures.length === 0 ? (
           <div className="fee-structures-div-2">
             <IndianRupee size={32} className="fee-structures-IndianRupee-3"  />
-            <p>No fee structures configured yet. Click "Add Fee Config" to configure one.</p>
+            <p>{structures.length === 0 ? "No fee structures configured yet. Click \"Add Fee Config\" to configure one." : "No fee structures match the selected filters."}</p>
           </div>
         ) : (
           <table className="table">
@@ -144,7 +217,7 @@ export default function FeeStructures({ isSubComponent = false }: { isSubCompone
               </tr>
             </thead>
             <tbody>
-              {structures.map((s) => (
+              {filteredStructures.map((s) => (
                 <tr key={s.id}>
                   <td><strong>{s.academic_year_name}</strong></td>
                   <td>

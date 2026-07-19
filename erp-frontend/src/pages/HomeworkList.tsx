@@ -43,7 +43,9 @@ export default function HomeworkList() {
 
   const user = JSON.parse(localStorage.getItem('erp_user') || '{}');
   const userRoles = user.roles || (user.role ? [user.role] : []);
-  const canManage = userRoles.some((r: string) => ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher'].includes(r));
+  const userPermissions = user.permissions || [];
+  const canManage = userPermissions.includes('homework.manage') || 
+                    userRoles.some((r: string) => ['admin', 'super_admin', 'Principal', 'principal'].includes(r));
 
   useEffect(() => {
     fetchMetadata();

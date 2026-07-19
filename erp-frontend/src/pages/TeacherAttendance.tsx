@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { ArrowLeft, Check, X, Clock, HelpCircle, Calendar, UserCheck } from 'lucide-react';
+import { ArrowLeft, Check, X, Clock, HelpCircle, Calendar, UserCheck, Search } from 'lucide-react';
 
 interface TeacherAttendanceRecord {
   teacher_id: string;
@@ -22,6 +22,9 @@ export default function TeacherAttendance() {
   const [teachers, setTeachers] = useState<TeacherAttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [deptFilter, setDeptFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   useEffect(() => {
     fetchTeacherAttendance();
@@ -79,6 +82,16 @@ export default function TeacherAttendance() {
     }
   };
 
+  const uniqueDepartments = Array.from(new Set(teachers.map(t => t.department).filter(Boolean)));
+
+  const filteredTeachers = teachers.filter(t => {
+    const matchesSearch = `${t.first_name} ${t.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (t.employee_id || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesDept = deptFilter === 'All' || t.department === deptFilter;
+    const matchesStatus = statusFilter === 'All' || t.status === statusFilter;
+    return matchesSearch && matchesDept && matchesStatus;
+  });
+
   return (
     <Layout>
       <PageGuidance
@@ -104,6 +117,48 @@ export default function TeacherAttendance() {
         </div>
       </div>
 
+      {/* Filters Bar */}
+      <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+        <div className="search-container" style={{ flex: 1, maxWidth: '300px' }}>
+          <Search size={14} />
+          <input
+            type="text"
+            placeholder="Search by name or emp ID..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <select
+            value={deptFilter}
+            onChange={e => setDeptFilter(e.target.value)}
+            className="input"
+            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+          >
+            <option value="All">All Departments</option>
+            {uniqueDepartments.map(dept => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="input"
+            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+          >
+            <option value="All">All Statuses</option>
+            <option value="present">Present</option>
+            <option value="absent">Absent</option>
+            <option value="half_day">Half Day</option>
+            <option value="on_leave">On Leave</option>
+          </select>
+        </div>
+      </div>
+
       <div className="card">
         {loading ? <p>Loading staff list...</p> : (
           <table className="table">
@@ -118,7 +173,7 @@ export default function TeacherAttendance() {
               </tr>
             </thead>
             <tbody>
-              {teachers.map((rec) => (
+              {filteredTeachers.map((rec) => (
                 <tr key={rec.teacher_id}>
                   <td><strong>{rec.employee_id}</strong></td>
                   <td>{rec.first_name} {rec.last_name}</td>
@@ -157,11 +212,13 @@ export default function TeacherAttendance() {
                   </td>
                 </tr>
               ))}
-              {teachers.length === 0 && (
+              {filteredTeachers.length === 0 && (
                 <tr>
                   <td colSpan={6} className="teacher-attendance-td-12">
                     <UserCheck size={32} className="teacher-attendance-UserCheck-13"  />
-                    <p className="teacher-attendance-text-14">No teachers registered in the system yet.</p>
+                    <p className="teacher-attendance-text-14">
+                      {teachers.length === 0 ? "No teachers registered in the system yet." : "No teachers match the selected filters."}
+                    </p>
                   </td>
                 </tr>
               )}

@@ -146,7 +146,7 @@ function App() {
 
           {/* ── Exams & Homework ─────────────────────────────────────────── */}
           <Route path="/exams" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Exams /></ProtectedRoute>} />
-          <Route path="/homework" element={<ProtectedRoute><HomeworkList /></ProtectedRoute>} />
+          <Route path="/homework" element={<ProtectedRoute allowedPermissions={['homework.view']}><HomeworkList /></ProtectedRoute>} />
 
           {/* ── Communication ────────────────────────────────────────────── */}
           <Route path="/announcements" element={<Navigate to="/communication?tab=announcements" replace />} />

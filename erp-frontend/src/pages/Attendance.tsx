@@ -7,7 +7,7 @@ import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Plus, Trash2, Calendar, ClipboardCheck, ArrowLeft, 
-  Check, X, AlertTriangle, HelpCircle, Clock, UserCheck
+  Check, X, AlertTriangle, HelpCircle, Clock, UserCheck, Search, Info
 } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
@@ -176,6 +176,19 @@ export default function Attendance() {
   const [tchrRecords, setTchrRecords] = useState<TeacherAttendanceRecord[]>([]);
   const [tchrLoading, setTchrLoading] = useState(true);
   const [tchrSaving, setTchrSaving] = useState(false);
+
+  // --- SEARCH & FILTER STATES ---
+  const [sessionSearchQuery, setSessionSearchQuery] = useState('');
+  const [sessionSectionFilter, setSessionSectionFilter] = useState('All');
+  const [sessionSubjectFilter, setSessionSubjectFilter] = useState('All');
+  const [sessionDateFilter, setSessionDateFilter] = useState('');
+
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [studentStatusFilter, setStudentStatusFilter] = useState('All');
+
+  const [tchrSearchQuery, setTchrSearchQuery] = useState('');
+  const [tchrDeptFilter, setTchrDeptFilter] = useState('All');
+  const [tchrStatusFilter, setTchrStatusFilter] = useState('All');
 
   // --- LIFECYCLE INITIALIZATION ---
   useEffect(() => {
@@ -388,6 +401,17 @@ export default function Attendance() {
   // --- RENDERING TABS ---
   const renderStudentAttendance = () => {
     if (stdView === 'list') {
+      const filteredSessions = stdSessions.filter(sess => {
+        const matchesSearch = (sess.section_name || '').toLowerCase().includes(sessionSearchQuery.toLowerCase()) ||
+                              (sess.subject_name || '').toLowerCase().includes(sessionSearchQuery.toLowerCase()) ||
+                              (sess.subject_code || '').toLowerCase().includes(sessionSearchQuery.toLowerCase()) ||
+                              (sess.teacher_name || '').toLowerCase().includes(sessionSearchQuery.toLowerCase());
+        const matchesSection = sessionSectionFilter === 'All' || sess.section_id === sessionSectionFilter;
+        const matchesSubject = sessionSubjectFilter === 'All' || sess.subject_id === sessionSubjectFilter;
+        const matchesDate = !sessionDateFilter || sess.date === sessionDateFilter;
+        return matchesSearch && matchesSection && matchesSubject && matchesDate;
+      });
+
       return (
         <>
           <div className="page-header attendance-session-list-header">
@@ -398,6 +422,67 @@ export default function Attendance() {
             <button className="btn btn-primary" onClick={() => setStdView('new')}>
               <Plus size={16} /> Start Class Session
             </button>
+          </div>
+
+          {/* Student Sessions Filters Bar */}
+          <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+            <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+              <Search size={14} />
+              <input
+                type="text"
+                placeholder="Search registers..."
+                value={sessionSearchQuery}
+                onChange={e => setSessionSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <select
+                value={sessionSectionFilter}
+                onChange={e => setSessionSectionFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+              >
+                <option value="All">All Sections</option>
+                {stdSections.map(sec => (
+                  <option key={sec.id} value={sec.id}>{sec.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <select
+                value={sessionSubjectFilter}
+                onChange={e => setSessionSubjectFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+              >
+                <option value="All">All Subjects</option>
+                {stdSubjects.map(sub => (
+                  <option key={sub.id} value={sub.id}>{sub.subject_name} ({sub.subject_code})</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Date:</span>
+              <input
+                type="date"
+                value={sessionDateFilter}
+                onChange={e => setSessionDateFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', height: 'auto', minWidth: '150px' }}
+              />
+              {sessionDateFilter && (
+                <button
+                  onClick={() => setSessionDateFilter('')}
+                  className="btn btn-sm btn-outline"
+                  style={{ padding: '0.4rem', height: 'auto' }}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="card">
@@ -413,6 +498,11 @@ export default function Attendance() {
                   onClick: () => setStdView('new')
                 }}
               />
+            ) : filteredSessions.length === 0 ? (
+              <div className="academic-setup-empty-container" style={{ padding: '3rem', textAlign: 'center' }}>
+                <Info size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.75rem' }} />
+                <p style={{ fontWeight: '500' }}>No attendance registers match the selected filters.</p>
+              </div>
             ) : (
               <div className="table-responsive">
                 <table className="table">
@@ -427,7 +517,7 @@ export default function Attendance() {
                     </tr>
                   </thead>
                   <tbody>
-                    {stdSessions.map((sess) => (
+                    {filteredSessions.map((sess) => (
                       <tr key={sess.id} className="attendance-tr-4" onClick={() => handleOpenMarking(sess)}>
                         <td><strong>{sess.date}</strong></td>
                         <td>{sess.section_name || 'Unknown'}</td>
@@ -633,6 +723,14 @@ export default function Attendance() {
     }
 
     if (stdView === 'mark' && selectedSession) {
+      const filteredStudentRecords = studentRecords.filter(rec => {
+        const matchesSearch = `${rec.first_name} ${rec.last_name}`.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+                              (rec.roll_number || '').toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+                              rec.admission_number.toLowerCase().includes(studentSearchQuery.toLowerCase());
+        const matchesStatus = studentStatusFilter === 'All' || rec.status === studentStatusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
       return (
         <>
           <div className="page-header attendance-marking-header">
@@ -652,6 +750,34 @@ export default function Attendance() {
             </button>
           </div>
 
+          {/* Student List Filters Bar */}
+          <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+            <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+              <Search size={14} />
+              <input
+                type="text"
+                placeholder="Search students by name or roll number..."
+                value={studentSearchQuery}
+                onChange={e => setStudentSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <select
+                value={studentStatusFilter}
+                onChange={e => setStudentStatusFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+              >
+                <option value="All">All Statuses</option>
+                <option value="present">Present</option>
+                <option value="absent">Absent</option>
+                <option value="late">Late</option>
+                <option value="excused">Excused</option>
+              </select>
+            </div>
+          </div>
+
           <div className="card">
             {stdLoading ? (
               <SkeletonLoader type="table" rows={6} cols={4} />
@@ -668,7 +794,7 @@ export default function Attendance() {
                       </tr>
                     </thead>
                     <tbody>
-                      {studentRecords.map((rec) => (
+                      {filteredStudentRecords.map((rec) => (
                         <tr key={rec.student_id}>
                           <td><strong>{rec.roll_number || '-'}</strong></td>
                           <td>{rec.first_name} {rec.last_name}</td>
@@ -730,10 +856,10 @@ export default function Attendance() {
                           </td>
                         </tr>
                       ))}
-                      {studentRecords.length === 0 && (
+                      {filteredStudentRecords.length === 0 && (
                         <tr>
                           <td colSpan={4} className="attendance-td-20">
-                            No students found. Add student enrollments first.
+                            {studentRecords.length === 0 ? "No students found. Add student enrollments first." : "No students match the selected filters."}
                           </td>
                         </tr>
                       )}
@@ -742,7 +868,7 @@ export default function Attendance() {
                 </div>
 
                 <div className="attendance-mobile-cards">
-                  {studentRecords.map((rec) => (
+                  {filteredStudentRecords.map((rec) => (
                     <div key={rec.student_id} className="card attendance-mobile-card">
                       <div className="attendance-row-22">
                         <div>
@@ -813,8 +939,8 @@ export default function Attendance() {
                       </div>
                     </div>
                   ))}
-                  {studentRecords.length === 0 && (
-                    <p className="attendance-text-28">No students found.</p>
+                  {filteredStudentRecords.length === 0 && (
+                    <p className="attendance-text-28">{studentRecords.length === 0 ? "No students found." : "No students match the selected filters."}</p>
                   )}
                 </div>
               </>
@@ -826,6 +952,16 @@ export default function Attendance() {
   };
 
   const renderTeacherAttendance = () => {
+    const uniqueDepartments = Array.from(new Set(tchrRecords.map(t => t.department).filter(Boolean)));
+
+    const filteredTchrRecords = tchrRecords.filter(t => {
+      const matchesSearch = `${t.first_name} ${t.last_name}`.toLowerCase().includes(tchrSearchQuery.toLowerCase()) ||
+                            (t.employee_id || '').toLowerCase().includes(tchrSearchQuery.toLowerCase());
+      const matchesDept = tchrDeptFilter === 'All' || t.department === tchrDeptFilter;
+      const matchesStatus = tchrStatusFilter === 'All' || t.status === tchrStatusFilter;
+      return matchesSearch && matchesDept && matchesStatus;
+    });
+
     return (
       <>
         <div className="page-header teacher-attendance-header">
@@ -839,6 +975,48 @@ export default function Attendance() {
             <button className="btn btn-primary" onClick={handleSaveTeacherAttendance} disabled={tchrSaving || tchrLoading}>
               {tchrSaving ? 'Saving...' : 'Save Registers'}
             </button>
+          </div>
+        </div>
+
+        {/* Teacher Filters Bar */}
+        <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+          <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+            <Search size={14} />
+            <input
+              type="text"
+              placeholder="Search by name or emp ID..."
+              value={tchrSearchQuery}
+              onChange={e => setTchrSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <select
+              value={tchrDeptFilter}
+              onChange={e => setTchrDeptFilter(e.target.value)}
+              className="input"
+              style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+            >
+              <option value="All">All Departments</option>
+              {uniqueDepartments.map(dept => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={tchrStatusFilter}
+              onChange={e => setTchrStatusFilter(e.target.value)}
+              className="input"
+              style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+            >
+              <option value="All">All Statuses</option>
+              <option value="present">Present</option>
+              <option value="absent">Absent</option>
+              <option value="half_day">Half Day</option>
+              <option value="on_leave">On Leave</option>
+            </select>
           </div>
         </div>
 
@@ -859,7 +1037,7 @@ export default function Attendance() {
                     </tr>
                   </thead>
                   <tbody>
-                    {tchrRecords.map((t) => (
+                    {filteredTchrRecords.map((t) => (
                       <tr key={t.teacher_id}>
                         <td><strong>{t.employee_id}</strong></td>
                         <td>{t.first_name} {t.last_name}</td>
@@ -919,11 +1097,11 @@ export default function Attendance() {
                         </td>
                       </tr>
                     ))}
-                    {tchrRecords.length === 0 && (
+                    {filteredTchrRecords.length === 0 && (
                       <tr>
                         <td colSpan={5} className="attendance-td-37">
                           <UserCheck size={32} className="attendance-UserCheck-38"  />
-                          No active teachers found in the directory.
+                          {tchrRecords.length === 0 ? "No active teachers found in the directory." : "No teachers match the selected filters."}
                         </td>
                       </tr>
                     )}
@@ -932,7 +1110,7 @@ export default function Attendance() {
               </div>
 
               <div className="attendance-mobile-cards">
-                {tchrRecords.map((t) => (
+                {filteredTchrRecords.map((t) => (
                   <div key={t.teacher_id} className="card attendance-mobile-card">
                     <div className="attendance-row-40">
                       <div>
@@ -998,8 +1176,8 @@ export default function Attendance() {
                     </div>
                   </div>
                 ))}
-                {tchrRecords.length === 0 && (
-                  <p className="attendance-text-47">No teachers found.</p>
+                {filteredTchrRecords.length === 0 && (
+                  <p className="attendance-text-47">{tchrRecords.length === 0 ? "No teachers found." : "No teachers match the selected filters."}</p>
                 )}
               </div>
             </>

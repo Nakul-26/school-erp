@@ -53,6 +53,16 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Search & Filter state variables
+  const [courseFilter, setCourseFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+
+  const [ledgerSearchQuery, setLedgerSearchQuery] = useState('');
+  const [ledgerStatusFilter, setLedgerStatusFilter] = useState('All');
+
+  const [paymentSearchQuery, setPaymentSearchQuery] = useState('');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('All');
+
   // Selected student details
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [ledger, setLedger] = useState<StudentFeeRecord[]>([]);
@@ -471,6 +481,28 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
     }
   };
 
+  const uniqueCourses = Array.from(new Set(students.map(s => s.course_name).filter(Boolean)));
+  
+  const filteredStudents = students.filter(student => {
+    const matchesCourse = courseFilter === 'All' || student.course_name === courseFilter;
+    const matchesStatus = statusFilter === 'All' || student.status === statusFilter;
+    return matchesCourse && matchesStatus;
+  });
+
+  const filteredLedger = ledger.filter(item => {
+    const matchesSearch = item.fee_type.toLowerCase().includes(ledgerSearchQuery.toLowerCase());
+    const matchesStatus = ledgerStatusFilter === 'All' || item.status === ledgerStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredPayments = payments.filter(p => {
+    const matchesSearch = p.fee_type.toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
+                          (p.remarks || '').toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
+                          (p.receipt_number || '').toLowerCase().includes(paymentSearchQuery.toLowerCase());
+    const matchesMethod = paymentMethodFilter === 'All' || p.payment_method === paymentMethodFilter;
+    return matchesSearch && matchesMethod;
+  });
+
   const content = (
     <>
       {!isSubComponent && (
@@ -492,8 +524,8 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
           </div>
 
           <div className="card student-fees-card">
-            <form onSubmit={handleSearchSubmit} className="student-fees-row-3">
-              <div className="search-container student-fees-search-container">
+            <form onSubmit={handleSearchSubmit} className="student-fees-row-3" style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="search-container student-fees-search-container" style={{ flex: 1, minWidth: '250px' }}>
                 <Search size={18} />
                 <input
                   type="text"
@@ -502,14 +534,40 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <button type="submit" className="btn btn-primary">Search</button>
+              <button type="submit" className="btn btn-primary" style={{ height: 'auto', padding: '0.55rem 1.25rem' }}>Search</button>
+
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <select
+                  value={courseFilter}
+                  onChange={e => setCourseFilter(e.target.value)}
+                  className="input"
+                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+                >
+                  <option value="All">All Courses</option>
+                  {uniqueCourses.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  className="input"
+                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="PAID">Paid</option>
+                  <option value="PARTIALLY_PAID">Partially Paid</option>
+                  <option value="UNPAID">Unpaid</option>
+                </select>
+              </div>
             </form>
           </div>
 
           <div className="card">
-            {loading ? <p>Loading student fee summaries...</p> : students.length === 0 ? (
+            {loading ? <p>Loading student fee summaries...</p> : filteredStudents.length === 0 ? (
               <p className="student-fees-text-5">
-                No student accounts found. Try modifying your search query.
+                {students.length === 0 ? "No student accounts found. Try modifying your search query." : "No student accounts match the selected filters."}
               </p>
             ) : (
               <table className="table">
@@ -527,7 +585,7 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map((student) => {
+                  {filteredStudents.map((student) => {
                     const outstanding = student.total_amount - student.paid_amount;
                     return (
                       <tr key={student.student_id} className="student-fees-tr-7" onClick={() => handleOpenLedger(student)}>
@@ -590,10 +648,36 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
             {/* Outstanding Items Card */}
             <div className="card">
               <h3 className="student-fees-title-14">Outstanding Liabilities</h3>
-              {ledgerLoading ? <p>Loading ledger...</p> : ledger.length === 0 ? (
+              
+              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div className="search-container" style={{ flex: 1, maxWidth: '200px' }}>
+                  <Search size={14} />
+                  <input
+                    type="text"
+                    placeholder="Search category..."
+                    value={ledgerSearchQuery}
+                    onChange={e => setLedgerSearchQuery(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <select
+                    value={ledgerStatusFilter}
+                    onChange={e => setLedgerStatusFilter(e.target.value)}
+                    className="input"
+                    style={{ padding: '0.35rem 0.55rem', fontSize: '0.8rem', cursor: 'pointer', height: 'auto', minWidth: '125px' }}
+                  >
+                    <option value="All">All Statuses</option>
+                    <option value="PAID">Paid</option>
+                    <option value="PARTIALLY_PAID">Partial</option>
+                    <option value="UNPAID">Unpaid</option>
+                  </select>
+                </div>
+              </div>
+
+              {ledgerLoading ? <p>Loading ledger...</p> : filteredLedger.length === 0 ? (
                 <div className="student-fees-div-15">
                   <IndianRupee size={24} className="student-fees-IndianRupee-16"  />
-                  <p>No billing records found in this student's ledger. Click "Generate Ledger" to apply current fee structures.</p>
+                  <p>{ledger.length === 0 ? "No billing records found in this student's ledger. Click \"Generate Ledger\" to apply current fee structures." : "No ledger records match the selected filters."}</p>
                 </div>
               ) : (
                 <table className="table student-fees-table">
@@ -608,7 +692,7 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
                     </tr>
                   </thead>
                   <tbody>
-                    {ledger.map((item) => {
+                    {filteredLedger.map((item) => {
                       const outstanding = item.total_amount - item.paid_amount;
                       return (
                         <tr key={item.id}>
@@ -640,10 +724,37 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
             {/* Payment History Card */}
             <div className="card">
               <h3 className="student-fees-title-23">Transaction History</h3>
-              {ledgerLoading ? <p>Loading transaction logs...</p> : payments.length === 0 ? (
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div className="search-container" style={{ flex: 1, maxWidth: '200px' }}>
+                  <Search size={14} />
+                  <input
+                    type="text"
+                    placeholder="Search txn category or ref..."
+                    value={paymentSearchQuery}
+                    onChange={e => setPaymentSearchQuery(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <select
+                    value={paymentMethodFilter}
+                    onChange={e => setPaymentMethodFilter(e.target.value)}
+                    className="input"
+                    style={{ padding: '0.35rem 0.55rem', fontSize: '0.8rem', cursor: 'pointer', height: 'auto', minWidth: '125px' }}
+                  >
+                    <option value="All">All Methods</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Cheque">Cheque</option>
+                  </select>
+                </div>
+              </div>
+
+              {ledgerLoading ? <p>Loading transaction logs...</p> : filteredPayments.length === 0 ? (
                 <div className="student-fees-div-24">
                   <Receipt size={24} className="student-fees-Receipt-25"  />
-                  <p>No payments recorded for this student account yet.</p>
+                  <p>{payments.length === 0 ? "No payments recorded for this student account yet." : "No transactions match the selected filters."}</p>
                 </div>
               ) : (
                 <table className="table student-fees-table">
@@ -657,7 +768,7 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
                     </tr>
                   </thead>
                   <tbody>
-                    {payments.map((p) => (
+                    {filteredPayments.map((p) => (
                       <tr key={p.id}>
                         <td>
                           {p.payment_date}

@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   Layers, ClipboardList, CalendarDays, Plus, Edit2, Trash2,
   CheckCircle2, AlertTriangle, Play, HelpCircle, User,
-  Check, X, RefreshCw, ChevronDown, ChevronUp, Info, BookOpen
+  Check, X, RefreshCw, ChevronDown, ChevronUp, Info, BookOpen, Search
 } from 'lucide-react';
 
 interface AcademicYear {
@@ -98,6 +98,17 @@ export default function AcademicSetup() {
   // Currently inspected teacher workload details
   const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
 
+  // Search & Filter States
+  const [curriculumSearchQuery, setCurriculumSearchQuery] = useState('');
+  const [assignmentClassSearch, setAssignmentClassSearch] = useState('');
+  const [assignmentSubjectSearch, setAssignmentSubjectSearch] = useState('');
+  const [assignmentTeacherSearch, setAssignmentTeacherSearch] = useState('');
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [selectedDeptId, setSelectedDeptId] = useState<string>('All');
+  const [assignmentStatusFilter, setAssignmentStatusFilter] = useState<string>('All');
+  const [teacherLoadFilter, setTeacherLoadFilter] = useState<string>('All');
+  const [assignmentCourseFilter, setAssignmentCourseFilter] = useState<string>('All');
+
   const handleTabChange = (tab: string) => {
     setSearchParams({ tab });
   };
@@ -109,12 +120,13 @@ export default function AcademicSetup() {
   const fetchCoreData = async () => {
     setLoading(true);
     try {
-      const [yearsData, coursesData, sectionsData, subjectsData, teachersData] = await Promise.all([
+      const [yearsData, coursesData, sectionsData, subjectsData, teachersData, deptsData] = await Promise.all([
         api.get('/academic-years').catch(() => []),
         api.get('/programs').catch(() => []), // programs map to courses in DB
         api.get('/sections').catch(() => []),
         api.get('/subjects').catch(() => []),
-        api.get('/teachers').catch(() => [])
+        api.get('/teachers').catch(() => []),
+        api.get('/departments').catch(() => [])
       ]);
 
       setAcademicYears(yearsData || []);
@@ -122,6 +134,7 @@ export default function AcademicSetup() {
       setSections(sectionsData || []);
       setSubjects(subjectsData || []);
       setTeachers(teachersData || []);
+      setDepartments(deptsData || []);
 
       // Set default selected year (current or first)
       const currentYear = yearsData?.find((y: any) => y.is_current === 1) || yearsData?.[0];
@@ -428,143 +441,187 @@ export default function AcademicSetup() {
         ) : (
           <div className="setup-tab-content">
             {/* ──── TAB 1: CURRICULUM & PERIODS ──── */}
-            {activeTab === 'curriculum' && (
-              <div className="curriculum-container">
-                <div className="academic-setup-section-header">
-                  <div className="academic-setup-section-header-left">
-                    <h3>Curriculum Definition</h3>
-                    <p>
-                      Configure standard classes (Grades) and set how many periods/week each subject runs.
-                    </p>
+            {activeTab === 'curriculum' && (() => {
+              const filteredCourses = courses.filter(course => {
+                const matchDept = selectedDeptId === 'All' || course.department_id === selectedDeptId;
+                const courseSubjects = subjects.filter(s => s.course_id === course.id);
+                const matchesCourse = course.name.toLowerCase().includes(curriculumSearchQuery.toLowerCase()) ||
+                                      course.course_code.toLowerCase().includes(curriculumSearchQuery.toLowerCase());
+                const matchesSubject = courseSubjects.some(sub => 
+                  sub.subject_name.toLowerCase().includes(curriculumSearchQuery.toLowerCase()) ||
+                  sub.subject_code.toLowerCase().includes(curriculumSearchQuery.toLowerCase())
+                );
+                return matchDept && (matchesCourse || matchesSubject);
+              });
+
+              return (
+                <div className="curriculum-container">
+                  <div className="academic-setup-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div className="academic-setup-section-header-left">
+                      <h3>Curriculum Definition</h3>
+                      <p>
+                        Configure standard classes (Grades) and set how many periods/week each subject runs.
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <select
+                        value={selectedDeptId}
+                        onChange={e => setSelectedDeptId(e.target.value)}
+                        className="input"
+                        style={{ padding: '0.35rem 0.65rem', fontSize: '0.85rem', minWidth: '150px', cursor: 'pointer', height: 'auto' }}
+                      >
+                        <option value="All">All Departments</option>
+                        {departments.map(d => (
+                          <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
+                      </select>
+
+                      <div className="search-container">
+                        <Search size={14} />
+                        <input
+                          type="text"
+                          placeholder="Search grades or subjects..."
+                          value={curriculumSearchQuery}
+                          onChange={e => setCurriculumSearchQuery(e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="academic-setup-list-layout">
-                  {courses.map(course => {
-                    const courseSubjects = subjects.filter(s => s.course_id === course.id);
-                    const isExpanded = !!expandedCourses[course.id];
+                  <div className="academic-setup-list-layout">
+                    {filteredCourses.length === 0 ? (
+                      <div className="academic-setup-empty-container" style={{ padding: '3rem', textAlign: 'center', background: 'var(--bg-card)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)' }}>
+                        <BookOpen size={32} style={{ color: 'var(--text-muted)', marginBottom: '0.75rem' }} />
+                        <p style={{ fontWeight: '500', color: 'var(--text-secondary)' }}>No grades or subjects found matching "{curriculumSearchQuery}"</p>
+                      </div>
+                    ) : (
+                      filteredCourses.map(course => {
+                        const courseSubjects = subjects.filter(s => s.course_id === course.id);
+                        const isExpanded = !!expandedCourses[course.id] || curriculumSearchQuery.trim() !== '';
 
-                    return (
-                      <div key={course.id} className="academic-setup-course-accordion">
-                        <div
-                          onClick={() => handleToggleCourse(course.id)}
-                          className="academic-setup-accordion-header"
-                        >
-                          <div className="academic-setup-accordion-title-container">
-                            <div className="academic-setup-accordion-dot"></div>
-                            <span className="academic-setup-accordion-title">
-                              {course.name} <span className="academic-setup-accordion-subtitle">({course.course_code})</span>
-                            </span>
-                            <span className="badge badge-secondary academic-setup-accordion-badge">
-                              {courseSubjects.length} subjects
-                            </span>
-                          </div>
-                          {isExpanded ? <ChevronUp size={16} color="var(--text-secondary)" /> : <ChevronDown size={16} color="var(--text-secondary)" />}
-                        </div>
-
-                        {isExpanded && (
-                          <div className="academic-setup-accordion-content">
-                            {courseSubjects.length === 0 ? (
-                              <div className="academic-setup-empty-container">
-                                <p>No subjects added to this grade yet.</p>
-                                <button
-                                  type="button"
-                                  onClick={() => handleAddSubjectClick(course.id)}
-                                  className="btn btn-secondary academic-setup-empty-action-btn"
-                                >
-                                  <Plus size={14} /> Add First Subject
-                                </button>
+                        return (
+                          <div key={course.id} className="academic-setup-course-accordion">
+                            <div
+                              onClick={() => handleToggleCourse(course.id)}
+                              className="academic-setup-accordion-header"
+                            >
+                              <div className="academic-setup-accordion-title-container">
+                                <div className="academic-setup-accordion-dot"></div>
+                                <span className="academic-setup-accordion-title">
+                                  {course.name} <span className="academic-setup-accordion-subtitle">({course.course_code})</span>
+                                </span>
+                                <span className="badge badge-secondary academic-setup-accordion-badge">
+                                  {courseSubjects.length} subjects
+                                </span>
                               </div>
-                            ) : (
-                              <div>
-                                <table className="academic-setup-table">
-                                  <thead>
-                                    <tr>
-                                      <th>Subject</th>
-                                      <th>Code</th>
-                                      <th style={{ textAlign: 'center', width: '150px' }}>Weekly Periods</th>
-                                      <th style={{ textAlign: 'right', width: '120px' }}>Actions</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {courseSubjects.map(sub => (
-                                      <tr key={sub.id}>
-                                        <td style={{ fontWeight: '500', color: 'var(--text-main)' }}>{sub.subject_name}</td>
-                                        <td style={{ color: 'var(--text-secondary)' }}>{sub.subject_code}</td>
-                                        <td style={{ textAlign: 'center' }}>
-                                          <div className="academic-setup-periods-badge">
-                                            <button
-                                              type="button"
-                                              onClick={async () => {
-                                                if (sub.weekly_hours > 1) {
-                                                  await api.put(`/subjects/${sub.id}`, { ...sub, weekly_hours: sub.weekly_hours - 1 });
-                                                  const updatedSubs = await api.get('/subjects');
-                                                  setSubjects(updatedSubs);
-                                                }
-                                              }}
-                                              className="academic-setup-periods-btn"
-                                            >
-                                              -
-                                            </button>
-                                            <span className="academic-setup-periods-val">{sub.weekly_hours}</span>
-                                            <button
-                                              type="button"
-                                              onClick={async () => {
-                                                await api.put(`/subjects/${sub.id}`, { ...sub, weekly_hours: sub.weekly_hours + 1 });
-                                                const updatedSubs = await api.get('/subjects');
-                                                setSubjects(updatedSubs);
-                                              }}
-                                              className="academic-setup-periods-btn"
-                                            >
-                                              +
-                                            </button>
-                                          </div>
-                                        </td>
-                                        <td style={{ textAlign: 'right' }}>
-                                          <div className="academic-setup-actions-row">
-                                            <button
-                                              type="button"
-                                              onClick={() => handleEditSubjectClick(sub)}
-                                              className="btn-icon"
-                                              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--text-secondary)' }}
-                                              title="Edit Subject"
-                                            >
-                                              <Edit2 size={13} />
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={() => handleDeleteSubject(sub.id)}
-                                              className="btn-icon"
-                                              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--danger)' }}
-                                              title="Delete Subject"
-                                            >
-                                              <Trash2 size={13} />
-                                            </button>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                                <div className="academic-setup-footer-row">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleAddSubjectClick(course.id)}
-                                    className="btn btn-primary"
-                                  >
-                                    <Plus size={14} /> Add Subject to {course.name}
-                                  </button>
-                                </div>
+                              {isExpanded ? <ChevronUp size={16} color="var(--text-secondary)" /> : <ChevronDown size={16} color="var(--text-secondary)" />}
+                            </div>
+
+                            {isExpanded && (
+                              <div className="academic-setup-accordion-content">
+                                {courseSubjects.length === 0 ? (
+                                  <div className="academic-setup-empty-container">
+                                    <p>No subjects added to this grade yet.</p>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAddSubjectClick(course.id)}
+                                      className="btn btn-secondary academic-setup-empty-action-btn"
+                                    >
+                                      <Plus size={14} /> Add First Subject
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <table className="academic-setup-table">
+                                      <thead>
+                                        <tr>
+                                          <th>Subject</th>
+                                          <th>Code</th>
+                                          <th style={{ textAlign: 'center', width: '150px' }}>Weekly Periods</th>
+                                          <th style={{ textAlign: 'right', width: '120px' }}>Actions</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {courseSubjects.map(sub => (
+                                          <tr key={sub.id}>
+                                            <td style={{ fontWeight: '500', color: 'var(--text-main)' }}>{sub.subject_name}</td>
+                                            <td style={{ color: 'var(--text-secondary)' }}>{sub.subject_code}</td>
+                                            <td style={{ textAlign: 'center' }}>
+                                              <div className="academic-setup-periods-badge">
+                                                <button
+                                                  type="button"
+                                                  onClick={async () => {
+                                                    if (sub.weekly_hours > 1) {
+                                                      await api.put(`/subjects/${sub.id}`, { ...sub, weekly_hours: sub.weekly_hours - 1 });
+                                                      const updatedSubs = await api.get('/subjects');
+                                                      setSubjects(updatedSubs);
+                                                    }
+                                                  }}
+                                                  className="academic-setup-periods-btn"
+                                                >
+                                                  -
+                                                </button>
+                                                <span className="academic-setup-periods-val">{sub.weekly_hours}</span>
+                                                <button
+                                                  type="button"
+                                                  onClick={async () => {
+                                                    await api.put(`/subjects/${sub.id}`, { ...sub, weekly_hours: sub.weekly_hours + 1 });
+                                                    const updatedSubs = await api.get('/subjects');
+                                                    setSubjects(updatedSubs);
+                                                  }}
+                                                  className="academic-setup-periods-btn"
+                                                >
+                                                  +
+                                                </button>
+                                              </div>
+                                            </td>
+                                            <td style={{ textAlign: 'right' }}>
+                                              <div className="academic-setup-actions-row">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleEditSubjectClick(sub)}
+                                                  className="btn-icon"
+                                                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--text-secondary)' }}
+                                                  title="Edit Subject"
+                                                >
+                                                  <Edit2 size={13} />
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleDeleteSubject(sub.id)}
+                                                  className="btn-icon"
+                                                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--danger)' }}
+                                                  title="Delete Subject"
+                                                >
+                                                  <Trash2 size={13} />
+                                                </button>
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                    <div className="academic-setup-footer-row">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAddSubjectClick(course.id)}
+                                        className="btn btn-primary"
+                                      >
+                                        <Plus size={14} /> Add Subject to {course.name}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* ──── TAB 2: SUBJECT ASSIGNMENTS ──── */}
             {activeTab === 'assignments' && (
@@ -599,6 +656,22 @@ export default function AcademicSetup() {
                 {selectedSectionId ? (() => {
                   const section = sections.find(s => s.id === selectedSectionId);
                   const sectionSubjects = subjects.filter(s => s.course_id === section?.course_id);
+                  const filteredSectionSubjects = sectionSubjects.filter(sub => {
+                    const alloc = allocations.find(
+                      a => a.section_id === selectedSectionId && a.subject_id === sub.id && a.academic_year_id === selectedYearId
+                    );
+                    const assignedTeacherId = alloc ? alloc.teacher_id : '';
+                    
+                    if (assignmentStatusFilter === 'All') return true;
+                    if (assignmentStatusFilter === 'Unassigned') return !assignedTeacherId;
+                    if (assignmentStatusFilter === 'Assigned') return !!assignedTeacherId;
+                    if (assignmentStatusFilter === 'Overloaded') {
+                      if (!assignedTeacherId) return false;
+                      const load = getTeacherLoadInfo(assignedTeacherId);
+                      return load.hours > 24;
+                    }
+                    return true;
+                  });
 
                   if (sectionSubjects.length === 0) {
                     return (
@@ -615,20 +688,43 @@ export default function AcademicSetup() {
                   return (
                     <div style={{ display: 'grid', gridTemplateColumns: selectedTeacherId ? '1fr 320px' : '1fr', gap: '1.5rem', alignItems: 'start' }}>
                       <div>
-                        <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-main)', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)', marginBottom: '0.75rem' }}>
-                          Subject Assignments for Section {section?.name}
-                        </h4>
-                        <table className="academic-setup-table">
-                          <thead>
-                            <tr>
-                              <th>Subject</th>
-                              <th style={{ textAlign: 'center', width: '80px' }}>Periods</th>
-                              <th style={{ width: '260px' }}>Assigned Teacher</th>
-                              <th style={{ textAlign: 'right', width: '100px' }}>Load Info</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {sectionSubjects.map(sub => {
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>
+                            Subject Assignments for Section {section?.name}
+                          </h4>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Filter Assignment:</span>
+                            <select
+                              value={assignmentStatusFilter}
+                              onChange={e => setAssignmentStatusFilter(e.target.value)}
+                              className="input"
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', width: 'auto', height: 'auto', minWidth: '140px', cursor: 'pointer' }}
+                            >
+                              <option value="All">All Subjects</option>
+                              <option value="Unassigned">Unassigned</option>
+                              <option value="Assigned">Assigned</option>
+                              <option value="Overloaded">Overloaded Teachers</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {filteredSectionSubjects.length === 0 ? (
+                          <div className="academic-setup-empty-container" style={{ padding: '2rem', textAlign: 'center' }}>
+                            <Info size={24} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>No subjects match the selected assignment filter.</p>
+                          </div>
+                        ) : (
+                          <table className="academic-setup-table">
+                            <thead>
+                              <tr>
+                                <th>Subject</th>
+                                <th style={{ textAlign: 'center', width: '80px' }}>Periods</th>
+                                <th style={{ width: '260px' }}>Assigned Teacher</th>
+                                <th style={{ textAlign: 'right', width: '100px' }}>Load Info</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredSectionSubjects.map(sub => {
                               const alloc = allocations.find(
                                 a => a.section_id === selectedSectionId && a.subject_id === sub.id && a.academic_year_id === selectedYearId
                               );
@@ -683,6 +779,7 @@ export default function AcademicSetup() {
                             })}
                           </tbody>
                         </table>
+                        )}
                       </div>
 
                       {/* Teacher Load Panel */}
@@ -789,101 +886,201 @@ export default function AcademicSetup() {
                         </button>
                       </div>
 
+                      {/* Search inputs for advanced view modes */}
+                      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+                        {advancedViewMode === 'class' && (
+                          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <select
+                              value={assignmentCourseFilter}
+                              onChange={e => setAssignmentCourseFilter(e.target.value)}
+                              className="input"
+                              style={{ padding: '0.35rem 0.65rem', fontSize: '0.85rem', minWidth: '150px', cursor: 'pointer', height: 'auto' }}
+                            >
+                              <option value="All">All Grades</option>
+                              {courses.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </select>
+
+                            <div className="search-container">
+                              <Search size={14} />
+                              <input
+                                type="text"
+                                placeholder="Search class sections..."
+                                value={assignmentClassSearch}
+                                onChange={e => setAssignmentClassSearch(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {advancedViewMode === 'subject' && (
+                          <div className="search-container">
+                            <Search size={14} />
+                            <input
+                              type="text"
+                              placeholder="Search subjects..."
+                              value={assignmentSubjectSearch}
+                              onChange={e => setAssignmentSubjectSearch(e.target.value)}
+                            />
+                          </div>
+                        )}
+                        {advancedViewMode === 'teacher' && (
+                          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <select
+                              value={teacherLoadFilter}
+                              onChange={e => setTeacherLoadFilter(e.target.value)}
+                              className="input"
+                              style={{ padding: '0.35rem 0.65rem', fontSize: '0.85rem', minWidth: '155px', cursor: 'pointer', height: 'auto' }}
+                            >
+                              <option value="All">All Workloads</option>
+                              <option value="Available">Available (load &gt; 0)</option>
+                              <option value="Overloaded">Overloaded (&gt; 24)</option>
+                              <option value="Unassigned">Unassigned (0 periods)</option>
+                            </select>
+
+                            <div className="search-container">
+                              <Search size={14} />
+                              <input
+                                type="text"
+                                placeholder="Search teachers..."
+                                value={assignmentTeacherSearch}
+                                onChange={e => setAssignmentTeacherSearch(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       {/* 1. BY CLASS VIEW */}
-                      {advancedViewMode === 'class' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                          {sections
-                            .filter(s => s.academic_year_id === selectedYearId)
-                            .map(sec => {
-                              const secAllocations = allocations.filter(a => a.section_id === sec.id && a.academic_year_id === selectedYearId);
-                              return (
-                                <div key={sec.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.75rem 1rem' }}>
-                                  <h5 style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Section {sec.name}</h5>
-                                  {secAllocations.length === 0 ? (
-                                    <p style={{ fontStyle: 'italic', fontSize: '0.8rem', color: 'var(--text-muted)' }}>No assignments made yet.</p>
-                                  ) : (
+                      {advancedViewMode === 'class' && (() => {
+                        const filteredSections = sections.filter(
+                          s => s.academic_year_id === selectedYearId &&
+                          s.name.toLowerCase().includes(assignmentClassSearch.toLowerCase()) &&
+                          (assignmentCourseFilter === 'All' || s.course_id === assignmentCourseFilter)
+                        );
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {filteredSections.length === 0 ? (
+                              <p style={{ fontStyle: 'italic', fontSize: '0.85rem', color: 'var(--text-muted)' }}>No class sections match your search.</p>
+                            ) : (
+                              filteredSections.map(sec => {
+                                const secAllocations = allocations.filter(a => a.section_id === sec.id && a.academic_year_id === selectedYearId);
+                                return (
+                                  <div key={sec.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.75rem 1rem' }}>
+                                    <h5 style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Section {sec.name}</h5>
+                                    {secAllocations.length === 0 ? (
+                                      <p style={{ fontStyle: 'italic', fontSize: '0.8rem', color: 'var(--text-muted)' }}>No assignments made yet.</p>
+                                    ) : (
+                                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                                        {secAllocations.map(a => {
+                                          const sub = subjects.find(s => s.id === a.subject_id);
+                                          const teach = teachers.find(t => t.id === a.teacher_id);
+                                          return (
+                                            <div key={a.id} style={{ background: 'var(--bg-subtle)', padding: '0.5rem', borderRadius: 'var(--radius-xs)', fontSize: '0.8rem' }}>
+                                              <span style={{ fontWeight: '600' }}>{sub?.subject_name}:</span> {teach ? `${teach.first_name} ${teach.last_name}` : 'Unassigned'}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* 2. BY SUBJECT VIEW */}
+                      {advancedViewMode === 'subject' && (() => {
+                        const filteredSubjects = subjects.filter(
+                          sub => sub.subject_name.toLowerCase().includes(assignmentSubjectSearch.toLowerCase()) ||
+                          sub.subject_code.toLowerCase().includes(assignmentSubjectSearch.toLowerCase())
+                        );
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {filteredSubjects.length === 0 ? (
+                              <p style={{ fontStyle: 'italic', fontSize: '0.85rem', color: 'var(--text-muted)' }}>No subjects match your search.</p>
+                            ) : (
+                              filteredSubjects.map(sub => {
+                                const subAllocations = allocations.filter(a => a.subject_id === sub.id && a.academic_year_id === selectedYearId);
+                                if (subAllocations.length === 0) return null; // only show subjects with assignments
+                                return (
+                                  <div key={sub.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.75rem 1rem' }}>
+                                    <h5 style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{sub.subject_name} ({sub.subject_code})</h5>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                                      {secAllocations.map(a => {
-                                        const sub = subjects.find(s => s.id === a.subject_id);
+                                      {subAllocations.map(a => {
+                                        const sec = sections.find(s => s.id === a.section_id);
                                         const teach = teachers.find(t => t.id === a.teacher_id);
                                         return (
                                           <div key={a.id} style={{ background: 'var(--bg-subtle)', padding: '0.5rem', borderRadius: 'var(--radius-xs)', fontSize: '0.8rem' }}>
-                                            <span style={{ fontWeight: '600' }}>{sub?.subject_name}:</span> {teach ? `${teach.first_name} ${teach.last_name}` : 'Unassigned'}
+                                            <span style={{ fontWeight: '600' }}>Section {sec?.name}:</span> {teach ? `${teach.first_name} ${teach.last_name}` : 'Unassigned'}
                                           </div>
                                         );
                                       })}
                                     </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                        </div>
-                      )}
-
-                      {/* 2. BY SUBJECT VIEW */}
-                      {advancedViewMode === 'subject' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                          {subjects.map(sub => {
-                            const subAllocations = allocations.filter(a => a.subject_id === sub.id && a.academic_year_id === selectedYearId);
-                            if (subAllocations.length === 0) return null; // only show subjects with assignments
-                            return (
-                              <div key={sub.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.75rem 1rem' }}>
-                                <h5 style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{sub.subject_name} ({sub.subject_code})</h5>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                                  {subAllocations.map(a => {
-                                    const sec = sections.find(s => s.id === a.section_id);
-                                    const teach = teachers.find(t => t.id === a.teacher_id);
-                                    return (
-                                      <div key={a.id} style={{ background: 'var(--bg-subtle)', padding: '0.5rem', borderRadius: 'var(--radius-xs)', fontSize: '0.8rem' }}>
-                                        <span style={{ fontWeight: '600' }}>Section {sec?.name}:</span> {teach ? `${teach.first_name} ${teach.last_name}` : 'Unassigned'}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          }).filter(Boolean)}
-                        </div>
-                      )}
+                                  </div>
+                                );
+                              }).filter(Boolean)
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* 3. BY TEACHER VIEW */}
-                      {advancedViewMode === 'teacher' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                          {teachers
-                            .filter(t => t.status === 'ACTIVE')
-                            .map(teach => {
-                              const teachAllocations = allocations.filter(a => a.teacher_id === teach.id && a.academic_year_id === selectedYearId);
-                              const load = getTeacherLoadInfo(teach.id);
-                              return (
-                                <div key={teach.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.75rem 1rem' }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                    <h5 style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                      {teach.first_name} {teach.last_name}
-                                    </h5>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: '600', color: load.color }}>
-                                      {load.hours} hours ({load.status})
-                                    </span>
-                                  </div>
-                                  {teachAllocations.length === 0 ? (
-                                    <p style={{ fontStyle: 'italic', fontSize: '0.8rem', color: 'var(--text-muted)' }}>No teaching assignments assigned.</p>
-                                  ) : (
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                      {teachAllocations.map(a => {
-                                        const sub = subjects.find(s => s.id === a.subject_id);
-                                        const sec = sections.find(s => s.id === a.section_id);
-                                        return (
-                                          <span key={a.id} style={{ background: 'var(--bg-subtle)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-xs)', fontSize: '0.75rem', border: '1px solid var(--border)' }}>
-                                            {sub?.subject_name} in {sec?.name}
-                                          </span>
-                                        );
-                                      })}
+                      {advancedViewMode === 'teacher' && (() => {
+                        const filteredTeachers = teachers.filter(t => {
+                          if (t.status !== 'ACTIVE') return false;
+                          const matchesSearch = (`${t.first_name} ${t.last_name}`).toLowerCase().includes(assignmentTeacherSearch.toLowerCase());
+                          if (!matchesSearch) return false;
+
+                          const load = getTeacherLoadInfo(t.id);
+                          if (teacherLoadFilter === 'All') return true;
+                          if (teacherLoadFilter === 'Overloaded') return load.hours > 24;
+                          if (teacherLoadFilter === 'Available') return load.hours <= 24 && load.hours > 0;
+                          if (teacherLoadFilter === 'Unassigned') return load.hours === 0;
+                          return true;
+                        });
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {filteredTeachers.length === 0 ? (
+                              <p style={{ fontStyle: 'italic', fontSize: '0.85rem', color: 'var(--text-muted)' }}>No teachers match your search.</p>
+                            ) : (
+                              filteredTeachers.map(teach => {
+                                const teachAllocations = allocations.filter(a => a.teacher_id === teach.id && a.academic_year_id === selectedYearId);
+                                const load = getTeacherLoadInfo(teach.id);
+                                return (
+                                  <div key={teach.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.75rem 1rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                      <h5 style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                                        {teach.first_name} {teach.last_name}
+                                      </h5>
+                                      <span style={{ fontSize: '0.8rem', fontWeight: '600', color: load.color }}>
+                                        {load.hours} hours ({load.status})
+                                      </span>
                                     </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                        </div>
-                      )}
+                                    {teachAllocations.length === 0 ? (
+                                      <p style={{ fontStyle: 'italic', fontSize: '0.8rem', color: 'var(--text-muted)' }}>No teaching assignments assigned.</p>
+                                    ) : (
+                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                        {teachAllocations.map(a => {
+                                          const sub = subjects.find(s => s.id === a.subject_id);
+                                          const sec = sections.find(s => s.id === a.section_id);
+                                          return (
+                                            <span key={a.id} style={{ background: 'var(--bg-subtle)', padding: '0.3rem 0.5rem', borderRadius: 'var(--radius-xs)', fontSize: '0.75rem', border: '1px solid var(--border)' }}>
+                                              {sub?.subject_name} in {sec?.name}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

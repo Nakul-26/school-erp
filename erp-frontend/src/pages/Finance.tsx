@@ -61,6 +61,9 @@ export default function Finance() {
   
   // Expenses Ledger state (backed by localStorage)
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
+  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('All');
+  const [expensePaymentFilter, setExpensePaymentFilter] = useState('All');
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [expenseForm, setExpenseForm] = useState({
     category: 'Utilities' as any,
@@ -186,6 +189,14 @@ export default function Finance() {
       alert(err.message || 'Failed to delete expense.');
     }
   };
+
+  const filteredExpenses = expenses.filter(exp => {
+    const matchesSearch = exp.description.toLowerCase().includes(expenseSearchQuery.toLowerCase()) ||
+                          (exp.recorded_by || '').toLowerCase().includes(expenseSearchQuery.toLowerCase());
+    const matchesCategory = expenseCategoryFilter === 'All' || exp.category === expenseCategoryFilter;
+    const matchesPayment = expensePaymentFilter === 'All' || exp.payment_method === expensePaymentFilter;
+    return matchesSearch && matchesCategory && matchesPayment;
+  });
 
   // Math helper
   const totalExpensesSum = expenses.reduce((acc, curr) => acc + curr.amount, 0);
@@ -459,6 +470,51 @@ export default function Finance() {
               )}
             </div>
 
+            {/* Expense Filters Bar */}
+            <div className="filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '0.5rem 0' }}>
+              <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+                <Search size={14} />
+                <input
+                  type="text"
+                  placeholder="Search expense description..."
+                  value={expenseSearchQuery}
+                  onChange={e => setExpenseSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <select
+                  value={expenseCategoryFilter}
+                  onChange={e => setExpenseCategoryFilter(e.target.value)}
+                  className="input"
+                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+                >
+                  <option value="All">All Categories</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Stationery">Stationery</option>
+                  <option value="Salaries">Salaries</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
+
+              <div>
+                <select
+                  value={expensePaymentFilter}
+                  onChange={e => setExpensePaymentFilter(e.target.value)}
+                  className="input"
+                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+                >
+                  <option value="All">All Payment Methods</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="UPI">UPI</option>
+                </select>
+              </div>
+            </div>
+
             <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
@@ -471,7 +527,7 @@ export default function Finance() {
                 </tr>
               </thead>
               <tbody>
-                {expenses.map(exp => (
+                {filteredExpenses.map(exp => (
                   <tr key={exp.id} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '0.65rem 0.5rem' }}><code>{new Date(exp.date).toLocaleDateString()}</code></td>
                     <td style={{ padding: '0.65rem 0.5rem' }}>
@@ -489,9 +545,11 @@ export default function Finance() {
                     </td>
                   </tr>
                 ))}
-                {expenses.length === 0 && (
+                {filteredExpenses.length === 0 && (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No expenses recorded.</td>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                      {expenses.length === 0 ? "No expenses recorded." : "No expenses match the selected filters."}
+                    </td>
                   </tr>
                 )}
               </tbody>

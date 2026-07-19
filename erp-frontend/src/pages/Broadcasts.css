@@ -1067,3 +1067,56 @@ input[type="text"].bc-table-search-input:focus {
   border-color: var(--primary, #6366f1) !important;
   text-decoration: none !important;
 }
+
+/* Sent History Filters Styling */
+.bc-history-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.bc-filters-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.bc-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.bc-filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bc-filter-select {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--bg-input, #ffffff);
+  color: var(--text-main, #0f172a);
+  cursor: pointer;
+  min-width: 120px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.bc-filter-select:focus {
+  border-color: var(--primary, #6366f1);
+}
+

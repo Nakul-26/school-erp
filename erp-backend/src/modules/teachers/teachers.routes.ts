@@ -45,7 +45,7 @@ async function canViewTeacher(db: D1Database, user: JwtPayload, teacherId: strin
   return isTeacherRole(user) && await teacherBelongsToUser(db, user, teacherId);
 }
 
-teachers.get('/', requireRole('admin', 'super_admin', 'Principal', 'HOD'), async (c) => {
+teachers.get('/', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'teacher', 'Teacher'), async (c) => {
   const user = c.get('user');
   const repo = new TeacherRepository(c.env.DB);
   const service = new TeacherService(repo);

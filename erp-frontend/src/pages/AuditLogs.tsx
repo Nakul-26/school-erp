@@ -102,26 +102,19 @@ export default function AuditLogs() {
       </div>
 
       {/* Filter Bar */}
-      <form className="card filters audit-logs-card" onSubmit={handleSearch}>
-        <div className="audit-logs-div-4">
-          <label className="audit-logs-label-5">Search Action</label>
-          <div className="search-container audit-logs-search-container">
-            <Search size={16} />
-            <input
-              type="text"
-              placeholder="e.g. LOGIN, UPDATE, BULK_IMPORT..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+      <form className="card filters audit-logs-filter-card" onSubmit={handleSearch}>
+        <div className="search-container audit-logs-search-container">
+          <Search size={16} />
+          <input
+            type="text"
+            placeholder="Search logs by action or user..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
 
-        <div className="audit-logs-div-7">
-          <label className="audit-logs-label-8">
-            <Filter size={13} className="audit-logs-Filter-9"  />
-            Module
-          </label>
-          <select value={module} onChange={(e) => setModule(e.target.value)} className="audit-logs-select-10">
+        <div>
+          <select value={module} onChange={(e) => setModule(e.target.value)} className="input audit-logs-select">
             <option value="">All Modules</option>
             {modules.map(m => (
               <option key={m} value={m}>{m.replace(/_/g, ' ').toUpperCase()}</option>
@@ -129,25 +122,35 @@ export default function AuditLogs() {
           </select>
         </div>
 
-        <div className="audit-logs-div-11">
-          <label className="audit-logs-label-12">From Date</label>
-          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+        <div>
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="input audit-logs-date-input"
+            title="From Date"
+          />
         </div>
 
-        <div className="audit-logs-div-13">
-          <label className="audit-logs-label-14">To Date</label>
-          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+        <div>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="input audit-logs-date-input"
+            title="To Date"
+          />
         </div>
 
         <button type="submit" className="btn btn-primary audit-logs-btn">
-          Apply Filters
+          Search Logs
         </button>
         <button type="button" className="btn btn-outline audit-logs-btn" onClick={() => { setSearch(''); setModule(''); setFromDate(''); setToDate(''); }}>
           Clear
         </button>
       </form>
 
-      <div className="card audit-logs-card">
+      <div className="card audit-logs-table-card">
         {loading ? (
           <p className="audit-logs-text-18">Loading audit logs...</p>
         ) : (

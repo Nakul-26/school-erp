@@ -96,6 +96,10 @@ export default function Students() {
   // Institution & Terminology States
   const { user } = useAuth();
   const userPermissions = user?.permissions || [];
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const isTeacherOnly = userRoles.some(r => ['teacher', 'Teacher'].includes(r)) &&
+    !userRoles.some(r => ['admin', 'Admin', 'super_admin', 'Super Admin', 'principal', 'Principal', 'hod', 'HOD', 'role-super-admin'].includes(r));
+
   const canViewStudent = hasAnyPermission(userPermissions, ['student.view']);
   const canCreateStudent = hasAnyPermission(userPermissions, ['student.create']);
   const canEditStudent = hasAnyPermission(userPermissions, ['student.edit']);
@@ -529,8 +533,12 @@ export default function Students() {
         <>
           <div className="page-header students-page-header">
             <div>
-              <h2 className="students-title-1">Students Directory</h2>
-              <p className="students-text-2">Manage student enrollments, academic records, and family contacts.</p>
+              <h2 className="students-title-1">{isTeacherOnly ? 'My Students' : 'Students Directory'}</h2>
+              <p className="students-text-2">
+                {isTeacherOnly
+                  ? 'View and access academic records for students enrolled in your assigned sections.'
+                  : 'Manage student enrollments, academic records, and family contacts.'}
+              </p>
             </div>
             
             <div className="header-actions students-header-actions">

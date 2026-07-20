@@ -24,7 +24,6 @@ import StudentDetails from './pages/StudentDetails';
 import Teachers from './pages/Teachers';
 import TeacherDetails from './pages/TeacherDetails';
 import Exams from './pages/Exams';
-import TeacherAttendance from './pages/TeacherAttendance';
 import Announcements from './pages/Announcements';
 import Notifications from './pages/Notifications';
 import FeeStructures from './pages/FeeStructures';
@@ -142,7 +141,7 @@ function App() {
 
           {/* ── Attendance ──────────────────────────────────────────────── */}
           <Route path="/attendance" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Attendance /></ProtectedRoute>} />
-          <Route path="/teacher-attendance" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><TeacherAttendance /></ProtectedRoute>} />
+          <Route path="/teacher-attendance" element={<Navigate to="/attendance?tab=teachers" replace />} />
 
           {/* ── Exams & Homework ─────────────────────────────────────────── */}
           <Route path="/exams" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Exams /></ProtectedRoute>} />

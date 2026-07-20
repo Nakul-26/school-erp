@@ -65,7 +65,22 @@ export default function Attendance() {
     (queryTab === 'teachers' && canManageTeachers) ? 'teachers' : 'students'
   );
 
+  // Sync activeTab with URL parameter and enforce RBAC security guard
+  useEffect(() => {
+    if (queryTab === 'teachers') {
+      if (canManageTeachers) {
+        setActiveTab('teachers');
+      } else {
+        setActiveTab('students');
+        setSearchParams({ tab: 'students' }, { replace: true });
+      }
+    } else if (queryTab === 'students') {
+      setActiveTab('students');
+    }
+  }, [queryTab, canManageTeachers, setSearchParams]);
+
   const handleTabChange = (tab: 'students' | 'teachers') => {
+    if (tab === 'teachers' && !canManageTeachers) return;
     setActiveTab(tab);
     setSearchParams({ tab });
   };

@@ -20,7 +20,11 @@ async function checkHomeworkManageAccess(db: D1Database, user: JwtPayload, secti
   const { UserRepository } = await import('../users/users.repository');
   const userRepo = new UserRepository(db);
   const userPermissions = await userRepo.getUserPermissions(user.sub);
-  if (!userPermissions.includes('homework.manage')) {
+  const canManagePerm = userPermissions.includes('homework.manage') || 
+                        userPermissions.includes('homework.create') || 
+                        userPermissions.includes('homework.edit') ||
+                        roles.includes('teacher');
+  if (!canManagePerm) {
     return false;
   }
 
@@ -78,9 +82,13 @@ homework.get('/', async (c) => {
             SELECT 1 FROM teaching_allocations ta
             WHERE ta.teacher_id = ? AND ta.section_id = h.section_id AND ta.subject_id = h.subject_id AND ta.institution_id = ? AND LOWER(ta.status) = 'active'
           )
+          OR EXISTS (
+            SELECT 1 FROM sections sec_ct
+            WHERE sec_ct.id = h.section_id AND sec_ct.class_teacher_id = ? AND sec_ct.is_active = 1
+          )
         )
     `;
-    const params: any[] = [user.institution_id, teacherId, teacherId, teacherId, user.institution_id];
+    const params: any[] = [user.institution_id, teacherId, teacherId, teacherId, user.institution_id, teacherId];
     if (sectionId) {
       query += ` AND h.section_id = ?`;
       params.push(sectionId);
@@ -161,9 +169,18 @@ homework.post('/', async (c) => {
   const body = await c.req.json();
   const db = c.env.DB;
 
+  if (isTeacherOnly(user)) {
+    const teacherId = await getTeacherIdForUser(db, user);
+    if (!teacherId) {
+      return c.json({ error: 'Forbidden: Teacher profile not found for current user' }, 403);
+    }
+    // Lock teacher_id to current teacher
+    body.teacher_id = teacherId;
+  }
+
   const hasAccess = await checkHomeworkManageAccess(db, user, body.section_id, body.subject_id);
   if (!hasAccess) {
-    return c.json({ error: 'Forbidden: You do not have permission to manage homework' }, 403);
+    return c.json({ error: 'Forbidden: You are not assigned to teach this subject and section' }, 403);
   }
 
   const repo = new HomeworkRepository(db);

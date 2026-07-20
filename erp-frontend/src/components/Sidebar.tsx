@@ -121,6 +121,8 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const initials = displayName.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
   const roleLabel = roles[0] || 'Staff';
 
+  const isTeacherOnly = isTeacher && !isAdmin && !isHOD;
+
   type Link = { to: string; label: string; icon: any; badge?: number; feature?: keyof typeof FEATURES };
   type Group = { key: string; label: string; links: Link[]; always?: boolean };
 
@@ -137,7 +139,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       key: 'people', label: 'People',
       links: [
         { to: '/admissions', label: 'Admissions', icon: UserPlus },
-        { to: '/students', label: 'Students', icon: Users },
+        { to: '/students', label: isTeacherOnly ? 'My Students' : 'Students', icon: Users },
         { to: '/teachers', label: 'Teachers', icon: UserCheck },
         { to: '/alumni', label: 'Alumni', icon: GraduationCap, feature: 'alumni' },
       ],
@@ -150,7 +152,6 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/subjects', label: 'Subjects', icon: BookOpen },
         { to: '/timetable', label: 'Timetable', icon: CalendarDays },
         { to: '/attendance', label: 'Attendance', icon: ClipboardCheck },
-        { to: '/teacher-attendance', label: 'Teacher Attendance', icon: ClipboardList },
         { to: '/exams', label: 'Exams & Results', icon: Award },
         { to: '/homework', label: 'Homework', icon: Clipboard, feature: 'homework' },
         { to: '/calendar', label: 'Calendar', icon: Calendar, feature: 'calendar' },

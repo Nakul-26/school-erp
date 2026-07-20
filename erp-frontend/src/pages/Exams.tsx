@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, Trash2, ClipboardCheck, ArrowLeft, Award, FileSpreadsheet, Layers, Search, Info } from 'lucide-react';
+import { Plus, Trash2, ClipboardCheck, ArrowLeft, Award, FileSpreadsheet, Layers, Search, Info, Printer } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
@@ -984,69 +984,122 @@ export default function Exams() {
         <div className="modal-overlay no-print" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>
           <div className="modal exams-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Student Report Card</h3>
-              <button onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>✕</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Award size={20} style={{ color: 'var(--primary)' }} />
+                <h3 style={{ margin: 0 }}>Student Report Card</h3>
+              </div>
+              <button className="modal-close" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>✕</button>
             </div>
-            <div className="modal-body">
-              {loadingReportCard ? <p>Building report card...</p> : selectedReportCard ? (
-                <div id="printable-report-card" className="exams-div-37">
-                  <div className="exams-div-38">
-                    <h2 className="exams-title-39">Academic Report Card</h2>
-                    <h3 className="exams-title-40">Institution Name</h3>
+            <div className="modal-body" style={{ padding: '1.25rem' }}>
+              {loadingReportCard ? (
+                <div style={{ textAlign: 'center', padding: '3rem' }}>
+                  <Award size={36} className="spinning" style={{ opacity: 0.6, marginBottom: '1rem' }} />
+                  <p style={{ color: 'var(--text-muted)' }}>Building academic report card...</p>
+                </div>
+              ) : selectedReportCard ? (
+                <div id="printable-report-card" className="report-card-container">
+                  {/* Institutional Header */}
+                  <div className="report-card-header">
+                    <div className="report-card-brand">
+                      <div className="report-card-logo">
+                        <Award size={28} />
+                      </div>
+                      <div>
+                        <h2 className="report-card-inst-name">
+                          {selectedReportCard.exam?.institution_name || user?.institution_name || 'Academic Institution'}
+                        </h2>
+                        <p className="report-card-inst-subtitle">Official Statement of Academic Marks & Progress</p>
+                      </div>
+                    </div>
+                    <div className="report-card-doc-title">
+                      <span>ACADEMIC REPORT CARD</span>
+                      <span className="report-card-term-badge">{selectedReportCard.exam?.name || 'Examination Event'}</span>
+                    </div>
                   </div>
 
-                  <div className="exams-grid-41">
-                    <div>
-                      <p className="exams-text-42"><strong>Student Name:</strong> {selectedReportCard.student.first_name} {selectedReportCard.student.last_name}</p>
-                      <p className="exams-text-43"><strong>Roll Number:</strong> {selectedReportCard.student.roll_number || '-'}</p>
-                      <p className="exams-text-44"><strong>Admission No:</strong> {selectedReportCard.student.admission_number}</p>
+                  {/* Student Information Grid */}
+                  <div className="report-card-info-grid">
+                    <div className="report-card-info-col">
+                      <div className="info-row">
+                        <span className="info-label">Student Name</span>
+                        <span className="info-val highlight">{selectedReportCard.student.first_name} {selectedReportCard.student.last_name}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Roll Number</span>
+                        <span className="info-val">{selectedReportCard.student.roll_number || '-'}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Admission No</span>
+                        <span className="info-val">{selectedReportCard.student.admission_number || '-'}</span>
+                      </div>
                     </div>
-                    <div className="exams-div-45">
-                      <p className="exams-text-46"><strong>Exam:</strong> {selectedReportCard.exam.name}</p>
-                      <p className="exams-text-47"><strong>Academic Year:</strong> {selectedReportCard.exam.academic_year}</p>
-                      <p className="exams-text-48"><strong>Program:</strong> {selectedReportCard.exam.course}</p>
+                    <div className="report-card-info-col">
+                      <div className="info-row">
+                        <span className="info-label">Academic Year</span>
+                        <span className="info-val">{selectedReportCard.exam.academic_year}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Program / Class</span>
+                        <span className="info-val">{selectedReportCard.exam.course}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Examination</span>
+                        <span className="info-val">{selectedReportCard.exam.name}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <table className="table exams-table">
+                  {/* Subject Marks Table */}
+                  <table className="report-card-table">
                     <thead>
-                      <tr className="exams-tr-50">
-                        <th className="exams-th-51">Subject Code</th>
-                        <th className="exams-th-52">Subject Name</th>
-                        <th className="exams-th-53">Max Marks</th>
-                        <th className="exams-th-54">Obtained</th>
-                        <th className="exams-th-55">Percentage</th>
-                        <th className="exams-th-56">Grade</th>
-                        <th className="exams-th-57">GP</th>
-                        <th className="exams-th-58">Result</th>
+                      <tr>
+                        <th style={{ textAlign: 'left' }}>Subject Code</th>
+                        <th style={{ textAlign: 'left' }}>Subject Name</th>
+                        <th>Max</th>
+                        <th>Obtained</th>
+                        <th>%</th>
+                        <th>Grade</th>
+                        <th>GP</th>
+                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedReportCard.subjects.map((sub: any, idx: number) => (
-                        <tr key={idx} className="exams-tr-59">
-                          <td className="exams-td-60">{sub.subject_code}</td>
-                          <td className="exams-td-61">{sub.subject_name}</td>
-                          <td className="exams-td-62">{sub.max_marks}</td>
-                          <td className="exams-td-63">{sub.marks_obtained}</td>
-                          <td className="exams-td-64">{sub.percent}%</td>
-                          <td className="exams-td-65">{sub.grade}</td>
-                          <td className="exams-td-66">{sub.grade_point}</td>
-                          <td className="exams-td-67">
-                            <span style={{ color: sub.is_passing ? 'var(--success)' : 'var(--danger)', fontWeight: 'bold' }}>
-                              {sub.is_passing ? 'PASS' : 'FAIL'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                      <tr className="exams-tr-68">
-                        <td colSpan={2} className="exams-td-69">GRAND TOTAL</td>
-                        <td className="exams-td-70">{selectedReportCard.total.max_marks}</td>
-                        <td className="exams-td-71">{selectedReportCard.total.marks_obtained}</td>
-                        <td className="exams-td-72">{selectedReportCard.total.percent}%</td>
-                        <td className="exams-td-73">{selectedReportCard.total.grade}</td>
-                        <td className="exams-td-74">{selectedReportCard.total.grade_point}</td>
-                        <td className="exams-td-75">
-                          <span style={{ color: selectedReportCard.result === 'PASS' ? 'var(--success)' : 'var(--danger)' }}>
+                      {selectedReportCard.subjects.map((sub: any, idx: number) => {
+                        const gradeClean = sub.grade?.toString().toLowerCase().replace('+', 'plus') || 'default';
+                        return (
+                          <tr key={idx}>
+                            <td style={{ textAlign: 'left', fontWeight: 600 }}>{sub.subject_code}</td>
+                            <td style={{ textAlign: 'left' }}>{sub.subject_name}</td>
+                            <td>{sub.max_marks}</td>
+                            <td style={{ fontWeight: 700 }}>{sub.marks_obtained}</td>
+                            <td>{sub.percent}%</td>
+                            <td>
+                              <span className={`grade-badge grade-${gradeClean}`}>
+                                {sub.grade}
+                              </span>
+                            </td>
+                            <td>{sub.grade_point}</td>
+                            <td>
+                              <span className={`status-pill ${sub.is_passing ? 'pass' : 'fail'}`}>
+                                {sub.is_passing ? 'PASS' : 'FAIL'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      <tr className="report-card-total-row">
+                        <td colSpan={2} style={{ textAlign: 'left', fontWeight: 800 }}>GRAND TOTAL</td>
+                        <td>{selectedReportCard.total.max_marks}</td>
+                        <td style={{ fontWeight: 800, fontSize: '1.05rem' }}>{selectedReportCard.total.marks_obtained}</td>
+                        <td style={{ fontWeight: 800 }}>{selectedReportCard.total.percent}%</td>
+                        <td>
+                          <span className={`grade-badge grade-${selectedReportCard.total.grade?.toString().toLowerCase().replace('+', 'plus') || 'default'}`}>
+                            {selectedReportCard.total.grade}
+                          </span>
+                        </td>
+                        <td>{selectedReportCard.total.grade_point}</td>
+                        <td>
+                          <span className={`status-pill ${selectedReportCard.result === 'PASS' ? 'pass' : 'fail'}`}>
                             {selectedReportCard.result}
                           </span>
                         </td>
@@ -1054,29 +1107,47 @@ export default function Exams() {
                     </tbody>
                   </table>
 
-                  <div className="exams-grid-76">
-                    <div>
-                      <p><strong>Rank in Class:</strong> {selectedReportCard.total.rank || 'N/A'}</p>
+                  {/* Summary & Metrics */}
+                  <div className="report-card-stats-row">
+                    <div className="stat-box">
+                      <span className="stat-label">Class Rank</span>
+                      <span className="stat-val">{selectedReportCard.total.rank ? `#${selectedReportCard.total.rank}` : 'N/A'}</span>
                     </div>
-                    <div>
-                      <p><strong>Attendance:</strong> {selectedReportCard.attendance_percent !== null ? `${selectedReportCard.attendance_percent}%` : 'N/A'}</p>
+                    <div className="stat-box">
+                      <span className="stat-label">Attendance</span>
+                      <span className="stat-val">{selectedReportCard.attendance_percent !== null ? `${selectedReportCard.attendance_percent}%` : 'N/A'}</span>
                     </div>
-                    <div className="exams-div-77">
-                      <p><strong>Overall Result:</strong> <span style={{ fontWeight: 'bold', color: selectedReportCard.result === 'PASS' ? 'var(--success)' : 'var(--danger)' }}>{selectedReportCard.result}</span></p>
+                    <div className="stat-box">
+                      <span className="stat-label">Final Result</span>
+                      <span className={`stat-val ${selectedReportCard.result === 'PASS' ? 'text-success' : 'text-danger'}`}>
+                        {selectedReportCard.result}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="exams-row-78">
-                    <div className="exams-div-79">Class Teacher</div>
-                    <div className="exams-div-80">Controller of Exams</div>
-                    <div className="exams-div-81">Principal</div>
+                  {/* Signatures */}
+                  <div className="report-card-signatures">
+                    <div className="sig-block">
+                      <div className="sig-line"></div>
+                      <span>Class Teacher</span>
+                    </div>
+                    <div className="sig-block">
+                      <div className="sig-line"></div>
+                      <span>Controller of Exams</span>
+                    </div>
+                    <div className="sig-block">
+                      <div className="sig-line"></div>
+                      <span>Principal</span>
+                    </div>
                   </div>
                 </div>
               ) : <p>No report card data loaded</p>}
             </div>
             <div className="modal-footer no-print">
               <button className="btn btn-outline" onClick={() => { setShowReportCardModal(false); setSelectedReportCard(null); }}>Close</button>
-              <button className="btn btn-primary" onClick={() => window.print()} disabled={!selectedReportCard}>Print Report Card</button>
+              <button className="btn btn-primary" onClick={() => window.print()} disabled={!selectedReportCard}>
+                <Printer size={16} /> Print Marks Card
+              </button>
             </div>
           </div>
         </div>

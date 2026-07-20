@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, Trash2, Clock, Calendar, BookOpen, User, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Clock, Calendar, BookOpen, User, RefreshCw, Search, Filter } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 import { useAuth } from '../contexts/AuthContext';
@@ -81,6 +81,10 @@ export default function TimetablePage() {
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [showSlotModal, setShowSlotModal] = useState(false);
+  const [periodSearch, setPeriodSearch] = useState('');
+  const [periodTypeFilter, setPeriodTypeFilter] = useState<'all' | 'period' | 'break'>('all');
+  const [periodTimingFilter, setPeriodTimingFilter] = useState<'all' | 'morning' | 'afternoon' | 'evening'>('all');
+  const [periodStartTimeFilter, setPeriodStartTimeFilter] = useState<string>('all');
   const [slotForm, setSlotForm] = useState({
     name: '',
     start_time: '',
@@ -613,114 +617,194 @@ export default function TimetablePage() {
     </>
   );
 
-  // ── Render: Class Periods ──────────────────────────────────────────────────
+  const renderPeriods = () => {
+    const uniqueStartTimes = Array.from(new Set(slots.map(s => s.start_time).filter(Boolean))).sort();
 
-  const renderPeriods = () => (
-    <>
-      <div className="card">
-        {slotsLoading ? (
-          <SkeletonLoader type="table" rows={4} cols={4} />
-        ) : slots.length === 0 ? (
-          <EmptyState
-            title="No Class Periods Defined"
-            description="Create breaks and lecture slots to build your school's weekly schedule."
-            icon={Clock}
-            action={{
-              label: "Create Class Period",
-              onClick: () => setShowSlotModal(true)
-            }}
-          />
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Period Name</th>
-                <th>Timings</th>
-                <th>Type</th>
-                <th className="timetable-page-th-38">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {slots.map((slot) => (
-                <tr key={slot.id} style={slot.slot_type === 'break' ? { backgroundColor: '#f1f5f9' } : {}}>
-                  <td><strong>{slot.name}</strong></td>
-                  <td>
-                    <div className="timetable-page-row-39">
-                      <Clock size={14} className="text-muted" />
-                      <span>{slot.start_time} - {slot.end_time}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`badge ${slot.slot_type === 'break' ? 'badge-secondary' : 'badge-primary'}`}>
-                      {slot.slot_type.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="timetable-page-td-40">
-                    <button className="btn btn-sm btn-danger" onClick={() => handleSlotDelete(slot.id)}>
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {/* Empty state is handled above by wrapper */}
-            </tbody>
-          </table>
-        )}
-      </div>
+    const filteredSlots = slots.filter(slot => {
+      const matchesSearch = slot.name.toLowerCase().includes(periodSearch.toLowerCase()) ||
+                            `${slot.start_time} - ${slot.end_time}`.toLowerCase().includes(periodSearch.toLowerCase());
+      const matchesType = periodTypeFilter === 'all' || slot.slot_type === periodTypeFilter;
 
-      {/* Add Period modal */}
-      {showSlotModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Add New Class Period</h3>
-            <form onSubmit={handleSlotSubmit}>
-              <div className="form-group">
-                <label>Period Name (e.g. Period 1, Lunch Break)</label>
-                <input
-                  type="text"
-                  value={slotForm.name}
-                  onChange={(e) => setSlotForm({ ...slotForm, name: e.target.value })}
-                  placeholder="e.g. Period 1"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Period Type</label>
-                <select value={slotForm.slot_type} onChange={(e) => setSlotForm({ ...slotForm, slot_type: e.target.value as any })} required>
-                  <option value="period">Academic Period</option>
-                  <option value="break">Break / Recess</option>
-                </select>
-              </div>
-              <div className="timetable-page-grid-41">
-                <div className="form-group">
-                  <label>Start Time (HH:MM)</label>
-                  <input
-                    type="time"
-                    value={slotForm.start_time}
-                    onChange={(e) => setSlotForm({ ...slotForm, start_time: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>End Time (HH:MM)</label>
-                  <input
-                    type="time"
-                    value={slotForm.end_time}
-                    onChange={(e) => setSlotForm({ ...slotForm, end_time: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button type="button" onClick={() => setShowSlotModal(false)} className="btn btn-secondary">Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Period</button>
-              </div>
-            </form>
+      const hour = parseInt((slot.start_time || '').split(':')[0] || '0', 10);
+      let matchesTiming = true;
+      if (periodTimingFilter === 'morning') matchesTiming = hour < 12;
+      else if (periodTimingFilter === 'afternoon') matchesTiming = hour >= 12 && hour < 16;
+      else if (periodTimingFilter === 'evening') matchesTiming = hour >= 16;
+
+      const matchesStartTime = periodStartTimeFilter === 'all' || slot.start_time === periodStartTimeFilter;
+
+      return matchesSearch && matchesType && matchesTiming && matchesStartTime;
+    });
+
+    return (
+      <>
+        {/* Filters Bar for Class Periods */}
+        <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+          <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
+            <Search size={14} />
+            <input
+              type="text"
+              placeholder="Search by period name or timing..."
+              value={periodSearch}
+              onChange={e => setPeriodSearch(e.target.value)}
+            />
           </div>
+
+          <div>
+            <select
+              value={periodTypeFilter}
+              onChange={e => setPeriodTypeFilter(e.target.value as any)}
+              className="input"
+              style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+            >
+              <option value="all">All Period Types</option>
+              <option value="period">Academic Period</option>
+              <option value="break">Break / Recess</option>
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={periodTimingFilter}
+              onChange={e => setPeriodTimingFilter(e.target.value as any)}
+              className="input"
+              style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+            >
+              <option value="all">All Time Slots</option>
+              <option value="morning">Morning (&lt; 12:00 PM)</option>
+              <option value="afternoon">Afternoon (12:00 - 4:00 PM)</option>
+              <option value="evening">Evening (&gt; 4:00 PM)</option>
+            </select>
+          </div>
+
+          {uniqueStartTimes.length > 0 && (
+            <div>
+              <select
+                value={periodStartTimeFilter}
+                onChange={e => setPeriodStartTimeFilter(e.target.value)}
+                className="input"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '140px' }}
+              >
+                <option value="all">All Start Times</option>
+                {uniqueStartTimes.map(time => (
+                  <option key={time} value={time}>Starts at {time}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
-      )}
-    </>
-  );
+
+        <div className="card">
+          {slotsLoading ? (
+            <SkeletonLoader type="table" rows={4} cols={4} />
+          ) : slots.length === 0 ? (
+            <EmptyState
+              title="No Class Periods Defined"
+              description="Create breaks and lecture slots to build your school's weekly schedule."
+              icon={Clock}
+              action={{
+                label: "Create Class Period",
+                onClick: () => setShowSlotModal(true)
+              }}
+            />
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Period Name</th>
+                  <th>Timings</th>
+                  <th>Type</th>
+                  <th className="timetable-page-th-38">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSlots.map((slot) => (
+                  <tr key={slot.id} style={slot.slot_type === 'break' ? { backgroundColor: '#f1f5f9' } : {}}>
+                    <td><strong>{slot.name}</strong></td>
+                    <td>
+                      <div className="timetable-page-row-39">
+                        <Clock size={14} className="text-muted" />
+                        <span>{slot.start_time} - {slot.end_time}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`badge ${slot.slot_type === 'break' ? 'badge-secondary' : 'badge-primary'}`}>
+                        {slot.slot_type.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="timetable-page-td-40">
+                      <button className="btn btn-sm btn-danger" onClick={() => handleSlotDelete(slot.id)}>
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredSlots.length === 0 && (
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                      No class periods match the selected filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Add Period modal */}
+        {showSlotModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>Add New Class Period</h3>
+              <form onSubmit={handleSlotSubmit}>
+                <div className="form-group">
+                  <label>Period Name (e.g. Period 1, Lunch Break)</label>
+                  <input
+                    type="text"
+                    value={slotForm.name}
+                    onChange={(e) => setSlotForm({ ...slotForm, name: e.target.value })}
+                    placeholder="e.g. Period 1"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Period Type</label>
+                  <select value={slotForm.slot_type} onChange={(e) => setSlotForm({ ...slotForm, slot_type: e.target.value as any })} required>
+                    <option value="period">Academic Period</option>
+                    <option value="break">Break / Recess</option>
+                  </select>
+                </div>
+                <div className="timetable-page-grid-41">
+                  <div className="form-group">
+                    <label>Start Time (HH:MM)</label>
+                    <input
+                      type="time"
+                      value={slotForm.start_time}
+                      onChange={(e) => setSlotForm({ ...slotForm, start_time: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>End Time (HH:MM)</label>
+                    <input
+                      type="time"
+                      value={slotForm.end_time}
+                      onChange={(e) => setSlotForm({ ...slotForm, end_time: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="modal-actions">
+                  <button type="button" onClick={() => setShowSlotModal(false)} className="btn btn-secondary">Cancel</button>
+                  <button type="submit" className="btn btn-primary">Save Period</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
 
   // ── Root render ────────────────────────────────────────────────────────────
 

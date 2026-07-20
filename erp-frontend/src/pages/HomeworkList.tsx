@@ -24,6 +24,7 @@ export default function HomeworkList() {
   const [sections, setSections] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
+  const [allocations, setAllocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -42,10 +43,14 @@ export default function HomeworkList() {
   });
 
   const user = JSON.parse(localStorage.getItem('erp_user') || '{}');
-  const userRoles = user.roles || (user.role ? [user.role] : []);
-  const userPermissions = user.permissions || [];
+  const userRoles: string[] = user.roles || (user.role ? [user.role] : []);
+  const userPermissions: string[] = user.permissions || [];
+  const isTeacherOnly = userRoles.some((r: string) => ['teacher', 'Teacher'].includes(r)) && 
+    !userRoles.some((r: string) => ['admin', 'Admin', 'super_admin', 'Super Admin', 'principal', 'Principal', 'hod', 'HOD'].includes(r));
+
   const canManage = userPermissions.includes('homework.manage') || 
-                    userRoles.some((r: string) => ['admin', 'super_admin', 'Principal', 'principal'].includes(r));
+                    userPermissions.includes('homework.create') ||
+                    userRoles.some((r: string) => ['admin', 'super_admin', 'Principal', 'principal', 'Teacher', 'teacher', 'HOD', 'hod'].includes(r));
 
   useEffect(() => {
     fetchMetadata();
@@ -57,19 +62,34 @@ export default function HomeworkList() {
 
   const fetchMetadata = async () => {
     try {
-      const [secList, subList, teachList] = await Promise.all([
+      const [secList, subList, teachList, allocList] = await Promise.all([
         api.get('/classes'), // sections
         api.get('/subjects'),
-        api.get('/teachers')
+        api.get('/teachers'),
+        api.get('/teaching-allocations').catch(() => [])
       ]);
-      setSections(secList);
-      setSubjects(subList);
       setTeachers(teachList);
 
-      // Pre-fill teacher field if logged-in user is a teacher
       const matchedTeacher = teachList.find((t: any) => t.user_id === user.sub);
       if (matchedTeacher) {
         setForm(prev => ({ ...prev, teacher_id: matchedTeacher.id }));
+      }
+
+      if (isTeacherOnly) {
+        const teacherAllocations = Array.isArray(allocList) ? allocList : [];
+        setAllocations(teacherAllocations);
+
+        const assignedSecIds = new Set(teacherAllocations.map((a: any) => a.section_id).filter(Boolean));
+        const assignedSubIds = new Set(teacherAllocations.map((a: any) => a.subject_id).filter(Boolean));
+
+        const filteredSections = secList.filter((s: any) => assignedSecIds.has(s.id) || (matchedTeacher && s.class_teacher_id === matchedTeacher.id));
+        const filteredSubjects = subList.filter((sub: any) => assignedSubIds.has(sub.id));
+
+        setSections(filteredSections.length > 0 ? filteredSections : secList);
+        setSubjects(filteredSubjects.length > 0 ? filteredSubjects : subList);
+      } else {
+        setSections(secList);
+        setSubjects(subList);
       }
     } catch (err) {
       console.error('Error fetching metadata:', err);
@@ -95,7 +115,7 @@ export default function HomeworkList() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.section_id || !form.subject_id || !form.teacher_id || !form.title || !form.due_date) {
+    if (!form.section_id || !form.subject_id || (!form.teacher_id && !isTeacherOnly) || !form.title || !form.due_date) {
       return alert('Please fill in all required fields');
     }
     try {
@@ -123,12 +143,19 @@ export default function HomeworkList() {
     if (!confirm('Are you sure you want to delete this homework assignment?')) return;
     try {
       await api.delete(`/homework/${id}`);
-      alert('Homework deleted');
       fetchHomework();
-    } catch (err) {
-      alert('Error deleting homework');
+    } catch (err: any) {
+      alert(err.message || 'Error deleting homework');
     }
   };
+
+  const availableSubjectsInModal = React.useMemo(() => {
+    if (!isTeacherOnly || !form.section_id) return subjects;
+    const sectionAllocated = subjects.filter(sub =>
+      allocations.some((a: any) => (!a.section_id || a.section_id === form.section_id) && a.subject_id === sub.id)
+    );
+    return sectionAllocated.length > 0 ? sectionAllocated : subjects;
+  }, [isTeacherOnly, form.section_id, subjects, allocations]);
 
   return (
     <Layout>
@@ -258,21 +285,23 @@ export default function HomeworkList() {
                       required
                     >
                       <option value="">-- Choose Subject --</option>
-                      {subjects.map(s => <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>)}
+                      {availableSubjectsInModal.map(s => <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>)}
                     </select>
                   </div>
 
-                  <div className="form-group homework-list-modal-full-width">
-                    <label>Assigning Teacher *</label>
-                    <select
-                      value={form.teacher_id}
-                      onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
-                      required
-                    >
-                      <option value="">-- Choose Staff --</option>
-                      {teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name} ({t.employee_id})</option>)}
-                    </select>
-                  </div>
+                  {!isTeacherOnly && (
+                    <div className="form-group homework-list-modal-full-width">
+                      <label>Assigning Teacher *</label>
+                      <select
+                        value={form.teacher_id}
+                        onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
+                        required
+                      >
+                        <option value="">-- Choose Staff --</option>
+                        {teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name} ({t.employee_id})</option>)}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="homework-list-modal-section-title">

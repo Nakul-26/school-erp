@@ -196,239 +196,294 @@
   width: 90%;
 }
 
-.exams-div-37 {
-  background-color: #fff;
-  color: #000;
-  padding: 1rem;
+/* Modern Printable Marks Card / Report Card Styling */
+.report-card-container {
+  background-color: #ffffff;
+  color: #0f172a;
+  padding: 1.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  font-family: inherit;
 }
 
-.exams-div-38 {
-  border-bottom: 2px solid #000;
-  margin-bottom: 1.5rem;
+.report-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #0f172a;
   padding-bottom: 1rem;
-  text-align: center;
+  margin-bottom: 1.25rem;
 }
 
-.exams-title-39 {
-  margin: 0px;
+.report-card-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.report-card-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.report-card-inst-name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.report-card-inst-subtitle {
+  margin: 0.15rem 0 0 0;
+  font-size: 0.775rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.report-card-doc-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.report-card-doc-title span:first-child {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #0f172a;
   text-transform: uppercase;
 }
 
-.exams-title-40 {
-  color: #555;
-  font-weight: normal;
-  margin: 0.25rem 0 0 0;
+.report-card-term-badge {
+  background: #f1f5f9;
+  color: #334155;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
 }
 
-.exams-grid-41 {
+.report-card-info-grid {
   display: grid;
-  font-size: 0.9rem;
-  gap: 1rem;
   grid-template-columns: 1fr 1fr;
-  margin-bottom: 1.5rem;
+  gap: 1.25rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.25rem;
 }
 
-.exams-text-42 {
-  margin: 0.25rem 0;
-}
-
-.exams-text-43 {
-  margin: 0.25rem 0;
-}
-
-.exams-text-44 {
-  margin: 0.25rem 0;
-}
-
-.exams-div-45 {
-  text-align: right;
-}
-
-.exams-text-46 {
-  margin: 0.25rem 0;
-}
-
-.exams-text-47 {
-  margin: 0.25rem 0;
-}
-
-.exams-text-48 {
-  margin: 0.25rem 0;
-}
-
-.exams-table {
-  border-collapse: collapse;
-  margin-bottom: 1.5rem;
-  width: 100%;
-}
-
-.exams-tr-50 {
-  border-bottom: 2px solid #000;
-}
-
-.exams-th-51 {
-  padding: 0.5rem;
-  text-align: left;
-}
-
-.exams-th-52 {
-  padding: 0.5rem;
-  text-align: left;
-}
-
-.exams-th-53 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-th-54 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-th-55 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-th-56 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-th-57 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-th-58 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-tr-59 {
-  border-bottom: 1px solid var(--border);
-}
-
-.exams-td-60 {
-  padding: 0.5rem;
-}
-
-.exams-td-61 {
-  padding: 0.5rem;
-}
-
-.exams-td-62 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-td-63 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-td-64 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-td-65 {
-  font-weight: bold;
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-td-66 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-td-67 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-tr-68 {
-  border-bottom: 2px solid #000;
-  border-top: 2px solid #000;
-  font-weight: bold;
-}
-
-.exams-td-69 {
-  padding: 0.5rem;
-}
-
-.exams-td-70 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-td-71 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-td-72 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-td-73 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-td-74 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-td-75 {
-  padding: 0.5rem;
-  text-align: center;
-}
-
-.exams-grid-76 {
-  border-top: 1px dashed #ccc;
-  display: grid;
-  font-size: 0.9rem;
-  gap: 1rem;
-  grid-template-columns: 1fr 1fr 1fr;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-}
-
-.exams-div-77 {
-  text-align: right;
-}
-
-.exams-row-78 {
-  color: #555;
+.report-card-info-col {
   display: flex;
-  font-size: 0.8rem;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.info-row {
+  display: flex;
   justify-content: space-between;
-  margin-top: 3rem;
+  font-size: 0.825rem;
 }
 
-.exams-div-79 {
-  border-top: 1px solid #000;
-  padding-top: 0.25rem;
-  text-align: center;
-  width: 150px;
+.info-label {
+  color: #64748b;
+  font-weight: 500;
 }
 
-.exams-div-80 {
-  border-top: 1px solid #000;
-  padding-top: 0.25rem;
-  text-align: center;
-  width: 150px;
+.info-val {
+  color: #0f172a;
+  font-weight: 600;
 }
 
-.exams-div-81 {
-  border-top: 1px solid #000;
-  padding-top: 0.25rem;
+.info-val.highlight {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.report-card-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.25rem;
+  font-size: 0.825rem;
+}
+
+.report-card-table th {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.6rem 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   text-align: center;
-  width: 150px;
+  border: 1px solid #0f172a;
+}
+
+.report-card-table td {
+  padding: 0.55rem 0.5rem;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.report-card-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.report-card-total-row td {
+  background: #f1f5f9 !important;
+  border-top: 2px solid #0f172a !important;
+  border-bottom: 2px solid #0f172a !important;
+  color: #0f172a !important;
+}
+
+.grade-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.grade-badge.grade-aplus, .grade-badge.grade-a {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.grade-badge.grade-bplus, .grade-badge.grade-b {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.grade-badge.grade-cplus, .grade-badge.grade-c {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.grade-badge.grade-f {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.725rem;
+}
+
+.status-pill.pass {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-pill.fail {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.report-card-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.875rem;
+  margin-bottom: 2.25rem;
+}
+
+.stat-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.stat-val {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.stat-val.text-success { color: #16a34a; }
+.stat-val.text-danger { color: #dc2626; }
+
+.report-card-signatures {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3.5rem;
+  padding-top: 0.5rem;
+}
+
+.sig-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 170px;
+}
+
+.sig-line {
+  width: 100%;
+  border-top: 1px dashed #475569;
+  margin-bottom: 0.4rem;
+}
+
+.sig-block span {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+/* Print Overrides */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #printable-report-card, #printable-report-card * {
+    visibility: visible;
+  }
+
+  #printable-report-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 24px;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
 }
 

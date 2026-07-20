@@ -40,16 +40,27 @@
   flex-wrap: wrap;
 }
 
-.filter-select-row {
-  display: flex;
-  gap: 1rem;
+.export-dropdown-wrapper {
   margin-top: auto;
-  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  width: 100%;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  height: auto !important;
 }
 
-.filter-select-row select {
-  flex: 1;
-  min-width: 180px;
+.export-select-input {
+  width: 100%;
+  height: 38px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0 0.75rem !important;
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  font-size: 0.875rem !important;
+  outline: none !important;
 }
 
 .import-tabs {
@@ -288,8 +299,62 @@ to {
   margin-top: 0.25rem;
 }
 
-.data-tools-page-tabs {
+.data-tools-main-tabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 2px solid var(--border);
   margin-bottom: 1.5rem;
+  padding-bottom: 0;
+}
+
+.data-tools-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.data-tools-tab:hover {
+  color: var(--primary);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.data-tools-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+}
+
+.import-sub-header {
+  margin-bottom: 1.5rem;
+}
+
+.import-sub-title {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.import-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
 }
 
 @media (max-width: 480px) {
@@ -297,4 +362,5 @@ to {
     grid-template-columns: 1fr;
   }
 }
+
 

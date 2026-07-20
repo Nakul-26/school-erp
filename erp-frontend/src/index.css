@@ -570,6 +570,17 @@ input:focus, select:focus, textarea:focus {
 }
 
 .search-container input,
+.search-container input[type="text"],
+.search-container input[type="search"],
+form .search-container input,
+form .search-container input[type="text"],
+form .search-container input[type="search"],
+form [class*="-search-"] input,
+form [class*="-search-"] input[type="text"],
+form [class*="-search-"] input[type="search"],
+[class*="-search-"] input,
+[class*="-search-"] input[type="text"],
+[class*="-search-"] input[type="search"],
 div.search-container input[class*="-input-"]:not([type="checkbox"]):not([type="radio"]),
 div.search-container select[class*="-select-"],
 .students-search-container input,
@@ -578,7 +589,8 @@ div.search-container select[class*="-select-"],
 .section-workspace-div-106 input,
 .transport-div-5 input,
 .certificates-div-5 input {
-  border: none !important;
+  border: 0 !important;
+  border-style: none !important;
   background: transparent !important;
   width: 100% !important;
   outline: none !important;
@@ -589,6 +601,9 @@ div.search-container select[class*="-select-"],
   box-shadow: none !important;
   min-width: 0 !important;
   height: 100% !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
 }
 
 .search-container input:hover,
@@ -865,6 +880,7 @@ input.classes-input-27,
   margin-bottom: 20px;
   overflow-x: auto;
   scrollbar-width: none;
+  min-height: fit-content;
 }
 .tabs::-webkit-scrollbar, .page-tabs::-webkit-scrollbar { display: none; }
 

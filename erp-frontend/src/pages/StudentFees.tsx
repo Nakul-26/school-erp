@@ -524,9 +524,9 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
           </div>
 
           <div className="card student-fees-card">
-            <form onSubmit={handleSearchSubmit} className="student-fees-row-3" style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div className="search-container student-fees-search-container" style={{ flex: 1, minWidth: '250px' }}>
-                <Search size={18} />
+            <form onSubmit={handleSearchSubmit} className="student-fees-filter-bar">
+              <div className="search-container student-fees-search-container">
+                <Search size={16} />
                 <input
                   type="text"
                   placeholder="Search students by name, admission ID, or roll number..."
@@ -534,33 +534,32 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <button type="submit" className="btn btn-primary" style={{ height: 'auto', padding: '0.55rem 1.25rem' }}>Search</button>
 
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <select
-                  value={courseFilter}
-                  onChange={e => setCourseFilter(e.target.value)}
-                  className="input"
-                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
-                >
-                  <option value="All">All Courses</option>
-                  {uniqueCourses.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+              <button type="submit" className="btn btn-primary student-fees-search-btn">
+                Search
+              </button>
 
-                <select
-                  value={statusFilter}
-                  onChange={e => setStatusFilter(e.target.value)}
-                  className="input"
-                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
-                >
-                  <option value="All">All Statuses</option>
-                  <option value="PAID">Paid</option>
-                  <option value="PARTIALLY_PAID">Partially Paid</option>
-                  <option value="UNPAID">Unpaid</option>
-                </select>
-              </div>
+              <select
+                value={courseFilter}
+                onChange={e => setCourseFilter(e.target.value)}
+                className="input student-fees-filter-select"
+              >
+                <option value="All">All Courses</option>
+                {uniqueCourses.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                className="input student-fees-filter-select"
+              >
+                <option value="All">All Statuses</option>
+                <option value="PAID">Paid</option>
+                <option value="PARTIALLY_PAID">Partially Paid</option>
+                <option value="UNPAID">Unpaid</option>
+              </select>
             </form>
           </div>
 

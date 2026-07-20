@@ -457,11 +457,11 @@ export default function Broadcasts({ isSubComponent = false }: { isSubComponent?
               <div className="bc-list-layout">
                 {/* Filters */}
                 <div className="bc-filters-bar">
-                  <div className="bc-search-wrapper">
+                  <div className="search-container bc-search-wrapper">
                     <Search size={14} className="bc-search-icon" />
                     <input 
                       type="text" 
-                      placeholder="Search messages..." 
+                      placeholder="Search messages by subject or text..." 
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       className="bc-search-input"

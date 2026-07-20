@@ -37,15 +37,18 @@
   padding: 1.25rem;
 }
 
-.student-fees-row-3 {
+.student-fees-filter-bar {
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .student-fees-search-container {
   flex: 1;
-  max-width: 500px;
+  min-width: 260px;
+  height: 38px;
 }
 
 form div.student-fees-search-container input:not([type="checkbox"]):not([type="radio"]) {
@@ -57,9 +60,23 @@ form div.student-fees-search-container input:not([type="checkbox"]):not([type="r
   padding: 0 !important;
 }
 
-.student-fees-row-3 button[type="submit"] {
-  height: 36px;
-  padding: 0 1.25rem;
+.student-fees-search-btn {
+  height: 38px !important;
+  padding: 0 1.25rem !important;
+  font-size: 0.85rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
+}
+
+.student-fees-filter-select {
+  height: 38px !important;
+  padding: 0 0.75rem !important;
+  font-size: 0.85rem !important;
+  cursor: pointer !important;
+  min-width: 160px;
+  flex-shrink: 0;
 }
 
 .student-fees-text-5 {

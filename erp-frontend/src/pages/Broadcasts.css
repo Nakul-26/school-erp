@@ -68,46 +68,63 @@
 }
 
 .bc-search-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: var(--bg-card, #ffffff) !important;
+  border: 1px solid var(--border, #e2e8f0) !important;
+  border-radius: var(--radius-input, 6px) !important;
+  padding: 0 12px !important;
+  height: 38px !important;
+  flex: 1;
+  min-width: 220px;
+  max-width: 380px;
+  margin: 0 !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  box-sizing: border-box !important;
   position: relative;
-  display: flex;
-  align-items: center;
-  width: 280px;
+}
+
+.bc-search-wrapper:hover {
+  border-color: var(--border-strong, #cbd5e1) !important;
+}
+
+.bc-search-wrapper:focus-within {
+  border-color: var(--primary, #6d5df6) !important;
+  box-shadow: 0 0 0 3px rgba(109, 93, 246, 0.12) !important;
 }
 
 .bc-search-icon {
-  position: absolute;
-  left: 0.85rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary, #94a3b8);
+  position: static !important;
+  transform: none !important;
+  color: var(--text-secondary, #94a3b8) !important;
+  flex-shrink: 0 !important;
   pointer-events: none;
-  transition: color 0.2s ease;
-  z-index: 2;
-}
-
-input[type="text"].bc-search-input {
-  width: 100%;
-  padding: 0 0.85rem 0 2.2rem !important;
-  font-size: 0.85rem !important;
-  border: 1px solid var(--border, #e2e8f0) !important;
-  border-radius: 8px !important;
-  background: var(--bg-input, #ffffff) !important;
-  color: var(--text-main, #0f172a) !important;
-  transition: all 0.2s ease-in-out !important;
-}
-
-input[type="text"].bc-search-input:hover {
-  border-color: var(--primary-hover, #5b4df0) !important;
-}
-
-input[type="text"].bc-search-input:focus {
-  border-color: var(--primary, #6d5df6) !important;
-  box-shadow: 0 0 0 3px rgba(109, 93, 246, 0.12) !important;
-  background-color: #ffffff !important;
+  transition: color 0.15s ease !important;
 }
 
 .bc-search-wrapper:focus-within .bc-search-icon {
-  color: var(--primary, #6d5df6);
+  color: var(--primary, #6d5df6) !important;
+}
+
+.bc-search-input,
+.bc-search-wrapper input,
+input[type="text"].bc-search-input {
+  border: 0 !important;
+  border-style: none !important;
+  background: transparent !important;
+  width: 100% !important;
+  outline: none !important;
+  font-size: 0.85rem !important;
+  color: var(--text-main, #0f172a) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
 }
 
 .bc-category-tabs {

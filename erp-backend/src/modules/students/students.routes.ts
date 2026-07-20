@@ -184,9 +184,13 @@ students.get('/', async (c) => {
             SELECT 1 FROM teaching_allocations ta
             WHERE ta.teacher_id = ? AND ta.section_id = se.section_id AND ta.institution_id = ? AND LOWER(ta.status) = 'active'
           )
+          OR EXISTS (
+            SELECT 1 FROM sections sec_ct
+            WHERE sec_ct.id = se.section_id AND sec_ct.class_teacher_id = ? AND sec_ct.is_active = 1
+          )
         )
     `;
-    const params: any[] = [user.institution_id, teacherId, teacherId, user.institution_id];
+    const params: any[] = [user.institution_id, teacherId, teacherId, user.institution_id, teacherId];
 
     if (status) {
       whereClause += ' AND s.status = ?';

@@ -83,6 +83,8 @@ export default function Reports() {
   // ── Attendance state ───────────────────────────────────────────────────────
   const [attSections, setAttSections] = useState<any[]>([]);
   const [attSelectedSectionId, setAttSelectedSectionId] = useState<string>('');
+  const [attCourseFilter, setAttCourseFilter] = useState<string>('');
+  const [attYearFilter, setAttYearFilter] = useState<string>('');
   const [attReport, setAttReport] = useState<StudentAttendanceReportRow[]>([]);
   const [attLoading, setAttLoading] = useState(false);
   const [attInitialLoading, setAttInitialLoading] = useState(true);
@@ -182,8 +184,19 @@ export default function Reports() {
     return pct < 75;
   }).length;
 
+  const uniqueCourses = Array.from(new Set(attSections.map(s => s.course_name).filter(Boolean)));
+  const uniqueYears = Array.from(new Set(attSections.map(s => s.academic_year_name).filter(Boolean)));
+
+  const filteredAttSections = attSections.filter(s => {
+    const matchesCourse = !attCourseFilter || s.course_name === attCourseFilter;
+    const matchesYear = !attYearFilter || s.academic_year_name === attYearFilter;
+    return matchesCourse && matchesYear;
+  });
+
   const selectedSectionObj = attSections.find(s => s.id === attSelectedSectionId);
-  const selectedSectionName = selectedSectionObj ? `${selectedSectionObj.name} (Year ${selectedSectionObj.year_number})` : '';
+  const selectedSectionName = selectedSectionObj
+    ? `${selectedSectionObj.course_name ? `${selectedSectionObj.course_name} - ` : ''}Section ${selectedSectionObj.name} (Year ${selectedSectionObj.year_number})`
+    : '';
 
   // ── Teacher handlers ───────────────────────────────────────────────────────
 
@@ -414,24 +427,87 @@ export default function Reports() {
         {/* 2. ATTENDANCE TAB */}
         {activeTab === 'attendance' && showAttendanceTab && (
           <>
-            <div className="page-sub-header reports-page-sub-header" style={{ marginBottom: '1.25rem' }}>
-              {attInitialLoading ? <p>Loading...</p> : (
+            <div className="card filters reports-filters-bar no-print" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+              {attInitialLoading ? <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Loading classes and sections...</p> : (
                 <>
-                  <div className="form-group reports-form-group no-print">
-                    <label className="reports-label-3" style={{ fontSize: '0.85rem', fontWeight: '600' }}>Select Class / Section:</label>
-                    <select value={attSelectedSectionId} onChange={(e) => setAttSelectedSectionId(e.target.value)} className="reports-select-4" style={{ marginLeft: '0.5rem', padding: '0.35rem 0.5rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-                      <option value="">-- Select Section --</option>
-                      {attSections.map(s => <option key={s.id} value={s.id}>{s.name} (Year {s.year_number})</option>)}
+                  {/* Course / Program Filter */}
+                  {uniqueCourses.length > 0 && (
+                    <select
+                      value={attCourseFilter}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAttCourseFilter(val);
+                        const firstSec = attSections.find(s => (!val || s.course_name === val) && (!attYearFilter || s.academic_year_name === attYearFilter));
+                        if (firstSec) setAttSelectedSectionId(firstSec.id);
+                      }}
+                      className="input"
+                      style={{ height: '38px', padding: '0 0.75rem', fontSize: '0.85rem', minWidth: '160px', borderRadius: 'var(--radius-input, 6px)', background: 'var(--bg-card)' }}
+                    >
+                      <option value="">All Classes / Programs</option>
+                      {uniqueCourses.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
-                  </div>
-                  {selectedSectionObj && (
-                    <div className="print-only" style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-                      Selected Section: {selectedSectionName}
-                    </div>
                   )}
+
+                  {/* Academic Year Filter */}
+                  {uniqueYears.length > 0 && (
+                    <select
+                      value={attYearFilter}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAttYearFilter(val);
+                        const firstSec = attSections.find(s => (!attCourseFilter || s.course_name === attCourseFilter) && (!val || s.academic_year_name === val));
+                        if (firstSec) setAttSelectedSectionId(firstSec.id);
+                      }}
+                      className="input"
+                      style={{ height: '38px', padding: '0 0.75rem', fontSize: '0.85rem', minWidth: '150px', borderRadius: 'var(--radius-input, 6px)', background: 'var(--bg-card)' }}
+                    >
+                      <option value="">All Academic Years</option>
+                      {uniqueYears.map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  )}
+
+                  {/* Main Section Select */}
+                  <select
+                    value={attSelectedSectionId}
+                    onChange={(e) => setAttSelectedSectionId(e.target.value)}
+                    className="input"
+                    style={{ height: '38px', padding: '0 0.75rem', fontSize: '0.85rem', flex: 1, minWidth: '240px', borderRadius: 'var(--radius-input, 6px)', background: 'var(--bg-card)' }}
+                  >
+                    <option value="">-- Select Section --</option>
+                    {filteredAttSections.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.course_name ? `${s.course_name} — ` : ''}Section {s.name} {s.year_number ? `(Year ${s.year_number})` : ''} {s.academic_year_name ? `[${s.academic_year_name}]` : ''} {s.class_teacher_name ? `• Teacher: ${s.class_teacher_name}` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </>
               )}
             </div>
+
+            {selectedSectionObj && (
+              <div className="card" style={{ padding: '0.85rem 1.25rem', marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                <div>
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>
+                    {selectedSectionObj.course_name ? `${selectedSectionObj.course_name} — ` : ''}Section {selectedSectionObj.name}
+                  </h3>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {selectedSectionObj.academic_year_name && (
+                      <span><strong>Academic Year:</strong> {selectedSectionObj.academic_year_name}</span>
+                    )}
+                    <span><strong>Grade/Year:</strong> Year {selectedSectionObj.year_number}</span>
+                    {selectedSectionObj.class_teacher_name && (
+                      <span><strong>Class Teacher:</strong> {selectedSectionObj.class_teacher_name}</span>
+                    )}
+                    {selectedSectionObj.room && (
+                      <span><strong>Room:</strong> {selectedSectionObj.room}</span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--primary)', background: 'var(--primary-soft)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-sm)' }}>
+                  {selectedSectionObj.student_count || attReport.length} Students Enrolled
+                </div>
+              </div>
+            )}
 
             {attSelectedSectionId && attReport.length > 0 && (
               <div className="stats-grid reports-stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>

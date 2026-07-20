@@ -59,9 +59,16 @@ export async function teacherHasSectionAccess(db: D1Database, user: JwtPayload, 
         AND ta.institution_id = ?
         AND LOWER(ta.status) = 'active'
         AND sec.is_active = 1
+      UNION
+      SELECT sec.id AS section_id
+      FROM sections sec
+      WHERE sec.class_teacher_id = ?
+        AND sec.id = ?
+        AND sec.institution_id = ?
+        AND sec.is_active = 1
     ) scope
     LIMIT 1
-  `).bind(teacherId, sectionId, user.institution_id, teacherId, sectionId, user.institution_id).first();
+  `).bind(teacherId, sectionId, user.institution_id, teacherId, sectionId, user.institution_id, teacherId, sectionId, user.institution_id).first();
 
   return Boolean(match);
 }
@@ -98,22 +105,44 @@ export async function teacherHasSubjectAccess(
   `;
 
   if (sectionId) {
-    whereA += ' AND tsa.section_id = ?';
+    whereA += ' AND (tsa.section_id = ? OR tsa.section_id IS NULL)';
     paramsA.push(sectionId);
-    whereB += ' AND ta.section_id = ?';
+
+    whereB += ' AND (ta.section_id = ? OR ta.section_id IS NULL)';
     paramsB.push(sectionId);
   }
+
   if (courseId) {
-    whereA += ' AND tsa.course_id = ?';
+    whereA += ' AND (sec.course_id = ? OR sec.course_id IS NULL)';
     paramsA.push(courseId);
-    whereB += ' AND ta.program_id = ?';
+
+    whereB += ' AND (sec.course_id = ? OR sec.course_id IS NULL)';
     paramsB.push(courseId);
   }
+
   if (academicYearId) {
-    whereA += ' AND tsa.academic_year_id = ?';
+    whereA += ' AND (sec.academic_year_id = ? OR sec.academic_year_id IS NULL)';
     paramsA.push(academicYearId);
-    whereB += ' AND ta.academic_year_id = ?';
+
+    whereB += ' AND (sec.academic_year_id = ? OR sec.academic_year_id IS NULL)';
     paramsB.push(academicYearId);
+  }
+
+  const paramsC: any[] = [];
+  let unionC = '';
+  if (sectionId) {
+    unionC = `
+      UNION
+      SELECT sub.id AS subject_id
+      FROM subjects sub
+      JOIN sections sec ON sec.id = ?
+      WHERE sec.class_teacher_id = ?
+        AND sub.id = ?
+        AND sec.institution_id = ?
+        AND sec.is_active = 1
+        AND sub.is_active = 1
+    `;
+    paramsC.push(sectionId, teacherId, subjectId, user.institution_id);
   }
 
   const match = await db.prepare(`
@@ -122,15 +151,18 @@ export async function teacherHasSubjectAccess(
       SELECT tsa.subject_id
       FROM teacher_subject_assignments tsa
       JOIN subjects sub ON sub.id = tsa.subject_id
+      LEFT JOIN sections sec ON sec.id = tsa.section_id
       WHERE ${whereA}
       UNION
       SELECT ta.subject_id
       FROM teaching_allocations ta
       JOIN subjects sub ON sub.id = ta.subject_id
+      LEFT JOIN sections sec ON sec.id = ta.section_id
       WHERE ${whereB}
+      ${unionC}
     ) scope
     LIMIT 1
-  `).bind(...paramsA, ...paramsB).first();
+  `).bind(...paramsA, ...paramsB, ...paramsC).first();
 
   return Boolean(match);
 }
@@ -165,9 +197,16 @@ export async function teacherCanAccessStudent(db: D1Database, user: JwtPayload, 
             AND ta.institution_id = ?
             AND LOWER(ta.status) = 'active'
         )
+        OR EXISTS (
+          SELECT 1
+          FROM sections sec_ct
+          WHERE sec_ct.id = se.section_id
+            AND sec_ct.class_teacher_id = ?
+            AND sec_ct.is_active = 1
+        )
       )
     LIMIT 1
-  `).bind(studentId, user.institution_id, teacherId, teacherId, user.institution_id).first();
+  `).bind(studentId, user.institution_id, teacherId, teacherId, user.institution_id, teacherId).first();
 
   return Boolean(match);
 }

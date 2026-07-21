@@ -72,6 +72,7 @@ export default function DataTools() {
       const obj: Record<string, any> = {};
       headers.forEach((header, idx) => {
         const key = keys[idx];
+        if (!key) return;
         const val = row[key];
         obj[header] = val === undefined || val === null ? '' : val;
       });

@@ -1,5 +1,6 @@
 import './Layout.css';
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { Menu, X, ArrowDownToLine, Bell, BellOff, X as CloseIcon } from 'lucide-react';
 import BottomNav from './BottomNav';
@@ -9,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
   const { user } = useAuth();
   const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
   const permissions: string[] = user?.permissions || [];
@@ -24,7 +26,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // Close sidebar on route change (mobile)
   useEffect(() => {
     setSidebarOpen(false);
-  }, [window.location.pathname]);
+  }, [location.pathname]);
 
   // Prevent body scroll when sidebar open on mobile
   useEffect(() => {

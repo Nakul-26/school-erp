@@ -25,6 +25,62 @@ system.get('/settings/logo/:institutionId', async (c) => {
 
 system.use('*', authMiddleware);
 
+// --- GLOBAL SEARCH ---
+system.get('/search', async (c) => {
+  const user = c.get('user');
+  const query = (c.req.query('q') || '').trim();
+
+  if (!query || query.length < 2) {
+    return c.json({ results: { students: [], teachers: [], sections: [], subjects: [] } });
+  }
+
+  const searchPattern = `%${query}%`;
+  const db = c.env.DB;
+
+  const [studentsRes, teachersRes, sectionsRes, subjectsRes] = await Promise.all([
+    db.prepare(`
+      SELECT id, first_name, last_name, admission_number, roll_number, email
+      FROM students
+      WHERE institution_id = ? AND is_active = 1
+        AND (first_name LIKE ? OR last_name LIKE ? OR admission_number LIKE ? OR roll_number LIKE ? OR email LIKE ?)
+      LIMIT 10
+    `).bind(user.institution_id, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern).all(),
+
+    db.prepare(`
+      SELECT id, first_name, last_name, employee_id, designation, department, email
+      FROM teachers
+      WHERE institution_id = ? AND is_active = 1
+        AND (first_name LIKE ? OR last_name LIKE ? OR employee_id LIKE ? OR email LIKE ? OR department LIKE ?)
+      LIMIT 10
+    `).bind(user.institution_id, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern).all(),
+
+    db.prepare(`
+      SELECT id, name, year_number, room
+      FROM sections
+      WHERE institution_id = ? AND is_active = 1
+        AND (name LIKE ? OR room LIKE ?)
+      LIMIT 10
+    `).bind(user.institution_id, searchPattern, searchPattern).all(),
+
+    db.prepare(`
+      SELECT id, subject_name, subject_code, credits, semester
+      FROM subjects
+      WHERE institution_id = ? AND is_active = 1
+        AND (subject_name LIKE ? OR subject_code LIKE ?)
+      LIMIT 10
+    `).bind(user.institution_id, searchPattern, searchPattern).all()
+  ]);
+
+  return c.json({
+    results: {
+      students: studentsRes.results || [],
+      teachers: teachersRes.results || [],
+      sections: sectionsRes.results || [],
+      subjects: subjectsRes.results || []
+    }
+  });
+});
+
 // --- CSV HELPER PARSER ---
 function parseCSV(text: string): string[][] {
   const result: string[][] = [];

@@ -64,7 +64,7 @@ System	Audit logs	Recommended	present	working	Timestamped action log tracking al
 System	Data backup/restore	Essential	present	working	Disaster recovery SQL file backup export/restore
 System	Import students CSV	Recommended	present	working	Bulk upload system spreadsheets in DataTools page
 System	Export data	Recommended	present	working	Exporting rosters, attendance, results & fees as CSV files
-System	Global search	Recommended	absent	n/a	No global search bar or API endpoint is implemented.
+System	Global search	Recommended	present	working	GET /system/search API endpoint searches students, teachers, sections & subjects.
 System	Dashboard analytics	Essential	present	working	Role-specific interactive analytics count cards
 Security	Password reset	Essential	present	working	Token-verified password reset workflow
 Security	Session management	Essential	present	working	Role-verified JWT bearer authorization middleware

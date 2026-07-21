@@ -184,7 +184,6 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/setup', label: 'School Setup', icon: Settings },
         { to: '/institution-setup', label: 'Institution Setup', icon: Building2 },
         { to: '/settings', label: 'Settings', icon: Settings },
-        { to: '/settings/grades', label: 'Grade Settings', icon: Award },
         { to: '/data-tools', label: 'Data Tools', icon: FileSpreadsheet },
         { to: '/audit-logs', label: 'Audit Logs', icon: ClipboardList },
         { to: '/access-control', label: 'Access Control', icon: UserCog },

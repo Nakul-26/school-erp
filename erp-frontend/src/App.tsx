@@ -58,6 +58,8 @@ import AcademicSetup from './pages/AcademicSetup';
 import Finance from './pages/Finance';
 import Communication from './pages/Communication';
 
+import ErrorBoundary from './components/ErrorBoundary';
+
 function App() {
   useEffect(() => {
     // 1. Prevent scroll wheel from changing numbers on type="number" inputs
@@ -88,10 +90,11 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <Router>
-        <Routes>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ToastProvider>
+          <Router>
+          <Routes>
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/access-denied" element={<AccessDenied />} />
@@ -183,7 +186,7 @@ function App() {
           <Route path="/access-control" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><ManageUsers /></ProtectedRoute>} />
           <Route path="/institution-setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><InstitutionSetup /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']} allowedPermissions={['institution.manage']}><SystemSettings /></ProtectedRoute>} />
-          <Route path="/settings/grades" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']} allowedPermissions={['institution.manage']}><GradeSettings /></ProtectedRoute>} />
+          <Route path="/settings/grades" element={<Navigate to="/settings?tab=grades" replace />} />
           <Route path="/audit-logs" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']} allowedPermissions={['audit.view']}><AuditLogs /></ProtectedRoute>} />
           <Route path="/setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><SchoolSetup /></ProtectedRoute>} />
 
@@ -206,6 +209,7 @@ function App() {
       </Router>
       </ToastProvider>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

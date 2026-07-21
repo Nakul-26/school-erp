@@ -40,13 +40,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles,
     : explicitPolicy || routePolicy;
   const hasAccess = canAccess(user, policy);
 
-  console.log('[ProtectedRoute Debug]:', {
-    pathname: location.pathname,
-    user,
-    policy,
-    hasAccess
-  });
-
   if (!hasAccess) {
     return <Navigate to="/access-denied" state={{ reason: 'You do not have permission to access this page.' }} replace />;
   }

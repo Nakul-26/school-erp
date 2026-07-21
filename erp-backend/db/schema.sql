@@ -851,11 +851,9 @@ CREATE TABLE IF NOT EXISTS alumni (
 
 CREATE INDEX IF NOT EXISTS idx_alumni_institution ON alumni(institution_id);
 
-
-
-
-
-
-
-
-
+-- 42. Rate Limits
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT PRIMARY KEY,
+  count INTEGER NOT NULL DEFAULT 1,
+  reset_at INTEGER NOT NULL
+);

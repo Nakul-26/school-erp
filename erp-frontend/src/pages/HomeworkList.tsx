@@ -4,6 +4,7 @@ import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { BookOpen, Plus, Trash2, Calendar, Clipboard, FileText } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 interface Homework {
   id: string;
@@ -20,6 +21,7 @@ interface Homework {
 }
 
 export default function HomeworkList() {
+  const toast = useToast();
   const [homeworkList, setHomeworkList] = useState<Homework[]>([]);
   const [sections, setSections] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -116,12 +118,12 @@ export default function HomeworkList() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.section_id || !form.subject_id || (!form.teacher_id && !isTeacherOnly) || !form.title || !form.due_date) {
-      return alert('Please fill in all required fields');
+      return toast.warning('Please fill in all required fields');
     }
     try {
       setSaving(true);
       await api.post('/homework', form);
-      alert('Homework assigned successfully!');
+      toast.success('Homework assigned successfully!');
       setShowModal(false);
       setForm({
         section_id: '',
@@ -133,7 +135,7 @@ export default function HomeworkList() {
       });
       fetchHomework();
     } catch (err: any) {
-      alert(err.message || 'Error creating homework assignment');
+      toast.error(err.message || 'Error creating homework assignment');
     } finally {
       setSaving(false);
     }
@@ -143,9 +145,10 @@ export default function HomeworkList() {
     if (!confirm('Are you sure you want to delete this homework assignment?')) return;
     try {
       await api.delete(`/homework/${id}`);
+      toast.success('Homework assignment deleted');
       fetchHomework();
     } catch (err: any) {
-      alert(err.message || 'Error deleting homework');
+      toast.error(err.message || 'Error deleting homework');
     }
   };
 

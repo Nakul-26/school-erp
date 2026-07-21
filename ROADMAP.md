@@ -13,10 +13,14 @@ The following modules are complete and working in `D:\nakul\simple_erp`:
 ### Core Infrastructure
 | Module | Status | Notes |
 |--------|--------|-------|
-| Authentication (Login / Logout / Forgot Password) | ✅ Done | JWT, Hono backend, D1 storage |
-| RBAC — Roles + Permissions schema | ✅ Done | `roles`, `user_roles`, `role_permissions` tables — many-to-many, already better than plan's simpler proposal |
-| Auth middleware with role enforcement | ✅ Done | `requireRole()` factory exists in `auth.ts` |
-| Route-level guards | ✅ Done | `ProtectedRoute` with `allowedRoles` prop in `App.tsx` |
+| Authentication (Login / Logout / Forgot Password) | ✅ Done | JWT, Hono backend, D1 storage, httpOnly cookie support |
+| RBAC — Roles + Permissions schema | ✅ Done | `roles`, `user_roles`, `role_permissions` tables & centralized role normalization |
+| Auth middleware with role enforcement | ✅ Done | `requireRole()` factory in `auth.ts` with normalized `hasAnyRole` |
+| Route-level guards | ✅ Done | `ProtectedRoute` with `allowedRoles` & `ErrorBoundary` protection |
+| D1 Rate Limiting | ✅ Done | Persistent SQLite `rate_limits` table with auto-creation & fallback |
+| Global Search | ✅ Done | `GET /system/search` cross-entity search for students, teachers, classes & subjects |
+| Multi-Channel Notification Dispatcher | ✅ Done | In-app DB, Web Push, Resend email & Fast2SMS/Twilio SMS hooks |
+| Print-Ready Receipt Generator | ✅ Done | `GET /fees/receipts/:id/print` generating print-ready HTML receipts |
 | Multi-branch / institution switching | ✅ Done | Super Admin can toggle institutions |
 | Dark sidebar navigation (collapsible groups) | ✅ Done | `Sidebar.tsx` with collapse state |
 

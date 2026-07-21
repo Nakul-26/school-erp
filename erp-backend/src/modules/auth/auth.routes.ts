@@ -1,12 +1,15 @@
 import { Hono } from 'hono';
+import { setCookie, deleteCookie } from 'hono/cookie';
 import { AuthService } from './auth.service';
 import { UserRepository } from '../users/users.repository';
 import { InstitutionRepository } from '../institutions/institutions.repository';
 import { authMiddleware } from '../../middleware/auth';
 import { rateLimit } from '../../middleware/rate-limit';
 import type { Env, JwtPayload } from '../../types';
+import { validateBody } from '../../middleware/validate';
+import { LoginSchema, RegisterInstitutionSchema, ForgotPasswordSchema, ResetPasswordSchema } from '../../utils/schemas';
 
-const auth = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
+const auth = new Hono<{ Bindings: Env; Variables: { user: JwtPayload; validBody: any } }>();
 
 const getServices = (c: any) => {
   const userRepo = new UserRepository(c.env.DB);
@@ -15,20 +18,34 @@ const getServices = (c: any) => {
   return { userRepo, instRepo, service };
 };
 
-auth.post('/login', rateLimit(10, 15 * 60 * 1000), async (c) => {
+auth.post('/login', rateLimit(10, 15 * 60 * 1000), validateBody(LoginSchema), async (c) => {
   const { service } = getServices(c);
-  const { email, password } = await c.req.json();
+  const { email, password } = c.get('validBody');
   try {
     const result = await service.login(email, password);
+    if (result && result.token) {
+      setCookie(c, 'erp_token', result.token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'Lax',
+        path: '/',
+        maxAge: 86400 * 7
+      });
+    }
     return c.json(result);
   } catch (e: any) {
     return c.json({ error: e.message }, 401);
   }
 });
 
-auth.post('/register-institution', async (c) => {
+auth.post('/logout', async (c) => {
+  deleteCookie(c, 'erp_token', { path: '/' });
+  return c.json({ success: true, message: 'Logged out successfully' });
+});
+
+auth.post('/register-institution', validateBody(RegisterInstitutionSchema), async (c) => {
   const { service } = getServices(c);
-  const data = await c.req.json();
+  const data = c.get('validBody');
   
   const inviteCode = data.invite_code;
   const secret = c.env.INSTITUTION_INVITE_SECRET;
@@ -65,16 +82,16 @@ auth.get('/me', authMiddleware, async (c) => {
   });
 });
 
-auth.post('/forgot-password', rateLimit(3, 60 * 60 * 1000), async (c) => {
+auth.post('/forgot-password', rateLimit(3, 60 * 60 * 1000), validateBody(ForgotPasswordSchema), async (c) => {
   const { service } = getServices(c);
-  const { email } = await c.req.json();
+  const { email } = c.get('validBody');
   const result = await service.forgotPassword(email);
   return c.json(result);
 });
 
-auth.post('/reset-password', async (c) => {
+auth.post('/reset-password', validateBody(ResetPasswordSchema), async (c) => {
   const { service } = getServices(c);
-  const { token, new_password } = await c.req.json();
+  const { token, new_password } = c.get('validBody');
   try {
     const result = await service.resetPassword(token, new_password);
     return c.json(result);

@@ -1,8 +1,11 @@
 import './SystemSettings.css';
+import './GradeSettings.css';
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 import { 
   Building2, 
   Mail, 
@@ -19,15 +22,34 @@ import {
   CheckCircle,
   Loader2,
   Camera,
-  Sliders
+  Sliders,
+  RefreshCw
 } from 'lucide-react';
 
-type SettingsTab = 'general' | 'rules' | 'backup';
+type SettingsTab = 'general' | 'rules' | 'grades' | 'backup';
 
+interface GradeScale {
+  id?: string;
+  grade: string;
+  min_percent: number;
+  max_percent: number;
+  grade_point: number;
+  remarks: string;
+  is_passing: number;
+  sort_order: number;
+}
 
 export default function SystemSettings() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('general');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') as SettingsTab) || 'general';
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [academicYears, setAcademicYears] = useState<any[]>([]);
+  const toast = useToast();
+
+  // Grade Scales state
+  const [scales, setScales] = useState<GradeScale[]>([]);
+  const [scalesLoading, setScalesLoading] = useState(false);
+  const [scalesSaving, setScalesSaving] = useState(false);
 
   // Settings form states
   const [name, setName] = useState('');
@@ -45,7 +67,6 @@ export default function SystemSettings() {
   const [gracePeriod, setGracePeriod] = useState<string>('15');
   const [lockAfterHours, setLockAfterHours] = useState<string>('24');
 
-
   // Backup state
   const [backupFile, setBackupFile] = useState<File | null>(null);
 
@@ -58,7 +79,94 @@ export default function SystemSettings() {
 
   useEffect(() => {
     fetchSettingsAndYears();
+    fetchScales();
   }, []);
+
+  const handleTabChange = (tab: SettingsTab) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
+
+  const fetchScales = async () => {
+    try {
+      setScalesLoading(true);
+      const data = await api.get('/grades/scales');
+      setScales(data || []);
+    } catch (err) {
+      console.error('Error fetching grade scales:', err);
+    } finally {
+      setScalesLoading(false);
+    }
+  };
+
+  const handleLoadDefaultScales = async () => {
+    if (!confirm('Are you sure you want to load default grading scales? This will overwrite your current configuration.')) {
+      return;
+    }
+    try {
+      setScalesSaving(true);
+      await api.post('/grades/scales/seed', {});
+      toast.success('Default grading scales loaded successfully!');
+      fetchScales();
+    } catch (err: any) {
+      toast.error('Error loading default grade scales');
+    } finally {
+      setScalesSaving(false);
+    }
+  };
+
+  const handleSaveScales = async () => {
+    try {
+      setScalesSaving(true);
+      const payload = scales.map((s, idx) => ({
+        grade: s.grade,
+        min_percent: s.min_percent,
+        max_percent: s.max_percent,
+        grade_point: s.grade_point,
+        remarks: s.remarks,
+        is_passing: s.is_passing,
+        sort_order: s.sort_order || (idx + 1)
+      }));
+      await api.put('/grades/scales', { scales: payload });
+      toast.success('Grading scales updated successfully!');
+      fetchScales();
+    } catch (err: any) {
+      toast.error(err.message || 'Error saving grading scales');
+    } finally {
+      setScalesSaving(false);
+    }
+  };
+
+  const handleGradeRowChange = (index: number, field: keyof GradeScale, value: any) => {
+    setScales(prev => prev.map((s, i) => {
+      if (i === index) {
+        return {
+          ...s,
+          [field]: field === 'grade' || field === 'remarks' ? value : Number(value)
+        };
+      }
+      return s;
+    }));
+  };
+
+  const handleAddGradeRow = () => {
+    setScales(prev => [
+      ...prev,
+      {
+        grade: '',
+        min_percent: 0,
+        max_percent: 100,
+        grade_point: 0,
+        remarks: '',
+        is_passing: 1,
+        sort_order: prev.length + 1
+      }
+    ]);
+  };
+
+  const handleRemoveGradeRow = (index: number) => {
+    setScales(prev => prev.filter((_, i) => i !== index));
+  };
 
   const fetchSettingsAndYears = async () => {
     try {
@@ -270,7 +378,7 @@ export default function SystemSettings() {
       <div className="settings-tabs">
         <button 
           className={`tab-btn ${activeTab === 'general' ? 'active' : ''}`}
-          onClick={() => setActiveTab('general')}
+          onClick={() => handleTabChange('general')}
           disabled={loading || backupLoading}
         >
           <Building2 size={18} />
@@ -278,15 +386,23 @@ export default function SystemSettings() {
         </button>
         <button 
           className={`tab-btn ${activeTab === 'rules' ? 'active' : ''}`}
-          onClick={() => setActiveTab('rules')}
+          onClick={() => handleTabChange('rules')}
           disabled={loading || backupLoading}
         >
           <Sliders size={18} />
           Academic Rules & Preferences
         </button>
         <button 
+          className={`tab-btn ${activeTab === 'grades' ? 'active' : ''}`}
+          onClick={() => handleTabChange('grades')}
+          disabled={loading || backupLoading}
+        >
+          <Award size={18} />
+          Grade Settings
+        </button>
+        <button 
           className={`tab-btn ${activeTab === 'backup' ? 'active' : ''}`}
-          onClick={() => setActiveTab('backup')}
+          onClick={() => handleTabChange('backup')}
           disabled={loading || backupLoading}
         >
           <Database size={18} />
@@ -582,7 +698,7 @@ export default function SystemSettings() {
                       const checked = workingDays.includes(day);
                       return (
                         <label key={day} className="system-settings-row-30">
-                          <input type="checkbox" checked={checked} className="system-settings-input-31" onChange={e => { if (e.target.checked) { setWorkingDays([...workingDays, day]); } else { setWorkingDays(workingDays.filter(d => d !== day)); } }}  />
+                          <input type="checkbox" checked={checked} className="system-settings-input-31" onChange={e => { if (e.target.checked) { setWorkingDays([...workingDays, day]); } else { setWorkingDays(workingDays.filter(d => d !== day)); } }} />
                           {day}
                         </label>
                       );
@@ -601,9 +717,93 @@ export default function SystemSettings() {
             </div>
           </form>
         )}
-      </div>
 
-      
+        {activeTab === 'grades' && (
+          <div className="card grade-settings-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#1e293b' }}>Grade Scale Configuration</h3>
+                <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.875rem' }}>
+                  Configure default marks-to-grade scaling ranges used across exams and report card generation.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button className="btn btn-outline" onClick={handleLoadDefaultScales} disabled={scalesLoading || scalesSaving}>
+                  <RefreshCw size={16} /> Load Default Scale
+                </button>
+                <button className="btn btn-primary" onClick={handleSaveScales} disabled={scalesLoading || scalesSaving || scales.length === 0}>
+                  <Save size={16} /> Save Changes
+                </button>
+              </div>
+            </div>
+
+            {scalesLoading ? <p>Loading grade scale configuration...</p> : (
+              <div>
+                <table className="table grade-settings-table">
+                  <thead>
+                    <tr>
+                      <th>Grade</th>
+                      <th>Min %</th>
+                      <th>Max %</th>
+                      <th>Grade Point (GPA)</th>
+                      <th>Remarks / Description</th>
+                      <th>Status</th>
+                      <th>Sort Order</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scales.map((s, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <input type="text" value={s.grade} onChange={(e) => handleGradeRowChange(idx, 'grade', e.target.value)} placeholder="e.g. A+" className="grade-settings-input-7" />
+                        </td>
+                        <td>
+                          <input type="number" value={s.min_percent} onChange={(e) => handleGradeRowChange(idx, 'min_percent', e.target.value)} className="grade-settings-input-8" />
+                        </td>
+                        <td>
+                          <input type="number" value={s.max_percent} onChange={(e) => handleGradeRowChange(idx, 'max_percent', e.target.value)} className="grade-settings-input-9" />
+                        </td>
+                        <td>
+                          <input type="number" step="0.1" value={s.grade_point} onChange={(e) => handleGradeRowChange(idx, 'grade_point', e.target.value)} className="grade-settings-input-10" />
+                        </td>
+                        <td>
+                          <input type="text" value={s.remarks || ''} onChange={(e) => handleGradeRowChange(idx, 'remarks', e.target.value)} placeholder="e.g. Outstanding" className="grade-settings-input-11" />
+                        </td>
+                        <td>
+                          <select value={s.is_passing} onChange={(e) => handleGradeRowChange(idx, 'is_passing', e.target.value)} className="grade-settings-select-12">
+                            <option value={1}>Pass</option>
+                            <option value={0}>Fail</option>
+                          </select>
+                        </td>
+                        <td>
+                          <input type="number" value={s.sort_order} onChange={(e) => handleGradeRowChange(idx, 'sort_order', e.target.value)} className="grade-settings-input-13" />
+                        </td>
+                        <td>
+                          <button className="btn btn-sm btn-outline btn-danger" onClick={() => handleRemoveGradeRow(idx)}>
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {scales.length === 0 && (
+                      <tr>
+                        <td colSpan={8} className="grade-settings-td-14">
+                          <Award size={32} className="grade-settings-Award-15" />
+                          <p className="grade-settings-text-16">No grading scales defined yet. Click 'Load Default Scale' or add a custom row.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                <button className="btn btn-outline" onClick={handleAddGradeRow} style={{ marginTop: '1rem' }}>
+                  + Add Custom Grade Row
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </Layout>
   );
 }

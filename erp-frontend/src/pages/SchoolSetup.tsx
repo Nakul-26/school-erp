@@ -96,7 +96,7 @@ export default function SchoolSetup() {
         {
           label: 'Grade Scales',
           description: 'Configure A/B/C or percentage-based grading',
-          to: '/settings/grades',
+          to: '/settings?tab=grades',
           icon: <Award size={16} />
         },
       ]

@@ -5,6 +5,7 @@ import { FeesService } from './fees.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 import { isYearLockedOrArchived } from '../../utils/academic-year-lock';
+import { renderFeeReceiptHtml } from '../../utils/print-template';
 
 const fees = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -685,6 +686,68 @@ fees.post('/payments/:id/verify', requireRole('admin', 'super_admin', 'Principal
   } catch (err: any) {
     return c.json({ error: err.message }, 500);
   }
+});
+
+// Serve print-ready HTML fee receipt
+fees.get('/receipts/:id/print', async (c) => {
+  const user = c.get('user');
+  const receiptId = c.req.param('id')!;
+  const db = c.env.DB;
+
+  const receipt = await db.prepare(`
+    SELECT 
+      fr.receipt_number,
+      fr.created_at as receipt_date,
+      fp.amount,
+      fp.payment_method,
+      fp.transaction_reference,
+      fp.remarks,
+      sfr.fee_type,
+      s.first_name,
+      s.last_name,
+      s.admission_number,
+      s.roll_number,
+      crs.name as course_name,
+      sec.name as section_name,
+      inst.name as institution_name,
+      inst.address as institution_address,
+      inst.phone as institution_phone
+    FROM fee_receipts fr
+    JOIN fee_payments fp ON fp.id = fr.payment_id
+    JOIN student_fee_records sfr ON sfr.id = fp.student_fee_record_id
+    JOIN students s ON s.id = fp.student_id
+    JOIN institutions inst ON inst.id = fr.institution_id
+    LEFT JOIN student_enrollments se ON se.student_id = s.id AND se.is_active = 1
+    LEFT JOIN courses crs ON crs.id = se.course_id
+    LEFT JOIN sections sec ON sec.id = se.section_id
+    WHERE fr.id = ? AND fr.institution_id = ? AND fr.is_active = 1
+  `).bind(receiptId, user.institution_id).first<any>();
+
+  if (!receipt) {
+    return c.json({ error: 'Receipt not found' }, 404);
+  }
+
+  const html = renderFeeReceiptHtml({
+    institutionName: receipt.institution_name,
+    institutionAddress: receipt.institution_address,
+    institutionPhone: receipt.institution_phone,
+    receiptNumber: receipt.receipt_number,
+    receiptDate: receipt.receipt_date ? receipt.receipt_date.split('T')[0] : '',
+    studentName: `${receipt.first_name} ${receipt.last_name}`,
+    admissionNumber: receipt.admission_number,
+    rollNumber: receipt.roll_number,
+    courseName: receipt.course_name,
+    sectionName: receipt.section_name,
+    feeType: receipt.fee_type,
+    amountPaid: receipt.amount,
+    paymentMethod: receipt.payment_method,
+    transactionRef: receipt.transaction_reference,
+    remarks: receipt.remarks
+  });
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+  });
 });
 
 // --- EXPENSES ---

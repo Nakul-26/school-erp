@@ -1,7 +1,9 @@
 import { Context, Next } from 'hono';
 import { verify } from 'hono/jwt';
+import { getCookie } from 'hono/cookie';
 import type { Env, JwtPayload } from '../types';
 import { UserRepository } from '../modules/users/users.repository';
+import { hasAnyRole, normalizeRole, ROLES } from '../utils/roles';
 
 export async function authMiddleware(c: Context<{ Bindings: Env; Variables: { user: JwtPayload } }>, next: Next) {
   let token = '';
@@ -9,7 +11,7 @@ export async function authMiddleware(c: Context<{ Bindings: Env; Variables: { us
   if (authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.slice(7);
   } else {
-    token = c.req.query('token') || '';
+    token = c.req.query('token') || getCookie(c, 'erp_token') || '';
   }
 
   if (!token) {
@@ -33,7 +35,7 @@ export function requireRole(...roles: string[]) {
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
     
     const userRoles = user.roles || (user.role ? [user.role] : []);
-    const hasRole = userRoles.some(r => roles.includes(r) || r === 'super_admin' || r === 'Super Admin' || r === 'Principal' || r === 'principal');
+    const hasRole = hasAnyRole(userRoles, roles);
     
     if (!hasRole) {
       return c.json({ error: 'Forbidden: insufficient role' }, 403);
@@ -42,35 +44,19 @@ export function requireRole(...roles: string[]) {
   };
 }
 
-const PERMISSION_CACHE = new Map<string, { permissions: string[]; expiresAt: number }>();
-const CACHE_TTL_MS = 30000; // 30 seconds
-
 export function requirePermission(...permissions: string[]) {
   return async (c: Context<{ Bindings: Env; Variables: { user: JwtPayload } }>, next: Next) => {
     const user = c.get('user');
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
     // Super Admin gets bypass
-    const userRoles = user.roles || (user.role ? [user.role] : []);
-    if (userRoles.includes('Super Admin') || userRoles.includes('super_admin') || userRoles.includes('role-super-admin')) {
+    const userRoles = (user.roles || (user.role ? [user.role] : [])).map(normalizeRole);
+    if (userRoles.includes(ROLES.SUPER_ADMIN)) {
       return await next();
     }
 
-    const now = Date.now();
-    const cacheKey = `${user.institution_id}:${user.sub}`;
-    const cached = PERMISSION_CACHE.get(cacheKey);
-    let userPermissions: string[];
-
-    if (cached && cached.expiresAt > now) {
-      userPermissions = cached.permissions;
-    } else {
-      const repo = new UserRepository(c.env.DB);
-      userPermissions = await repo.getUserPermissions(user.sub);
-      PERMISSION_CACHE.set(cacheKey, {
-        permissions: userPermissions,
-        expiresAt: now + CACHE_TTL_MS
-      });
-    }
+    const repo = new UserRepository(c.env.DB);
+    const userPermissions = await repo.getUserPermissions(user.sub);
     
     const hasPermission = permissions.every(p => userPermissions.includes(p));
     if (!hasPermission) {

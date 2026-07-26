@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-const BACKEND = 'http://localhost:8787';
+const BACKEND = 'http://localhost:8788';
 
 // Helper to bypass proxy and serve index.html for client-side routing on page refresh
 const proxyConfig = () => ({

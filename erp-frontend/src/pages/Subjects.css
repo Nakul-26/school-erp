@@ -784,3 +784,44 @@ div.subjects-filters-card div.subjects-filter-item select {
   padding: 0 10px !important;
 }
 
+/* Subjects Bulk Actions Bar */
+.subjects-bulk-bar {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width, 240px);
+  right: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1rem 2rem;
+  background: var(--bg-card, #ffffff);
+  border-top: 1px solid var(--border, #e2e8f0);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.subjects-bulk-info {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+}
+
+.subjects-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.subjects-bulk-divider {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--border, #e2e8f0);
+  margin: 0 0.5rem;
+}
+
+

@@ -18,16 +18,23 @@ import {
   XCircle, 
   Clock, 
   Search, 
-  ChevronRight,
-  Info,
-  SlidersHorizontal,
+  Filter,
   CheckCircle,
-  TrendingUp,
-  Sliders,
-  DollarSign
+  SlidersHorizontal
 } from 'lucide-react';
 
 type TabType = 'list' | 'rollover' | 'promote' | 'close';
+
+function formatDate(dateStr: string) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return dateStr;
+  }
+}
 
 export default function AcademicYears() {
   const [activeTab, setActiveTab] = useState<TabType>('list');
@@ -35,9 +42,16 @@ export default function AcademicYears() {
   const [programs, setPrograms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Search & Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
   // Modals & Forms
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({ name: '', start_date: '', end_date: '', is_current: 0, status: 'Draft' });
+
+  // Confirmation modal for Make Current
+  const [confirmMakeCurrentYear, setConfirmMakeCurrentYear] = useState<any | null>(null);
 
   // 1. Rollover Wizard State
   const [rolloverForm, setRolloverForm] = useState({
@@ -90,7 +104,7 @@ export default function AcademicYears() {
       setYears(yearsData || []);
       setPrograms(programsData || []);
 
-      if (yearsData.length > 0) {
+      if (yearsData && yearsData.length > 0) {
         const active = yearsData.find((y: any) => y.is_current) || yearsData[0];
         setRolloverForm(prev => ({
           ...prev,
@@ -107,7 +121,7 @@ export default function AcademicYears() {
         });
       }
 
-      if (programsData.length > 0) {
+      if (programsData && programsData.length > 0) {
         setPromoForm(prev => ({
           ...prev,
           source_course_id: programsData[0].id,
@@ -155,13 +169,20 @@ export default function AcademicYears() {
   // Handle Lifecycle actions
   const handleAddYear = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent invalid date range
+    if (addForm.start_date && addForm.end_date && addForm.end_date <= addForm.start_date) {
+      alert('End date must be after the start date.');
+      return;
+    }
+
     try {
       await api.post('/academic-years', addForm);
       setShowAddModal(false);
       setAddForm({ name: '', start_date: '', end_date: '', is_current: 0, status: 'Draft' });
       fetchYearsAndPrograms();
-    } catch (err) {
-      alert('Error creating academic year');
+    } catch (err: any) {
+      alert(err.message || 'Error creating academic year');
     }
   };
 
@@ -169,18 +190,33 @@ export default function AcademicYears() {
     try {
       await api.put(`/academic-years/${id}`, updates);
       fetchYearsAndPrograms();
-    } catch (err) {
-      alert('Error updating academic year status');
+    } catch (err: any) {
+      alert(err.message || 'Error updating academic year status');
     }
   };
 
+  const handleMakeCurrentRequested = (year: any) => {
+    setConfirmMakeCurrentYear(year);
+  };
+
+  const confirmMakeCurrentExecute = async () => {
+    if (!confirmMakeCurrentYear) return;
+    await handleUpdateStatus(confirmMakeCurrentYear.id, { is_current: 1, status: 'Active' });
+    setConfirmMakeCurrentYear(null);
+  };
+
+  const handleArchiveYear = async (id: string) => {
+    if (!confirm('Are you sure you want to archive this academic year? It will become read-only.')) return;
+    await handleUpdateStatus(id, { status: 'Archived', is_current: 0 });
+  };
+
   const handleDeleteYear = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this academic year? All configuration structures tied exclusively to this year will be archived.')) return;
+    if (!confirm('Are you sure you want to delete this academic year?')) return;
     try {
       await api.delete(`/academic-years/${id}`);
       fetchYearsAndPrograms();
-    } catch (err) {
-      alert('Error deleting academic year');
+    } catch (err: any) {
+      alert(err.message || 'Error deleting academic year');
     }
   };
 
@@ -244,13 +280,11 @@ export default function AcademicYears() {
     setPromotionPreview([]);
     setSelectedStudents([]);
     try {
-      // 1. Fetch Students in Section
       const studentsData = await api.get(`/students?section_id=${promoForm.source_section_id}`);
       setStudents(studentsData || []);
 
       if (studentsData && studentsData.length > 0) {
         const studentIds = studentsData.map((s: any) => s.id);
-        // 2. Fetch eligibility preview from endpoint
         const res = await api.post('/academic-years/promote', {
           source_year_id: promoForm.source_year_id,
           target_year_id: promoForm.target_year_id,
@@ -264,7 +298,6 @@ export default function AcademicYears() {
           preview: true
         });
         setPromotionPreview(res.results || []);
-        // Auto-select eligible or warnings by default
         const preSelected = res.results
           ?.filter((r: any) => r.status !== 'Not Eligible')
           ?.map((r: any) => r.student_id) || [];
@@ -334,7 +367,7 @@ export default function AcademicYears() {
   };
 
   const executeClose = async () => {
-    if (!confirm('Are you sure you want to lock and close this academic year? This is non-reversible and freezes historical records.')) return;
+    if (!confirm('Are you sure you want to lock and close this academic year? Historical records will be frozen and archived.')) return;
     setExecutingClose(true);
     try {
       await api.post('/academic-years/close', {
@@ -351,11 +384,17 @@ export default function AcademicYears() {
     }
   };
 
-  // --- KPI Prep ---
-  const currentYearObj = years.find(y => y.is_current);
+  // KPI Prep
+  const currentYearObj = years.find(y => y.is_current === 1);
   const kpis = [
     { label: 'Total Academic Years', value: years.length, icon: <Calendar size={20} />, color: 'primary' as const },
-    { label: 'Active / Current Year', value: currentYearObj?.name || 'None', icon: <CheckCircle2 size={20} />, color: 'success' as const, description: currentYearObj ? `${currentYearObj.start_date} to ${currentYearObj.end_date}` : '' },
+    { 
+      label: 'Current Academic Year', 
+      value: currentYearObj?.name || 'None Set', 
+      icon: <CheckCircle2 size={20} />, 
+      color: 'success' as const, 
+      description: currentYearObj ? `${formatDate(currentYearObj.start_date)} – ${formatDate(currentYearObj.end_date)}` : '' 
+    },
     { label: 'Draft Years', value: years.filter(y => y.status === 'Draft').length, icon: <Clock size={20} />, color: 'info' as const },
     { label: 'Archived Years', value: years.filter(y => y.status === 'Archived').length, icon: <Archive size={20} />, color: 'info' as const }
   ];
@@ -367,17 +406,43 @@ export default function AcademicYears() {
     { id: 'close', label: 'Year Closing Wizard', icon: <Archive size={16} /> }
   ];
 
+  // Filtering & Sorting (Current Year at top, then by start_date DESC)
+  const sortedYears = [...years].sort((a, b) => {
+    if (a.is_current === 1) return -1;
+    if (b.is_current === 1) return 1;
+    return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+  });
+
+  const filteredYears = sortedYears.filter(y => {
+    const matchesSearch = y.name.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'current') return y.is_current === 1;
+    return y.status === statusFilter;
+  });
+
+  const isInvalidDateRange = Boolean(
+    addForm.start_date && addForm.end_date && addForm.end_date <= addForm.start_date
+  );
+
   return (
     <Layout>
       <PageGuidance
         title="School Years"
         description="Use this page to set up and manage the calendar years for school operations."
-        steps={["Create a new school year (e.g. 2026-27) with its start and end dates.","Mark the current school year so the system displays the correct student records.","Switch between years to view historic school records."]}
+        steps={[
+          "Create a new school year (e.g. 2026-27) with its start and end dates.",
+          "Mark the current school year so the system displays the correct student records.",
+          "Switch between years to view historic school records."
+        ]}
       />
       <WorkspaceShell
         title="Academic Years Workspace"
         breadcrumbs={[{ label: 'Institution Admin', to: '/settings' }, { label: 'Academic Years' }]}
-        statusBadge={{ label: currentYearObj?.status || 'Archived', type: currentYearObj?.status === 'Active' ? 'success' : 'secondary' }}
+        statusBadge={{ 
+          label: currentYearObj ? `Current: ${currentYearObj.name}` : 'No Active Year', 
+          type: currentYearObj ? 'success' : 'secondary' 
+        }}
         actions={
           <button className="btn btn-primary academic-years-btn" onClick={() => setShowAddModal(true)}>
             <Plus size={16} /> Add Academic Year
@@ -392,72 +457,160 @@ export default function AcademicYears() {
           <div className="academic-years-col-2">
             <div className="card">
               <div className="card-header academic-years-card-header">
-                <h3 className="academic-years-title-4">Registered Academic Years</h3>
-                <span className="academic-years-span-5">Lifecycle management of terms</span>
-              </div>
-              <div className="academic-years-div-6">
-                <div className="table-responsive">
-                  <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Start Date</th>
-                      <th>End Date</th>
-                      <th>Lifecycle Status</th>
-                      <th className="academic-years-th-7">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {years.map(year => (
-                      <tr key={year.id} className="academic-years-tr-8">
-                        <td className="academic-years-td-9">
-                          {year.name} {year.is_current === 1 && <span className="badge badge-success academic-years-badge">Current</span>}
-                        </td>
-                        <td>{year.start_date}</td>
-                        <td>{year.end_date}</td>
-                        <td>
-                          <span className={`badge ${
-                            year.status === 'Active' ? 'badge-success' :
-                            year.status === 'Draft' ? 'badge-info' :
-                            year.status === 'Locked' ? 'badge-warning' : 'badge-secondary'
-                          }`}>
-                            {year.status}
-                          </span>
-                        </td>
-                        <td className="academic-years-td-11">
-                          <div className="academic-years-row-12">
-                            {year.status !== 'Active' && year.status !== 'Archived' && (
-                              <button className="btn btn-sm btn-outline academic-years-btn" onClick={() => handleUpdateStatus(year.id, { is_current: 1, status: 'Active' })}>
-                                Make Current
-                              </button>
-                            )}
-                            {year.status === 'Active' && (
-                              <button className="btn btn-sm btn-warning academic-years-btn" onClick={() => handleUpdateStatus(year.id, { status: 'Locked' })}>
-                                <Lock size={12} /> Lock Year
-                              </button>
-                            )}
-                            {year.status === 'Locked' && (
-                              <button className="btn btn-sm btn-success academic-years-btn" onClick={() => handleUpdateStatus(year.id, { status: 'Active' })}>
-                                <Unlock size={12} /> Unlock
-                              </button>
-                            )}
-                            {year.status !== 'Archived' && year.status !== 'Draft' && (
-                              <button className="btn btn-sm btn-secondary academic-years-btn" onClick={() => handleUpdateStatus(year.id, { status: 'Archived', is_current: 0 })}>
-                                <Archive size={12} /> Archive
-                              </button>
-                            )}
-                            {!year.is_current && (
-                              <button className="btn btn-sm btn-danger academic-years-btn" onClick={() => handleDeleteYear(year.id)} title="Delete">
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div>
+                  <h3 className="academic-years-title-4">Registered Academic Years</h3>
+                  <span className="academic-years-span-5">Lifecycle management of school terms</span>
                 </div>
+
+                {/* Filter and Search Controls */}
+                <div className="academic-years-toolbar">
+                  <div className="academic-years-search-box">
+                    <Search size={16} className="academic-years-search-icon" />
+                    <input 
+                      type="text" 
+                      placeholder="Search year name (e.g. 2026-27)..." 
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className="academic-years-search-input"
+                    />
+                  </div>
+
+                  <div className="academic-years-filter-box">
+                    <Filter size={14} />
+                    <select 
+                      value={statusFilter} 
+                      onChange={e => setStatusFilter(e.target.value)}
+                      className="academic-years-filter-select"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="current">Current Year</option>
+                      <option value="Active">Active</option>
+                      <option value="Draft">Draft</option>
+                      <option value="Locked">Locked</option>
+                      <option value="Archived">Archived</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="academic-years-div-6">
+                {filteredYears.length === 0 ? (
+                  <div className="academic-years-empty-state">
+                    <Calendar size={40} className="academic-years-empty-icon" />
+                    <h4>No academic years found</h4>
+                    <p>
+                      {searchTerm || statusFilter !== 'all' 
+                        ? 'No academic years match your search or filter criteria.' 
+                        : 'No academic years created yet. Create your first academic year to get started.'}
+                    </p>
+                    <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                      <Plus size={16} /> Create First Academic Year
+                    </button>
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Duration</th>
+                          <th>Lifecycle Status</th>
+                          <th className="academic-years-th-7">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredYears.map(year => {
+                          const isArchived = year.status === 'Archived';
+                          const isCurrent = year.is_current === 1;
+
+                          return (
+                            <tr key={year.id} className={`academic-years-tr-8 ${isCurrent ? 'academic-years-current-row' : ''}`}>
+                              <td className="academic-years-td-9">
+                                <div className="academic-years-name-container">
+                                  <span>{year.name}</span>
+                                  {isCurrent && (
+                                    <span className="badge badge-success academic-years-current-badge">
+                                      <CheckCircle size={12} /> Current Academic Year
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="academic-years-duration-cell">
+                                {formatDate(year.start_date)} – {formatDate(year.end_date)}
+                              </td>
+                              <td>
+                                <span className={`badge ${
+                                  year.status === 'Active' ? 'badge-success' :
+                                  year.status === 'Draft' ? 'badge-info' :
+                                  year.status === 'Locked' ? 'badge-warning' : 'badge-secondary'
+                                }`}>
+                                  {year.status}
+                                </span>
+                              </td>
+                              <td className="academic-years-td-11">
+                                <div className="academic-years-row-12">
+                                  {isArchived ? (
+                                    <span className="academic-years-readonly-badge">
+                                      <Lock size={12} /> Archived (Read-Only)
+                                    </span>
+                                  ) : (
+                                    <>
+                                      {!isCurrent && (
+                                        <button 
+                                          className="btn btn-sm btn-outline-primary academic-years-btn" 
+                                          onClick={() => handleMakeCurrentRequested(year)}
+                                          title="Set as Current Academic Year"
+                                        >
+                                          <CheckCircle size={12} /> Make Current
+                                        </button>
+                                      )}
+
+                                      {year.status === 'Active' && (
+                                        <button 
+                                          className="btn btn-sm btn-warning academic-years-btn" 
+                                          onClick={() => handleUpdateStatus(year.id, { status: 'Locked' })}
+                                        >
+                                          <Lock size={12} /> Lock
+                                        </button>
+                                      )}
+
+                                      {year.status === 'Locked' && (
+                                        <button 
+                                          className="btn btn-sm btn-success academic-years-btn" 
+                                          onClick={() => handleUpdateStatus(year.id, { status: 'Active' })}
+                                        >
+                                          <Unlock size={12} /> Unlock
+                                        </button>
+                                      )}
+
+                                      <button 
+                                        className="btn btn-sm btn-secondary academic-years-btn" 
+                                        onClick={() => handleArchiveYear(year.id)}
+                                        title="Archive this academic year"
+                                      >
+                                        <Archive size={12} /> Archive
+                                      </button>
+
+                                      {year.status === 'Draft' && !isCurrent && (
+                                        <button 
+                                          className="btn btn-sm btn-danger academic-years-btn" 
+                                          onClick={() => handleDeleteYear(year.id)} 
+                                          title="Delete Draft Year"
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -802,27 +955,81 @@ export default function AcademicYears() {
               <form onSubmit={handleAddYear}>
                 <div className="form-group academic-years-form-group">
                   <label className="academic-years-label-116">Name (e.g., 2026-27)</label>
-                  <input type="text" value={addForm.name} onChange={e => setAddForm({...addForm, name: e.target.value})} required className="academic-years-input-117"  />
+                  <input 
+                    type="text" 
+                    value={addForm.name} 
+                    onChange={e => setAddForm({...addForm, name: e.target.value})} 
+                    required 
+                    placeholder="e.g. 2026-27"
+                    className="academic-years-input-117"  
+                  />
                 </div>
                 <div className="form-group academic-years-form-group">
                   <label className="academic-years-label-119">Start Date</label>
-                  <input type="date" value={addForm.start_date} onChange={e => setAddForm({...addForm, start_date: e.target.value})} required className="academic-years-input-120"  />
+                  <input 
+                    type="date" 
+                    value={addForm.start_date} 
+                    onChange={e => setAddForm({...addForm, start_date: e.target.value})} 
+                    required 
+                    className="academic-years-input-120"  
+                  />
                 </div>
                 <div className="form-group academic-years-form-group">
                   <label className="academic-years-label-122">End Date</label>
-                  <input type="date" value={addForm.end_date} onChange={e => setAddForm({...addForm, end_date: e.target.value})} required className="academic-years-input-123"  />
+                  <input 
+                    type="date" 
+                    value={addForm.end_date} 
+                    min={addForm.start_date || undefined}
+                    onChange={e => setAddForm({...addForm, end_date: e.target.value})} 
+                    required 
+                    className="academic-years-input-123"  
+                  />
+                  {isInvalidDateRange && (
+                    <span className="academic-years-inline-error">
+                      <AlertTriangle size={13} /> End date must be after start date.
+                    </span>
+                  )}
                 </div>
                 <div className="form-group academic-years-form-group">
                   <label className="academic-years-row-125">
-                    <input type="checkbox" checked={!!addForm.is_current} onChange={e => setAddForm({...addForm, is_current: e.target.checked ? 1 : 0})} />
+                    <input 
+                      type="checkbox" 
+                      checked={!!addForm.is_current} 
+                      onChange={e => setAddForm({...addForm, is_current: e.target.checked ? 1 : 0})} 
+                    />
                     Set as current academic year
                   </label>
                 </div>
                 <div className="modal-actions academic-years-modal-actions">
                   <button type="button" onClick={() => setShowAddModal(false)} className="btn btn-secondary">Cancel</button>
-                  <button type="submit" className="btn btn-primary">Save Academic Year</button>
+                  <button type="submit" className="btn btn-primary" disabled={isInvalidDateRange}>Save Academic Year</button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal for Setting Current Academic Year */}
+        {confirmMakeCurrentYear && (
+          <div className="modal">
+            <div className="modal-content academic-years-modal-content">
+              <div className="academic-years-row-112">
+                <h3 className="academic-years-title-113">Confirm Current Academic Year</h3>
+                <button onClick={() => setConfirmMakeCurrentYear(null)} className="academic-years-btn-114">×</button>
+              </div>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-main, #1e293b)' }}>
+                  Setting <strong>"{confirmMakeCurrentYear.name}"</strong> as the current academic year will deactivate the existing current academic year ({currentYearObj?.name || 'none'}).
+                </p>
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '6px', color: '#b45309', fontSize: '0.85rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <AlertTriangle size={16} />
+                  <span>Only one academic year can be active/current at a time per institution.</span>
+                </div>
+              </div>
+              <div className="modal-actions academic-years-modal-actions">
+                <button type="button" onClick={() => setConfirmMakeCurrentYear(null)} className="btn btn-secondary">Cancel</button>
+                <button type="button" onClick={confirmMakeCurrentExecute} className="btn btn-primary">Confirm & Set Current</button>
+              </div>
             </div>
           </div>
         )}

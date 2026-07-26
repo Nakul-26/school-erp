@@ -14,12 +14,16 @@ export class InstitutionService {
     return await this.repo.findById(id);
   }
 
-  async getAllInstitutions(): Promise<Institution[]> {
-    return await this.repo.findAll();
+  async getAllInstitutions(options?: { search?: string; page?: number; limit?: number }): Promise<{ data: Institution[]; total: number }> {
+    return await this.repo.findAll(options);
   }
 
   async updateInstitution(id: string, input: UpdateInstitutionInput, userId?: string): Promise<void> {
     await this.repo.update(id, input, userId);
+  }
+
+  async checkDeleteProtection(id: string): Promise<{ safe: boolean; reason?: string }> {
+    return await this.repo.checkDeleteProtection(id);
   }
 
   async deleteInstitution(id: string, userId?: string): Promise<void> {

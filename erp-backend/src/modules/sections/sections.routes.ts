@@ -324,4 +324,77 @@ sections.delete('/:id/documents/:docId', requirePermission('academic.manage'), a
   }
 });
 
+// --- BULK SECTION ACTIONS ---
+sections.post('/bulk-action', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const { section_ids, action, payload } = await c.req.json();
+
+  if (!section_ids || !Array.isArray(section_ids) || section_ids.length === 0) {
+    return c.json({ error: 'No section_ids provided' }, 400);
+  }
+
+  const db = c.env.DB;
+  
+  // Verify section_ids belong to user's institution (Tenant Isolation)
+  const placeholders = section_ids.map(() => '?').join(',');
+  const { results: validSections } = await db.prepare(
+    `SELECT id, name FROM sections WHERE id IN (${placeholders}) AND institution_id = ?`
+  ).bind(...section_ids, user.institution_id).all<{ id: string; name: string }>();
+
+  if (!validSections || validSections.length === 0) {
+    return c.json({ error: 'No valid sections found for this institution' }, 400);
+  }
+
+  const validIds = validSections.map(s => s.id);
+  const validPlaceholders = validIds.map(() => '?').join(',');
+
+  if (action === 'assign_class_teacher') {
+    const { class_teacher_id } = payload || {};
+    if (class_teacher_id) {
+      const teacher = await db.prepare('SELECT id FROM teachers WHERE id = ? AND institution_id = ? AND is_active = 1')
+        .bind(class_teacher_id, user.institution_id).first();
+      if (!teacher) return c.json({ error: 'Invalid class teacher' }, 400);
+    }
+
+    await db.prepare(
+      `UPDATE sections SET class_teacher_id = ?, updated_at = datetime('now'), updated_by = ? WHERE id IN (${validPlaceholders}) AND institution_id = ?`
+    ).bind(class_teacher_id || null, user.sub, ...validIds, user.institution_id).run();
+
+    await createAuditLog(db, user.sub, 'BULK_ASSIGN_CLASS_TEACHER', 'sections', validIds[0], `Bulk assigned class teacher for ${validIds.length} classes/sections.`);
+    return c.json({ success: true, message: `Successfully updated class teacher for ${validIds.length} sections.` });
+  }
+
+  if (action === 'deactivate') {
+    await db.prepare(
+      `UPDATE sections SET is_active = 0, updated_at = datetime('now'), updated_by = ? WHERE id IN (${validPlaceholders}) AND institution_id = ?`
+    ).bind(user.sub, ...validIds, user.institution_id).run();
+
+    await createAuditLog(db, user.sub, 'BULK_DEACTIVATE_SECTIONS', 'sections', validIds[0], `Bulk deactivated ${validIds.length} classes/sections.`);
+    return c.json({ success: true, message: `Successfully deactivated ${validIds.length} sections.` });
+  }
+
+  if (action === 'reactivate') {
+    await db.prepare(
+      `UPDATE sections SET is_active = 1, updated_at = datetime('now'), updated_by = ? WHERE id IN (${validPlaceholders}) AND institution_id = ?`
+    ).bind(user.sub, ...validIds, user.institution_id).run();
+
+    await createAuditLog(db, user.sub, 'BULK_REACTIVATE_SECTIONS', 'sections', validIds[0], `Bulk reactivated ${validIds.length} classes/sections.`);
+    return c.json({ success: true, message: `Successfully reactivated ${validIds.length} sections.` });
+  }
+
+  if (action === 'delete') {
+    const repo = new SectionRepository(db);
+    const service = new SectionService(repo);
+    let count = 0;
+    for (const sId of validIds) {
+      await service.deleteSection(sId, user.sub);
+      count++;
+    }
+    await createAuditLog(db, user.sub, 'BULK_DELETE_SECTIONS', 'sections', validIds[0], `Bulk deleted ${count} classes/sections.`);
+    return c.json({ success: true, message: `Successfully deleted ${count} sections.` });
+  }
+
+  return c.json({ error: 'Invalid action' }, 400);
+});
+
 export default sections;

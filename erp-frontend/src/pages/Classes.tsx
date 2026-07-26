@@ -94,6 +94,11 @@ export default function Classes() {
   const [sectionLogs, setSectionLogs] = useState<any[]>([]);
   const [sectionDetailLoading, setSectionDetailLoading] = useState(false);
 
+  // Bulk Actions State
+  const [selectedSectionIds, setSelectedSectionIds] = useState<string[]>([]);
+  const [showBulkTeacherModal, setShowBulkTeacherModal] = useState<boolean>(false);
+  const [bulkTeacherId, setBulkTeacherId] = useState<string>('');
+
   // ----------------------------------------------------
   // TAB 2: PROGRAM STATE & FILTERS
   // ----------------------------------------------------
@@ -309,6 +314,99 @@ export default function Classes() {
       fetchData();
     } catch (err: any) {
       alert(err.error || err.message || 'Error deleting section');
+    }
+  };
+
+  // Bulk Section Selection & Action Handlers
+  const handleSelectAllSections = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedSectionIds(filteredClasses.map(c => c.id));
+    } else {
+      setSelectedSectionIds([]);
+    }
+  };
+
+  const handleSelectOneSection = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedSectionIds(prev => [...prev, id]);
+    } else {
+      setSelectedSectionIds(prev => prev.filter(item => item !== id));
+    }
+  };
+
+  const handleBulkSectionAction = async (
+    action: 'assign_class_teacher' | 'deactivate' | 'reactivate' | 'delete',
+    payload?: any
+  ) => {
+    if (selectedSectionIds.length === 0) return;
+
+    if (!canManageAcademic) {
+      alert('You do not have permission to perform bulk actions on classes/sections.');
+      return;
+    }
+
+    if (action === 'deactivate' && !confirm(`Are you sure you want to deactivate ${selectedSectionIds.length} classes/sections?`)) return;
+    if (action === 'reactivate' && !confirm(`Are you sure you want to reactivate ${selectedSectionIds.length} classes/sections?`)) return;
+    if (action === 'delete') {
+      const confirmInput = prompt(`You are about to PERMANENTLY delete ${selectedSectionIds.length} classes/sections.\n\nType DELETE to confirm:`);
+      if (confirmInput !== 'DELETE') {
+        alert('Bulk delete cancelled. Confirmation word did not match.');
+        return;
+      }
+    }
+
+    try {
+      setLoading(true);
+      const res = await api.post('/sections/bulk-action', {
+        section_ids: selectedSectionIds,
+        action,
+        payload
+      });
+      alert(res.message || 'Bulk action completed successfully.');
+      setSelectedSectionIds([]);
+      setShowBulkTeacherModal(false);
+      fetchData();
+    } catch (err: any) {
+      console.error(err);
+      alert(`Bulk action failed: ${err.message || 'Error occurred'}`);
+      setLoading(false);
+    }
+  };
+
+  const handleBulkSectionExport = (format: 'csv' | 'xlsx') => {
+    const exportData = filteredClasses
+      .filter(cls => selectedSectionIds.length === 0 || selectedSectionIds.includes(cls.id))
+      .map(cls => ({
+        'Section Name': cls.name,
+        'Academic Year': cls.academic_year_name || 'N/A',
+        [getProgramLabel()]: cls.course_name || 'N/A',
+        'Year Level': cls.year_number,
+        'Room': cls.room || 'N/A',
+        'Capacity': cls.capacity || 40,
+        'Enrolled Students': cls.student_count || 0,
+        'Class Teacher': cls.class_teacher_name || 'Unassigned',
+        'Status': cls.is_active !== 0 ? 'Active' : 'Archived'
+      }));
+
+    if (exportData.length === 0) {
+      alert('No sections to export');
+      return;
+    }
+
+    const firstRow = exportData[0];
+    if (!firstRow) return;
+
+    if (format === 'csv') {
+      const headers = Object.keys(firstRow).join(',');
+      const rows = exportData.map(row => Object.values(row).map(v => `"${v}"`).join(','));
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `classes_sections_export_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -690,6 +788,14 @@ export default function Classes() {
                 <table className="table classes-table">
                 <thead>
                   <tr className="classes-tr-39">
+                    <th style={{ width: '40px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={filteredClasses.length > 0 && selectedSectionIds.length === filteredClasses.length} 
+                        onChange={handleSelectAllSections} 
+                        title="Select All"
+                      />
+                    </th>
                     <th className="classes-th-40">Section details</th>
                     {institutionType !== 'school' && <th className="classes-th-41">Year Level</th>}
                     <th className="classes-th-42">{getProgramLabel()}</th>
@@ -704,9 +810,17 @@ export default function Classes() {
                   {filteredClasses.map(cls => {
                     const isOverfilled = (cls.student_count || 0) >= (cls.capacity || 40);
                     const percent = Math.min(100, Math.round(((cls.student_count || 0) / (cls.capacity || 40)) * 100));
-                    
+                    const isSelected = selectedSectionIds.includes(cls.id);
+
                     return (
-                      <tr key={cls.id} className="hover-row classes-hover-row">
+                      <tr key={cls.id} className={`hover-row classes-hover-row ${isSelected ? 'is-selected' : ''}`}>
+                        <td style={{ width: '40px' }} onClick={e => e.stopPropagation()}>
+                          <input 
+                            type="checkbox" 
+                            checked={isSelected} 
+                            onChange={e => handleSelectOneSection(cls.id, e.target.checked)} 
+                          />
+                        </td>
                         <td className="classes-td-49">
                           <span onClick={() => navigate(`/classes/${cls.id}`)} className="classes-span-50">
                             {cls.name}
@@ -1644,6 +1758,80 @@ export default function Classes() {
             {/* Close Actions */}
             <div className="modal-actions classes-modal-actions">
               <button type="button" onClick={() => setShowProgramDetailModal(false)} className="btn btn-secondary">Close Details</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Bulk Actions Panel for Sections */}
+      {activeMainTab === 'sections' && selectedSectionIds.length > 0 && (
+        <div className="classes-bulk-bar animate-slide-in">
+          <span className="classes-bulk-info">
+            <strong>{selectedSectionIds.length}</strong> {selectedSectionIds.length === 1 ? 'class/section' : 'classes/sections'} selected
+          </span>
+          <div className="classes-bulk-actions">
+            {canManageAcademic && (
+              <>
+                <button onClick={() => setShowBulkTeacherModal(true)} className="btn btn-sm btn-outline" title="Assign Class Teacher">
+                  Assign Class Teacher
+                </button>
+                <button onClick={() => handleBulkSectionAction('deactivate')} className="btn btn-sm btn-outline text-warning">
+                  <Archive size={14} /> Deactivate
+                </button>
+                <button onClick={() => handleBulkSectionAction('reactivate')} className="btn btn-sm btn-outline text-success">
+                  <Check size={14} /> Reactivate
+                </button>
+                <button onClick={() => handleBulkSectionAction('delete')} className="btn btn-sm btn-danger">
+                  <Trash2 size={14} /> Delete
+                </button>
+              </>
+            )}
+            <div className="classes-bulk-divider" />
+            <button onClick={() => handleBulkSectionExport('csv')} className="btn btn-sm btn-outline">
+              Export CSV
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Assign Class Teacher Modal */}
+      {showBulkTeacherModal && (
+        <div className="modal classes-modal" style={{ zIndex: 1000 }}>
+          <div className="modal-content classes-modal-content size-sm">
+            <h3 style={{ margin: 0, marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 700 }}>
+              Bulk Assign Class Teacher
+            </h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              Select a teacher to assign as the primary Class Teacher for the <strong>{selectedSectionIds.length}</strong> selected sections.
+            </p>
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.375rem' }}>
+                Class Teacher
+              </label>
+              <select
+                value={bulkTeacherId}
+                onChange={e => setBulkTeacherId(e.target.value)}
+                className="classes-select-31"
+                style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}
+              >
+                <option value="">-- Unassigned / None --</option>
+                {teachers.map(t => (
+                  <option key={t.id} value={t.id}>
+                    {t.first_name} {t.last_name} ({t.employee_id || 'Teacher'})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="modal-actions classes-modal-actions">
+              <button type="button" onClick={() => setShowBulkTeacherModal(false)} className="btn btn-secondary">
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => handleBulkSectionAction('assign_class_teacher', { class_teacher_id: bulkTeacherId })}
+              >
+                Apply Assignment
+              </button>
             </div>
           </div>
         </div>

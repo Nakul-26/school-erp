@@ -298,7 +298,7 @@ export default function SystemSettings() {
 
     try {
       const token = localStorage.getItem('erp_token');
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+      const baseUrl = import.meta.env.VITE_API_URL || '';
       
       const res = await fetch(`${baseUrl}/system/backup/export`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -353,7 +353,7 @@ export default function SystemSettings() {
 
   const getLogoUrl = (logoPath?: string) => {
     if (!logoPath) return '';
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+    const baseUrl = import.meta.env.VITE_API_URL || '';
     const path = logoPath.startsWith('/') ? logoPath : `/${logoPath}`;
     return `${baseUrl}${path}`;
   };

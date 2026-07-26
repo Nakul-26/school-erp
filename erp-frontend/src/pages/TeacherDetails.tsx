@@ -444,7 +444,7 @@ export default function TeacherDetails() {
       return;
     }
     if (!doc.backendId) return;
-    const baseUrl = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8787' : '');
+    const baseUrl = import.meta.env.VITE_API_URL || '';
     const token = localStorage.getItem('erp_token');
     const downloadUrl = `${baseUrl}/teachers/${id}/documents/${doc.backendId}/download?token=${encodeURIComponent(token || '')}`;
     window.open(downloadUrl, '_blank');

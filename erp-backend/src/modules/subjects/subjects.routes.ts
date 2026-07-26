@@ -636,4 +636,86 @@ subjects.get('/:id/timeline', async (c) => {
   return c.json(results || []);
 });
 
+// --- BULK SUBJECT ACTIONS ---
+subjects.post('/bulk-action', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const { subject_ids, action, payload } = await c.req.json();
+
+  if (!subject_ids || !Array.isArray(subject_ids) || subject_ids.length === 0) {
+    return c.json({ error: 'No subject_ids provided' }, 400);
+  }
+
+  const db = c.env.DB;
+  
+  // Verify subject_ids belong to user's institution (Tenant Isolation)
+  const placeholders = subject_ids.map(() => '?').join(',');
+  const { results: validSubjects } = await db.prepare(
+    `SELECT id, subject_name FROM subjects WHERE id IN (${placeholders}) AND institution_id = ?`
+  ).bind(...subject_ids, user.institution_id).all<{ id: string; subject_name: string }>();
+
+  if (!validSubjects || validSubjects.length === 0) {
+    return c.json({ error: 'No valid subjects found for this institution' }, 400);
+  }
+
+  const validIds = validSubjects.map(s => s.id);
+  const validPlaceholders = validIds.map(() => '?').join(',');
+
+  if (action === 'deactivate') {
+    await db.prepare(
+      `UPDATE subjects SET status = 'INACTIVE', is_active = 0, updated_at = datetime('now'), updated_by = ? WHERE id IN (${validPlaceholders}) AND institution_id = ?`
+    ).bind(user.sub, ...validIds, user.institution_id).run();
+
+    await createAuditLog(db, user.sub, 'BULK_DEACTIVATE_SUBJECTS', 'subjects', validIds[0], `Bulk deactivated ${validIds.length} subjects.`);
+    return c.json({ success: true, message: `Successfully deactivated ${validIds.length} subjects.` });
+  }
+
+  if (action === 'reactivate') {
+    await db.prepare(
+      `UPDATE subjects SET status = 'ACTIVE', is_active = 1, updated_at = datetime('now'), updated_by = ? WHERE id IN (${validPlaceholders}) AND institution_id = ?`
+    ).bind(user.sub, ...validIds, user.institution_id).run();
+
+    await createAuditLog(db, user.sub, 'BULK_REACTIVATE_SUBJECTS', 'subjects', validIds[0], `Bulk reactivated ${validIds.length} subjects.`);
+    return c.json({ success: true, message: `Successfully reactivated ${validIds.length} subjects.` });
+  }
+
+  if (action === 'update_type') {
+    const { theory_lab } = payload || {};
+    if (!theory_lab || !['Theory', 'Lab', 'Practical'].includes(theory_lab)) {
+      return c.json({ error: 'Valid theory_lab (Theory, Lab, Practical) is required' }, 400);
+    }
+
+    await db.prepare(
+      `UPDATE subjects SET theory_lab = ?, updated_at = datetime('now'), updated_by = ? WHERE id IN (${validPlaceholders}) AND institution_id = ?`
+    ).bind(theory_lab, user.sub, ...validIds, user.institution_id).run();
+
+    await createAuditLog(db, user.sub, 'BULK_UPDATE_SUBJECT_TYPE', 'subjects', validIds[0], `Bulk updated type to ${theory_lab} for ${validIds.length} subjects.`);
+    return c.json({ success: true, message: `Successfully updated subject type to ${theory_lab} for ${validIds.length} subjects.` });
+  }
+
+  if (action === 'update_elective') {
+    const is_elective = payload?.is_elective ? 1 : 0;
+
+    await db.prepare(
+      `UPDATE subjects SET is_elective = ?, updated_at = datetime('now'), updated_by = ? WHERE id IN (${validPlaceholders}) AND institution_id = ?`
+    ).bind(is_elective, user.sub, ...validIds, user.institution_id).run();
+
+    await createAuditLog(db, user.sub, 'BULK_UPDATE_SUBJECT_ELECTIVE', 'subjects', validIds[0], `Bulk updated elective status to ${is_elective} for ${validIds.length} subjects.`);
+    return c.json({ success: true, message: `Successfully updated elective status for ${validIds.length} subjects.` });
+  }
+
+  if (action === 'delete') {
+    const repo = new SubjectRepository(db);
+    const service = new SubjectService(repo);
+    let count = 0;
+    for (const subId of validIds) {
+      await service.deleteSubject(subId, user.sub);
+      count++;
+    }
+    await createAuditLog(db, user.sub, 'BULK_DELETE_SUBJECTS', 'subjects', validIds[0], `Bulk deleted ${count} subjects.`);
+    return c.json({ success: true, message: `Successfully deleted ${count} subjects.` });
+  }
+
+  return c.json({ error: 'Invalid action' }, 400);
+});
+
 export default subjects;

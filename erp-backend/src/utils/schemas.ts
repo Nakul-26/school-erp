@@ -22,6 +22,29 @@ export const RegisterInstitutionSchema = z.object({
   invite_code: z.string().optional(),
 });
 
+export const VALID_INSTITUTION_TYPES = [
+  'school',
+  'college',
+  'pu_college',
+  'degree_college',
+  'engineering_college',
+  'university',
+  'coaching'
+] as const;
+
+export const InstitutionCreateSchema = z.object({
+  name: z.string().min(2, 'Institution name must be at least 2 characters'),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  logo: z.string().optional(),
+  institution_type: z.enum(VALID_INSTITUTION_TYPES).default('college'),
+  attendance_threshold: z.number().min(0).max(100).optional(),
+  passing_marks: z.number().min(0).max(100).optional(),
+});
+
+export const InstitutionUpdateSchema = InstitutionCreateSchema.partial();
+
 export const StudentCreateSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   middle_name: z.string().optional(),

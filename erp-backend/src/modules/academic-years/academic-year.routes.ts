@@ -71,15 +71,20 @@ academicYears.delete('/:id', requirePermission('academic.manage'), async (c) => 
   const id = c.req.param('id')!;
   const repo = new AcademicYearRepository(c.env.DB);
   const service = new AcademicYearService(repo);
-  
+
   const existing = await service.getAcademicYear(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Academic year not found' }, 404);
   }
-  
-  await service.deleteAcademicYear(id, user.sub);
-  await createAuditLog(c.env.DB, user.sub, 'DELETE_ACADEMIC_YEAR', 'academic_years', id, `Deleted academic year: ${existing.name}`);
-  return c.json({ success: true });
+
+  try {
+    await service.deleteAcademicYear(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_ACADEMIC_YEAR', 'academic_years', id, `Deleted academic year: ${existing.name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    // 409 Conflict — downstream references or active-year guard
+    return c.json({ error: e.message }, 409);
+  }
 });
 
 // Rollover Endpoint

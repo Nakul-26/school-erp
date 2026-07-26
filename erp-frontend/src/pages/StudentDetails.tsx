@@ -357,7 +357,7 @@ export default function StudentDetails() {
     try {
       const token = localStorage.getItem('erp_token');
       // Set API BASE URL
-      const BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8787' : '');
+      const BASE_URL = import.meta.env.VITE_API_URL || '';
       
       const response = await fetch(`${BASE_URL}/students/${id}/documents/${doc.id}/download`, {
         headers: {

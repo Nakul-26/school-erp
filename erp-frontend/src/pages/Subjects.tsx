@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Plus, Edit2, Trash2, Eye, RefreshCw, Info } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Eye, RefreshCw, Info, Check, Archive } from 'lucide-react';
 import { PageGuidance } from '../components/PageGuidance';
 import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
@@ -77,6 +77,11 @@ export default function Subjects() {
   const [subjectSelectedType, setSubjectSelectedType] = useState<string>('All');
   const [subjectSelectedElective, setSubjectSelectedElective] = useState<string>('All');
   const [showMoreFilters, setShowMoreFilters] = useState<boolean>(false);
+
+  // Bulk Actions State
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
+  const [showBulkTypeModal, setShowBulkTypeModal] = useState<boolean>(false);
+  const [bulkTheoryLab, setBulkTheoryLab] = useState<string>('Theory');
 
   // Redirection Check for legacy Subject Assignments link requests
   useEffect(() => {
@@ -177,6 +182,100 @@ export default function Subjects() {
     setSubjectSelectedStatus('All');
     setSubjectSelectedType('All');
     setSubjectSelectedElective('All');
+  };
+
+  // Bulk Subject Selection & Action Handlers
+  const handleSelectAllSubjects = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedSubjectIds(filteredSubjects.map(s => s.id));
+    } else {
+      setSelectedSubjectIds([]);
+    }
+  };
+
+  const handleSelectOneSubject = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedSubjectIds(prev => [...prev, id]);
+    } else {
+      setSelectedSubjectIds(prev => prev.filter(item => item !== id));
+    }
+  };
+
+  const handleBulkSubjectAction = async (
+    action: 'deactivate' | 'reactivate' | 'update_type' | 'update_elective' | 'delete',
+    payload?: any
+  ) => {
+    if (selectedSubjectIds.length === 0) return;
+
+    if (!canManageAcademic) {
+      alert('You do not have permission to perform bulk actions on subjects.');
+      return;
+    }
+
+    if (action === 'deactivate' && !confirm(`Are you sure you want to deactivate ${selectedSubjectIds.length} subjects?`)) return;
+    if (action === 'reactivate' && !confirm(`Are you sure you want to reactivate ${selectedSubjectIds.length} subjects?`)) return;
+    if (action === 'delete') {
+      const confirmInput = prompt(`You are about to PERMANENTLY delete ${selectedSubjectIds.length} subjects.\n\nType DELETE to confirm:`);
+      if (confirmInput !== 'DELETE') {
+        alert('Bulk delete cancelled. Confirmation word did not match.');
+        return;
+      }
+    }
+
+    try {
+      setLoading(true);
+      const res = await api.post('/subjects/bulk-action', {
+        subject_ids: selectedSubjectIds,
+        action,
+        payload
+      });
+      alert(res.message || 'Bulk action completed successfully.');
+      setSelectedSubjectIds([]);
+      setShowBulkTypeModal(false);
+      const subs = await api.get('/subjects');
+      setSubjects(subs || []);
+    } catch (err: any) {
+      console.error(err);
+      alert(`Bulk action failed: ${err.message || 'Error occurred'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkSubjectExport = (format: 'csv' | 'xlsx') => {
+    const exportData = filteredSubjects
+      .filter(s => selectedSubjectIds.length === 0 || selectedSubjectIds.includes(s.id))
+      .map(s => ({
+        'Subject Code': s.subject_code,
+        'Subject Name': s.subject_name,
+        'Department': s.department || 'N/A',
+        'Type': s.theory_lab || 'Theory',
+        'Credits': s.credits || 0,
+        'Semester': s.semester || 1,
+        'Category': s.is_elective ? 'Elective' : 'Core',
+        'Status': s.status || 'ACTIVE'
+      }));
+
+    if (exportData.length === 0) {
+      alert('No subjects to export');
+      return;
+    }
+
+    const firstRow = exportData[0];
+    if (!firstRow) return;
+
+    if (format === 'csv') {
+      const headers = Object.keys(firstRow).join(',');
+      const rows = exportData.map(row => Object.values(row).map(v => `"${v}"`).join(','));
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `subjects_export_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   // Filter computation
@@ -384,6 +483,14 @@ export default function Subjects() {
           <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                <th style={{ width: '40px', padding: '0.5rem' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={filteredSubjects.length > 0 && selectedSubjectIds.length === filteredSubjects.length} 
+                    onChange={handleSelectAllSubjects} 
+                    title="Select All"
+                  />
+                </th>
                 {institutionType !== 'school' && <th style={{ textAlign: 'left', padding: '0.5rem' }}>Code</th>}
                 <th style={{ textAlign: 'left', padding: '0.5rem' }}>Name</th>
                 {institutionType !== 'school' && <th style={{ textAlign: 'left', padding: '0.5rem' }}>Semester</th>}
@@ -397,8 +504,17 @@ export default function Subjects() {
               </tr>
             </thead>
             <tbody>
-              {filteredSubjects.map(subject => (
-                <tr key={subject.id} style={{ borderBottom: '1px solid var(--border)' }}>
+              {filteredSubjects.map(subject => {
+                const isSelected = selectedSubjectIds.includes(subject.id);
+                return (
+                  <tr key={subject.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: isSelected ? '#f8fafc' : 'transparent' }}>
+                    <td style={{ width: '40px', padding: '0.65rem 0.5rem' }} onClick={e => e.stopPropagation()}>
+                      <input 
+                        type="checkbox" 
+                        checked={isSelected} 
+                        onChange={e => handleSelectOneSubject(subject.id, e.target.checked)} 
+                      />
+                    </td>
                   {institutionType !== 'school' && <td style={{ padding: '0.65rem 0.5rem' }}>{subject.subject_code}</td>}
                   <td style={{ padding: '0.65rem 0.5rem' }}>
                     <span onClick={() => navigate(`/subjects/${subject.id}`)} style={{ fontWeight: '600', color: 'var(--primary)', cursor: 'pointer' }}>
@@ -434,7 +550,8 @@ export default function Subjects() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+            })}
               {filteredSubjects.length === 0 && (
                 <tr>
                   <td colSpan={12} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No subjects found.</td>
@@ -559,6 +676,81 @@ export default function Subjects() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Bulk Actions Panel for Subjects */}
+      {selectedSubjectIds.length > 0 && (
+        <div className="subjects-bulk-bar animate-slide-in">
+          <span className="subjects-bulk-info">
+            <strong>{selectedSubjectIds.length}</strong> {selectedSubjectIds.length === 1 ? 'subject' : 'subjects'} selected
+          </span>
+          <div className="subjects-bulk-actions">
+            {canManageAcademic && (
+              <>
+                <button onClick={() => setShowBulkTypeModal(true)} className="btn btn-sm btn-outline">
+                  Set Type (Theory/Lab)
+                </button>
+                <button onClick={() => handleBulkSubjectAction('update_elective', { is_elective: 1 })} className="btn btn-sm btn-outline">
+                  Mark as Elective
+                </button>
+                <button onClick={() => handleBulkSubjectAction('update_elective', { is_elective: 0 })} className="btn btn-sm btn-outline">
+                  Mark as Core
+                </button>
+                <button onClick={() => handleBulkSubjectAction('deactivate')} className="btn btn-sm btn-outline text-warning">
+                  <Archive size={14} /> Deactivate
+                </button>
+                <button onClick={() => handleBulkSubjectAction('reactivate')} className="btn btn-sm btn-outline text-success">
+                  <Check size={14} /> Reactivate
+                </button>
+                <button onClick={() => handleBulkSubjectAction('delete')} className="btn btn-sm btn-danger">
+                  <Trash2 size={14} /> Delete
+                </button>
+              </>
+            )}
+            <div className="subjects-bulk-divider" />
+            <button onClick={() => handleBulkSubjectExport('csv')} className="btn btn-sm btn-outline">
+              Export CSV
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Update Subject Type Modal */}
+      {showBulkTypeModal && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="card modal-content" style={{ width: '420px', padding: '1.5rem' }}>
+            <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
+              Bulk Update Subject Type
+            </h4>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+              Select the delivery format for the <strong>{selectedSubjectIds.length}</strong> selected subjects.
+            </p>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>Subject Type</label>
+              <select
+                value={bulkTheoryLab}
+                onChange={e => setBulkTheoryLab(e.target.value)}
+                className="input"
+                style={{ width: '100%' }}
+              >
+                <option value="Theory">Theory</option>
+                <option value="Lab">Lab / Practical</option>
+                <option value="Practical">Practical Only</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button type="button" onClick={() => setShowBulkTypeModal(false)} className="btn btn-secondary">
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => handleBulkSubjectAction('update_type', { theory_lab: bulkTheoryLab })}
+              >
+                Apply Type
+              </button>
+            </div>
           </div>
         </div>
       )}

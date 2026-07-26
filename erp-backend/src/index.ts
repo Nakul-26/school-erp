@@ -49,15 +49,45 @@ const app = new Hono<{ Bindings: Env }>();
 app.use('*', async (c, next) => {
   const corsMiddleware = cors({
     origin: (origin) => {
-      const allowed = [
-        c.env.FRONTEND_ORIGIN,
+      if (!origin) {
+        return c.env.FRONTEND_ORIGIN || '*';
+      }
+
+      const envOrigins = c.env.FRONTEND_ORIGIN 
+        ? c.env.FRONTEND_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+
+      const allowedStatic = [
+        ...envOrigins,
         'http://localhost:5173',
         'http://localhost:3000',
         'http://localhost:3001',
-      ].filter(Boolean);
-      return allowed.includes(origin) ? origin : (c.env.FRONTEND_ORIGIN || 'http://localhost:3001');
+        'http://localhost:4173',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001',
+        'http://127.0.0.1:4173',
+      ];
+
+      if (allowedStatic.includes(origin)) {
+        return origin;
+      }
+
+      try {
+        const url = new URL(origin);
+        if (
+          url.hostname === 'localhost' ||
+          url.hostname === '127.0.0.1' ||
+          url.hostname === '[::1]' ||
+          url.hostname.endsWith('.localhost')
+        ) {
+          return origin;
+        }
+      } catch (e) {}
+
+      return envOrigins[0] || origin;
     },
-    allowHeaders: ['Content-Type', 'Authorization'],
+    allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
     maxAge: 86400,

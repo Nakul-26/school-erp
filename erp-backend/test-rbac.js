@@ -1,7 +1,7 @@
 /**
  * Integration Test for RBAC, CORS, and Tenant Isolation
  */
-const BASE_URL = 'http://127.0.0.1:8787';
+const BASE_URL = 'http://127.0.0.1:8788';
 
 async function runTests() {
   console.log('🚀 Starting security verification tests...\n');

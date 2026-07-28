@@ -1,3 +1,5 @@
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'medical' | 'on_duty' | 'excused' | 'holiday';
+
 export interface AttendanceSession {
   id: string;
   institution_id: string;
@@ -26,7 +28,7 @@ export interface StudentAttendanceRecord {
   institution_id: string;
   session_id: string;
   student_id: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
+  status: AttendanceStatus;
   remarks: string | null;
   is_active: number;
   created_at: string;
@@ -35,7 +37,7 @@ export interface StudentAttendanceRecord {
   created_by: string | null;
   updated_by: string | null;
 
-  // populated student details for list view
+  // populated student details
   first_name?: string;
   last_name?: string;
   roll_number?: string;
@@ -48,11 +50,12 @@ export interface CreateAttendanceSessionInput {
   teacher_id: string;
   slot_id?: string;
   date: string;
+  allow_override?: boolean;
 }
 
 export interface MarkStudentAttendanceInput {
   student_id: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
+  status: AttendanceStatus;
   remarks?: string;
 }
 

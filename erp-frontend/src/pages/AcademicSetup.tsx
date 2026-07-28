@@ -299,8 +299,8 @@ export default function AcademicSetup() {
           subject_id: subjectId,
           teacher_id: teacherId,
           academic_year_id: selectedYearId,
-          department_id: program?.department_id || 'DEFAULT_DEPT', // fallback if empty
-          program_id: program?.id || '',
+          department_id: program?.department_id || departments[0]?.id || 'DEPT-MAIN',
+          program_id: program?.id || section.course_id,
           semester: subject.semester || 1,
           year_number: section.year_number || 1,
           classes_per_week: subject.weekly_hours || 4,

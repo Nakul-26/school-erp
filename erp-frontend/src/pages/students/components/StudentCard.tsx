@@ -10,6 +10,7 @@ interface StudentCardProps {
   activeMenuId: string | null;
   setActiveMenuId: (id: string | null) => void;
   handleOpenEditModal: (student: any) => void;
+  handleOpenIDCardModal: (student: any) => void;
   handleReactivateStudent: (id: string, name: string) => void;
   handleArchiveStudent: (id: string, name: string) => void;
   handleDeleteStudent: (id: string, name: string) => void;
@@ -24,6 +25,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
   activeMenuId,
   setActiveMenuId,
   handleOpenEditModal,
+  handleOpenIDCardModal,
   handleReactivateStudent,
   handleArchiveStudent,
   handleDeleteStudent,
@@ -152,6 +154,12 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                   <Edit2 size={14} /> Edit Profile
                 </button>
               )}
+              <button
+                onClick={(e) => { e.stopPropagation(); handleOpenIDCardModal(student); }}
+                className="dropdown-item students-dropdown-item"
+              >
+                <Calendar size={14} /> ID Card Preview
+              </button>
               <Link to={`/students/${student.id}?tab=attendance`} className="dropdown-item students-dropdown-item">
                 <Calendar size={14} /> Attendance
               </Link>
@@ -162,7 +170,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                 <IndianRupee size={14} /> Fee Ledger
               </Link>
               <div className="students-dropdown-divider" />
-              {canEditStudent && (student.status === 'DROPPED' ? (
+              {canEditStudent && (student.status === 'DROPPED' || student.status === 'Archived' ? (
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleReactivateStudent(student.id, getFullName()); }} 
                   className="dropdown-item students-dropdown-item text-success" 

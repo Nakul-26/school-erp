@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { Env, JwtPayload } from '../../types';
 import { TeachingAllocationRepository } from './allocations.repository';
+import { AllocationService, AllocationServiceError } from './allocations.service';
 import { CreateAllocationInput, UpdateAllocationInput } from './allocations.types';
 import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
@@ -16,6 +17,7 @@ allocations.get('/', async (c) => {
   const user = c.get('user');
   const query = c.req.query();
   const repo = new TeachingAllocationRepository(c.env.DB);
+  const service = new AllocationService(repo, c.env.DB);
 
   const userRoles = user.roles || (user.role ? [user.role] : []);
   const isStaff = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher'].includes(r));
@@ -50,25 +52,29 @@ allocations.get('/', async (c) => {
     const teacherId = await getTeacherIdForUser(c.env.DB, user);
     if (!teacherId) return c.json([]);
 
-    const list = await repo.list(user.institution_id, {
+    const list = await service.listAllocations(user.institution_id, {
       academic_year_id: query.academic_year_id,
       department_id: query.department_id,
       program_id: query.program_id,
       teacher_id: teacherId,
       section_id: query.section_id,
-      subject_id: query.subject_id
+      subject_id: query.subject_id,
+      status: query.status,
+      search: query.search
     });
 
     return c.json(list);
   }
 
-  const list = await repo.list(user.institution_id, {
+  const list = await service.listAllocations(user.institution_id, {
     academic_year_id: query.academic_year_id,
     department_id: query.department_id,
     program_id: query.program_id,
     teacher_id: query.teacher_id,
     section_id: query.section_id,
-    subject_id: query.subject_id
+    subject_id: query.subject_id,
+    status: query.status,
+    search: query.search
   });
 
   return c.json(list);
@@ -314,6 +320,7 @@ allocations.get('/:id', async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new TeachingAllocationRepository(c.env.DB);
+  const service = new AllocationService(repo, c.env.DB);
 
   const userRoles = user.roles || (user.role ? [user.role] : []);
   const isStaff = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher'].includes(r));
@@ -321,7 +328,7 @@ allocations.get('/:id', async (c) => {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
-  const allocation = await repo.findById(id, user.institution_id);
+  const allocation = await service.getAllocation(id, user.institution_id);
   if (!allocation) {
     return c.json({ error: 'Allocation not found' }, 404);
   }
@@ -337,59 +344,48 @@ allocations.get('/:id', async (c) => {
   return c.json(allocation);
 });
 
-// 4. POST /: Create teaching allocation (runs conflict checks)
+// 3.1. GET /:id/dependencies: Check downstream dependencies before delete
+allocations.get('/:id/dependencies', async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new TeachingAllocationRepository(c.env.DB);
+  const service = new AllocationService(repo, c.env.DB);
+
+  const allocation = await service.getAllocation(id, user.institution_id);
+  if (!allocation) {
+    return c.json({ error: 'Allocation not found' }, 404);
+  }
+
+  const deps = await service.getDependencies(id);
+  return c.json(deps);
+});
+
+// 4. POST /: Create teaching allocation
 allocations.post('/', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json<CreateAllocationInput>();
   const repo = new TeachingAllocationRepository(c.env.DB);
+  const service = new AllocationService(repo, c.env.DB);
 
-  // Validate academic year is not locked/archived
-  const isYearLocked = await isYearLockedOrArchived(c.env.DB, input.academic_year_id);
-  if (isYearLocked) {
-    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
-  }
-
-  // 1. Verify target entities belong to this institution
-  const isTeacherValid = await repo.validateTeacherStatus(input.teacher_id, user.institution_id);
-  if (!isTeacherValid) {
-    return c.json({ error: 'Invalid or inactive teacher assigned' }, 400);
-  }
-
-  // 2. Check duplicate mapping conflict
-  const isDuplicate = await repo.checkDuplicateAllocation(
-    input.teacher_id,
-    input.subject_id,
-    input.section_id,
-    input.academic_year_id
-  );
-  if (isDuplicate) {
-    return c.json({ error: 'Duplicate allocation: This teacher is already assigned to this subject and section for the selected academic year.' }, 400);
-  }
-
-  // 3. Insert record
-  const id = crypto.randomUUID();
   try {
-    await repo.create(id, user.institution_id, input, user.sub);
+    const res = await service.createAllocation(user.institution_id, input, user.sub);
     await createAuditLog(
       c.env.DB,
       user.sub,
       'CREATE_TEACHING_ALLOCATION',
       'teaching_allocations',
-      id,
+      res.id,
       `Allocated teacher ID ${input.teacher_id} for subject ID ${input.subject_id} in section ID ${input.section_id}`
     );
 
-    // Calculate updated workload to return as warning metadata if threshold is breached
-    const load = await repo.calculateTeacherLoad(input.teacher_id, input.academic_year_id);
-    const hasLoadWarning = load.total_hours > 24;
-
     return c.json({
       success: true,
-      id,
-      warning: hasLoadWarning ? `Warning: Teacher load is now at ${load.total_hours} weekly hours (recommended maximum is 24).` : null
+      id: res.id,
+      warning: res.warning || null
     }, 201);
   } catch (err: any) {
-    return c.json({ error: err.message }, 500);
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
   }
 });
 
@@ -399,82 +395,67 @@ allocations.put('/:id', requirePermission('academic.manage'), async (c) => {
   const id = c.req.param('id')!;
   const input = await c.req.json<UpdateAllocationInput>();
   const repo = new TeachingAllocationRepository(c.env.DB);
-
-  const existing = await repo.findById(id, user.institution_id);
-  if (!existing) {
-    return c.json({ error: 'Allocation not found' }, 404);
-  }
-
-  // Validate academic year is not locked/archived
-  const isLockedOld = await isYearLockedOrArchived(c.env.DB, existing.academic_year_id);
-  const isLockedNew = input.academic_year_id ? await isYearLockedOrArchived(c.env.DB, input.academic_year_id) : false;
-  if (isLockedOld || isLockedNew) {
-    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
-  }
-
-  // If changing teacher, subject, section, or academic year, check duplicates
-  const teacherId = input.teacher_id || existing.teacher_id;
-  const subjectId = input.subject_id || existing.subject_id;
-  const sectionId = input.section_id || existing.section_id;
-  const academicYearId = input.academic_year_id || existing.academic_year_id;
-
-  const isMappingChanged =
-    teacherId !== existing.teacher_id ||
-    subjectId !== existing.subject_id ||
-    sectionId !== existing.section_id ||
-    academicYearId !== existing.academic_year_id;
-
-  if (isMappingChanged) {
-    const isDuplicate = await repo.checkDuplicateAllocation(teacherId, subjectId, sectionId, academicYearId, id);
-    if (isDuplicate) {
-      return c.json({ error: 'Conflict: An allocation already exists for this mapping.' }, 400);
-    }
-
-    // Check if an inactive record exists for the new mapping
-    const existingMapping = await repo.findByMapping(teacherId, subjectId, sectionId, academicYearId);
-    if (existingMapping) {
-      try {
-        await repo.reactivateAndMerge(existingMapping.id, id, user.institution_id, input, user.sub);
-        await createAuditLog(c.env.DB, user.sub, 'UPDATE_TEACHING_ALLOCATION', 'teaching_allocations', existingMapping.id, `Reactivated and updated allocation details due to teacher reassignment`);
-        return c.json({ success: true });
-      } catch (err: any) {
-        return c.json({ error: err.message }, 500);
-      }
-    }
-  }
+  const service = new AllocationService(repo, c.env.DB);
 
   try {
-    await repo.update(id, user.institution_id, input, user.sub);
+    await service.updateAllocation(id, user.institution_id, input, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'UPDATE_TEACHING_ALLOCATION', 'teaching_allocations', id, `Updated allocation details`);
     return c.json({ success: true });
   } catch (err: any) {
-    return c.json({ error: err.message }, 500);
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
   }
 });
 
-// 6. DELETE /:id: Soft delete allocation
-allocations.delete('/:id', requirePermission('academic.manage'), async (c) => {
+// 5.1 POST /:id/archive: Archive allocation
+allocations.post('/:id/archive', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new TeachingAllocationRepository(c.env.DB);
-
-  const existing = await repo.findById(id, user.institution_id);
-  if (!existing) {
-    return c.json({ error: 'Allocation not found' }, 404);
-  }
-
-  // Validate academic year is not locked/archived
-  const isLocked = await isYearLockedOrArchived(c.env.DB, existing.academic_year_id);
-  if (isLocked) {
-    return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
-  }
+  const service = new AllocationService(repo, c.env.DB);
 
   try {
-    await repo.softDelete(id, user.institution_id, user.sub);
-    await createAuditLog(c.env.DB, user.sub, 'DELETE_TEACHING_ALLOCATION', 'teaching_allocations', id, `Soft deleted teaching allocation`);
+    await service.archiveAllocation(id, user.institution_id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'ARCHIVE_TEACHING_ALLOCATION', 'teaching_allocations', id, `Archived allocation`);
     return c.json({ success: true });
   } catch (err: any) {
-    return c.json({ error: err.message }, 500);
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
+  }
+});
+
+// 5.2 POST /:id/restore: Restore archived allocation
+allocations.post('/:id/restore', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new TeachingAllocationRepository(c.env.DB);
+  const service = new AllocationService(repo, c.env.DB);
+
+  try {
+    await service.restoreAllocation(id, user.institution_id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'RESTORE_TEACHING_ALLOCATION', 'teaching_allocations', id, `Restored allocation`);
+    return c.json({ success: true });
+  } catch (err: any) {
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
+  }
+});
+
+// 6. DELETE /:id: Delete allocation (with 409 conflict protection)
+allocations.delete('/:id', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const force = c.req.query('force') === 'true';
+  const repo = new TeachingAllocationRepository(c.env.DB);
+  const service = new AllocationService(repo, c.env.DB);
+
+  try {
+    await service.deleteAllocation(id, user.institution_id, user.sub, force);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_TEACHING_ALLOCATION', 'teaching_allocations', id, `Deleted/Archived teaching allocation`);
+    return c.json({ success: true });
+  } catch (err: any) {
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
   }
 });
 

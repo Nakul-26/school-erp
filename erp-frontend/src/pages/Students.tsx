@@ -21,6 +21,7 @@ import { AddStudentWizard } from './students/components/AddStudentWizard';
 import { EditStudentModal } from './students/components/EditStudentModal';
 import { BulkSectionModal } from './students/components/BulkSectionModal';
 import { ImportExcelModal } from './students/components/ImportExcelModal';
+import { StudentIDCardModal } from './students/components/StudentIDCardModal';
 
 export default function Students() {
   const [students, setStudents] = useState<any[]>([]);
@@ -92,6 +93,13 @@ export default function Students() {
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showIDCardModal, setShowIDCardModal] = useState(false);
+  const [selectedIDCardStudent, setSelectedIDCardStudent] = useState<any>(null);
+
+  const handleOpenIDCardModal = (student: any) => {
+    setSelectedIDCardStudent(student);
+    setShowIDCardModal(true);
+  };
 
   // Institution & Terminology States
   const { user } = useAuth();
@@ -654,6 +662,7 @@ export default function Students() {
                       activeMenuId={activeMenuId}
                       setActiveMenuId={setActiveMenuId}
                       handleOpenEditModal={handleOpenEditModal}
+                      handleOpenIDCardModal={handleOpenIDCardModal}
                       handleReactivateStudent={handleReactivateStudent}
                       handleArchiveStudent={handleArchiveStudent}
                       handleDeleteStudent={handleDeleteStudent}
@@ -669,6 +678,7 @@ export default function Students() {
                   handleSelectAll={handleSelectAll}
                   handleSelectOne={handleSelectOne}
                   handleOpenEditModal={handleOpenEditModal}
+                  handleOpenIDCardModal={handleOpenIDCardModal}
                   handleReactivateStudent={handleReactivateStudent}
                   handleArchiveStudent={handleArchiveStudent}
                   handleDeleteStudent={handleDeleteStudent}
@@ -759,6 +769,13 @@ export default function Students() {
               getProgramLabel={getProgramLabel}
               handleEditSubmit={handleEditSubmit}
               setShowEditModal={setShowEditModal}
+            />
+          )}
+
+          {showIDCardModal && selectedIDCardStudent && (
+            <StudentIDCardModal
+              student={selectedIDCardStudent}
+              onClose={() => { setShowIDCardModal(false); setSelectedIDCardStudent(null); }}
             />
           )}
         </>

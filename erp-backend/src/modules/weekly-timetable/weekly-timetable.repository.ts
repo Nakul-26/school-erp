@@ -1,29 +1,117 @@
-import { WeeklyTimetableEntry, CreateWeeklyTimetableInput, UpdateWeeklyTimetableInput } from './weekly-timetable.types';
+import { WeeklyTimetableEntry, CreateWeeklyTimetableInput, UpdateWeeklyTimetableInput, TimetableSubstituteInput } from './weekly-timetable.types';
 import { getUpdateFields } from '../../utils/repository';
 
-const UPDATE_FIELDS = ['academic_year_id', 'teacher_id', 'subject_id', 'section_id', 'slot_id', 'day_of_week'] as const;
+const UPDATE_FIELDS = ['academic_year_id', 'teacher_id', 'subject_id', 'section_id', 'slot_id', 'day_of_week', 'room_number', 'status'] as const;
 
 export class WeeklyTimetableRepository {
+  private schemaChecked = false;
+
   constructor(private db: D1Database) {}
 
-  async create(id: string, institutionId: string, input: CreateWeeklyTimetableInput, userId?: string): Promise<void> {
-    await this.db.prepare(`
-      INSERT INTO weekly_timetable (
-        id, institution_id, academic_year_id, teacher_id, subject_id, section_id, slot_id, day_of_week, created_by, updated_by, is_active
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-      ON CONFLICT(institution_id, academic_year_id, section_id, slot_id, day_of_week) DO UPDATE SET
-        is_active = 1,
-        deleted_at = NULL,
-        teacher_id = excluded.teacher_id,
-        subject_id = excluded.subject_id,
-        updated_by = excluded.updated_by,
-        updated_at = datetime('now')
-    `).bind(
-      id, institutionId, input.academic_year_id, input.teacher_id || null, input.subject_id, input.section_id, input.slot_id, input.day_of_week, userId || null, userId || null
-    ).run();
+  async ensureSchema(): Promise<void> {
+    if (this.schemaChecked) return;
+    try {
+      await this.db.prepare("ALTER TABLE weekly_timetable ADD COLUMN room_number TEXT").run();
+    } catch (_) {}
+    try {
+      await this.db.prepare("ALTER TABLE weekly_timetable ADD COLUMN status TEXT DEFAULT 'Published'").run();
+    } catch (_) {}
+    this.schemaChecked = true;
+  }
+
+  async findSectionConflict(sectionId: string, slotId: string, dayOfWeek: string, academicYearId: string, excludeId?: string): Promise<any | null> {
+    await this.ensureSchema();
+    let query = `
+      SELECT wt.*, s.name as section_name, sub.subject_name
+      FROM weekly_timetable wt
+      JOIN sections s ON wt.section_id = s.id
+      JOIN subjects sub ON wt.subject_id = sub.id
+      WHERE wt.section_id = ? AND wt.slot_id = ? AND LOWER(wt.day_of_week) = LOWER(?) AND wt.academic_year_id = ? AND wt.is_active = 1
+    `;
+    const params: any[] = [sectionId, slotId, dayOfWeek, academicYearId];
+    if (excludeId) {
+      query += ' AND wt.id != ?';
+      params.push(excludeId);
+    }
+    return await this.db.prepare(query).bind(...params).first<any>();
+  }
+
+  async findTeacherConflict(teacherId: string, slotId: string, dayOfWeek: string, academicYearId: string, excludeId?: string): Promise<any | null> {
+    await this.ensureSchema();
+    let query = `
+      SELECT s.name as section_name, sub.subject_name, (t.first_name || ' ' || t.last_name) as teacher_name
+      FROM weekly_timetable wt
+      JOIN sections s ON wt.section_id = s.id
+      JOIN subjects sub ON wt.subject_id = sub.id
+      JOIN teachers t ON wt.teacher_id = t.id
+      WHERE wt.teacher_id = ? AND wt.slot_id = ? AND LOWER(wt.day_of_week) = LOWER(?) AND wt.is_active = 1
+    `;
+    const params: any[] = [teacherId, slotId, dayOfWeek];
+    if (excludeId) {
+      query += ' AND wt.id != ?';
+      params.push(excludeId);
+    }
+    return await this.db.prepare(query).bind(...params).first<any>();
+  }
+
+  async findRoomConflict(roomNumber: string, slotId: string, dayOfWeek: string, academicYearId: string, excludeId?: string): Promise<any | null> {
+    if (!roomNumber || !roomNumber.trim()) return null;
+    await this.ensureSchema();
+    let query = `
+      SELECT s.name as section_name, sub.subject_name
+      FROM weekly_timetable wt
+      JOIN sections s ON wt.section_id = s.id
+      JOIN subjects sub ON wt.subject_id = sub.id
+      WHERE LOWER(TRIM(wt.room_number)) = LOWER(TRIM(?)) AND wt.slot_id = ? AND LOWER(wt.day_of_week) = LOWER(?) AND wt.is_active = 1
+    `;
+    const params: any[] = [roomNumber.trim(), slotId, dayOfWeek];
+    if (excludeId) {
+      query += ' AND wt.id != ?';
+      params.push(excludeId);
+    }
+    return await this.db.prepare(query).bind(...params).first<any>();
+  }
+
+  async checkTeacherAllocation(teacherId: string, subjectId: string, sectionId: string, institutionId: string): Promise<boolean> {
+    const row = await this.db.prepare(`
+      SELECT 1 FROM teaching_allocations 
+      WHERE teacher_id = ? AND subject_id = ? AND section_id = ? AND institution_id = ? AND is_active = 1 AND LOWER(status) = 'active'
+      UNION
+      SELECT 1 FROM teacher_subject_assignments 
+      WHERE teacher_id = ? AND subject_id = ? AND section_id = ? AND is_active = 1
+      LIMIT 1
+    `).bind(teacherId, subjectId, sectionId, institutionId, teacherId, subjectId, sectionId).first();
+    return !!row;
+  }
+
+  async create(id: string, institutionId: string, input: CreateWeeklyTimetableInput, userId?: string): Promise<string> {
+    await this.ensureSchema();
+    const existing = await this.db.prepare(`
+      SELECT id FROM weekly_timetable 
+      WHERE institution_id = ? AND academic_year_id = ? AND section_id = ? AND slot_id = ? AND LOWER(day_of_week) = LOWER(?)
+    `).bind(institutionId, input.academic_year_id, input.section_id, input.slot_id, input.day_of_week).first<{ id: string }>();
+
+    if (existing) {
+      await this.db.prepare(`
+        UPDATE weekly_timetable 
+        SET is_active = 1, deleted_at = NULL, teacher_id = ?, subject_id = ?, room_number = ?, status = ?, updated_by = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `).bind(input.teacher_id || null, input.subject_id, input.room_number || null, input.status || 'Published', userId || null, existing.id).run();
+      return existing.id;
+    } else {
+      await this.db.prepare(`
+        INSERT INTO weekly_timetable (
+          id, institution_id, academic_year_id, teacher_id, subject_id, section_id, slot_id, day_of_week, room_number, status, created_by, updated_by, is_active
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+      `).bind(
+        id, institutionId, input.academic_year_id, input.teacher_id || null, input.subject_id, input.section_id, input.slot_id, input.day_of_week, input.room_number || null, input.status || 'Published', userId || null, userId || null
+      ).run();
+      return id;
+    }
   }
 
   async findById(id: string): Promise<WeeklyTimetableEntry | null> {
+    await this.ensureSchema();
     return await this.db.prepare(`
       SELECT wt.*, 
              (t.first_name || ' ' || t.last_name) AS teacher_name,
@@ -43,6 +131,7 @@ export class WeeklyTimetableRepository {
   }
 
   async listByInstitution(institutionId: string): Promise<WeeklyTimetableEntry[]> {
+    await this.ensureSchema();
     const { results } = await this.db.prepare(`
       SELECT wt.*, 
              (t.first_name || ' ' || t.last_name) AS teacher_name,

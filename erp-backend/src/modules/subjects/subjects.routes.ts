@@ -99,11 +99,8 @@ subjects.get('/', async (c) => {
   }
 
   const repo = new SubjectRepository(c.env.DB);
-  const service = new SubjectService(repo);
-  const results = await service.listSubjects(user.institution_id, {
-    course_id: filters.course_id,
-    semester: filters.semester ? parseInt(filters.semester) : undefined
-  });
+  const service = new SubjectService(repo, c.env.DB);
+  const results = await service.listSubjects(user.institution_id, filters);
   return c.json(results);
 });
 
@@ -120,7 +117,7 @@ subjects.get('/:id', async (c) => {
     FROM subjects s
     JOIN courses c ON c.id = s.course_id
     LEFT JOIN departments d ON d.id = c.department_id
-    WHERE s.id = ? AND s.is_active = 1
+    WHERE s.id = ?
   `).bind(id).first<any>();
   
   if (!result || result.institution_id !== user.institution_id) {
@@ -132,18 +129,34 @@ subjects.get('/:id', async (c) => {
   return c.json(result);
 });
 
+subjects.get('/:id/dependencies', async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new SubjectRepository(c.env.DB);
+  const service = new SubjectService(repo, c.env.DB);
+
+  const existing = await service.getSubject(id);
+  if (!existing || existing.institution_id !== user.institution_id) {
+    return c.json({ error: 'Subject not found' }, 404);
+  }
+
+  const deps = await service.getDependencies(id);
+  return c.json(deps);
+});
+
 subjects.post('/', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
   const repo = new SubjectRepository(c.env.DB);
-  const service = new SubjectService(repo);
+  const service = new SubjectService(repo, c.env.DB);
   
   try {
     const id = await service.createSubject(user.institution_id, input, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'CREATE_SUBJECT', 'subjects', id, `Created subject: ${input.subject_name} (${input.subject_code})`);
     return c.json({ id }, 201);
   } catch (e: any) {
-    return c.json({ error: e.message }, 400);
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
   }
 });
 
@@ -152,7 +165,7 @@ subjects.put('/:id', requirePermission('academic.manage'), async (c) => {
   const id = c.req.param('id')!;
   const input = await c.req.json();
   const repo = new SubjectRepository(c.env.DB);
-  const service = new SubjectService(repo);
+  const service = new SubjectService(repo, c.env.DB);
   
   const existing = await service.getSubject(id);
   if (!existing || existing.institution_id !== user.institution_id) {
@@ -164,24 +177,74 @@ subjects.put('/:id', requirePermission('academic.manage'), async (c) => {
     await createAuditLog(c.env.DB, user.sub, 'UPDATE_SUBJECT', 'subjects', id, `Updated subject: ${existing.subject_name}`);
     return c.json({ success: true });
   } catch (e: any) {
-    return c.json({ error: e.message }, 400);
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
   }
 });
 
-subjects.delete('/:id', requirePermission('academic.manage'), async (c) => {
+subjects.post('/:id/archive', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new SubjectRepository(c.env.DB);
-  const service = new SubjectService(repo);
+  const service = new SubjectService(repo, c.env.DB);
   
   const existing = await service.getSubject(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Subject not found' }, 404);
   }
   
-  await service.deleteSubject(id, user.sub);
-  await createAuditLog(c.env.DB, user.sub, 'DELETE_SUBJECT', 'subjects', id, `Deleted subject: ${existing.subject_name}`);
-  return c.json({ success: true });
+  try {
+    await service.archiveSubject(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'ARCHIVE_SUBJECT', 'subjects', id, `Archived subject: ${existing.subject_name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
+  }
+});
+
+subjects.post('/:id/restore', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new SubjectRepository(c.env.DB);
+  const service = new SubjectService(repo, c.env.DB);
+  
+  const existing = await service.getSubject(id);
+  if (!existing || existing.institution_id !== user.institution_id) {
+    return c.json({ error: 'Subject not found' }, 404);
+  }
+  
+  try {
+    await service.restoreSubject(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'RESTORE_SUBJECT', 'subjects', id, `Restored subject: ${existing.subject_name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
+  }
+});
+
+subjects.delete('/:id', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const force = c.req.query('force') === 'true';
+
+  const repo = new SubjectRepository(c.env.DB);
+  const service = new SubjectService(repo, c.env.DB);
+  
+  const existing = await service.getSubject(id);
+  if (!existing || existing.institution_id !== user.institution_id) {
+    return c.json({ error: 'Subject not found' }, 404);
+  }
+  
+  try {
+    await service.deleteSubject(id, user.sub, force);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_SUBJECT', 'subjects', id, `Deleted/Archived subject: ${existing.subject_name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
+  }
 });
 
 // --- OPERATIONAL TEACHING DATA ---

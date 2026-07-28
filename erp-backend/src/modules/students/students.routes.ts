@@ -323,7 +323,7 @@ students.get('/:id', async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new StudentRepository(c.env.DB);
-  const service = new StudentService(repo);
+  const service = new StudentService(repo, c.env.DB);
   const result = await service.getStudent(id);
   
   if (!result || result.institution_id !== user.institution_id) {
@@ -359,19 +359,33 @@ students.get('/:id', async (c) => {
   return c.json(result);
 });
 
+students.get('/:id/dependencies', async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new StudentRepository(c.env.DB);
+  const service = new StudentService(repo, c.env.DB);
+
+  const existing = await service.getStudent(id);
+  if (!existing || existing.institution_id !== user.institution_id) {
+    return c.json({ error: 'Student not found' }, 404);
+  }
+
+  const deps = await service.getDependencies(id);
+  return c.json(deps);
+});
+
 students.post('/', requireRole('admin', 'super_admin'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
   const repo = new StudentRepository(c.env.DB);
-  const service = new StudentService(repo);
+  const service = new StudentService(repo, c.env.DB);
+
   try {
     const id = await service.createStudent(user.institution_id, input, user.sub);
     return c.json({ id }, 201);
   } catch (err: any) {
-    if (err.message && (err.message.includes('UNIQUE constraint failed: students.admission_number') || err.message.includes('students.admission_number'))) {
-      return c.json({ error: 'Admission number already exists. Please choose a unique admission number.' }, 400);
-    }
-    throw err;
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
   }
 });
 
@@ -380,7 +394,7 @@ students.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
   const id = c.req.param('id')!;
   const input = await c.req.json();
   const repo = new StudentRepository(c.env.DB);
-  const service = new StudentService(repo);
+  const service = new StudentService(repo, c.env.DB);
   
   const existing = await service.getStudent(id);
   if (!existing || existing.institution_id !== user.institution_id) {
@@ -388,29 +402,64 @@ students.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
   }
   
   try {
-    await service.updateStudent(id, input, user.sub);
+    await service.updateStudent(id, user.institution_id, input, user.sub);
     return c.json({ success: true });
   } catch (err: any) {
-    if (err.message && (err.message.includes('UNIQUE constraint failed: students.admission_number') || err.message.includes('students.admission_number'))) {
-      return c.json({ error: 'Admission number already exists. Please enter a unique admission number.' }, 400);
-    }
-    throw err;
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
+  }
+});
+
+students.post('/:id/archive', requireRole('admin', 'super_admin'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new StudentRepository(c.env.DB);
+  const service = new StudentService(repo, c.env.DB);
+
+  try {
+    await service.archiveStudent(id, user.institution_id, user.sub);
+    return c.json({ success: true });
+  } catch (err: any) {
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
+  }
+});
+
+students.post('/:id/restore', requireRole('admin', 'super_admin'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new StudentRepository(c.env.DB);
+  const service = new StudentService(repo, c.env.DB);
+
+  try {
+    await service.restoreStudent(id, user.institution_id, user.sub);
+    return c.json({ success: true });
+  } catch (err: any) {
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
   }
 });
 
 students.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
+  const force = c.req.query('force') === 'true';
+
   const repo = new StudentRepository(c.env.DB);
-  const service = new StudentService(repo);
+  const service = new StudentService(repo, c.env.DB);
   
   const existing = await service.getStudent(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Student not found' }, 404);
   }
   
-  await service.deleteStudent(id, user.sub);
-  return c.json({ success: true });
+  try {
+    await service.deleteStudent(id, user.institution_id, user.sub, force);
+    return c.json({ success: true });
+  } catch (err: any) {
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
+  }
 });
 
 // --- BULK STUDENT ACTIONS ---

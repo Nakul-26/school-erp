@@ -5,6 +5,8 @@ export interface Program {
   course_code: string;
   name: string;
   duration_years: number;
+  duration_unit?: string;
+  degree_type?: string;
   semester_enabled: number;
   credit_system_enabled: number;
   electives_enabled: number;
@@ -21,3 +23,20 @@ export type CreateProgramInput = Omit<Program, 'id' | 'institution_id' | 'is_act
 export type UpdateProgramInput = Partial<CreateProgramInput> & {
   is_active?: number;
 };
+
+export interface ProgramFilterOptions {
+  includeArchived?: boolean;
+  search?: string;
+  status?: 'ACTIVE' | 'ARCHIVED' | 'ALL';
+  degree_type?: string;
+  department_id?: string;
+}
+
+export interface ProgramDependencyCounts {
+  students: number;
+  classes: number;
+  subjects: number;
+  teacher_assignments: number;
+  timetables: number;
+  total: number;
+}

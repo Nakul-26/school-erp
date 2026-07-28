@@ -1,4 +1,4 @@
-import { TeachingAllocation, CreateAllocationInput, UpdateAllocationInput } from './allocations.types';
+import { TeachingAllocation, CreateAllocationInput, UpdateAllocationInput, AllocationFilterOptions, AllocationDependencyCounts } from './allocations.types';
 import { getUpdateFields } from '../../utils/repository';
 
 const UPDATE_FIELDS = [
@@ -6,7 +6,7 @@ const UPDATE_FIELDS = [
   'mentoring_hours', 'admin_hours', 'primary_teacher', 'status',
   'start_date', 'end_date', 'remarks',
   'teacher_id', 'subject_id', 'section_id', 'academic_year_id',
-  'department_id', 'program_id', 'semester', 'year_number'
+  'department_id', 'program_id', 'semester', 'year_number', 'is_active'
 ] as const;
 
 export class TeachingAllocationRepository {
@@ -70,7 +70,7 @@ export class TeachingAllocationRepository {
     return await this.db.prepare(`
       SELECT 
         a.*,
-      (t.first_name || ' ' || t.last_name) as teacher_name,
+        (t.first_name || ' ' || t.last_name) as teacher_name,
         t.employee_id as teacher_employee_id,
         s.name as section_name,
         sub.subject_name,
@@ -85,18 +85,11 @@ export class TeachingAllocationRepository {
       JOIN academic_years y ON y.id = a.academic_year_id
       JOIN departments d ON d.id = a.department_id
       JOIN courses c ON c.id = a.program_id
-      WHERE a.id = ? AND a.institution_id = ? AND a.is_active = 1
+      WHERE a.id = ? AND a.institution_id = ?
     `).bind(id, institutionId).first();
   }
 
-  async list(institutionId: string, filters: {
-    academic_year_id?: string;
-    department_id?: string;
-    program_id?: string;
-    teacher_id?: string;
-    section_id?: string;
-    subject_id?: string;
-  }): Promise<any[]> {
+  async list(institutionId: string, filters: AllocationFilterOptions): Promise<any[]> {
     let query = `
       SELECT 
         a.*,
@@ -115,36 +108,53 @@ export class TeachingAllocationRepository {
       JOIN academic_years y ON y.id = a.academic_year_id
       JOIN departments d ON d.id = a.department_id
       JOIN courses c ON c.id = a.program_id
-      WHERE a.institution_id = ? AND a.is_active = 1
+      WHERE a.institution_id = ?
     `;
     const params: any[] = [institutionId];
 
-    if (filters.academic_year_id) {
+    // Status filter
+    if (filters.status === 'Active') {
+      query += ' AND a.is_active = 1 AND a.status = "Active"';
+    } else if (filters.status === 'Archived') {
+      query += ' AND (a.is_active = 0 OR a.status = "Archived")';
+    } else if (filters.is_active !== undefined && filters.is_active !== '') {
+      query += ' AND a.is_active = ?';
+      params.push(filters.is_active === '0' ? 0 : 1);
+    } else if (filters.status !== 'ALL') {
+      query += ' AND a.is_active = 1';
+    }
+
+    if (filters.academic_year_id && filters.academic_year_id !== 'ALL') {
       query += ' AND a.academic_year_id = ?';
       params.push(filters.academic_year_id);
     }
-    if (filters.department_id) {
+    if (filters.department_id && filters.department_id !== 'ALL') {
       query += ' AND a.department_id = ?';
       params.push(filters.department_id);
     }
-    if (filters.program_id) {
+    if (filters.program_id && filters.program_id !== 'ALL') {
       query += ' AND a.program_id = ?';
       params.push(filters.program_id);
     }
-    if (filters.teacher_id) {
+    if (filters.teacher_id && filters.teacher_id !== 'ALL') {
       query += ' AND a.teacher_id = ?';
       params.push(filters.teacher_id);
     }
-    if (filters.section_id) {
+    if (filters.section_id && filters.section_id !== 'ALL') {
       query += ' AND a.section_id = ?';
       params.push(filters.section_id);
     }
-    if (filters.subject_id) {
+    if (filters.subject_id && filters.subject_id !== 'ALL') {
       query += ' AND a.subject_id = ?';
       params.push(filters.subject_id);
     }
+    if (filters.search && filters.search.trim()) {
+      query += ' AND ((t.first_name || " " || t.last_name) LIKE ? OR sub.subject_name LIKE ? OR sub.subject_code LIKE ? OR s.name LIKE ?)';
+      const term = `%${filters.search.trim()}%`;
+      params.push(term, term, term, term);
+    }
 
-    query += ' ORDER BY a.created_at DESC';
+    query += ' ORDER BY a.is_active DESC, y.name DESC, (t.first_name || " " || t.last_name) ASC, sub.subject_name ASC';
 
     const { results } = await this.db.prepare(query).bind(...params).all<any>();
     return results || [];
@@ -155,19 +165,41 @@ export class TeachingAllocationRepository {
     if (fields.length === 0) return;
 
     const sets = fields.map(field => `${field} = ?`).join(', ');
-    const values = [...fields.map(field => input[field]), userId || null, id, institutionId];
+    const values = [...fields.map(field => input[field] === undefined ? null : input[field]), userId || null, id, institutionId];
 
     await this.db.prepare(`
       UPDATE teaching_allocations 
       SET ${sets}, updated_at = datetime('now'), updated_by = ?
-      WHERE id = ? AND institution_id = ? AND is_active = 1
+      WHERE id = ? AND institution_id = ?
     `).bind(...values).run();
+  }
+
+  async demoteOtherPrimaryTeachers(subjectId: string, sectionId: string, academicYearId: string, excludeId?: string): Promise<void> {
+    let query = 'UPDATE teaching_allocations SET primary_teacher = 0 WHERE subject_id = ? AND section_id = ? AND academic_year_id = ? AND is_active = 1';
+    const params = [subjectId, sectionId, academicYearId];
+    if (excludeId) {
+      query += ' AND id != ?';
+      params.push(excludeId);
+    }
+    await this.db.prepare(query).bind(...params).run();
   }
 
   async softDelete(id: string, institutionId: string, userId?: string): Promise<void> {
     await this.db.prepare(`
       UPDATE teaching_allocations 
-      SET is_active = 0, updated_at = datetime('now'), updated_by = ? 
+      SET is_active = 0, status = 'Archived', updated_at = datetime('now'), updated_by = ? 
+      WHERE id = ? AND institution_id = ?
+    `).bind(userId || null, id, institutionId).run();
+  }
+
+  async hardDelete(id: string, institutionId: string): Promise<void> {
+    await this.db.prepare('DELETE FROM teaching_allocations WHERE id = ? AND institution_id = ?').bind(id, institutionId).run();
+  }
+
+  async restore(id: string, institutionId: string, userId?: string): Promise<void> {
+    await this.db.prepare(`
+      UPDATE teaching_allocations 
+      SET is_active = 1, status = 'Active', updated_at = datetime('now'), updated_by = ? 
       WHERE id = ? AND institution_id = ?
     `).bind(userId || null, id, institutionId).run();
   }
@@ -214,7 +246,7 @@ export class TeachingAllocationRepository {
     userId?: string
   ): Promise<void> {
     const fields = getUpdateFields(input, UPDATE_FIELDS);
-    const sets = [...fields.map(field => `${field} = ?`), 'is_active = 1'].join(', ');
+    const sets = [...fields.map(field => `${field} = ?`), 'is_active = 1', "status = 'Active'"].join(', ');
     const values = [...fields.map(field => input[field]), userId || null, reactivateId, institutionId];
 
     const stmt1 = this.db.prepare(`
@@ -225,11 +257,51 @@ export class TeachingAllocationRepository {
 
     const stmt2 = this.db.prepare(`
       UPDATE teaching_allocations 
-      SET is_active = 0, updated_at = datetime('now'), updated_by = ? 
+      SET is_active = 0, status = 'Archived', updated_at = datetime('now'), updated_by = ? 
       WHERE id = ? AND institution_id = ?
     `).bind(userId || null, softDeleteId, institutionId);
 
     await this.db.batch([stmt1, stmt2]);
+  }
+
+  async getDependencyCounts(id: string): Promise<AllocationDependencyCounts> {
+    const alloc = await this.db.prepare('SELECT teacher_id, subject_id, section_id, academic_year_id FROM teaching_allocations WHERE id = ?').bind(id).first<any>();
+    if (!alloc) {
+      return { timetables: 0, attendance: 0, exams: 0, total: 0 };
+    }
+
+    // 1. Timetables
+    const ttRow = await this.db.prepare(`
+      SELECT COUNT(*) as count 
+      FROM weekly_timetable 
+      WHERE teacher_id = ? AND subject_id = ? AND section_id = ? AND is_active = 1
+    `).bind(alloc.teacher_id, alloc.subject_id, alloc.section_id).first<{ count: number }>();
+    const timetables = ttRow?.count || 0;
+
+    // 2. Attendance sessions
+    const attRow = await this.db.prepare(`
+      SELECT COUNT(*) as count 
+      FROM attendance_sessions 
+      WHERE teacher_id = ? AND subject_id = ? AND section_id = ? AND is_active = 1
+    `).bind(alloc.teacher_id, alloc.subject_id, alloc.section_id).first<{ count: number }>();
+    const attendance = attRow?.count || 0;
+
+    // 3. Exams
+    const examRow = await this.db.prepare(`
+      SELECT COUNT(*) as count 
+      FROM exam_subjects 
+      WHERE subject_id = ? AND is_active = 1
+    `).bind(alloc.subject_id).first<{ count: number }>();
+    const exams = examRow?.count || 0;
+
+    const total = timetables + attendance;
+
+    return {
+      timetables,
+      attendance,
+      exams,
+      total
+    };
   }
 
   async calculateTeacherLoad(teacherId: string, academicYearId: string): Promise<{

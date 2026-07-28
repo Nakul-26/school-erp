@@ -9,6 +9,7 @@ interface StudentsTableProps {
   handleSelectAll: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSelectOne: (id: string, checked: boolean) => void;
   handleOpenEditModal: (student: any) => void;
+  handleOpenIDCardModal: (student: any) => void;
   handleReactivateStudent: (id: string, name: string) => void;
   handleArchiveStudent: (id: string, name: string) => void;
   handleDeleteStudent: (id: string, name: string) => void;
@@ -23,6 +24,7 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
   handleSelectAll,
   handleSelectOne,
   handleOpenEditModal,
+  handleOpenIDCardModal,
   handleReactivateStudent,
   handleArchiveStudent,
   handleDeleteStudent,
@@ -102,15 +104,16 @@ export const StudentsTable: React.FC<StudentsTableProps> = ({
                 </span>
               </td>
               <td>
-                <span className={`badge badge-${s.status === 'ACTIVE' ? 'success' : 'secondary'}`}>
+                <span className={`badge badge-${s.status === 'ACTIVE' ? 'success' : s.status === 'Archived' || s.status === 'DROPPED' ? 'secondary' : 'info'}`}>
                   {s.status}
                 </span>
               </td>
               <td>
                 <div className="students-row-67">
                   <Link to={`/students/${s.id}`} className="btn btn-sm btn-outline students-btn-table-action">View</Link>
+                  <button onClick={() => handleOpenIDCardModal(s)} className="btn btn-sm btn-outline students-btn-table-action" title="ID Card Preview">🪪</button>
                   {canEditStudent && <button onClick={() => handleOpenEditModal(s)} className="btn btn-sm btn-outline students-btn-table-action" title="Edit Record"><Edit2 size={12} /></button>}
-                  {canEditStudent && (s.status === 'DROPPED' ? (
+                  {canEditStudent && (s.status === 'DROPPED' || s.status === 'Archived' ? (
                     <button onClick={() => handleReactivateStudent(s.id, getFullName(s))} className="btn btn-sm btn-outline students-btn-table-action students-btn-table-reactivate" title="Reactivate Student"><Check size={12} /></button>
                   ) : (
                     <button onClick={() => handleArchiveStudent(s.id, getFullName(s))} className="btn btn-sm btn-outline students-btn-table-action students-btn-table-archive" title="Archive Student"><Archive size={12} /></button>

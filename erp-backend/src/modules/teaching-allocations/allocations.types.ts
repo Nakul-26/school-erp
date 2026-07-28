@@ -32,4 +32,23 @@ export type CreateAllocationInput = Omit<
   'id' | 'institution_id' | 'is_active' | 'created_at' | 'updated_at' | 'created_by' | 'updated_by'
 >;
 
-export type UpdateAllocationInput = Partial<CreateAllocationInput>;
+export type UpdateAllocationInput = Partial<CreateAllocationInput> & { is_active?: number };
+
+export interface AllocationFilterOptions {
+  academic_year_id?: string;
+  department_id?: string;
+  program_id?: string;
+  teacher_id?: string;
+  section_id?: string;
+  subject_id?: string;
+  status?: string;
+  is_active?: string;
+  search?: string;
+}
+
+export interface AllocationDependencyCounts {
+  timetables: number;
+  attendance: number;
+  exams: number;
+  total: number;
+}

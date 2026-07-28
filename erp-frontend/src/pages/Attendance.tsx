@@ -325,6 +325,21 @@ export default function Attendance() {
     ));
   };
 
+  const handleMarkAll = (status: 'present' | 'absent' | 'late' | 'excused') => {
+    setStudentRecords(prev => prev.map(rec => ({ ...rec, status })));
+  };
+
+  const handleInvertSelection = () => {
+    setStudentRecords(prev => prev.map(rec => ({
+      ...rec,
+      status: rec.status === 'present' ? 'absent' : rec.status === 'absent' ? 'present' : rec.status
+    })));
+  };
+
+  const handleClearAll = () => {
+    setStudentRecords(prev => prev.map(rec => ({ ...rec, status: 'present' })));
+  };
+
   const handleStudentRemarksChange = (studentId: string, remarks: string) => {
     setStudentRecords(prev => prev.map(rec => 
       rec.student_id === studentId ? { ...rec, remarks } : rec
@@ -337,7 +352,7 @@ export default function Attendance() {
       setStdLoading(true);
       const payload = studentRecords.map(rec => ({
         student_id: rec.student_id,
-        status: rec.status,
+        status: rec.status || 'present',
         remarks: rec.remarks
       }));
       await api.post(`/attendance/sessions/${selectedSession.id}/attendance`, payload);
@@ -345,8 +360,8 @@ export default function Attendance() {
       setStdView('list');
       setSelectedSession(null);
       fetchStdSessionsOnly();
-    } catch (err) {
-      alert('Error saving attendance records');
+    } catch (err: any) {
+      alert(err.message || 'Error saving attendance records');
     } finally {
       setStdLoading(false);
     }
@@ -765,24 +780,55 @@ export default function Attendance() {
             </button>
           </div>
 
-          {/* Student List Filters Bar */}
-          <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
-            <div className="search-container" style={{ flex: 1, maxWidth: '280px' }}>
-              <Search size={14} />
-              <input
-                type="text"
-                placeholder="Search students by name or roll number..."
-                value={studentSearchQuery}
-                onChange={e => setStudentSearchQuery(e.target.value)}
-              />
+          {/* Live Analytics & Bulk Action Bar */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div className="card" style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <UserCheck size={20} style={{ color: '#16a34a' }} />
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block' }}>Present</span>
+                <strong style={{ fontSize: '1.1rem', color: '#16a34a' }}>
+                  {studentRecords.filter(r => r.status === 'present').length} / {studentRecords.length}
+                </strong>
+              </div>
             </div>
+            <div className="card" style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <X size={20} style={{ color: '#dc2626' }} />
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block' }}>Absent</span>
+                <strong style={{ fontSize: '1.1rem', color: '#dc2626' }}>
+                  {studentRecords.filter(r => r.status === 'absent').length}
+                </strong>
+              </div>
+            </div>
+            <div className="card" style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Clock size={20} style={{ color: '#d97706' }} />
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block' }}>Late / Excused</span>
+                <strong style={{ fontSize: '1.1rem', color: '#d97706' }}>
+                  {studentRecords.filter(r => r.status === 'late' || r.status === 'excused').length}
+                </strong>
+              </div>
+            </div>
+          </div>
 
-            <div>
+          {/* Student List Filters & Bulk Action Controls Bar */}
+          <div className="card filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', padding: '1rem', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="search-container" style={{ flex: 1, minWidth: '220px', maxWidth: '280px' }}>
+                <Search size={14} />
+                <input
+                  type="text"
+                  placeholder="Search students by name or roll..."
+                  value={studentSearchQuery}
+                  onChange={e => setStudentSearchQuery(e.target.value)}
+                />
+              </div>
+
               <select
                 value={studentStatusFilter}
                 onChange={e => setStudentStatusFilter(e.target.value)}
                 className="input"
-                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '150px' }}
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer', height: 'auto', minWidth: '130px' }}
               >
                 <option value="All">All Statuses</option>
                 <option value="present">Present</option>
@@ -790,6 +836,35 @@ export default function Attendance() {
                 <option value="late">Late</option>
                 <option value="excused">Excused</option>
               </select>
+            </div>
+
+            {/* Quick Bulk Action Buttons */}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Bulk Mark:</span>
+              <button
+                type="button"
+                onClick={() => handleMarkAll('present')}
+                className="btn btn-secondary"
+                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #86efac' }}
+              >
+                ✓ All Present
+              </button>
+              <button
+                type="button"
+                onClick={() => handleMarkAll('absent')}
+                className="btn btn-secondary"
+                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', backgroundColor: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' }}
+              >
+                ✕ All Absent
+              </button>
+              <button
+                type="button"
+                onClick={handleInvertSelection}
+                className="btn btn-secondary"
+                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
+              >
+                🔄 Invert
+              </button>
             </div>
           </div>
 

@@ -67,18 +67,22 @@ sections.get('/', async (c) => {
       query += ' AND s.course_id = ?';
       params.push(filters.course_id);
     }
+    if (filters.year_number) {
+      query += ' AND s.year_number = ?';
+      params.push(Number(filters.year_number));
+    }
     if (filters.search) {
-      query += ' AND (s.name LIKE ? OR s.room LIKE ?)';
-      params.push(`%${filters.search}%`, `%${filters.search}%`);
+      query += ' AND (s.name LIKE ? OR s.room LIKE ? OR c.name LIKE ?)';
+      params.push(`%${filters.search}%`, `%${filters.search}%`, `%${filters.search}%`);
     }
 
-    query += ' ORDER BY c.name ASC, s.name ASC';
+    query += ' ORDER BY c.name ASC, s.year_number ASC, s.name ASC';
     const { results } = await c.env.DB.prepare(query).bind(...params).all();
     return c.json(results || []);
   }
 
   const repo = new SectionRepository(c.env.DB);
-  const service = new SectionService(repo);
+  const service = new SectionService(repo, c.env.DB);
   const results = await service.listSections(user.institution_id, filters);
   return c.json(results);
 });
@@ -87,10 +91,10 @@ sections.get('/:id', async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new SectionRepository(c.env.DB);
-  const service = new SectionService(repo);
+  const service = new SectionService(repo, c.env.DB);
   const result = await service.getSection(id);
   
-  if (!result || result.institution_id !== user.institution_id || result.is_active !== 1) {
+  if (!result || result.institution_id !== user.institution_id) {
     return c.json({ error: 'Section not found' }, 404);
   }
   if (!(await teacherHasSectionAccess(c.env.DB, user, id))) {
@@ -99,18 +103,34 @@ sections.get('/:id', async (c) => {
   return c.json(result);
 });
 
+sections.get('/:id/dependencies', async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new SectionRepository(c.env.DB);
+  const service = new SectionService(repo, c.env.DB);
+
+  const existing = await service.getSection(id);
+  if (!existing || existing.institution_id !== user.institution_id) {
+    return c.json({ error: 'Section not found' }, 404);
+  }
+
+  const deps = await service.getDependencies(id);
+  return c.json(deps);
+});
+
 sections.post('/', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
   const repo = new SectionRepository(c.env.DB);
-  const service = new SectionService(repo);
+  const service = new SectionService(repo, c.env.DB);
   
   try {
     const id = await service.createSection(user.institution_id, input, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'CREATE_SECTION', 'sections', id, `Created section: ${input.name} (Year: ${input.year_number})`);
     return c.json({ id }, 201);
   } catch (e: any) {
-    return c.json({ error: e.message }, 400);
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
   }
 });
 
@@ -119,7 +139,7 @@ sections.put('/:id', requirePermission('academic.manage'), async (c) => {
   const id = c.req.param('id')!;
   const input = await c.req.json();
   const repo = new SectionRepository(c.env.DB);
-  const service = new SectionService(repo);
+  const service = new SectionService(repo, c.env.DB);
   
   const existing = await service.getSection(id);
   if (!existing || existing.institution_id !== user.institution_id) {
@@ -131,15 +151,16 @@ sections.put('/:id', requirePermission('academic.manage'), async (c) => {
     await createAuditLog(c.env.DB, user.sub, 'UPDATE_SECTION', 'sections', id, `Updated section: ${existing.name}`);
     return c.json({ success: true });
   } catch (e: any) {
-    return c.json({ error: e.message }, 400);
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
   }
 });
 
-sections.delete('/:id', requirePermission('academic.manage'), async (c) => {
+sections.post('/:id/archive', requirePermission('academic.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new SectionRepository(c.env.DB);
-  const service = new SectionService(repo);
+  const service = new SectionService(repo, c.env.DB);
   
   const existing = await service.getSection(id);
   if (!existing || existing.institution_id !== user.institution_id) {
@@ -147,11 +168,56 @@ sections.delete('/:id', requirePermission('academic.manage'), async (c) => {
   }
   
   try {
-    await service.deleteSection(id, user.sub);
-    await createAuditLog(c.env.DB, user.sub, 'DELETE_SECTION', 'sections', id, `Deleted section: ${existing.name}`);
+    await service.archiveSection(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'ARCHIVE_SECTION', 'sections', id, `Archived section: ${existing.name}`);
     return c.json({ success: true });
   } catch (e: any) {
-    return c.json({ error: e.message }, 400);
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
+  }
+});
+
+sections.post('/:id/restore', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new SectionRepository(c.env.DB);
+  const service = new SectionService(repo, c.env.DB);
+  
+  const existing = await service.getSection(id);
+  if (!existing || existing.institution_id !== user.institution_id) {
+    return c.json({ error: 'Section not found' }, 404);
+  }
+  
+  try {
+    await service.restoreSection(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'RESTORE_SECTION', 'sections', id, `Restored section: ${existing.name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
+  }
+});
+
+sections.delete('/:id', requirePermission('academic.manage'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const force = c.req.query('force') === 'true';
+
+  const repo = new SectionRepository(c.env.DB);
+  const service = new SectionService(repo, c.env.DB);
+  
+  const existing = await service.getSection(id);
+  if (!existing || existing.institution_id !== user.institution_id) {
+    return c.json({ error: 'Section not found' }, 404);
+  }
+  
+  try {
+    await service.deleteSection(id, user.sub, force);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_SECTION', 'sections', id, `Deleted/Archived section: ${existing.name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
   }
 });
 

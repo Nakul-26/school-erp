@@ -149,7 +149,7 @@ exams.post('/', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teacher
   }
 
   const repo = new ExamsRepository(c.env.DB);
-  const service = new ExamsService(repo);
+  const service = new ExamsService(repo, c.env.DB);
   
   try {
     const id = await service.createExam(user.institution_id, input, user.sub);
@@ -168,17 +168,20 @@ exams.post('/', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teacher
 
     return c.json({ id }, 201);
   } catch (e: any) {
-    return c.json({ error: e.message }, 400);
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
   }
 });
 
 
 exams.put('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teacher'), async (c) => {
   const user = c.get('user');
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const userPermissions = user.permissions || [];
   const id = c.req.param('id')!;
   const input = await c.req.json();
   const repo = new ExamsRepository(c.env.DB);
-  const service = new ExamsService(repo);
+  const service = new ExamsService(repo, c.env.DB);
   
   const existing = await service.getExam(id);
   if (!existing || existing.institution_id !== user.institution_id) {
@@ -195,8 +198,10 @@ exams.put('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teach
     return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
+  const allowOverride = userPermissions.includes('exam.override_marks_lock') || userRoles.some(r => ['admin', 'super_admin', 'Principal'].includes(r));
+
   try {
-    await service.updateExam(id, input, user.sub);
+    await service.updateExam(id, input, user.sub, allowOverride);
     await createAuditLog(c.env.DB, user.sub, 'UPDATE_EXAM', 'exams', id, `Updated exam event: ${existing.name}`);
     
     // Trigger in-app notification if status is being set to PUBLISHED
@@ -212,7 +217,8 @@ exams.put('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Teach
 
     return c.json({ success: true });
   } catch (e: any) {
-    return c.json({ error: e.message }, 400);
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
   }
 });
 
@@ -365,13 +371,15 @@ exams.get('/subjects/:id/marks', async (c) => {
 
 exams.post('/subjects/:id/marks', async (c) => {
   const user = c.get('user');
+  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const userPermissions = user.permissions || [];
   const forbidden = requireAcademicStaff(user);
   if (forbidden) return c.json(forbidden, 403);
 
   const id = c.req.param('id')!;
   const input = await c.req.json();
   const repo = new ExamsRepository(c.env.DB);
-  const service = new ExamsService(repo);
+  const service = new ExamsService(repo, c.env.DB);
   
   const examSub = await repo.findSubjectById(id);
   if (!examSub || examSub.institution_id !== user.institution_id) {
@@ -400,6 +408,7 @@ exams.post('/subjects/:id/marks', async (c) => {
         AND se.is_active = 1
         AND s.institution_id = ?
         AND s.is_active = 1
+        AND s.status = 'ACTIVE'
       LIMIT 1
     `).bind(record.student_id, exam.academic_year_id, exam.course_id, exam.semester, user.institution_id).first<{ section_id: string }>();
 
@@ -408,7 +417,7 @@ exams.post('/subjects/:id/marks', async (c) => {
       !(await teacherCanAccessStudent(c.env.DB, user, record.student_id)) ||
       !(await teacherHasSubjectAccess(c.env.DB, user, examSub.subject_id, enrollment.section_id, exam.course_id, exam.academic_year_id))
     ) {
-      return c.json({ error: 'Forbidden: marks include a student or subject outside your teaching assignment' }, 403);
+      return c.json({ error: 'Forbidden: marks include an inactive or invalid student outside your teaching assignment' }, 403);
     }
   }
 
@@ -418,8 +427,10 @@ exams.post('/subjects/:id/marks', async (c) => {
     return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
+  const allowOverride = userPermissions.includes('exam.override_marks_lock') || userRoles.some(r => ['admin', 'super_admin', 'Principal'].includes(r));
+
   try {
-    await service.saveMarks(user.institution_id, id, input, user.sub);
+    await service.saveMarks(user.institution_id, id, input, user.sub, allowOverride);
     await createAuditLog(c.env.DB, user.sub, 'ENTER_EXAM_MARKS', 'exams', id, `Entered marks for exam subject ${id}`);
     
     // Trigger in-app notification
@@ -433,8 +444,22 @@ exams.post('/subjects/:id/marks', async (c) => {
 
     return c.json({ success: true });
   } catch (e: any) {
-    return c.json({ error: e.message }, 400);
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
   }
+});
+
+// --- HALL TICKET ELIGIBILITY ---
+exams.get('/:id/hall-ticket-eligibility/:studentId', async (c) => {
+  const user = c.get('user');
+  const examId = c.req.param('id')!;
+  const studentId = c.req.param('studentId')!;
+
+  const repo = new ExamsRepository(c.env.DB);
+  const service = new ExamsService(repo, c.env.DB);
+
+  const result = await service.checkHallTicketEligibility(user.institution_id, examId, studentId);
+  return c.json(result);
 });
 
 // --- RESULTS ---

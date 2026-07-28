@@ -110,6 +110,7 @@ attendance.get('/sessions/:id', async (c) => {
 attendance.post('/sessions', async (c) => {
   const user = c.get('user');
   const userRoles = user.roles || (user.role ? [user.role] : []);
+  const userPermissions = user.permissions || [];
   const isStaff = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher'].includes(r));
   if (!isStaff) {
     return c.json({ error: 'Forbidden' }, 403);
@@ -117,7 +118,7 @@ attendance.post('/sessions', async (c) => {
 
   const input = await c.req.json();
   const repo = new AttendanceRepository(c.env.DB);
-  const service = new AttendanceService(repo);
+  const service = new AttendanceService(repo, c.env.DB);
 
   if (!(await teacherHasSectionAccess(c.env.DB, user, input.section_id))) {
     return c.json({ error: 'Forbidden: section is outside your teaching assignment' }, 403);
@@ -137,18 +138,22 @@ attendance.post('/sessions', async (c) => {
     return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
+  const allowOverride = userPermissions.includes('attendance.override_lock') || userRoles.some(r => ['admin', 'super_admin', 'Principal'].includes(r));
+
   try {
-    const id = await service.createSession(user.institution_id, input, user.sub);
+    const id = await service.createSession(user.institution_id, input, user.sub, allowOverride);
     await createAuditLog(c.env.DB, user.sub, 'CREATE_ATTENDANCE_SESSION', 'attendance', id, `Created attendance session for section ${input.section_id} on ${input.date}`);
     return c.json({ id }, 201);
   } catch (e: any) {
-    return c.json({ error: e.message }, 400);
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
   }
 });
 
 attendance.delete('/sessions/:id', async (c) => {
   const user = c.get('user');
   const userRoles = user.roles || (user.role ? [user.role] : []);
+  const userPermissions = user.permissions || [];
   const isStaff = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher'].includes(r));
   if (!isStaff) {
     return c.json({ error: 'Forbidden' }, 403);
@@ -156,7 +161,7 @@ attendance.delete('/sessions/:id', async (c) => {
 
   const id = c.req.param('id')!;
   const repo = new AttendanceRepository(c.env.DB);
-  const service = new AttendanceService(repo);
+  const service = new AttendanceService(repo, c.env.DB);
   
   const existing = await service.getSession(id);
   if (!existing || existing.institution_id !== user.institution_id) {
@@ -172,9 +177,16 @@ attendance.delete('/sessions/:id', async (c) => {
     return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
-  await service.deleteSession(id, user.sub);
-  await createAuditLog(c.env.DB, user.sub, 'DELETE_ATTENDANCE_SESSION', 'attendance', id, `Deleted attendance session`);
-  return c.json({ success: true });
+  const allowOverride = userPermissions.includes('attendance.override_lock') || userRoles.some(r => ['admin', 'super_admin', 'Principal'].includes(r));
+
+  try {
+    await service.deleteSession(id, user.institution_id, user.sub, allowOverride);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_ATTENDANCE_SESSION', 'attendance', id, `Deleted attendance session`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
+  }
 });
 
 attendance.get('/sessions/:id/attendance', async (c) => {
@@ -187,7 +199,7 @@ attendance.get('/sessions/:id/attendance', async (c) => {
 
   const id = c.req.param('id')!;
   const repo = new AttendanceRepository(c.env.DB);
-  const service = new AttendanceService(repo);
+  const service = new AttendanceService(repo, c.env.DB);
   
   const session = await service.getSession(id);
   if (!session || session.institution_id !== user.institution_id) {
@@ -204,6 +216,7 @@ attendance.get('/sessions/:id/attendance', async (c) => {
 attendance.post('/sessions/:id/attendance', async (c) => {
   const user = c.get('user');
   const userRoles = user.roles || (user.role ? [user.role] : []);
+  const userPermissions = user.permissions || [];
   const isStaff = userRoles.some(r => ['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'teacher'].includes(r));
   if (!isStaff) {
     return c.json({ error: 'Forbidden' }, 403);
@@ -213,7 +226,7 @@ attendance.post('/sessions/:id/attendance', async (c) => {
   const input = await c.req.json();
   
   const repo = new AttendanceRepository(c.env.DB);
-  const service = new AttendanceService(repo);
+  const service = new AttendanceService(repo, c.env.DB);
   
   const session = await service.getSession(id);
   if (!session || session.institution_id !== user.institution_id) {
@@ -239,10 +252,11 @@ attendance.post('/sessions/:id/attendance', async (c) => {
           AND se.is_active = 1
           AND s.institution_id = ?
           AND s.is_active = 1
+          AND s.status = 'ACTIVE'
         LIMIT 1
       `).bind(studentId, session.section_id, user.institution_id).first();
       if (!enrolled || !(await teacherCanAccessStudent(c.env.DB, user, studentId))) {
-        return c.json({ error: 'Forbidden: attendance includes a student outside this session section' }, 403);
+        return c.json({ error: 'Forbidden: attendance includes an inactive or invalid student outside this section' }, 403);
       }
     }
   }
@@ -253,8 +267,10 @@ attendance.post('/sessions/:id/attendance', async (c) => {
     return c.json({ error: 'This academic year is locked or archived. Modifications are not allowed.' }, 400);
   }
   
+  const allowOverride = userPermissions.includes('attendance.override_lock') || userRoles.some(r => ['admin', 'super_admin', 'Principal'].includes(r));
+
   try {
-    await service.markAttendance(user.institution_id, id, input, user.sub);
+    await service.markAttendance(user.institution_id, id, input, user.sub, allowOverride);
     await createAuditLog(c.env.DB, user.sub, 'MARK_ATTENDANCE', 'attendance', id, `Marked attendance for session ${id}`);
     
     // Trigger in-app notification
@@ -268,7 +284,8 @@ attendance.post('/sessions/:id/attendance', async (c) => {
 
     return c.json({ success: true });
   } catch (e: any) {
-    return c.json({ error: e.message }, 400);
+    const status = e.statusCode || 400;
+    return c.json({ error: e.message }, status as any);
   }
 });
 

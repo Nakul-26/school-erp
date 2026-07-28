@@ -105,6 +105,8 @@ export default function Classes() {
   const [programSearchQuery, setProgramSearchQuery] = useState('');
   const [programStatusFilter, setProgramStatusFilter] = useState<'ACTIVE' | 'ARCHIVED' | 'ALL'>('ACTIVE');
   const [programDeptFilter, setProgramDeptFilter] = useState<string>('ALL');
+  const [programDegreeFilter, setProgramDegreeFilter] = useState<string>('ALL');
+  const [programDurationFilter, setProgramDurationFilter] = useState<string>('ALL');
 
   // Program Modals & Forms
   const [showAddProgramModal, setShowAddProgramModal] = useState(false);
@@ -116,10 +118,12 @@ export default function Classes() {
   const [addProgramForm, setAddProgramForm] = useState({ 
     name: '', 
     course_code: '', 
-    duration_years: 1, 
+    duration_years: 4, 
+    duration_unit: 'Years',
+    degree_type: 'UG',
     department_id: '', 
-    semester_enabled: 0, 
-    credit_system_enabled: 0, 
+    semester_enabled: 1, 
+    credit_system_enabled: 1, 
     electives_enabled: 0, 
     description: '' 
   });
@@ -127,10 +131,12 @@ export default function Classes() {
     id: '', 
     name: '', 
     course_code: '', 
-    duration_years: 1, 
+    duration_years: 4, 
+    duration_unit: 'Years',
+    degree_type: 'UG',
     department_id: '', 
-    semester_enabled: 0, 
-    credit_system_enabled: 0, 
+    semester_enabled: 1, 
+    credit_system_enabled: 1, 
     electives_enabled: 0, 
     description: '' 
   });
@@ -426,6 +432,22 @@ export default function Classes() {
       alert('Name must be at least 3 characters.');
       return;
     }
+    if (addProgramForm.duration_years <= 0) {
+      alert('Duration must be a positive number greater than 0.');
+      return;
+    }
+
+    // Client-side duplicate check
+    const dupCode = programs.find(p => p.course_code.toUpperCase() === codeVal && p.is_active === 1);
+    if (dupCode) {
+      alert(`A ${getProgramLabel().toLowerCase()} with identifier code '${codeVal}' already exists.`);
+      return;
+    }
+    const dupName = programs.find(p => p.name.trim().toUpperCase() === nameVal.toUpperCase() && p.is_active === 1);
+    if (dupName) {
+      alert(`A ${getProgramLabel().toLowerCase()} with name '${nameVal}' already exists.`);
+      return;
+    }
 
     try {
       const payload = {
@@ -433,6 +455,8 @@ export default function Classes() {
         course_code: codeVal,
         name: nameVal,
         duration_years: institutionType === 'school' ? 1 : addProgramForm.duration_years,
+        duration_unit: addProgramForm.duration_unit || 'Years',
+        degree_type: addProgramForm.degree_type || (institutionType === 'school' ? 'School' : 'UG'),
         department_id: addProgramForm.department_id || null
       };
       await api.post('/programs', payload);
@@ -440,10 +464,12 @@ export default function Classes() {
       setAddProgramForm({ 
         name: '', 
         course_code: '', 
-        duration_years: institutionType === 'school' ? 1 : 4, 
+        duration_years: institutionType === 'school' ? 1 : 4,
+        duration_unit: 'Years',
+        degree_type: institutionType === 'school' ? 'School' : 'UG', 
         department_id: '', 
-        semester_enabled: 0, 
-        credit_system_enabled: 0, 
+        semester_enabled: 1, 
+        credit_system_enabled: 1, 
         electives_enabled: 0, 
         description: '' 
       });
@@ -466,12 +492,30 @@ export default function Classes() {
       alert('Name must be at least 3 characters.');
       return;
     }
+    if (editProgramForm.duration_years <= 0) {
+      alert('Duration must be a positive number greater than 0.');
+      return;
+    }
+
+    // Client-side duplicate check excluding current editing record
+    const dupCode = programs.find(p => p.id !== editProgramForm.id && p.course_code.toUpperCase() === codeVal && p.is_active === 1);
+    if (dupCode) {
+      alert(`A ${getProgramLabel().toLowerCase()} with identifier code '${codeVal}' already exists.`);
+      return;
+    }
+    const dupName = programs.find(p => p.id !== editProgramForm.id && p.name.trim().toUpperCase() === nameVal.toUpperCase() && p.is_active === 1);
+    if (dupName) {
+      alert(`A ${getProgramLabel().toLowerCase()} with name '${nameVal}' already exists.`);
+      return;
+    }
 
     try {
       await api.put(`/programs/${editProgramForm.id}`, {
         name: nameVal,
         course_code: codeVal,
         duration_years: institutionType === 'school' ? 1 : editProgramForm.duration_years,
+        duration_unit: editProgramForm.duration_unit || 'Years',
+        degree_type: editProgramForm.degree_type || (institutionType === 'school' ? 'School' : 'UG'),
         department_id: editProgramForm.department_id || null,
         semester_enabled: editProgramForm.semester_enabled,
         credit_system_enabled: editProgramForm.credit_system_enabled,
@@ -485,13 +529,26 @@ export default function Classes() {
     }
   };
 
-  const handleArchiveProgram = async (id: string) => {
-    if (!confirm(`Are you sure you want to archive this ${getProgramLabel().toLowerCase()}? (It will restrict future enrollments)`)) return;
+  const handleArchiveProgram = async (prog: any) => {
+    if (!confirm(`Are you sure you want to archive '${prog.name}' (${prog.course_code})?\n\nIt will restrict future enrollments and make this program read-only.`)) return;
     try {
-      await api.delete(`/programs/${id}`);
+      await api.post(`/programs/${prog.id}/archive`, {});
       fetchData();
     } catch (err: any) {
       alert(err.message || 'Error archiving program');
+    }
+  };
+
+  const handleDeleteProgram = async (prog: any) => {
+    if (!confirm(`Warning: This program may be linked to classes, students, and subjects.\n\nAre you sure you want to permanently delete '${prog.name}' (${prog.course_code})?`)) {
+      return;
+    }
+    try {
+      await api.delete(`/programs/${prog.id}?force=true`);
+      fetchData();
+      alert(`${getProgramLabel()} deleted successfully.`);
+    } catch (err: any) {
+      alert(err.message || 'Error deleting program. Ensure no active dependencies remain.');
     }
   };
 
@@ -506,11 +563,17 @@ export default function Classes() {
   };
 
   const openEditProgramModal = (prog: any) => {
+    if (prog.is_active === 0) {
+      alert('Archived programs are read-only. Please restore the program first to enable editing.');
+      return;
+    }
     setEditProgramForm({
       id: prog.id,
       name: prog.name,
       course_code: prog.course_code,
       duration_years: prog.duration_years || 1,
+      duration_unit: prog.duration_unit || 'Years',
+      degree_type: prog.degree_type || 'UG',
       department_id: prog.department_id || '',
       semester_enabled: prog.semester_enabled || 0,
       credit_system_enabled: prog.credit_system_enabled || 0,
@@ -551,7 +614,7 @@ export default function Classes() {
     return nameMatch || roomMatch || teacherMatch || programMatch;
   });
 
-  // Programs filters (client-side text, status, and dept)
+  // Programs filters (client-side text, status, dept, degree, duration & sort order)
   const displayedPrograms = programs.filter(prog => {
     const matchesSearch = prog.name.toLowerCase().includes(programSearchQuery.toLowerCase()) || 
                           prog.course_code.toLowerCase().includes(programSearchQuery.toLowerCase());
@@ -561,7 +624,17 @@ export default function Classes() {
 
     const matchesDept = programDeptFilter === 'ALL' ? true : prog.department_id === programDeptFilter;
 
-    return matchesSearch && matchesStatus && matchesDept;
+    const matchesDegree = programDegreeFilter === 'ALL' ? true : (prog.degree_type || 'UG') === programDegreeFilter;
+
+    const matchesDuration = programDurationFilter === 'ALL' ? true : String(prog.duration_years) === programDurationFilter;
+
+    return matchesSearch && matchesStatus && matchesDept && matchesDegree && matchesDuration;
+  }).sort((a, b) => {
+    // Sort Order: 1. Active first (is_active DESC), 2. Name A-Z (name ASC)
+    if (a.is_active !== b.is_active) {
+      return b.is_active - a.is_active;
+    }
+    return a.name.localeCompare(b.name);
   });
 
   // ----------------------------------------------------
@@ -968,16 +1041,40 @@ export default function Classes() {
           <div className="card filters classes-program-filters-card">
             <div className="search-container classes-search-container">
               <Search size={18} color="var(--text-muted)" />
-              <input type="text" placeholder={`Search by ${getProgramLabel().toLowerCase()} name or code...`} value={programSearchQuery} onChange={(e) => setProgramSearchQuery(e.target.value)} className="classes-input-94"  />
+              <input 
+                type="text" 
+                placeholder={`Search by ${getProgramLabel().toLowerCase()} name or code...`} 
+                value={programSearchQuery} 
+                onChange={(e) => setProgramSearchQuery(e.target.value)} 
+                className="classes-input-94"  
+              />
             </div>
             <div className="classes-row-95">
               {institutionType !== 'school' && (
-                <select value={programDeptFilter} onChange={(e) => setProgramDeptFilter(e.target.value)} className="classes-select-96">
-                  <option value="ALL">All Departments</option>
-                  {departments.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
+                <>
+                  <select value={programDeptFilter} onChange={(e) => setProgramDeptFilter(e.target.value)} className="classes-select-96">
+                    <option value="ALL">All Departments</option>
+                    {departments.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                  <select value={programDegreeFilter} onChange={(e) => setProgramDegreeFilter(e.target.value)} className="classes-select-96">
+                    <option value="ALL">All Degree Types</option>
+                    <option value="UG">UG (Undergraduate)</option>
+                    <option value="PG">PG (Postgraduate)</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Doctorate">Doctorate</option>
+                    <option value="Certificate">Certificate</option>
+                  </select>
+                  <select value={programDurationFilter} onChange={(e) => setProgramDurationFilter(e.target.value)} className="classes-select-96">
+                    <option value="ALL">All Durations</option>
+                    <option value="1">1 Year / Cycle</option>
+                    <option value="2">2 Years</option>
+                    <option value="3">3 Years</option>
+                    <option value="4">4 Years</option>
+                    <option value="5">5 Years</option>
+                  </select>
+                </>
               )}
               <select value={programStatusFilter} onChange={(e) => setProgramStatusFilter(e.target.value as any)} className="classes-select-97">
                 <option value="ACTIVE">Active Only</option>
@@ -999,36 +1096,50 @@ export default function Classes() {
                 <table className="table classes-table">
                   <thead>
                     <tr>
-                      <th className="classes-th-103">Code</th>
-                      <th className="classes-th-104">Name</th>
+                      <th className="classes-th-104">Program / Course Overview</th>
                       {institutionType !== 'school' && <th className="classes-th-105">Department</th>}
-                      {institutionType !== 'school' && <th className="classes-th-106">Duration</th>}
-                      <th className="classes-th-107">Semesters</th>
-                      <th className="classes-th-108">Credits</th>
+                      <th className="classes-th-107">Structure & Config</th>
                       <th className="classes-th-109">Status</th>
                       <th className="classes-th-110">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {displayedPrograms.map(prog => (
-                      <tr key={prog.id} className="classes-tr-111">
-                        <td className="classes-td-112">
-                          <code className="classes-code-113">
-                            {prog.course_code}
-                          </code>
+                      <tr key={prog.id} className={`classes-tr-111 ${prog.is_active === 0 ? 'archived-row' : ''}`}>
+                        <td className="classes-td-114">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{prog.name}</strong>
+                              <code className="classes-code-113" style={{ fontSize: '0.75rem', padding: '2px 6px' }}>
+                                {prog.course_code}
+                              </code>
+                              {institutionType !== 'school' && prog.degree_type && (
+                                <span className="badge badge-outline" style={{ fontSize: '0.7rem' }}>
+                                  {prog.degree_type}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '12px' }}>
+                              <span>Duration: <strong>{prog.duration_years} {prog.duration_unit || (prog.duration_years === 1 ? 'Year' : 'Years')}</strong></span>
+                              {prog.description && (
+                                <span>• {prog.description.length > 50 ? prog.description.substring(0, 50) + '...' : prog.description}</span>
+                              )}
+                            </div>
+                          </div>
                         </td>
-                        <td className="classes-td-114">{prog.name}</td>
                         {institutionType !== 'school' && <td className="classes-td-115">{getDeptCode(prog.department_id)}</td>}
-                        {institutionType !== 'school' && (
-                          <td className="classes-td-116">
-                            {prog.duration_years} {prog.duration_years === 1 ? 'Year' : 'Years'}
-                          </td>
-                        )}
                         <td className="classes-td-117">
-                          {prog.semester_enabled === 1 ? <Check size={16} color="var(--success)" className="classes-Check-118"  /> : <X size={16} color="var(--secondary)" className="classes-X-119"  />}
-                        </td>
-                        <td className="classes-td-120">
-                          {prog.credit_system_enabled === 1 ? <Check size={16} color="var(--success)" className="classes-Check-121"  /> : <X size={16} color="var(--secondary)" className="classes-X-122"  />}
+                          <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', alignItems: 'center' }}>
+                            <span title="Semester System" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              Semesters: {prog.semester_enabled === 1 ? <Check size={14} color="var(--success)" /> : <X size={14} color="var(--text-muted)" />}
+                            </span>
+                            <span title="Credit System" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              Credits: {prog.credit_system_enabled === 1 ? <Check size={14} color="var(--success)" /> : <X size={14} color="var(--text-muted)" />}
+                            </span>
+                            <span title="Electives Allowed" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              Electives: {prog.electives_enabled === 1 ? <Check size={14} color="var(--success)" /> : <X size={14} color="var(--text-muted)" />}
+                            </span>
+                          </div>
                         </td>
                         <td className="classes-td-123">
                           <span className={`badge badge-${prog.is_active === 1 ? 'success' : 'secondary'}`}>
@@ -1037,23 +1148,36 @@ export default function Classes() {
                         </td>
                         <td className="classes-td-124">
                           <div className="classes-row-125">
-                            <button onClick={() => openProgramDetailModal(prog)} className="btn btn-sm btn-outline classes-btn">
+                            <button onClick={() => openProgramDetailModal(prog)} className="btn btn-sm btn-outline classes-btn" title="View Details">
                               <Eye size={12} /> View
                             </button>
                             {canManageAcademic && (
-                              <button onClick={() => openEditProgramModal(prog)} className="btn btn-sm btn-secondary classes-btn">
-                                <Edit3 size={12} /> Edit
-                              </button>
-                            )}
-                            {canManageAcademic && (
                               prog.is_active === 1 ? (
-                                <button onClick={() => handleArchiveProgram(prog.id)} className="btn btn-sm btn-outline-danger classes-btn">
-                                  <Trash2 size={12} /> Archive
-                                </button>
+                                <>
+                                  <button onClick={() => openEditProgramModal(prog)} className="btn btn-sm btn-secondary classes-btn" title="Edit Program">
+                                    <Edit3 size={12} /> Edit
+                                  </button>
+                                  <button onClick={() => handleArchiveProgram(prog)} className="btn btn-sm btn-outline-danger classes-btn" title="Archive Program">
+                                    <Archive size={12} /> Archive
+                                  </button>
+                                </>
                               ) : (
-                                <button onClick={() => handleRestoreProgram(prog.id)} className="btn btn-sm btn-outline-success classes-btn">
-                                  <RefreshCw size={12} /> Restore
-                                </button>
+                                <>
+                                  <button 
+                                    disabled 
+                                    className="btn btn-sm btn-secondary classes-btn" 
+                                    title="Archived programs are read-only" 
+                                    style={{ opacity: 0.5, cursor: 'not-allowed' }}
+                                  >
+                                    <Edit3 size={12} /> Edit
+                                  </button>
+                                  <button onClick={() => handleRestoreProgram(prog.id)} className="btn btn-sm btn-outline-success classes-btn" title="Restore Program">
+                                    <RefreshCw size={12} /> Restore
+                                  </button>
+                                  <button onClick={() => handleDeleteProgram(prog)} className="btn btn-sm btn-danger classes-btn" title="Delete Unused Program">
+                                    <Trash2 size={12} /> Delete
+                                  </button>
+                                </>
                               )
                             )}
                           </div>
@@ -1062,7 +1186,7 @@ export default function Classes() {
                     ))}
                     {displayedPrograms.length === 0 && (
                       <tr>
-                        <td colSpan={institutionType === 'school' ? 6 : 8} className="classes-td-130">
+                        <td colSpan={institutionType === 'school' ? 4 : 5} className="classes-td-130">
                           <div className="classes-col-131">
                             <Shield size={48} color="#cbd5e1" />
                             <h4 className="classes-title-132">No {getProgramsLabel()} Found</h4>
@@ -1407,7 +1531,7 @@ export default function Classes() {
                 <input 
                   type="text" 
                   value={addProgramForm.course_code} 
-                  onChange={e => setAddProgramForm({...addProgramForm, course_code: e.target.value})} 
+                  onChange={e => setAddProgramForm({...addProgramForm, course_code: e.target.value.toUpperCase()})} 
                   placeholder={institutionType === 'school' ? 'e.g. GRADE-10' : 'e.g. BE-CSE'} 
                   required 
                 />
@@ -1424,27 +1548,58 @@ export default function Classes() {
               </div>
 
               {institutionType !== 'school' && (
-                <div className="classes-grid-219">
-                  <div className="form-group">
-                    <label className="classes-label-220">Department</label>
-                    <select value={addProgramForm.department_id} onChange={e => setAddProgramForm({...addProgramForm, department_id: e.target.value})} className="classes-select-221">
-                      <option value="">-- Choose Department --</option>
-                      {departments.map(d => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
-                      ))}
-                    </select>
+                <>
+                  <div className="classes-grid-219" style={{ marginBottom: '1rem' }}>
+                    <div className="form-group">
+                      <label className="classes-label-220">Degree Type *</label>
+                      <select 
+                        value={addProgramForm.degree_type} 
+                        onChange={e => setAddProgramForm({...addProgramForm, degree_type: e.target.value})} 
+                        className="classes-select-221"
+                        required
+                      >
+                        <option value="UG">UG (Bachelor Degree)</option>
+                        <option value="PG">PG (Master Degree)</option>
+                        <option value="Diploma">Diploma</option>
+                        <option value="Doctorate">Doctorate (PhD)</option>
+                        <option value="Certificate">Certificate</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="classes-label-220">Department</label>
+                      <select value={addProgramForm.department_id} onChange={e => setAddProgramForm({...addProgramForm, department_id: e.target.value})} className="classes-select-221">
+                        <option value="">-- Choose Department --</option>
+                        {departments.map(d => (
+                          <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label className="classes-label-222">Duration (Years)</label>
-                    <input 
-                      type="number" 
-                      value={addProgramForm.duration_years} 
-                      onChange={e => setAddProgramForm({...addProgramForm, duration_years: parseInt(e.target.value) || 4})} 
-                      min="1" 
-                      required 
-                    />
+
+                  <div className="classes-grid-219" style={{ marginBottom: '1rem' }}>
+                    <div className="form-group">
+                      <label className="classes-label-222">Duration Value *</label>
+                      <input 
+                        type="number" 
+                        value={addProgramForm.duration_years} 
+                        onChange={e => setAddProgramForm({...addProgramForm, duration_years: Math.max(1, parseInt(e.target.value) || 1)})} 
+                        min="1" 
+                        required 
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="classes-label-222">Duration Unit *</label>
+                      <select 
+                        value={addProgramForm.duration_unit} 
+                        onChange={e => setAddProgramForm({...addProgramForm, duration_unit: e.target.value})} 
+                        className="classes-select-221"
+                      >
+                        <option value="Years">Years</option>
+                        <option value="Semesters">Semesters</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               {/* Toggles Panel */}
@@ -1492,7 +1647,7 @@ export default function Classes() {
                 <input 
                   type="text" 
                   value={editProgramForm.course_code} 
-                  onChange={e => setEditProgramForm({...editProgramForm, course_code: e.target.value})} 
+                  onChange={e => setEditProgramForm({...editProgramForm, course_code: e.target.value.toUpperCase()})} 
                   required 
                 />
               </div>
@@ -1507,27 +1662,58 @@ export default function Classes() {
               </div>
 
               {institutionType !== 'school' && (
-                <div className="classes-grid-241">
-                  <div className="form-group">
-                    <label className="classes-label-242">Department</label>
-                    <select value={editProgramForm.department_id} onChange={e => setEditProgramForm({...editProgramForm, department_id: e.target.value})} className="classes-select-243">
-                      <option value="">-- Choose Department --</option>
-                      {departments.map(d => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
-                      ))}
-                    </select>
+                <>
+                  <div className="classes-grid-241" style={{ marginBottom: '1rem' }}>
+                    <div className="form-group">
+                      <label className="classes-label-242">Degree Type *</label>
+                      <select 
+                        value={editProgramForm.degree_type} 
+                        onChange={e => setEditProgramForm({...editProgramForm, degree_type: e.target.value})} 
+                        className="classes-select-243"
+                        required
+                      >
+                        <option value="UG">UG (Bachelor Degree)</option>
+                        <option value="PG">PG (Master Degree)</option>
+                        <option value="Diploma">Diploma</option>
+                        <option value="Doctorate">Doctorate (PhD)</option>
+                        <option value="Certificate">Certificate</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="classes-label-242">Department</label>
+                      <select value={editProgramForm.department_id} onChange={e => setEditProgramForm({...editProgramForm, department_id: e.target.value})} className="classes-select-243">
+                        <option value="">-- Choose Department --</option>
+                        {departments.map(d => (
+                          <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label className="classes-label-244">Duration (Years)</label>
-                    <input 
-                      type="number" 
-                      value={editProgramForm.duration_years} 
-                      onChange={e => setEditProgramForm({...editProgramForm, duration_years: parseInt(e.target.value) || 1})} 
-                      min="1" 
-                      required 
-                    />
+
+                  <div className="classes-grid-241" style={{ marginBottom: '1rem' }}>
+                    <div className="form-group">
+                      <label className="classes-label-244">Duration Value *</label>
+                      <input 
+                        type="number" 
+                        value={editProgramForm.duration_years} 
+                        onChange={e => setEditProgramForm({...editProgramForm, duration_years: Math.max(1, parseInt(e.target.value) || 1)})} 
+                        min="1" 
+                        required 
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="classes-label-244">Duration Unit *</label>
+                      <select 
+                        value={editProgramForm.duration_unit} 
+                        onChange={e => setEditProgramForm({...editProgramForm, duration_unit: e.target.value})} 
+                        className="classes-select-243"
+                      >
+                        <option value="Years">Years</option>
+                        <option value="Semesters">Semesters</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               {/* Toggles Panel */}

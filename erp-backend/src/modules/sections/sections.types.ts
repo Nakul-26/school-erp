@@ -24,4 +24,22 @@ export interface SectionWithDetails extends Section {
 }
 
 export type CreateSectionInput = Omit<Section, 'id' | 'institution_id' | 'is_active' | 'created_at' | 'updated_at' | 'deleted_at' | 'created_by' | 'updated_by'>;
+
 export type UpdateSectionInput = Partial<CreateSectionInput> & { is_active?: number };
+
+export interface SectionFilterOptions {
+  academic_year_id?: string;
+  course_id?: string;
+  year_number?: number | string;
+  is_active?: string;
+  status?: 'ACTIVE' | 'ARCHIVED' | 'ALL';
+  search?: string;
+}
+
+export interface SectionDependencyCounts {
+  students: number;
+  timetables: number;
+  attendance: number;
+  teacher_assignments: number;
+  total: number;
+}

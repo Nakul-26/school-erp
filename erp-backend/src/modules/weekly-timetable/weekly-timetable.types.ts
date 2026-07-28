@@ -1,3 +1,5 @@
+export type TimetableStatus = 'Draft' | 'Published' | 'Archived';
+
 export interface WeeklyTimetableEntry {
   id: string;
   institution_id: string;
@@ -7,6 +9,8 @@ export interface WeeklyTimetableEntry {
   section_id: string;
   slot_id: string;
   day_of_week: string;
+  room_number?: string | null;
+  status: TimetableStatus;
   is_active: number;
   created_at: string;
   updated_at: string;
@@ -21,22 +25,35 @@ export interface WeeklyTimetableEntry {
   slot_name?: string;
   start_time?: string;
   end_time?: string;
+  substitute_teacher_name?: string;
+  substitute_teacher_id?: string;
 }
 
 export interface CreateWeeklyTimetableInput {
   academic_year_id: string;
-  teacher_id?: string;
+  teacher_id?: string | null;
   subject_id: string;
   section_id: string;
   slot_id: string;
   day_of_week: string;
+  room_number?: string | null;
+  status?: TimetableStatus;
 }
 
 export interface UpdateWeeklyTimetableInput {
   academic_year_id?: string;
-  teacher_id?: string;
+  teacher_id?: string | null;
   subject_id?: string;
   section_id?: string;
   slot_id?: string;
   day_of_week?: string;
+  room_number?: string | null;
+  status?: TimetableStatus;
+}
+
+export interface TimetableSubstituteInput {
+  timetable_entry_id: string;
+  substitute_teacher_id: string;
+  date: string;
+  reason?: string;
 }

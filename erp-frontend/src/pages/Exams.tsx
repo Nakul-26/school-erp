@@ -157,8 +157,8 @@ export default function Exams() {
       setShowExamModal(false);
       setExamForm(f => ({ ...f, name: '', start_date: '', end_date: '' }));
       fetchExams();
-    } catch (err) {
-      alert('Error creating exam event');
+    } catch (err: any) {
+      alert(err.message || 'Error creating exam event');
     }
   };
 
@@ -166,8 +166,8 @@ export default function Exams() {
     try {
       await api.put(`/exams/${exam.id}`, { status });
       fetchExams();
-    } catch (err) {
-      alert('Error updating status');
+    } catch (err: any) {
+      alert(err.message || 'Error updating status');
     }
   };
 
@@ -177,8 +177,8 @@ export default function Exams() {
     try {
       await api.delete(`/exams/${id}`);
       fetchExams();
-    } catch (err) {
-      alert('Error deleting exam event');
+    } catch (err: any) {
+      alert(err.message || 'Error deleting exam event');
     }
   };
 
@@ -190,8 +190,8 @@ export default function Exams() {
       const data = await api.get(`/exams/${exam.id}/subjects`);
       setExamSubjects(data);
       setView('subjects');
-    } catch (err) {
-      alert('Error loading exam subjects');
+    } catch (err: any) {
+      alert(err.message || 'Error loading exam subjects');
     } finally {
       setLoading(false);
     }
@@ -207,8 +207,8 @@ export default function Exams() {
       // Reload subjects
       const data = await api.get(`/exams/${selectedExam.id}/subjects`);
       setExamSubjects(data);
-    } catch (err) {
-      alert('Error adding subject. It might already be added.');
+    } catch (err: any) {
+      alert(err.message || 'Error adding subject. It might already be added.');
     }
   };
 
@@ -220,8 +220,8 @@ export default function Exams() {
         const data = await api.get(`/exams/${selectedExam.id}/subjects`);
         setExamSubjects(data);
       }
-    } catch (err) {
-      alert('Error removing subject');
+    } catch (err: any) {
+      alert(err.message || 'Error removing subject');
     }
   };
 
@@ -240,8 +240,8 @@ export default function Exams() {
       }));
       setStudentMarks(initialized);
       setView('marks');
-    } catch (err) {
-      alert('Error loading marksheet. Ensure students are enrolled.');
+    } catch (err: any) {
+      alert(err.message || 'Error loading marksheet. Ensure students are enrolled.');
     } finally {
       setLoading(false);
     }
@@ -286,8 +286,8 @@ export default function Exams() {
       if (selectedExam) {
         handleOpenSubjects(selectedExam);
       }
-    } catch (err) {
-      alert('Error saving student marks');
+    } catch (err: any) {
+      alert(err.message || 'Error saving student marks');
     } finally {
       setLoading(false);
     }

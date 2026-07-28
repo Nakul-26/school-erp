@@ -135,6 +135,8 @@ CREATE TABLE IF NOT EXISTS courses (
   course_code TEXT NOT NULL,
   name TEXT NOT NULL,
   duration_years INTEGER NOT NULL,
+  duration_unit TEXT DEFAULT 'Years',
+  degree_type TEXT DEFAULT 'UG',
   semester_enabled INTEGER DEFAULT 0,
   credit_system_enabled INTEGER DEFAULT 0,
   electives_enabled INTEGER DEFAULT 0,
@@ -321,6 +323,8 @@ CREATE TABLE IF NOT EXISTS weekly_timetable (
   section_id TEXT NOT NULL REFERENCES sections(id),
   slot_id TEXT NOT NULL REFERENCES timetable_slots(id),
   day_of_week TEXT NOT NULL, -- 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+  room_number TEXT,
+  status TEXT DEFAULT 'Published',
   is_active INTEGER DEFAULT 1,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now')),

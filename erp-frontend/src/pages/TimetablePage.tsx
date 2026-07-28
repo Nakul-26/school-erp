@@ -148,8 +148,8 @@ export default function TimetablePage() {
       setShowSlotModal(false);
       setSlotForm({ name: '', start_time: '', end_time: '', slot_type: 'period' });
       fetchSlots();
-    } catch (err) {
-      alert('Error creating slot');
+    } catch (err: any) {
+      alert(err.message || 'Error creating slot');
     }
   };
 
@@ -270,8 +270,8 @@ export default function TimetablePage() {
       await api.post('/weekly-timetable', weeklyForm);
       setShowWeeklyModal(false);
       fetchTimetable();
-    } catch (err) {
-      alert('Conflict or error saving timetable entry. Check if slot is already occupied.');
+    } catch (err: any) {
+      alert(err.message || 'Conflict or error saving timetable entry. Check if slot or room is already occupied.');
     }
   };
 

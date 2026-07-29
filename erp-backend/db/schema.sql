@@ -77,14 +77,27 @@ CREATE TABLE IF NOT EXISTS role_permissions (
   PRIMARY KEY (role_id, permission_id)
 );
 
--- 7. Audit Logs
+-- 7. Audit Logs (Immutable Central Framework)
 CREATE TABLE IF NOT EXISTS audit_logs (
   id TEXT PRIMARY KEY,
+  institution_id TEXT REFERENCES institutions(id),
   user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  user_name TEXT,
+  user_role TEXT,
+  module TEXT NOT NULL,       -- e.g., 'auth', 'students', 'fees', 'attendance'
+  entity_type TEXT,           -- e.g., 'Student', 'FeePayment', 'Exam'
+  entity_id TEXT,             -- ID of the affected entity
   action TEXT NOT NULL,       -- e.g., 'CREATE', 'UPDATE', 'DELETE', 'LOGIN'
-  module TEXT NOT NULL,       -- e.g., 'auth', 'student', 'class'
-  record_id TEXT,             -- ID of the affected record
-  description TEXT,           -- Human readable summary: e.g., "Admin deleted student John Doe"
+  event_name TEXT,            -- e.g., 'StudentCreated', 'FeePaid', 'LoginSuccess'
+  record_id TEXT,             -- Legacy alias for entity_id
+  description TEXT,           -- Human readable summary
+  before_json TEXT,           -- JSON snapshot before change
+  after_json TEXT,            -- JSON snapshot after change
+  ip_address TEXT,
+  user_agent TEXT,
+  request_id TEXT,            -- Request correlation ID
+  status TEXT DEFAULT 'SUCCESS', -- SUCCESS, FAILURE, BLOCKED
+  reason TEXT,
   timestamp TEXT DEFAULT (datetime('now'))
 );
 
@@ -486,8 +499,81 @@ CREATE TABLE IF NOT EXISTS notifications (
   message TEXT NOT NULL,
   type TEXT NOT NULL, -- 'exam', 'attendance', 'result', 'announcement', 'general'
   is_read INTEGER DEFAULT 0,
+  recipient_type TEXT DEFAULT 'USER',
+  channel TEXT DEFAULT 'in_app',
+  template_id TEXT REFERENCES notification_templates(id),
+  status TEXT DEFAULT 'DELIVERED', -- PENDING, QUEUED, SENDING, DELIVERED, FAILED, READ, ARCHIVED, DEAD_LETTER
+  priority TEXT DEFAULT 'NORMAL', -- LOW, NORMAL, HIGH, URGENT
+  payload_json TEXT,
+  scheduled_at TEXT,
+  sent_at TEXT,
+  failed_at TEXT,
+  failure_reason TEXT,
+  retry_count INTEGER DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now')),
   read_at TEXT
+);
+
+-- 25b. Notification Templates
+CREATE TABLE IF NOT EXISTS notification_templates (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  name TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  channel TEXT DEFAULT 'all', -- email, sms, whatsapp, push, in_app, all
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  variables_json TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- 25c. Notification Queue
+CREATE TABLE IF NOT EXISTS notification_queue (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  notification_id TEXT REFERENCES notifications(id),
+  recipient_id TEXT NOT NULL REFERENCES users(id),
+  channel TEXT NOT NULL,
+  payload_json TEXT NOT NULL,
+  status TEXT DEFAULT 'PENDING', -- PENDING, QUEUED, PROCESSING, DELIVERED, FAILED, DEAD_LETTER
+  attempts INTEGER DEFAULT 0,
+  max_attempts INTEGER DEFAULT 3,
+  next_retry_at TEXT,
+  error_message TEXT,
+  scheduled_at TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- 25d. Notification Preferences
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  email_enabled INTEGER DEFAULT 1,
+  sms_enabled INTEGER DEFAULT 1,
+  whatsapp_enabled INTEGER DEFAULT 1,
+  push_enabled INTEGER DEFAULT 1,
+  in_app_enabled INTEGER DEFAULT 1,
+  quiet_hours_start TEXT,
+  quiet_hours_end TEXT,
+  language TEXT DEFAULT 'en',
+  timezone TEXT DEFAULT 'Asia/Kolkata',
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- 25e. Immutable Notification Audit Logs
+CREATE TABLE IF NOT EXISTS notification_logs (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  notification_id TEXT REFERENCES notifications(id),
+  provider TEXT NOT NULL, -- RESEND, FAST2SMS, TWILIO, META_WHATSAPP, FCM_PUSH, IN_APP
+  provider_message_id TEXT,
+  channel TEXT NOT NULL,
+  status TEXT NOT NULL,
+  response_payload TEXT,
+  latency_ms INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
 );
 
 -- 26. Fee Structures
@@ -499,13 +585,16 @@ CREATE TABLE IF NOT EXISTS fee_structures (
   year_number INTEGER NOT NULL,
   fee_type TEXT NOT NULL, -- 'Tuition Fee', 'Exam Fee', 'Library Fee', 'Other'
   amount REAL NOT NULL,
+  version INTEGER DEFAULT 1,
+  status TEXT DEFAULT 'ACTIVE', -- 'DRAFT', 'ACTIVE', 'ARCHIVED'
+  parent_version_id TEXT REFERENCES fee_structures(id),
   is_active INTEGER DEFAULT 1,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now')),
   deleted_at TEXT,
   created_by TEXT,
   updated_by TEXT,
-  UNIQUE(institution_id, academic_year_id, course_id, year_number, fee_type)
+  UNIQUE(institution_id, academic_year_id, course_id, year_number, fee_type, version)
 );
 
 -- 27. Student Fee Records (Student Ledger)
@@ -520,6 +609,10 @@ CREATE TABLE IF NOT EXISTS student_fee_records (
   fee_type TEXT NOT NULL,
   total_amount REAL NOT NULL,
   paid_amount REAL DEFAULT 0.0,
+  concession_amount REAL DEFAULT 0.0,
+  fine_amount REAL DEFAULT 0.0,
+  refund_amount REAL DEFAULT 0.0,
+  is_fine_exempt INTEGER DEFAULT 0,
   due_date TEXT, -- YYYY-MM-DD
   status TEXT NOT NULL DEFAULT 'UNPAID', -- 'UNPAID', 'PARTIALLY_PAID', 'PAID', 'OVERDUE'
   is_active INTEGER DEFAULT 1,
@@ -539,9 +632,12 @@ CREATE TABLE IF NOT EXISTS fee_payments (
   student_fee_record_id TEXT NOT NULL REFERENCES student_fee_records(id) ON DELETE CASCADE,
   amount REAL NOT NULL,
   payment_date TEXT NOT NULL, -- 'YYYY-MM-DD'
-  payment_method TEXT NOT NULL, -- 'UPI', 'Cash', 'Bank Transfer', 'Cheque'
+  payment_method TEXT NOT NULL, -- 'UPI', 'Cash', 'Bank Transfer', 'Cheque', 'Card', 'Online Gateway'
   transaction_reference TEXT,
   remarks TEXT,
+  status TEXT DEFAULT 'COMPLETED', -- 'COMPLETED', 'FAILED', 'REFUNDED', 'PARTIALLY_REFUNDED', 'CANCELLED'
+  receipt_number TEXT,
+  collected_by TEXT REFERENCES users(id),
   is_active INTEGER DEFAULT 1,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now')),
@@ -563,6 +659,65 @@ CREATE TABLE IF NOT EXISTS fee_receipts (
   created_by TEXT,
   updated_by TEXT,
   UNIQUE(institution_id, receipt_number)
+);
+
+-- 30. Fee Refunds
+CREATE TABLE IF NOT EXISTS fee_refunds (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  payment_id TEXT NOT NULL REFERENCES fee_payments(id),
+  student_fee_record_id TEXT NOT NULL REFERENCES student_fee_records(id),
+  student_id TEXT NOT NULL REFERENCES students(id),
+  refund_amount REAL NOT NULL,
+  refund_reason TEXT NOT NULL,
+  refund_date TEXT NOT NULL,
+  refund_reference TEXT,
+  approved_by TEXT REFERENCES users(id),
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- 31. Fee Fine Rules
+CREATE TABLE IF NOT EXISTS fee_fine_rules (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  name TEXT NOT NULL,
+  grace_period_days INTEGER DEFAULT 0,
+  fine_type TEXT NOT NULL, -- 'flat', 'daily'
+  fine_amount REAL NOT NULL,
+  max_fine_amount REAL DEFAULT 0,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  created_by TEXT REFERENCES users(id)
+);
+
+-- 32. Financial Ledger (Immutable Ledger)
+CREATE TABLE IF NOT EXISTS financial_ledger (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  student_id TEXT NOT NULL REFERENCES students(id),
+  student_fee_record_id TEXT REFERENCES student_fee_records(id),
+  entry_type TEXT NOT NULL, -- 'ALLOCATION', 'PAYMENT', 'DISCOUNT', 'SCHOLARSHIP', 'FINE', 'REFUND', 'ADJUSTMENT'
+  amount REAL NOT NULL,
+  balance_after REAL NOT NULL,
+  description TEXT NOT NULL,
+  reference_id TEXT,
+  created_by TEXT REFERENCES users(id),
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- 33. Fee Reminders
+CREATE TABLE IF NOT EXISTS fee_reminders (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id),
+  student_id TEXT NOT NULL REFERENCES students(id),
+  student_fee_record_id TEXT REFERENCES student_fee_records(id),
+  reminder_type TEXT NOT NULL, -- 'EMAIL', 'SMS', 'WHATSAPP'
+  recipient TEXT NOT NULL,
+  message TEXT NOT NULL,
+  status TEXT DEFAULT 'SENT',
+  sent_at TEXT DEFAULT (datetime('now')),
+  sent_by TEXT REFERENCES users(id)
 );
 
 -- Additional Indexes

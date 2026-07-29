@@ -42,7 +42,8 @@ import messaging from './modules/messaging/messaging.routes';
 import broadcasts from './modules/broadcasts/broadcasts.routes';
 import messageTemplates from './modules/message-templates/message-templates.routes';
 import { visitors, assets, alumni } from './modules/remaining.routes';
-
+import { requestIdMiddleware } from './middleware/request-id';
+import { registerAuditEventListener } from './modules/audit-logs/audit-logs.subscriber';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -87,12 +88,23 @@ app.use('*', async (c, next) => {
 
       return envOrigins[0] || origin;
     },
-    allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin'],
+    allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin', 'X-Request-ID', 'x-request-id'],
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
     maxAge: 86400,
   });
   return corsMiddleware(c, next);
+});
+
+app.use('*', requestIdMiddleware);
+
+let isAuditSubscriberRegistered = false;
+app.use('*', async (c, next) => {
+  if (!isAuditSubscriberRegistered && c.env?.DB) {
+    registerAuditEventListener(c.env.DB);
+    isAuditSubscriberRegistered = true;
+  }
+  await next();
 });
 
 app.use('*', async (c, next) => {
@@ -129,6 +141,7 @@ app.route('/institutions', institutions);
 app.route('/users', users);
 app.route('/academic-years', academicYears);
 app.route('/programs', programs);
+app.route('/courses', programs);
 app.route('/sections', sections);
 app.route('/classes', sections);
 app.route('/subjects', subjects);

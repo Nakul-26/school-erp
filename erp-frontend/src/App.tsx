@@ -35,6 +35,10 @@ import LeaveTypes from './pages/LeaveTypes';
 import MyLeaveApplications from './pages/MyLeaveApplications';
 import LeaveApprovals from './pages/LeaveApprovals';
 import GradeSettings from './pages/GradeSettings';
+import JobCenter from './pages/JobCenter';
+import DocumentCenter from './pages/DocumentCenter';
+import AnalyticsCenter from './pages/AnalyticsCenter';
+import IntegrationCenter from './pages/IntegrationCenter';
 
 import PayrollRuns from './pages/PayrollRuns';
 import PayrollRunDetail from './pages/PayrollRunDetail';
@@ -188,6 +192,12 @@ function App() {
           <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']} allowedPermissions={['institution.manage']}><SystemSettings /></ProtectedRoute>} />
           <Route path="/settings/grades" element={<Navigate to="/settings?tab=grades" replace />} />
           <Route path="/audit-logs" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']} allowedPermissions={['audit.view']}><AuditLogs /></ProtectedRoute>} />
+          <Route path="/job-center" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><JobCenter /></ProtectedRoute>} />
+          <Route path="/document-center" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'Accountant']}><DocumentCenter /></ProtectedRoute>} />
+          <Route path="/analytics-center" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher', 'Accountant']}><AnalyticsCenter /></ProtectedRoute>} />
+          <Route path="/analytics" element={<Navigate to="/analytics-center" replace />} />
+          <Route path="/integration-center" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><IntegrationCenter /></ProtectedRoute>} />
+          <Route path="/webhooks" element={<Navigate to="/integration-center" replace />} />
           <Route path="/setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']}><SchoolSetup /></ProtectedRoute>} />
 
           {/* ── Data Tools (V2 merged) ───────────────────────────────────── */}

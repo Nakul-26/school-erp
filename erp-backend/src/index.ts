@@ -41,9 +41,15 @@ import transport from './modules/transport/transport.routes';
 import messaging from './modules/messaging/messaging.routes';
 import broadcasts from './modules/broadcasts/broadcasts.routes';
 import messageTemplates from './modules/message-templates/message-templates.routes';
+import backgroundJobs from './modules/background-jobs/background-jobs.routes';
+import documents from './modules/documents/documents.routes';
+import analytics from './modules/analytics/analytics.routes';
+import integrations from './modules/integrations/integrations.routes';
 import { visitors, assets, alumni } from './modules/remaining.routes';
 import { requestIdMiddleware } from './middleware/request-id';
 import { registerAuditEventListener } from './modules/audit-logs/audit-logs.subscriber';
+import { registerAnalyticsEventListener } from './modules/analytics/analytics.subscriber';
+import { registerIntegrationsEventListener } from './modules/integrations/integrations.subscriber';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -99,10 +105,20 @@ app.use('*', async (c, next) => {
 app.use('*', requestIdMiddleware);
 
 let isAuditSubscriberRegistered = false;
+let isAnalyticsSubscriberRegistered = false;
+let isIntegrationsSubscriberRegistered = false;
 app.use('*', async (c, next) => {
   if (!isAuditSubscriberRegistered && c.env?.DB) {
     registerAuditEventListener(c.env.DB);
     isAuditSubscriberRegistered = true;
+  }
+  if (!isAnalyticsSubscriberRegistered && c.env?.DB) {
+    registerAnalyticsEventListener(c.env.DB);
+    isAnalyticsSubscriberRegistered = true;
+  }
+  if (!isIntegrationsSubscriberRegistered && c.env?.DB) {
+    registerIntegrationsEventListener(c.env.DB);
+    isIntegrationsSubscriberRegistered = true;
   }
   await next();
 });
@@ -177,6 +193,10 @@ app.route('/transport', transport);
 app.route('/messaging', messaging);
 app.route('/broadcasts', broadcasts);
 app.route('/message-templates', messageTemplates);
+app.route('/background-jobs', backgroundJobs);
+app.route('/documents', documents);
+app.route('/analytics', analytics);
+app.route('/integrations', integrations);
 app.route('/visitors', visitors);
 app.route('/assets', assets);
 app.route('/alumni', alumni);
@@ -194,16 +214,19 @@ app.get('*', async (c) => {
 export default {
   fetch: app.fetch,
   async scheduled(event: any, env: any, ctx: any) {
-    console.log('[Scheduled Worker] Checking for scheduled broadcasts...');
+    console.log('[Scheduled Worker] Checking background jobs queue & cron schedules...');
     try {
-      const { BroadcastsRepository } = await import('./modules/broadcasts/broadcasts.repository');
-      const { BroadcastsService } = await import('./modules/broadcasts/broadcasts.service');
-      const repo = new BroadcastsRepository(env.DB);
-      const service = new BroadcastsService(repo);
-      await service.processScheduledBroadcasts(env);
-      console.log('[Scheduled Worker] Scheduled broadcasts processing completed.');
+      const { BackgroundJobsRepository } = await import('./modules/background-jobs/background-jobs.repository');
+      const { BackgroundJobsService } = await import('./modules/background-jobs/background-jobs.service');
+      const repo = new BackgroundJobsRepository(env.DB);
+      const service = new BackgroundJobsService(repo);
+      
+      await service.evaluateCronSchedules();
+      const result = await service.processQueue('cron-worker-1', env);
+      console.log(`[Scheduled Worker] Queue processed. Count: ${result.processedCount}, Success: ${result.successCount}, Failed: ${result.failedCount}`);
     } catch (err) {
-      console.error('[Scheduled Worker] Failed to process scheduled broadcasts:', err);
+      console.error('[Scheduled Worker] Failed to process background jobs:', err);
     }
   }
 };
+

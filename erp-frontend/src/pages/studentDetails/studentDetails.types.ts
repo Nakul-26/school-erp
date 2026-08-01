@@ -71,6 +71,9 @@ export interface Program {
   name: string;
   course_code: string;
   is_active: number;
+  semester_enabled?: number;
+  credit_system_enabled?: number;
+  electives_enabled?: number;
 }
 
 export interface Section {
@@ -237,4 +240,97 @@ export interface StudentExamResult {
   percentage: number;
   grade: string;
   result: 'PASS' | 'FAIL';
+}
+
+export interface TranscriptSubjectResult {
+  subject_id: string;
+  subject_code: string;
+  subject_name: string;
+  credits: number | null;
+  exam_id: string;
+  exam_name: string;
+  marks_obtained: number;
+  max_marks: number;
+  percent: number;
+  grade: string;
+  grade_point: number;
+  is_passing: boolean;
+}
+
+export interface SemesterGpaResult {
+  course_id: string;
+  academic_year_id: string;
+  academic_year_name: string;
+  semester: number;
+  subjects: TranscriptSubjectResult[];
+  total_credits: number;
+  sgpa: number | null;
+  result: 'PASS' | 'FAIL';
+}
+
+export interface TranscriptResult {
+  student_id: string;
+  course_id: string;
+  course_name: string;
+  semesters: SemesterGpaResult[];
+  cgpa: number | null;
+  total_credits: number;
+}
+
+export interface ElectiveOffering {
+  subject_id: string;
+  subject_code: string;
+  subject_name: string;
+  credits: number | null;
+  registered_count: number;
+  is_registered: boolean;
+  is_eligible: boolean;
+}
+
+export interface PlacementDriveInfo {
+  id: string;
+  company_name: string;
+  title: string;
+  drive_type: 'PLACEMENT' | 'INTERNSHIP';
+  package_amount: number | null;
+  drive_date: string | null;
+  application_deadline: string | null;
+  status: 'DRAFT' | 'OPEN' | 'CLOSED' | 'COMPLETED';
+  min_cgpa: number | null;
+  max_backlogs: number | null;
+}
+
+export interface PlacementEligibility {
+  is_eligible: boolean;
+  reasons: string[];
+  cgpa: number | null;
+  open_backlog_count: number;
+}
+
+export interface PlacementApplicationView {
+  id: string;
+  drive_id: string;
+  title: string;
+  drive_type: string;
+  package_amount: number | null;
+  drive_status: string;
+  company_name: string;
+  status: string;
+  applied_at: string;
+  offer_package: number | null;
+  offer_date: string | null;
+  remarks: string | null;
+}
+
+export interface StudentElectiveChoice {
+  id: string;
+  subject_id: string;
+  subject_code: string;
+  subject_name: string;
+  credits: number | null;
+  academic_year_id: string;
+  academic_year_name: string;
+  semester: number;
+  status: 'REGISTERED' | 'WITHDRAWN';
+  registered_at: string;
 }

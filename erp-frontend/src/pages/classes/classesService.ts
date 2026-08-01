@@ -1,7 +1,8 @@
 import { api } from '../../services/api';
 import type {
   Section, Program, Department, Teacher, Subject, AcademicYear, Institution,
-  AuditLogsResponse, BulkActionResponse,
+  AuditLogsResponse, BulkActionResponse, Semester, CreateSemesterInput, UpdateSemesterInput,
+  StudentBacklogs, PrerequisiteLink,
 } from './classes.types';
 
 export const classesService = {
@@ -29,4 +30,23 @@ export const classesService = {
   archiveProgram: async (id: string) => await api.post(`/programs/${id}/archive`, {}),
   restoreProgram: async (id: string) => await api.post(`/programs/${id}/restore`, {}),
   deleteProgram: async (id: string) => await api.delete(`/programs/${id}?force=true`),
+
+  getSemesters: async (courseId: string, academicYearId?: string) => {
+    const params = new URLSearchParams({ course_id: courseId });
+    if (academicYearId) params.set('academic_year_id', academicYearId);
+    return await api.get<Semester[]>(`/semesters?${params.toString()}`).catch(() => []);
+  },
+  createSemester: async (data: CreateSemesterInput) => await api.post<{ id: string }>('/semesters', data),
+  updateSemester: async (id: string, data: UpdateSemesterInput) => await api.put(`/semesters/${id}`, data),
+  updateSemesterStatus: async (id: string, status: Semester['status']) => await api.patch(`/semesters/${id}/status`, { status }),
+  deleteSemester: async (id: string) => await api.delete(`/semesters/${id}`),
+
+  getCourseBacklogs: async (courseId: string) =>
+    await api.get<StudentBacklogs[]>(`/backlogs/course/${courseId}`).catch(() => []),
+
+  getPrerequisites: async (courseId: string) =>
+    await api.get<PrerequisiteLink[]>(`/prerequisites/course/${courseId}`).catch(() => []),
+  createPrerequisite: async (data: { subject_id: string; prerequisite_subject_id: string }) =>
+    await api.post<{ id: string }>('/prerequisites', data),
+  deletePrerequisite: async (id: string) => await api.delete(`/prerequisites/${id}`),
 };

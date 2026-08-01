@@ -100,3 +100,74 @@ export interface BulkActionResponse {
   message?: string;
   [key: string]: any;
 }
+
+export interface Semester {
+  id: string;
+  institution_id: string;
+  course_id: string;
+  academic_year_id: string;
+  semester_number: number;
+  name: string;
+  start_date: string | null;
+  end_date: string | null;
+  status: 'Draft' | 'Active' | 'Locked' | 'Archived';
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+
+  course_name?: string;
+  course_code?: string;
+  academic_year_name?: string;
+  enrolled_count?: number;
+}
+
+export interface BacklogSubject {
+  subject_id: string;
+  subject_code: string;
+  subject_name: string;
+  credits: number | null;
+  semester: number;
+  academic_year_id: string;
+  academic_year_name: string;
+  exam_id: string;
+  exam_name: string;
+  marks_obtained: number;
+  max_marks: number;
+  percent: number;
+  grade: string;
+  grade_point: number;
+}
+
+export interface StudentBacklogs {
+  student_id: string;
+  student_name: string;
+  roll_number: string | null;
+  admission_number: string;
+  open_backlogs: BacklogSubject[];
+  open_backlog_count: number;
+}
+
+export interface PrerequisiteLink {
+  id: string;
+  subject_id: string;
+  subject_code: string;
+  subject_name: string;
+  prerequisite_subject_id: string;
+  prerequisite_code: string;
+  prerequisite_name: string;
+}
+
+export interface CreateSemesterInput {
+  course_id: string;
+  academic_year_id: string;
+  semester_number: number;
+  name?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+}
+
+export interface UpdateSemesterInput {
+  name?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+}

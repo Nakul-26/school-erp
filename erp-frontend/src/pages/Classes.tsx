@@ -26,6 +26,9 @@ import { ProgramsTable } from './classes/components/ProgramsTable';
 import { AddProgramModal } from './classes/components/AddProgramModal';
 import { EditProgramModal } from './classes/components/EditProgramModal';
 import { ProgramDetailModal } from './classes/components/ProgramDetailModal';
+import { AddSemesterModal } from './classes/components/AddSemesterModal';
+import type { AddSemesterForm } from './classes/components/AddSemesterModal';
+import type { Semester, StudentBacklogs, PrerequisiteLink } from './classes/classes.types';
 
 export default function Classes() {
   const navigate = useNavigate();
@@ -111,7 +114,26 @@ export default function Classes() {
   const [showEditProgramModal, setShowEditProgramModal] = useState(false);
   const [showProgramDetailModal, setShowProgramDetailModal] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
-  const [programDetailTab, setProgramDetailTab] = useState<'info' | 'syllabus' | 'sections' | 'timeline'>('info');
+  const [programDetailTab, setProgramDetailTab] = useState<'info' | 'syllabus' | 'sections' | 'semesters' | 'backlogs' | 'timeline'>('info');
+
+  // Semesters (Phase D: college readiness)
+  const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [semestersLoading, setSemestersLoading] = useState(false);
+  const [selectedSemesterYearId, setSelectedSemesterYearId] = useState('');
+
+  // Backlogs / supplementary exam report (Phase D: college readiness)
+  const [backlogs, setBacklogs] = useState<StudentBacklogs[]>([]);
+  const [backlogsLoading, setBacklogsLoading] = useState(false);
+
+  // Subject prerequisites (Phase D: college readiness)
+  const [prerequisiteLinks, setPrerequisiteLinks] = useState<PrerequisiteLink[]>([]);
+  const [showAddSemesterModal, setShowAddSemesterModal] = useState(false);
+  const [addSemesterForm, setAddSemesterForm] = useState<AddSemesterForm>({
+    semester_number: 1,
+    name: '',
+    start_date: '',
+    end_date: ''
+  });
 
   const [addProgramForm, setAddProgramForm] = useState({
     name: '',
@@ -590,6 +612,147 @@ export default function Classes() {
     setSelectedProgram(prog);
     setProgramDetailTab('info');
     setShowProgramDetailModal(true);
+    const currentYear = years.find((y: any) => y.is_current) || years[0];
+    setSelectedSemesterYearId(currentYear?.id || '');
+  };
+
+  const fetchSemesters = async (courseId: string, academicYearId: string) => {
+    if (!courseId || !academicYearId) {
+      setSemesters([]);
+      return;
+    }
+    setSemestersLoading(true);
+    try {
+      const data = await classesService.getSemesters(courseId, academicYearId);
+      setSemesters(data);
+    } catch (err) {
+      console.error('Error fetching semesters:', err);
+    } finally {
+      setSemestersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedProgram?.semester_enabled === 1 && selectedSemesterYearId) {
+      fetchSemesters(selectedProgram.id, selectedSemesterYearId);
+    } else {
+      setSemesters([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProgram, selectedSemesterYearId]);
+
+  const fetchBacklogs = async (courseId: string) => {
+    setBacklogsLoading(true);
+    try {
+      const data = await classesService.getCourseBacklogs(courseId);
+      setBacklogs(data || []);
+    } catch (err) {
+      console.error('Error fetching backlogs:', err);
+    } finally {
+      setBacklogsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedProgram?.credit_system_enabled === 1) {
+      fetchBacklogs(selectedProgram.id);
+    } else {
+      setBacklogs([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProgram]);
+
+  const fetchPrerequisites = async (courseId: string) => {
+    try {
+      const data = await classesService.getPrerequisites(courseId);
+      setPrerequisiteLinks(data || []);
+    } catch (err) {
+      console.error('Error fetching prerequisites:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedProgram) {
+      fetchPrerequisites(selectedProgram.id);
+    } else {
+      setPrerequisiteLinks([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProgram]);
+
+  const handleAddPrerequisite = async (subjectId: string, prerequisiteSubjectId: string) => {
+    if (!selectedProgram) return;
+    try {
+      await classesService.createPrerequisite({ subject_id: subjectId, prerequisite_subject_id: prerequisiteSubjectId });
+      await fetchPrerequisites(selectedProgram.id);
+    } catch (err: any) {
+      alert(err.message || 'Error creating prerequisite link');
+    }
+  };
+
+  const handleDeletePrerequisite = async (id: string) => {
+    if (!selectedProgram) return;
+    if (!await confirm('Remove this prerequisite link?')) return;
+    try {
+      await classesService.deletePrerequisite(id);
+      await fetchPrerequisites(selectedProgram.id);
+    } catch (err: any) {
+      alert(err.message || 'Error removing prerequisite link');
+    }
+  };
+
+  const openAddSemesterModal = () => {
+    setAddSemesterForm({
+      semester_number: semesters.length + 1,
+      name: '',
+      start_date: '',
+      end_date: ''
+    });
+    setShowAddSemesterModal(true);
+  };
+
+  const handleAddSemesterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProgram || !selectedSemesterYearId) return;
+    try {
+      await classesService.createSemester({
+        course_id: selectedProgram.id,
+        academic_year_id: selectedSemesterYearId,
+        semester_number: addSemesterForm.semester_number,
+        ...(addSemesterForm.name.trim() ? { name: addSemesterForm.name.trim() } : {}),
+        start_date: addSemesterForm.start_date || null,
+        end_date: addSemesterForm.end_date || null
+      });
+      setShowAddSemesterModal(false);
+      await fetchSemesters(selectedProgram.id, selectedSemesterYearId);
+    } catch (err: any) {
+      alert(err.message || 'Error creating semester');
+    }
+  };
+
+  const handleSemesterStatusChange = async (semester: Semester, status: Semester['status']) => {
+    try {
+      await classesService.updateSemesterStatus(semester.id, status);
+      await fetchSemesters(semester.course_id, semester.academic_year_id);
+    } catch (err: any) {
+      alert(err.message || 'Error updating semester status');
+    }
+  };
+
+  const handleDeleteSemester = async (semester: Semester) => {
+    const ok = await confirm({
+      title: 'Delete Semester',
+      message: `Delete Semester ${semester.semester_number} (${semester.name})? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      danger: true
+    });
+    if (!ok) return;
+    try {
+      await classesService.deleteSemester(semester.id);
+      await fetchSemesters(semester.course_id, semester.academic_year_id);
+    } catch (err: any) {
+      alert(err.message || 'Error deleting semester');
+    }
   };
 
   // Helper mappings
@@ -920,6 +1083,29 @@ export default function Classes() {
         getDeptCode={getDeptCode}
         getTeacherName={getTeacherName}
         onClose={() => setShowProgramDetailModal(false)}
+        academicYears={years}
+        selectedSemesterYearId={selectedSemesterYearId}
+        setSelectedSemesterYearId={setSelectedSemesterYearId}
+        semesters={semesters}
+        semestersLoading={semestersLoading}
+        canManageAcademic={canManageAcademic}
+        onAddSemester={openAddSemesterModal}
+        onSemesterStatusChange={handleSemesterStatusChange}
+        onDeleteSemester={handleDeleteSemester}
+        backlogs={backlogs}
+        backlogsLoading={backlogsLoading}
+        prerequisiteLinks={prerequisiteLinks}
+        onAddPrerequisite={handleAddPrerequisite}
+        onDeletePrerequisite={handleDeletePrerequisite}
+      />
+
+      <AddSemesterModal
+        show={showAddSemesterModal && canManageAcademic}
+        form={addSemesterForm}
+        setForm={setAddSemesterForm}
+        academicYearName={years.find((y: any) => y.id === selectedSemesterYearId)?.name || ''}
+        onClose={() => setShowAddSemesterModal(false)}
+        onSubmit={handleAddSemesterSubmit}
       />
 
       <BulkActionsBar

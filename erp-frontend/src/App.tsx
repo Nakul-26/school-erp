@@ -17,6 +17,7 @@ const AuditLogs = lazy(() => import('./pages/AuditLogs'));
 const AcademicYears = lazy(() => import('./pages/AcademicYears'));
 const Departments = lazy(() => import('./pages/Departments'));
 const Classes = lazy(() => import('./pages/Classes'));
+const Placements = lazy(() => import('./pages/Placements'));
 const SectionWorkspace = lazy(() => import('./pages/SectionWorkspace'));
 const Subjects = lazy(() => import('./pages/Subjects'));
 const SubjectWorkspace = lazy(() => import('./pages/SubjectWorkspace'));
@@ -158,6 +159,7 @@ function App() {
 
           {/* ── Exams & Homework ─────────────────────────────────────────── */}
           <Route path="/exams" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Exams /></ProtectedRoute>} />
+          <Route path="/placements" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD']} allowedPermissions={['academic.manage']}><Placements /></ProtectedRoute>} />
           <Route path="/homework" element={<ProtectedRoute allowedPermissions={['homework.view']}><HomeworkList /></ProtectedRoute>} />
 
           {/* ── Communication ────────────────────────────────────────────── */}

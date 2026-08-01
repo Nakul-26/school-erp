@@ -2,7 +2,8 @@ import { api, authFetch } from '../../services/api';
 import type {
   Student, Guardian, Enrollment, AcademicYear, Program, Section, Institution,
   AttendanceSummary, StudentFeeRecord, FeePayment, StudentDocument, StudentNote,
-  TransportRoute, TransportAllocation, Exam, StudentExamResult,
+  TransportRoute, TransportAllocation, Exam, StudentExamResult, TranscriptResult,
+  ElectiveOffering, StudentElectiveChoice, PlacementDriveInfo, PlacementEligibility, PlacementApplicationView,
 } from './studentDetails.types';
 
 export const studentDetailsService = {
@@ -23,6 +24,28 @@ export const studentDetailsService = {
 
   getStudentExamResults: async (id: string) => await api.get<Exam[]>(`/exams/students/${id}/results`),
   getDetailedResult: async (id: string, examId: string) => await api.get<StudentExamResult>(`/exams/students/${id}/exams/${examId}/result`),
+
+  getTranscript: async (id: string, courseId: string) =>
+    await api.get<TranscriptResult>(`/transcript/${id}?courseId=${encodeURIComponent(courseId)}`),
+
+  getElectiveOfferings: async (courseId: string, academicYearId: string, semester: number, studentId: string) =>
+    await api.get<ElectiveOffering[]>(
+      `/electives/offerings/${courseId}?academicYearId=${encodeURIComponent(academicYearId)}&semester=${semester}&studentId=${encodeURIComponent(studentId)}`
+    ),
+  getMyElectives: async (studentId: string, courseId: string) =>
+    await api.get<StudentElectiveChoice[]>(`/electives/my/${studentId}?courseId=${encodeURIComponent(courseId)}`),
+  registerElective: async (data: { student_id: string; course_id: string; academic_year_id: string; semester: number; subject_id: string }) =>
+    await api.post<{ id: string }>('/electives', data),
+  withdrawElective: async (electiveId: string) => await api.delete(`/electives/${electiveId}`),
+
+  getOpenDrives: async (courseId: string) =>
+    await api.get<PlacementDriveInfo[]>(`/placements/drives?courseId=${encodeURIComponent(courseId)}`).catch(() => []),
+  getDriveEligibility: async (driveId: string, studentId: string) =>
+    await api.get<PlacementEligibility>(`/placements/drives/${driveId}/eligibility?studentId=${encodeURIComponent(studentId)}`),
+  applyToDrive: async (driveId: string) => await api.post<{ id: string }>(`/placements/drives/${driveId}/apply`, {}),
+  getMyApplications: async (studentId: string) =>
+    await api.get<PlacementApplicationView[]>(`/placements/my/${studentId}`).catch(() => []),
+  withdrawApplication: async (applicationId: string) => await api.delete(`/placements/applications/${applicationId}`),
 
   addNote: async (id: string, content: string) => await api.post<StudentNote>(`/students/${id}/notes`, { content }),
   deleteNote: async (id: string, noteId: string) => await api.delete(`/students/${id}/notes/${noteId}`),

@@ -6,7 +6,7 @@ import Layout from '../components/Layout';
 import { getAuthenticatedUrl } from '../services/api';
 import {
   Calendar, GraduationCap, FileText, User,
-  TrendingUp, IndianRupee, Clock, ArrowLeft, Heart, MessageSquare
+  TrendingUp, IndianRupee, Clock, ArrowLeft, Heart, MessageSquare, BookOpen, Briefcase
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useConfirm } from '../contexts/ConfirmDialogContext';
@@ -17,6 +17,9 @@ import { OverviewTab } from './studentDetails/components/OverviewTab';
 import { AcademicTab } from './studentDetails/components/AcademicTab';
 import { AttendanceTab } from './studentDetails/components/AttendanceTab';
 import { ResultsTab } from './studentDetails/components/ResultsTab';
+import { TranscriptTab } from './studentDetails/components/TranscriptTab';
+import { ElectivesTab } from './studentDetails/components/ElectivesTab';
+import { PlacementsTab } from './studentDetails/components/PlacementsTab';
 import { FeesTab } from './studentDetails/components/FeesTab';
 import { TimelineTab } from './studentDetails/components/TimelineTab';
 import { HealthTab } from './studentDetails/components/HealthTab';
@@ -69,6 +72,18 @@ export default function StudentDetails() {
   const [detailedResult, setDetailedResult] = useState<any>(null);
   const [loadingResult, setLoadingResult] = useState(false);
 
+  // Transcript (credit-weighted SGPA/CGPA) state
+  const [transcript, setTranscript] = useState<any>(null);
+  const [loadingTranscript, setLoadingTranscript] = useState(false);
+
+  const [electiveOfferings, setElectiveOfferings] = useState<any[]>([]);
+  const [myElectives, setMyElectives] = useState<any[]>([]);
+  const [loadingElectives, setLoadingElectives] = useState(false);
+
+  const [openDrives, setOpenDrives] = useState<any[]>([]);
+  const [myApplications, setMyApplications] = useState<any[]>([]);
+  const [loadingPlacements, setLoadingPlacements] = useState(false);
+
   // Document upload state
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -109,21 +124,49 @@ export default function StudentDetails() {
     setSearchParams({ tab });
   };
 
+  const currentCourseId = enrollments[0]?.course_id;
+  const currentProgram = programs.find((p: any) => p.id === currentCourseId);
+  const creditSystemEnabled = currentProgram?.credit_system_enabled === 1;
+  const electivesEnabled = currentProgram?.electives_enabled === 1;
+  const currentAcademicYearId = enrollments[0]?.academic_year_id;
+  const currentSemester = enrollments[0]?.semester;
+
   useEffect(() => {
     if (
       (activeTab === 'fees' && !canViewFees) ||
       (activeTab === 'notes' && !canWriteNotes) ||
-      (activeTab === 'documents' && !canManageDocs)
+      (activeTab === 'documents' && !canManageDocs) ||
+      (activeTab === 'transcript' && !loading && !creditSystemEnabled) ||
+      (activeTab === 'electives' && !loading && !electivesEnabled) ||
+      (activeTab === 'placements' && !loading && !currentCourseId)
     ) {
       setActiveTab('overview');
     }
-  }, [activeTab, canViewFees, canWriteNotes, canManageDocs]);
+  }, [activeTab, canViewFees, canWriteNotes, canManageDocs, loading, creditSystemEnabled, electivesEnabled, currentCourseId]);
 
   useEffect(() => {
     if (activeTab === 'results') {
       fetchExams();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'transcript' && creditSystemEnabled && currentCourseId) {
+      fetchTranscript(currentCourseId);
+    }
+  }, [activeTab, creditSystemEnabled, currentCourseId]);
+
+  useEffect(() => {
+    if (activeTab === 'electives' && electivesEnabled && currentCourseId && currentAcademicYearId && currentSemester) {
+      fetchElectives(currentCourseId, currentAcademicYearId, currentSemester);
+    }
+  }, [activeTab, electivesEnabled, currentCourseId, currentAcademicYearId, currentSemester]);
+
+  useEffect(() => {
+    if (activeTab === 'placements' && currentCourseId) {
+      fetchPlacements(currentCourseId);
+    }
+  }, [activeTab, currentCourseId]);
 
   useEffect(() => {
     if (selectedExamId) {
@@ -143,6 +186,112 @@ export default function StudentDetails() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const fetchTranscript = async (courseId: string) => {
+    try {
+      setLoadingTranscript(true);
+      const data = await studentDetailsService.getTranscript(id!, courseId);
+      setTranscript(data);
+    } catch (err) {
+      console.error(err);
+      setTranscript(null);
+    } finally {
+      setLoadingTranscript(false);
+    }
+  };
+
+  const fetchElectives = async (courseId: string, academicYearId: string, semester: number) => {
+    try {
+      setLoadingElectives(true);
+      const [offeringsData, myElectivesData] = await Promise.all([
+        studentDetailsService.getElectiveOfferings(courseId, academicYearId, semester, id!),
+        studentDetailsService.getMyElectives(id!, courseId)
+      ]);
+      setElectiveOfferings(offeringsData || []);
+      setMyElectives(myElectivesData || []);
+    } catch (err) {
+      console.error(err);
+      setElectiveOfferings([]);
+      setMyElectives([]);
+    } finally {
+      setLoadingElectives(false);
+    }
+  };
+
+  const handleRegisterElective = async (subjectId: string) => {
+    if (!currentCourseId || !currentAcademicYearId || !currentSemester) return;
+    try {
+      await studentDetailsService.registerElective({
+        student_id: id!,
+        course_id: currentCourseId,
+        academic_year_id: currentAcademicYearId,
+        semester: currentSemester,
+        subject_id: subjectId
+      });
+      await fetchElectives(currentCourseId, currentAcademicYearId, currentSemester);
+    } catch (err: any) {
+      alert(err.message || 'Error registering for elective');
+    }
+  };
+
+  const handleWithdrawElective = async (electiveId: string) => {
+    if (!currentCourseId || !currentAcademicYearId || !currentSemester) return;
+    if (!await confirm('Withdraw from this elective?')) return;
+    try {
+      await studentDetailsService.withdrawElective(electiveId);
+      await fetchElectives(currentCourseId, currentAcademicYearId, currentSemester);
+    } catch (err: any) {
+      alert(err.message || 'Error withdrawing from elective');
+    }
+  };
+
+  const fetchPlacements = async (courseId: string) => {
+    try {
+      setLoadingPlacements(true);
+      const [drivesData, applicationsData] = await Promise.all([
+        studentDetailsService.getOpenDrives(courseId),
+        studentDetailsService.getMyApplications(id!)
+      ]);
+      const openOnly = (drivesData || []).filter((d: any) => d.status === 'OPEN');
+      const withEligibility = await Promise.all(
+        openOnly.map(async (d: any) => {
+          try {
+            const eligibility = await studentDetailsService.getDriveEligibility(d.id, id!);
+            return { ...d, eligibility };
+          } catch {
+            return { ...d, eligibility: undefined };
+          }
+        })
+      );
+      setOpenDrives(withEligibility);
+      setMyApplications(applicationsData || []);
+    } catch (err) {
+      console.error(err);
+      setOpenDrives([]);
+      setMyApplications([]);
+    } finally {
+      setLoadingPlacements(false);
+    }
+  };
+
+  const handleApplyToDrive = async (driveId: string) => {
+    try {
+      await studentDetailsService.applyToDrive(driveId);
+      if (currentCourseId) await fetchPlacements(currentCourseId);
+    } catch (err: any) {
+      alert(err.message || 'Error applying to drive');
+    }
+  };
+
+  const handleWithdrawApplication = async (applicationId: string) => {
+    if (!await confirm('Withdraw this application?')) return;
+    try {
+      await studentDetailsService.withdrawApplication(applicationId);
+      if (currentCourseId) await fetchPlacements(currentCourseId);
+    } catch (err: any) {
+      alert(err.message || 'Error withdrawing application');
     }
   };
 
@@ -592,6 +741,9 @@ export default function StudentDetails() {
     { id: 'academic', label: 'Academic', icon: GraduationCap },
     { id: 'attendance', label: 'Attendance', icon: Clock },
     { id: 'results', label: 'Results', icon: TrendingUp },
+    { id: 'transcript', label: 'Transcript', icon: GraduationCap, show: creditSystemEnabled },
+    { id: 'electives', label: 'Electives', icon: BookOpen, show: electivesEnabled },
+    { id: 'placements', label: 'Placements', icon: Briefcase, show: !!currentCourseId },
     { id: 'fees', label: 'Fees', icon: IndianRupee, show: canViewFees },
     { id: 'timeline', label: 'Timeline', icon: Calendar },
     { id: 'health', label: 'Health Card', icon: Heart },
@@ -735,6 +887,32 @@ export default function StudentDetails() {
             setSelectedExamId={setSelectedExamId}
             loadingResult={loadingResult}
             detailedResult={detailedResult}
+          />
+        )}
+
+        {activeTab === 'transcript' && creditSystemEnabled && (
+          <TranscriptTab loading={loadingTranscript} transcript={transcript} />
+        )}
+
+        {activeTab === 'electives' && electivesEnabled && (
+          <ElectivesTab
+            loading={loadingElectives}
+            semester={currentSemester || null}
+            offerings={electiveOfferings}
+            myElectives={myElectives}
+            canRegister={true}
+            onRegister={handleRegisterElective}
+            onWithdraw={handleWithdrawElective}
+          />
+        )}
+
+        {activeTab === 'placements' && currentCourseId && (
+          <PlacementsTab
+            loading={loadingPlacements}
+            openDrives={openDrives}
+            myApplications={myApplications}
+            onApply={handleApplyToDrive}
+            onWithdraw={handleWithdrawApplication}
           />
         )}
 

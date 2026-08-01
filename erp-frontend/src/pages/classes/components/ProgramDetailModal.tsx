@@ -1,6 +1,10 @@
 import React from 'react';
+import { SemestersPanel } from './SemestersPanel';
+import { BacklogsPanel } from './BacklogsPanel';
+import { PrerequisitesPanel } from './PrerequisitesPanel';
+import type { Semester, AcademicYear, StudentBacklogs, PrerequisiteLink } from '../classes.types';
 
-type ProgramDetailTab = 'info' | 'syllabus' | 'sections' | 'timeline';
+type ProgramDetailTab = 'info' | 'syllabus' | 'sections' | 'semesters' | 'backlogs' | 'timeline';
 
 interface ProgramDetailModalProps {
   show: boolean;
@@ -13,10 +17,27 @@ interface ProgramDetailModalProps {
   getDeptCode: (deptId: string) => string;
   getTeacherName: (teacherId: string) => string;
   onClose: () => void;
+  academicYears: AcademicYear[];
+  selectedSemesterYearId: string;
+  setSelectedSemesterYearId: (id: string) => void;
+  semesters: Semester[];
+  semestersLoading: boolean;
+  canManageAcademic: boolean;
+  onAddSemester: () => void;
+  onSemesterStatusChange: (semester: Semester, status: Semester['status']) => void;
+  onDeleteSemester: (semester: Semester) => void;
+  backlogs: StudentBacklogs[];
+  backlogsLoading: boolean;
+  prerequisiteLinks: PrerequisiteLink[];
+  onAddPrerequisite: (subjectId: string, prerequisiteSubjectId: string) => Promise<void> | void;
+  onDeletePrerequisite: (id: string) => void;
 }
 
 export function ProgramDetailModal({
   show, selectedProgram, detailTab, setDetailTab, detailSubjects, detailSections, groupedSubjects, getDeptCode, getTeacherName, onClose,
+  academicYears, selectedSemesterYearId, setSelectedSemesterYearId, semesters, semestersLoading, canManageAcademic,
+  onAddSemester, onSemesterStatusChange, onDeleteSemester, backlogs, backlogsLoading,
+  prerequisiteLinks, onAddPrerequisite, onDeletePrerequisite,
 }: ProgramDetailModalProps) {
   if (!show || !selectedProgram) return null;
 
@@ -46,6 +67,8 @@ export function ProgramDetailModal({
             { tab: 'info', label: 'Info Details' },
             { tab: 'syllabus', label: `Syllabus / Subjects (${detailSubjects.length})` },
             { tab: 'sections', label: `Class Sections (${detailSections.length})` },
+            ...(selectedProgram.semester_enabled === 1 ? [{ tab: 'semesters', label: `Semesters (${semesters.length})` }] : []),
+            ...(selectedProgram.credit_system_enabled === 1 ? [{ tab: 'backlogs', label: `Backlogs (${backlogs.length})` }] : []),
             { tab: 'timeline', label: 'Timeline' }
           ].map(t => (
             <button
@@ -150,6 +173,14 @@ export function ProgramDetailModal({
                 No subjects mapped to this curriculum layout.
               </div>
             )}
+
+            <PrerequisitesPanel
+              links={prerequisiteLinks}
+              subjects={detailSubjects}
+              canManage={canManageAcademic}
+              onAdd={onAddPrerequisite}
+              onDelete={onDeletePrerequisite}
+            />
           </div>
         )}
 
@@ -184,6 +215,26 @@ export function ProgramDetailModal({
               </tbody>
             </table>
           </div>
+        )}
+
+        {/* Tab: Semesters (only for semester-enabled programs) */}
+        {detailTab === 'semesters' && selectedProgram.semester_enabled === 1 && (
+          <SemestersPanel
+            academicYears={academicYears}
+            selectedAcademicYearId={selectedSemesterYearId}
+            setSelectedAcademicYearId={setSelectedSemesterYearId}
+            semesters={semesters}
+            loading={semestersLoading}
+            canManage={canManageAcademic}
+            onAdd={onAddSemester}
+            onStatusChange={onSemesterStatusChange}
+            onDelete={onDeleteSemester}
+          />
+        )}
+
+        {/* Tab: Backlogs (only for credit-system programs) */}
+        {detailTab === 'backlogs' && selectedProgram.credit_system_enabled === 1 && (
+          <BacklogsPanel loading={backlogsLoading} backlogs={backlogs} />
         )}
 
         {/* Tab 4: Timeline */}

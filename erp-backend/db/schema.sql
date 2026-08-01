@@ -323,6 +323,24 @@ CREATE TABLE IF NOT EXISTS broadcasts (
   is_active INTEGER DEFAULT 1
 );
 
+CREATE TABLE IF NOT EXISTS companies (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  industry TEXT,
+  website TEXT,
+  contact_person TEXT,
+  contact_email TEXT,
+  contact_phone TEXT,
+  description TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
 CREATE TABLE IF NOT EXISTS courses (
   id TEXT PRIMARY KEY,
   institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
@@ -979,6 +997,46 @@ CREATE TABLE IF NOT EXISTS permissions (
   description TEXT
 );
 
+CREATE TABLE IF NOT EXISTS placement_applications (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  drive_id TEXT NOT NULL REFERENCES placement_drives(id) ON DELETE CASCADE,
+  student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'APPLIED' CHECK(status IN ('APPLIED', 'SHORTLISTED', 'INTERVIEWED', 'OFFERED', 'REJECTED', 'WITHDRAWN')),
+  applied_at TEXT DEFAULT (datetime('now')),
+  offer_package REAL,
+  offer_date TEXT,
+  remarks TEXT,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(drive_id, student_id)
+);
+
+CREATE TABLE IF NOT EXISTS placement_drives (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  drive_type TEXT NOT NULL DEFAULT 'PLACEMENT' CHECK(drive_type IN ('PLACEMENT', 'INTERNSHIP')),
+  description TEXT,
+  package_amount REAL,
+  drive_date TEXT,
+  application_deadline TEXT,
+  min_cgpa REAL,
+  max_backlogs INTEGER,
+  status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT', 'OPEN', 'CLOSED', 'COMPLETED')),
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -1065,6 +1123,25 @@ CREATE TABLE IF NOT EXISTS sections (
   updated_by TEXT
 );
 
+CREATE TABLE IF NOT EXISTS semesters (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  academic_year_id TEXT NOT NULL REFERENCES academic_years(id) ON DELETE RESTRICT,
+  semester_number INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  start_date TEXT,
+  end_date TEXT,
+  status TEXT NOT NULL DEFAULT 'Draft' CHECK(status IN ('Draft', 'Active', 'Locked', 'Archived')),
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(course_id, academic_year_id, semester_number)
+);
+
 CREATE TABLE IF NOT EXISTS student_attendance (
   id TEXT PRIMARY KEY,
   institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
@@ -1079,6 +1156,24 @@ CREATE TABLE IF NOT EXISTS student_attendance (
   created_by TEXT,
   updated_by TEXT,
   UNIQUE(session_id, student_id)
+);
+
+CREATE TABLE IF NOT EXISTS student_electives (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  academic_year_id TEXT NOT NULL REFERENCES academic_years(id) ON DELETE RESTRICT,
+  semester INTEGER NOT NULL,
+  subject_id TEXT NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'REGISTERED' CHECK(status IN ('REGISTERED', 'WITHDRAWN')),
+  registered_at TEXT DEFAULT (datetime('now')),
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(student_id, academic_year_id, semester, subject_id)
 );
 
 CREATE TABLE IF NOT EXISTS student_enrollments (
@@ -1214,6 +1309,18 @@ CREATE TABLE IF NOT EXISTS subject_lesson_plans (
   is_active INTEGER DEFAULT 1,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS subject_prerequisites (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  subject_id TEXT NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  prerequisite_subject_id TEXT NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  is_active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  created_by TEXT,
+  CHECK(subject_id != prerequisite_subject_id),
+  UNIQUE(subject_id, prerequisite_subject_id)
 );
 
 CREATE TABLE IF NOT EXISTS subjects (
@@ -1508,6 +1615,7 @@ CREATE INDEX IF NOT EXISTS idx_admission_applications_institution ON admission_a
 CREATE INDEX IF NOT EXISTS idx_admission_applications_status ON admission_applications(status);
 CREATE INDEX IF NOT EXISTS idx_admission_inquiries_institution ON admission_inquiries(institution_id);
 CREATE INDEX IF NOT EXISTS idx_admission_inquiries_status ON admission_inquiries(status);
+CREATE INDEX IF NOT EXISTS idx_companies_inst ON companies(institution_id);
 CREATE INDEX IF NOT EXISTS idx_allocations_section ON teaching_allocations(section_id);
 CREATE INDEX IF NOT EXISTS idx_allocations_subject ON teaching_allocations(subject_id);
 CREATE INDEX IF NOT EXISTS idx_allocations_teacher ON teaching_allocations(teacher_id);
@@ -1602,12 +1710,18 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id,
 CREATE INDEX IF NOT EXISTS idx_payslips_payroll ON payslips(payroll_run_id);
 CREATE INDEX IF NOT EXISTS idx_payslips_inst_deleted ON payslips(institution_id, deleted_at);
 CREATE INDEX IF NOT EXISTS idx_payroll_runs_inst_deleted ON payroll_runs(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_placement_drives_inst ON placement_drives(institution_id);
+CREATE INDEX IF NOT EXISTS idx_placement_drives_course ON placement_drives(course_id);
+CREATE INDEX IF NOT EXISTS idx_placement_applications_drive ON placement_applications(drive_id);
+CREATE INDEX IF NOT EXISTS idx_placement_applications_student ON placement_applications(student_id);
 CREATE INDEX IF NOT EXISTS idx_push_subs_institution ON push_subscriptions(institution_id) WHERE is_active = 1;
 CREATE INDEX IF NOT EXISTS idx_push_subs_user ON push_subscriptions(user_id) WHERE is_active = 1;
 CREATE INDEX IF NOT EXISTS idx_role_permissions_role ON role_permissions(role_id);
 CREATE INDEX IF NOT EXISTS idx_rollover_logs_institution ON academic_year_rollover_logs(institution_id);
 CREATE INDEX IF NOT EXISTS idx_salary_structures_teacher ON salary_structures(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_scheduled_reports_inst ON scheduled_reports(institution_id);
+CREATE INDEX IF NOT EXISTS idx_semesters_inst_deleted ON semesters(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_semesters_course_year ON semesters(course_id, academic_year_id);
 CREATE INDEX IF NOT EXISTS idx_sections_inst_deleted ON sections(institution_id, deleted_at);
 CREATE INDEX IF NOT EXISTS idx_settings_institution ON system_settings(institution_id);
 CREATE INDEX IF NOT EXISTS idx_student_attendance_inst_deleted ON student_attendance(institution_id, deleted_at);
@@ -1617,6 +1731,10 @@ CREATE INDEX IF NOT EXISTS idx_student_fee_records_inst_deleted ON student_fee_r
 CREATE INDEX IF NOT EXISTS idx_student_fee_records_student ON student_fee_records(student_id);
 CREATE INDEX IF NOT EXISTS idx_student_leaves_student ON student_leave_applications(student_id);
 CREATE INDEX IF NOT EXISTS idx_student_leave_applications_inst_deleted ON student_leave_applications(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_student_electives_student ON student_electives(student_id, academic_year_id, semester);
+CREATE INDEX IF NOT EXISTS idx_student_electives_offering ON student_electives(course_id, academic_year_id, semester, subject_id);
+CREATE INDEX IF NOT EXISTS idx_subject_prerequisites_subject ON subject_prerequisites(subject_id);
+CREATE INDEX IF NOT EXISTS idx_subject_prerequisites_prereq ON subject_prerequisites(prerequisite_subject_id);
 CREATE INDEX IF NOT EXISTS idx_student_marks_exam_subject ON student_marks(exam_subject_id);
 CREATE INDEX IF NOT EXISTS idx_student_marks_student ON student_marks(student_id);
 CREATE INDEX IF NOT EXISTS idx_student_marks_inst_deleted ON student_marks(institution_id, deleted_at);

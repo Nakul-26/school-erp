@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronRight, LogOut, Users, Calendar,
   ClipboardList, FileSpreadsheet, Building2, Layers, BookOpen,
   BarChart3, Landmark, CalendarDays, UserPlus, Clipboard, CheckSquare,
-  Library, Bus, MessageSquare, Package
+  Library, Bus, MessageSquare, Package, Briefcase
 } from 'lucide-react';
 import { isAllowedNav } from '../config/roleNav';
 import { useAuth } from '../contexts/AuthContext';
@@ -150,6 +150,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/timetable', label: 'Timetable', icon: CalendarDays },
         { to: '/attendance', label: 'Attendance', icon: ClipboardCheck },
         { to: '/exams', label: 'Exams & Results', icon: Award },
+        { to: '/placements', label: 'Placements', icon: Briefcase },
         { to: '/homework', label: 'Homework', icon: Clipboard, feature: 'homework' },
         { to: '/calendar', label: 'Calendar', icon: Calendar, feature: 'calendar' },
       ],

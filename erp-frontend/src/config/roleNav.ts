@@ -11,7 +11,7 @@ export type NavKey =
   | '/reports' | '/data-tools' | '/approvals'
   | '/setup' | '/settings' | '/users' | '/access-control' | '/audit-logs' | '/institution-setup' | '/profile'
   | '/visitors' | '/assets' | '/alumni'
-  | '/academic-setup' | '/finance' | '/communication';
+  | '/academic-setup' | '/finance' | '/communication' | '/placements';
 
 const ADMIN_ROLES = ['admin', 'super_admin', 'Principal'];
 const ACADEMIC_MANAGER_ROLES = [...ADMIN_ROLES, 'HOD'];
@@ -76,7 +76,8 @@ export const ROUTE_POLICIES: Record<string, AccessPolicy> = {
   '/setup': { roles: ACADEMIC_MANAGER_ROLES, permissions: ['setup.manage'] },
   '/visitors': { roles: ACADEMIC_MANAGER_ROLES, permissions: ['visitors.manage'] },
   '/assets': { roles: ADMIN_ROLES, permissions: ['assets.manage'] },
-  '/alumni': { roles: ACADEMIC_MANAGER_ROLES, permissions: ['alumni.manage'] }
+  '/alumni': { roles: ACADEMIC_MANAGER_ROLES, permissions: ['alumni.manage'] },
+  '/placements': { roles: ACADEMIC_MANAGER_ROLES, permissions: ['academic.manage'] }
 };
 
 export const PERMISSION_NAV: Record<string, string[]> = Object.entries(ROUTE_POLICIES).reduce<Record<string, string[]>>((acc, [path, policy]) => {

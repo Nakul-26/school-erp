@@ -95,38 +95,38 @@ export class AdmissionsService {
   async approveApplication(
     id: string,
     institutionId: string,
-    approverId: string,
-    db: D1Database
+    approverId: string
   ): Promise<{ studentId: string; admissionNumber: string }> {
     const app = await this.repo.getApplicationById(id);
     if (!app || app.institution_id !== institutionId) {
       throw new Error('Application not found');
     }
     if (app.status === 'Approved') {
-      throw new Error('Application is already approved');
+      const err: any = new Error('Application is already approved');
+      err.statusCode = 409;
+      throw err;
     }
 
-    // Create student record
+    // Guarded, standalone update: only succeeds if still not Approved, so a
+    // concurrent duplicate approval (e.g. a double-click) can't create two
+    // student records for the same application.
+    const guardResult = await this.repo.approveApplicationIfNotApproved(id, approverId);
+    if (guardResult.meta.changes === 0) {
+      const err: any = new Error('Application was already approved by another request');
+      err.statusCode = 409;
+      throw err;
+    }
+
     const studentId = crypto.randomUUID();
     const admissionNumber = app.application_number;
 
-    await db.prepare(`
-      INSERT INTO students (
-        id, institution_id, admission_number, first_name, last_name,
-        date_of_birth, gender, email, phone,
-        admission_date, status, created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, date('now'), 'Active', ?, ?)
-    `).bind(
-      studentId, institutionId, admissionNumber,
-      app.student_first_name, app.student_last_name,
-      app.date_of_birth || null, app.gender || null,
-      app.parent_email || null, app.parent_phone || null,
-      approverId, approverId
-    ).run();
-
-    // Update application
-    await this.repo.approveApplication(id, approverId);
-    await this.repo.setConvertedStudentId(id, studentId);
+    // Student creation + linking the application back to it run as a single
+    // atomic batch so a mid-sequence failure can't leave an approved
+    // application with no linked student record.
+    await this.repo.runBatch([
+      this.repo.createStudentFromApplicationStatement(studentId, institutionId, app, approverId),
+      this.repo.setConvertedStudentIdStatement(id, studentId),
+    ]);
 
     return { studentId, admissionNumber };
   }

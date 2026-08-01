@@ -583,7 +583,7 @@ subjects.post('/:id/documents/upload', async (c) => {
     return c.json({ error: 'No document file uploaded' }, 400);
   }
 
-  const validationError = validateUploadedFile(file);
+  const validationError = await validateUploadedFile(file);
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }

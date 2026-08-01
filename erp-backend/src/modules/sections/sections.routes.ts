@@ -293,7 +293,7 @@ sections.post('/:id/documents/upload', requirePermission('academic.manage'), asy
     return c.json({ error: 'No document file uploaded' }, 400);
   }
 
-  const validationError = validateUploadedFile(file);
+  const validationError = await validateUploadedFile(file);
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }

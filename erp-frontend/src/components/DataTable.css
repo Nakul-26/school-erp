@@ -1,0 +1,15 @@
+.data-table-th-checkbox {
+  width: 36px;
+}
+
+.data-table-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: #64748b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .data-table-empty {
+    color: #94a3b8;
+  }
+}

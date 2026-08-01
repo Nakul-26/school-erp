@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
-import { api } from '../services/api';
+import { api, authFetch } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import { 
   Building2, 
@@ -297,13 +297,8 @@ export default function SystemSettings() {
     setBackupLoading(true);
 
     try {
-      const token = localStorage.getItem('erp_token');
-      const baseUrl = import.meta.env.VITE_API_URL || '';
-      
-      const res = await fetch(`${baseUrl}/system/backup/export`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
+      const res = await authFetch('/system/backup/export');
+
       if (!res.ok) {
         throw new Error('Export failed. Check permissions.');
       }

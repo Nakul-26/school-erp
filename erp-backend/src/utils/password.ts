@@ -59,6 +59,16 @@ export async function verifyPassword(password: string, stored: string): Promise<
   return difference === 0;
 }
 
+// SHA-256 is enough here (not PBKDF2): unlike a user password, a reset token
+// is already high-entropy random data, not something an attacker can guess
+// and brute-force offline at low cost - we just need the DB row to not be a
+// directly-usable credential if the table is ever exposed (e.g. via a backup
+// leak or an unrelated SQLi).
+export async function hashToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  return bufferToHex(digest);
+}
+
 export function generatePassword(length = 16): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
   const random = crypto.getRandomValues(new Uint8Array(length));

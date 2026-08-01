@@ -189,7 +189,7 @@ users.post('/profile-photo', async (c) => {
     return c.json({ error: 'No image file provided' }, 400);
   }
 
-  const validationError = validateUploadedFile(file, { photoOnly: true });
+  const validationError = await validateUploadedFile(file, { photoOnly: true });
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }

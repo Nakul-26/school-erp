@@ -31,7 +31,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onNavigate }: SidebarProps) {
-  const { user } = useAuth();
+  const { user, login: setSession, logout } = useAuth();
   const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
   const permissions: string[] = user?.permissions || [];
   const navigate = useNavigate();
@@ -65,8 +65,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     if (!instId) return;
     try {
       const res = await api.post('/auth/switch-branch', { institution_id: instId });
-      localStorage.setItem('erp_token', res.token);
-      localStorage.setItem('erp_user', JSON.stringify(res.user));
+      setSession(res.user);
       window.location.reload();
     } catch (err) {
       alert('Failed to switch branch.');
@@ -112,9 +111,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('erp_token');
-    localStorage.removeItem('erp_user');
-    navigate('/login');
+    logout();
   };
 
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';

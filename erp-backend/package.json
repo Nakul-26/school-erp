@@ -8,7 +8,10 @@
     "dev": "wrangler dev --port 8788",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "db:execute": "wrangler d1 execute erp-db --local --file=db/schema.sql",
+    "db:migrate": "node db/run-migrations.js",
+    "db:migrate:remote": "node db/run-migrations.js --remote",
     "seed-demo": "node seed-demo.js",
     "seed-school": "wrangler d1 execute erp-db --local --file=db/seed-school.sql"
   },
@@ -20,8 +23,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.20.1",
     "@cloudflare/workers-types": "^4.0.0",
     "typescript": "^5.3.3",
+    "vitest": "^4.1.10",
     "wrangler": "^4.105.0"
   }
 }

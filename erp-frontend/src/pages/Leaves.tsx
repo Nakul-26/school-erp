@@ -5,6 +5,7 @@ import Layout from '../components/Layout';
 import { PageGuidance } from '../components/PageGuidance';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useConfirm } from '../contexts/ConfirmDialogContext';
 import { 
   Plus, Trash2, Calendar, BookOpen, Edit, RefreshCw, X,
   ClipboardCheck, Check, AlertTriangle, CalendarDays, FileText
@@ -76,6 +77,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function Leaves() {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryTab = searchParams.get('tab');
   
@@ -327,7 +329,7 @@ export default function Leaves() {
   };
 
   const handleDeleteType = async (lt: LeaveType) => {
-    if (!window.confirm(`Delete leave type "${lt.name}"? This cannot be undone.`)) return;
+    if (!await confirm({ message: `Delete leave type "${lt.name}"? This cannot be undone.`, danger: true, confirmLabel: 'Delete' })) return;
     try {
       await api.delete(`/leave/types/${lt.id}`);
       fetchQuotasList();

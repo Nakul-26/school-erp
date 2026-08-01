@@ -92,7 +92,10 @@ app.use('*', async (c, next) => {
         }
       } catch (e) {}
 
-      return envOrigins[0] || origin;
+      // Not on the allow-list: deny. Returning `origin` here would echo back
+      // whatever the caller sent, which combined with `credentials: true`
+      // lets any site issue authenticated cross-origin requests.
+      return undefined;
     },
     allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin', 'X-Request-ID', 'x-request-id'],
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

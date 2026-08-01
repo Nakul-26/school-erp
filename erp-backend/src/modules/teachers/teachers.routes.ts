@@ -353,7 +353,7 @@ teachers.post('/:id/documents/upload', requireRole('admin', 'super_admin', 'Prin
     return c.json({ error: 'No document file uploaded' }, 400);
   }
 
-  const validationError = validateUploadedFile(file);
+  const validationError = await validateUploadedFile(file);
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }

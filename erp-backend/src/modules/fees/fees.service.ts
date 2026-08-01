@@ -228,28 +228,48 @@ export class FeesService {
     const receiptId = crypto.randomUUID();
 
     const year = new Date().getFullYear().toString();
-    const count = await this.repo.countReceiptsForYear(institutionId, year);
-    const sequence = (count + 1).toString().padStart(5, '0');
+    // Atomic upsert+RETURNING - no read-then-write gap, so concurrent payments
+    // can't be issued the same receipt number.
+    const sequence = (await this.repo.reserveNextReceiptSequence(institutionId, year)).toString().padStart(5, '0');
     const receiptNumber = `REC-${year}-${sequence}`;
 
-    // Perform DB Writes
-    await this.repo.createPayment(paymentId, institutionId, input, receiptNumber, userId);
-    await this.repo.updateRecordStatusAndTotals(input.student_fee_record_id, { paid_amount: newPaidAmount, status }, userId);
-    await this.repo.createReceipt(receiptId, institutionId, paymentId, receiptNumber, userId);
-
-    // Ledger Entry
-    await this.repo.addLedgerEntry(
-      crypto.randomUUID(),
-      institutionId,
-      input.student_id,
+    // Guard update runs first, standalone: D1 batches can't branch on an
+    // earlier statement's row count, so the only way to fail fast without
+    // side effects is to check this before creating the payment/receipt/
+    // ledger rows. `WHERE paid_amount = <value we read above>` means a
+    // concurrent payment against the same record can't be silently lost -
+    // it fails here with changes=0 instead.
+    const updateResult = await this.repo.updateRecordStatusAndTotalsStatement(
       input.student_fee_record_id,
-      'PAYMENT',
-      input.amount,
-      newOutstanding,
-      `Payment received via ${input.payment_method} (${receiptNumber})`,
-      paymentId,
+      record.paid_amount,
+      { paid_amount: newPaidAmount, status },
       userId
-    );
+    ).run();
+    if (updateResult.meta.changes === 0) {
+      const err: any = new Error('Fee record was modified by another payment at the same time. Please retry.');
+      err.statusCode = 409;
+      throw err;
+    }
+
+    // The remaining three writes are unconditional inserts on fresh IDs, run
+    // as a single atomic D1 batch so a mid-sequence failure can't leave the
+    // payment, receipt, and ledger out of sync with each other.
+    await this.repo.runBatch([
+      this.repo.createPaymentStatement(paymentId, institutionId, input, receiptNumber, userId),
+      this.repo.createReceiptStatement(receiptId, institutionId, paymentId, receiptNumber, userId),
+      this.repo.addLedgerEntryStatement(
+        crypto.randomUUID(),
+        institutionId,
+        input.student_id,
+        input.student_fee_record_id,
+        'PAYMENT',
+        input.amount,
+        newOutstanding,
+        `Payment received via ${input.payment_method} (${receiptNumber})`,
+        paymentId,
+        userId
+      ),
+    ]);
 
     return { paymentId, receiptId, receiptNumber };
   }

@@ -5,6 +5,7 @@ import Layout from '../components/Layout';
 import { Plus, Grid, List, Trash2, Archive, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmDialogContext';
 import { hasAnyPermission } from '../utils/accessControl';
 
 // Modular Imports
@@ -28,6 +29,7 @@ export default function Teachers() {
   const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const confirm = useConfirm();
 
   // F-2: Filter state persisted in URL search params (mirrors Students.tsx pattern)
   const [searchParams, setSearchParams] = useSearchParams();
@@ -409,7 +411,7 @@ export default function Teachers() {
       return;
     }
 
-    if (!window.confirm('Are you sure you want to remove this assignment?')) return;
+    if (!await confirm('Are you sure you want to remove this assignment?')) return;
     try {
       await teacherService.deleteAssignment(assignId);
       const data = await teacherService.getAssignmentsByTeacher(editForm.id);
@@ -426,7 +428,7 @@ export default function Teachers() {
       return;
     }
 
-    if (!window.confirm(`Are you sure you want to permanently delete teacher "${name}"? This action is irreversible.`)) return;
+    if (!await confirm({ message: `Are you sure you want to permanently delete teacher "${name}"? This action is irreversible.`, danger: true, confirmLabel: 'Delete' })) return;
     try {
       setLoading(true);
       await teacherService.deleteTeacher(id);
@@ -444,7 +446,7 @@ export default function Teachers() {
       return;
     }
 
-    if (!window.confirm(`Are you sure you want to deactivate teacher "${name}"?`)) {
+    if (!await confirm(`Are you sure you want to deactivate teacher "${name}"?`)) {
       return;
     }
     try {
@@ -501,12 +503,17 @@ export default function Teachers() {
       return;
     }
 
-    if (action === 'deactivate' && !window.confirm(`Are you sure you want to deactivate ${selectedTeacherIds.length} teachers?`)) return;
-    if (action === 'reactivate' && !window.confirm(`Are you sure you want to reactivate ${selectedTeacherIds.length} teachers?`)) return;
+    if (action === 'deactivate' && !await confirm(`Are you sure you want to deactivate ${selectedTeacherIds.length} teachers?`)) return;
+    if (action === 'reactivate' && !await confirm(`Are you sure you want to reactivate ${selectedTeacherIds.length} teachers?`)) return;
     if (action === 'delete') {
-      const confirmInput = window.prompt(`You are about to PERMANENTLY delete ${selectedTeacherIds.length} teachers. This action is irreversible and will delete all their teaching assignments, timetable records, and user login credentials.\n\nType DELETE to confirm:`);
-      if (confirmInput !== 'DELETE') {
-        toast.error('Bulk delete cancelled. Confirmation word did not match.');
+      const confirmed = await confirm({
+        message: `You are about to PERMANENTLY delete ${selectedTeacherIds.length} teachers. This action is irreversible and will delete all their teaching assignments, timetable records, and user login credentials.`,
+        danger: true,
+        confirmLabel: 'Delete',
+        requireText: 'DELETE',
+      });
+      if (!confirmed) {
+        toast.error('Bulk delete cancelled.');
         return;
       }
     }

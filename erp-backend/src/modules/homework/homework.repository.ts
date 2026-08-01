@@ -53,7 +53,7 @@ export class HomeworkRepository {
   async softDelete(id: string, userId?: string): Promise<void> {
     await this.db.prepare(`
       UPDATE homework
-      SET is_active = 0, updated_at = datetime('now'), updated_by = ?
+      SET is_active = 0, deleted_at = datetime('now'), updated_at = datetime('now'), updated_by = ?
       WHERE id = ?
     `).bind(userId || null, id).run();
   }

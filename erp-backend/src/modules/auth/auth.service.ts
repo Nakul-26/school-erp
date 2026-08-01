@@ -1,5 +1,5 @@
 import { sign } from 'hono/jwt';
-import { hashPassword, verifyPassword } from '../../utils/password';
+import { hashPassword, verifyPassword, hashToken } from '../../utils/password';
 import { sendEmail } from '../../utils/email';
 import { Env, JwtPayload } from '../../types';
 import { UserRepository } from '../users/users.repository';
@@ -97,9 +97,12 @@ export class AuthService {
   async forgotPassword(email: string) {
     const user = await this.userRepo.findByEmail(email);
     if (user) {
+      // Only the hash is stored - the raw token exists solely in the emailed
+      // link, so a DB leak (backup, unrelated SQLi) can't be used to reset
+      // accounts directly.
       const resetToken = crypto.randomUUID();
       const expiry = new Date(Date.now() + 3600000).toISOString();
-      await this.userRepo.update(user.id, { reset_token: resetToken, reset_expires: expiry });
+      await this.userRepo.update(user.id, { reset_token: await hashToken(resetToken), reset_expires: expiry });
 
       const frontendUrl = this.env.FRONTEND_URL || 'http://localhost:5173';
       const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
@@ -113,7 +116,7 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPass: string) {
-    const user = await this.userRepo.findByResetToken(token);
+    const user = await this.userRepo.findByResetToken(await hashToken(token));
     if (!user || !user.reset_expires || new Date(user.reset_expires) < new Date()) {
       throw new Error('Invalid or expired token');
     }

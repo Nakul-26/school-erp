@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmDialogContext';
 import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
 export default function TeacherDetails() {
@@ -20,6 +21,7 @@ export default function TeacherDetails() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { success: toastSuccess, error: toastError, info: toastInfo } = useToast();
+  const confirm = useConfirm();
   const userPermissions = user?.permissions || [];
   const roles = user?.roles || (user?.role ? [user.role] : []);
   const isTeacherRole = hasAnyRole(roles, ['Teacher', 'teacher']);
@@ -341,7 +343,7 @@ export default function TeacherDetails() {
       return;
     }
     const newStatus = teacher.status === 'ACTIVE' ? 'RESIGNED' : 'ACTIVE';
-    if (!window.confirm(`Are you sure you want to change this teacher's status to ${newStatus}?`)) return;
+    if (!await confirm(`Are you sure you want to change this teacher's status to ${newStatus}?`)) return;
     try {
       await api.put(`/teachers/${id}`, {
         ...teacher,
@@ -445,8 +447,8 @@ export default function TeacherDetails() {
     }
     if (!doc.backendId) return;
     const baseUrl = import.meta.env.VITE_API_URL || '';
-    const token = localStorage.getItem('erp_token');
-    const downloadUrl = `${baseUrl}/teachers/${id}/documents/${doc.backendId}/download?token=${encodeURIComponent(token || '')}`;
+    // Session cookie is attached automatically on this top-level navigation.
+    const downloadUrl = `${baseUrl}/teachers/${id}/documents/${doc.backendId}/download`;
     window.open(downloadUrl, '_blank');
   };
 
@@ -455,7 +457,7 @@ export default function TeacherDetails() {
       toastError('You do not have permission to delete teacher documents.');
       return;
     }
-    if (!window.confirm(`Are you sure you want to delete this document: ${doc.label}?`)) return;
+    if (!await confirm({ message: `Are you sure you want to delete this document: ${doc.label}?`, danger: true, confirmLabel: 'Delete' })) return;
     if (!doc.backendId) return;
     try {
       await api.delete(`/teachers/${id}/documents/${doc.backendId}`);

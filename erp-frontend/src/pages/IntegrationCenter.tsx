@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../contexts/ToastContext';
+import { authFetch } from '../services/api';
 import './IntegrationCenter.css';
 
 interface Integration {
@@ -76,14 +77,10 @@ const IntegrationCenter: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const baseUrl = '/api';
-
-      const iRes = await fetch(`${baseUrl}/integrations`, { headers });
+      const iRes = await authFetch('/integrations');
       if (iRes.ok) setIntegrations(await iRes.json());
 
-      const sRes = await fetch(`${baseUrl}/integrations/webhooks/subscriptions`, { headers });
+      const sRes = await authFetch('/integrations/webhooks/subscriptions');
       if (sRes.ok) {
         const subsData = await sRes.json();
         setSubscriptions(subsData);
@@ -92,9 +89,9 @@ const IntegrationCenter: React.FC = () => {
         }
       }
 
-      let dUrl = `${baseUrl}/integrations/webhooks/deliveries`;
+      let dUrl = '/integrations/webhooks/deliveries';
       if (deliveryFilter) dUrl += `?status=${deliveryFilter}`;
-      const dRes = await fetch(dUrl, { headers });
+      const dRes = await authFetch(dUrl);
       if (dRes.ok) setDeliveries(await dRes.json());
     } catch (err) {
       console.error('Failed to load Integrations data:', err);
@@ -106,10 +103,9 @@ const IntegrationCenter: React.FC = () => {
   const handleCreateIntegration = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/integrations', {
+      const res = await authFetch('/integrations', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: intName,
           provider: intProvider,
@@ -131,10 +127,9 @@ const IntegrationCenter: React.FC = () => {
   const handleCreateSubscription = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/integrations/webhooks/subscriptions', {
+      const res = await authFetch('/integrations/webhooks/subscriptions', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: subName,
           eventType: subEventType,
@@ -154,11 +149,7 @@ const IntegrationCenter: React.FC = () => {
 
   const handleSendTestWebhook = async (subId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/integrations/webhooks/subscriptions/${subId}/test`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/integrations/webhooks/subscriptions/${subId}/test`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setTestResult(data.delivery);
@@ -172,11 +163,7 @@ const IntegrationCenter: React.FC = () => {
 
   const handleReplayDelivery = async (deliveryId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/integrations/webhooks/deliveries/${deliveryId}/replay`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/integrations/webhooks/deliveries/${deliveryId}/replay`, { method: 'POST' });
       if (res.ok) {
         toast.success('Webhook delivery replayed!');
         fetchData();

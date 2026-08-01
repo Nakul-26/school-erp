@@ -187,14 +187,14 @@ admissions.patch(
     const service = new AdmissionsService(repo);
 
     try {
-      const result = await service.approveApplication(id, user.institution_id, user.sub, c.env.DB);
+      const result = await service.approveApplication(id, user.institution_id, user.sub);
       await createAuditLog(
         c.env.DB, user.sub, 'APPROVE_ADMISSION_APPLICATION', 'admissions', id,
         `Approved application ${id}, created student ${result.studentId} with admission no ${result.admissionNumber}`
       );
       return c.json({ success: true, ...result });
     } catch (e: any) {
-      return c.json({ error: e.message }, 400);
+      return c.json({ error: e.message }, e.statusCode || 400);
     }
   }
 );

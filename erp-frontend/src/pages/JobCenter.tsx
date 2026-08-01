@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmDialogContext';
+import { authFetch } from '../services/api';
 import './JobCenter.css';
 
 interface Metrics {
@@ -80,6 +82,7 @@ interface HistoryItem {
 
 const JobCenter: React.FC = () => {
   const toast = useToast();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'jobs' | 'cron' | 'workers' | 'dlq' | 'history'>('dashboard');
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -123,20 +126,16 @@ const JobCenter: React.FC = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const baseUrl = '/api';
-
       // Always fetch metrics
-      const mRes = await fetch(`${baseUrl}/background-jobs/metrics`, { headers });
+      const mRes = await authFetch('/background-jobs/metrics');
       if (mRes.ok) setMetrics(await mRes.json());
 
       if (activeTab === 'dashboard' || activeTab === 'jobs') {
-        let url = `${baseUrl}/background-jobs?limit=50`;
+        let url = '/background-jobs?limit=50';
         if (statusFilter) url += `&status=${statusFilter}`;
         if (typeFilter) url += `&job_type=${typeFilter}`;
         if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
-        const jRes = await fetch(url, { headers });
+        const jRes = await authFetch(url);
         if (jRes.ok) {
           const data = await jRes.json();
           setJobs(data.jobs || []);
@@ -145,17 +144,17 @@ const JobCenter: React.FC = () => {
       }
 
       if (activeTab === 'dashboard' || activeTab === 'cron') {
-        const cRes = await fetch(`${baseUrl}/background-jobs/schedules/list`, { headers });
+        const cRes = await authFetch('/background-jobs/schedules/list');
         if (cRes.ok) setSchedules(await cRes.json());
       }
 
       if (activeTab === 'dashboard' || activeTab === 'workers') {
-        const wRes = await fetch(`${baseUrl}/background-jobs/workers/list`, { headers });
+        const wRes = await authFetch('/background-jobs/workers/list');
         if (wRes.ok) setWorkers(await wRes.json());
       }
 
       if (activeTab === 'dlq') {
-        const dRes = await fetch(`${baseUrl}/background-jobs/dead-letter/list`, { headers });
+        const dRes = await authFetch('/background-jobs/dead-letter/list');
         if (dRes.ok) {
           const data = await dRes.json();
           setDlqJobs(data.jobs || []);
@@ -163,7 +162,7 @@ const JobCenter: React.FC = () => {
       }
 
       if (activeTab === 'history') {
-        const hRes = await fetch(`${baseUrl}/background-jobs/history/list?limit=50`, { headers });
+        const hRes = await authFetch('/background-jobs/history/list?limit=50');
         if (hRes.ok) {
           const data = await hRes.json();
           setHistory(data.history || []);
@@ -178,10 +177,9 @@ const JobCenter: React.FC = () => {
 
   const handleRunWorkerNow = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/background-jobs/process', {
+      const res = await authFetch('/background-jobs/process', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ workerId: 'worker-ui-manual' })
       });
       if (res.ok) {
@@ -207,10 +205,9 @@ const JobCenter: React.FC = () => {
         return;
       }
 
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/background-jobs', {
+      const res = await authFetch('/background-jobs', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jobType: newJobType,
           queueName: newJobQueue,
@@ -237,10 +234,9 @@ const JobCenter: React.FC = () => {
   const handleCreateCronSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/background-jobs/schedules', {
+      const res = await authFetch('/background-jobs/schedules', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: cronName,
           jobType: cronJobType,
@@ -263,11 +259,7 @@ const JobCenter: React.FC = () => {
 
   const handleRetryJob = async (jobId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/background-jobs/${jobId}/retry`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/background-jobs/${jobId}/retry`, { method: 'POST' });
       if (res.ok) {
         toast.success('Job manual retry triggered!');
         fetchAllData();
@@ -279,11 +271,7 @@ const JobCenter: React.FC = () => {
 
   const handleCancelJob = async (jobId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/background-jobs/${jobId}/cancel`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/background-jobs/${jobId}/cancel`, { method: 'POST' });
       if (res.ok) {
         toast.info('Job cancelled successfully');
         fetchAllData();
@@ -295,10 +283,9 @@ const JobCenter: React.FC = () => {
 
   const handleToggleCron = async (cronId: string, currentActive: number) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/background-jobs/schedules/${cronId}/toggle`, {
+      const res = await authFetch(`/background-jobs/schedules/${cronId}/toggle`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: currentActive === 0 })
       });
       if (res.ok) {
@@ -312,11 +299,7 @@ const JobCenter: React.FC = () => {
 
   const handleRequeueCron = async (cronId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/background-jobs/schedules/${cronId}/requeue`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/background-jobs/schedules/${cronId}/requeue`, { method: 'POST' });
       if (res.ok) {
         toast.success('Cron schedule enqueued immediately!');
         fetchAllData();
@@ -327,13 +310,9 @@ const JobCenter: React.FC = () => {
   };
 
   const handlePurgeDLQ = async () => {
-    if (!window.confirm('Are you sure you want to purge all Dead Letter Queue jobs?')) return;
+    if (!await confirm({ message: 'Are you sure you want to purge all Dead Letter Queue jobs?', danger: true, confirmLabel: 'Purge' })) return;
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/background-jobs/dead-letter/purge', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch('/background-jobs/dead-letter/purge', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         toast.success(`Purged ${data.purgedCount} dead-letter jobs`);

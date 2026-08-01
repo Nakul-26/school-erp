@@ -6,6 +6,11 @@ import {
 export class AdmissionsRepository {
   constructor(private db: D1Database) {}
 
+  // Runs prepared statements as a single atomic D1 batch (all-or-nothing).
+  runBatch(statements: D1PreparedStatement[]): Promise<D1Result[]> {
+    return this.db.batch(statements);
+  }
+
   // --- INQUIRIES ---
 
   async createInquiry(id: string, institutionId: string, input: CreateInquiryInput, userId?: string): Promise<void> {
@@ -147,20 +152,44 @@ export class AdmissionsRepository {
     `).bind(id).first<any>();
   }
 
-  async approveApplication(id: string, approverId: string): Promise<void> {
-    await this.db.prepare(`
+  // Guarded, standalone: only succeeds if the application isn't already
+  // Approved, so two concurrent approve requests for the same application
+  // can't both succeed (the second gets meta.changes === 0).
+  async approveApplicationIfNotApproved(id: string, approverId: string): Promise<D1Result> {
+    return this.db.prepare(`
       UPDATE admission_applications
       SET status = 'Approved', approved_by = ?, approved_at = datetime('now'), updated_at = datetime('now')
-      WHERE id = ?
+      WHERE id = ? AND status != 'Approved'
     `).bind(approverId, id).run();
   }
 
-  async setConvertedStudentId(applicationId: string, studentId: string): Promise<void> {
-    await this.db.prepare(`
+  setConvertedStudentIdStatement(applicationId: string, studentId: string): D1PreparedStatement {
+    return this.db.prepare(`
       UPDATE admission_applications
       SET converted_student_id = ?, updated_at = datetime('now')
       WHERE id = ?
-    `).bind(studentId, applicationId).run();
+    `).bind(studentId, applicationId);
+  }
+
+  createStudentFromApplicationStatement(
+    studentId: string,
+    institutionId: string,
+    app: { application_number: string; student_first_name: string; student_last_name: string; date_of_birth?: string | null; gender?: string | null; parent_email?: string | null; parent_phone?: string | null },
+    approverId: string
+  ): D1PreparedStatement {
+    return this.db.prepare(`
+      INSERT INTO students (
+        id, institution_id, admission_number, first_name, last_name,
+        date_of_birth, gender, email, phone,
+        admission_date, status, created_by, updated_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, date('now'), 'ACTIVE', ?, ?)
+    `).bind(
+      studentId, institutionId, app.application_number,
+      app.student_first_name, app.student_last_name,
+      app.date_of_birth || null, app.gender || null,
+      app.parent_email || null, app.parent_phone || null,
+      approverId, approverId
+    );
   }
 
   async rejectApplication(id: string, reason: string, approverId: string): Promise<void> {

@@ -105,6 +105,14 @@ export default defineConfig({
       '/transport': proxyConfig(),
       '/assets': proxyConfig(),
 
+      // Documents, Analytics, Integrations, Background Jobs, Broadcasts
+      '/documents': proxyConfig(),
+      '/analytics': proxyConfig(),
+      '/integrations': proxyConfig(),
+      '/background-jobs': proxyConfig(),
+      '/broadcasts': proxyConfig(),
+      '/message-templates': proxyConfig(),
+
       // Legacy
       '/comms': proxyConfig(),
       '/api': proxyConfig(),

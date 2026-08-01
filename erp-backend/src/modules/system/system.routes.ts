@@ -222,7 +222,7 @@ system.post('/settings/logo', requireRole('admin', 'super_admin', 'Principal'), 
     return c.json({ error: 'No image file provided' }, 400);
   }
 
-  const validationError = validateUploadedFile(file, { photoOnly: true });
+  const validationError = await validateUploadedFile(file, { photoOnly: true });
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }
@@ -255,7 +255,7 @@ system.post('/imports/students', requireRole('admin', 'super_admin', 'Principal'
     return c.json({ error: 'No CSV file uploaded' }, 400);
   }
 
-  const validationError = validateUploadedFile(file);
+  const validationError = await validateUploadedFile(file);
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }
@@ -385,7 +385,7 @@ system.post('/imports/teachers', requireRole('admin', 'super_admin', 'Principal'
     return c.json({ error: 'No CSV file uploaded' }, 400);
   }
 
-  const validationError = validateUploadedFile(file);
+  const validationError = await validateUploadedFile(file);
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }
@@ -515,7 +515,7 @@ system.post('/imports/subjects', requireRole('admin', 'super_admin', 'Principal'
     return c.json({ error: 'No CSV file uploaded' }, 400);
   }
 
-  const validationError = validateUploadedFile(file);
+  const validationError = await validateUploadedFile(file);
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }

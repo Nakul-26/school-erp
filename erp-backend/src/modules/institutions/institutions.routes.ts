@@ -126,7 +126,7 @@ institutions.post('/:id/logo', async (c) => {
     return c.json({ error: 'No file uploaded under form field "file"' }, 400);
   }
 
-  const validationError = validateUploadedFile(file, { photoOnly: true });
+  const validationError = await validateUploadedFile(file, { photoOnly: true });
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }

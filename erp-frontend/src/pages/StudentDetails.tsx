@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { api, getAuthenticatedUrl } from '../services/api';
+import { api, getAuthenticatedUrl, authFetch } from '../services/api';
 import { 
   Plus, Calendar, GraduationCap, FileText, User, 
   TrendingUp, IndianRupee, Clock, ArrowLeft, Upload, Trash2, 
@@ -355,15 +355,7 @@ export default function StudentDetails() {
 
   const handleDownloadDoc = async (doc: any) => {
     try {
-      const token = localStorage.getItem('erp_token');
-      // Set API BASE URL
-      const BASE_URL = import.meta.env.VITE_API_URL || '';
-      
-      const response = await fetch(`${BASE_URL}/students/${id}/documents/${doc.id}/download`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await authFetch(`/students/${id}/documents/${doc.id}/download`);
       if (!response.ok) throw new Error('Download failed');
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);

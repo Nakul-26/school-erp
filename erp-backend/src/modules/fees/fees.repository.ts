@@ -9,6 +9,11 @@ import {
 export class FeesRepository {
   constructor(private db: D1Database) {}
 
+  // Runs prepared statements as a single atomic D1 batch (all-or-nothing).
+  runBatch(statements: D1PreparedStatement[]): Promise<D1Result[]> {
+    return this.db.batch(statements);
+  }
+
   // --- FEE STRUCTURES ---
   async getNextVersionNumber(institutionId: string, academicYearId: string, courseId: string, yearNumber: number, feeType: string): Promise<number> {
     const res = await this.db.prepare(`
@@ -204,14 +209,94 @@ export class FeesRepository {
   }
 
   async createPayment(id: string, institutionId: string, input: CreatePaymentInput, receiptNumber: string, userId?: string): Promise<void> {
-    await this.db.prepare(`
+    await this.createPaymentStatement(id, institutionId, input, receiptNumber, userId).run();
+  }
+
+  createPaymentStatement(id: string, institutionId: string, input: CreatePaymentInput, receiptNumber: string, userId?: string): D1PreparedStatement {
+    return this.db.prepare(`
       INSERT INTO fee_payments (
         id, institution_id, student_id, student_fee_record_id, amount, payment_date, payment_method, transaction_reference, remarks, status, receipt_number, collected_by, created_by, updated_by
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'COMPLETED', ?, ?, ?, ?)
     `).bind(
-      id, institutionId, input.student_id, input.student_fee_record_id, input.amount, input.payment_date, input.payment_method, 
+      id, institutionId, input.student_id, input.student_fee_record_id, input.amount, input.payment_date, input.payment_method,
       input.transaction_reference ? input.transaction_reference.trim() : null, input.remarks || null, receiptNumber, userId || null, userId || null, userId || null
-    ).run();
+    );
+  }
+
+  // Reserves the next sequential receipt number for (institution, year) atomically,
+  // via a single upsert+RETURNING statement - avoids the read-then-write race of
+  // the previous COUNT(*)+1 approach where concurrent payments could collide.
+  async reserveNextReceiptSequence(institutionId: string, year: string): Promise<number> {
+    const res = await this.db.prepare(`
+      INSERT INTO fee_receipt_counters (institution_id, year, next_seq)
+      VALUES (?, ?, 2)
+      ON CONFLICT(institution_id, year) DO UPDATE SET next_seq = next_seq + 1
+      RETURNING next_seq - 1 AS seq
+    `).bind(institutionId, year).first<{ seq: number }>();
+    return res!.seq;
+  }
+
+  // Optimistic-concurrency variant: only applies if paid_amount still matches what
+  // the caller last read, so two concurrent payments against the same fee record
+  // can't silently overwrite each other's totals.
+  updateRecordStatusAndTotalsStatement(
+    id: string,
+    expectedPaidAmount: number,
+    totals: { paid_amount?: number; concession_amount?: number; fine_amount?: number; refund_amount?: number; status: string },
+    userId?: string
+  ): D1PreparedStatement {
+    const updates: string[] = ['status = ?', "updated_at = datetime('now')", 'updated_by = ?'];
+    const params: any[] = [totals.status, userId || null];
+
+    if (totals.paid_amount !== undefined) {
+      updates.push('paid_amount = ?');
+      params.push(totals.paid_amount);
+    }
+    if (totals.concession_amount !== undefined) {
+      updates.push('concession_amount = ?');
+      params.push(totals.concession_amount);
+    }
+    if (totals.fine_amount !== undefined) {
+      updates.push('fine_amount = ?');
+      params.push(totals.fine_amount);
+    }
+    if (totals.refund_amount !== undefined) {
+      updates.push('refund_amount = ?');
+      params.push(totals.refund_amount);
+    }
+
+    params.push(id, expectedPaidAmount);
+    return this.db.prepare(
+      `UPDATE student_fee_records SET ${updates.join(', ')} WHERE id = ? AND paid_amount = ?`
+    ).bind(...params);
+  }
+
+  createReceiptStatement(id: string, institutionId: string, paymentId: string, receiptNumber: string, userId?: string): D1PreparedStatement {
+    return this.db.prepare(`
+      INSERT INTO fee_receipts (id, institution_id, payment_id, receipt_number, created_by, updated_by)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(id, institutionId, paymentId, receiptNumber, userId || null, userId || null);
+  }
+
+  addLedgerEntryStatement(
+    id: string,
+    institutionId: string,
+    studentId: string,
+    studentFeeRecordId: string | null,
+    entryType: 'ALLOCATION' | 'PAYMENT' | 'DISCOUNT' | 'SCHOLARSHIP' | 'FINE' | 'REFUND' | 'ADJUSTMENT',
+    amount: number,
+    balanceAfter: number,
+    description: string,
+    referenceId?: string | null,
+    userId?: string
+  ): D1PreparedStatement {
+    return this.db.prepare(`
+      INSERT INTO financial_ledger (
+        id, institution_id, student_id, student_fee_record_id, entry_type, amount, balance_after, description, reference_id, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id, institutionId, studentId, studentFeeRecordId || null, entryType, amount, balanceAfter, description, referenceId || null, userId || null
+    );
   }
 
   async getPaymentById(id: string): Promise<FeePayment | null> {
@@ -268,13 +353,6 @@ export class FeesRepository {
   }
 
   // --- RECEIPTS ---
-  async countReceiptsForYear(institutionId: string, year: string): Promise<number> {
-    const res = await this.db.prepare(`
-      SELECT COUNT(*) as count FROM fee_receipts WHERE institution_id = ? AND receipt_number LIKE ?
-    `).bind(institutionId, `REC-${year}-%`).first<{ count: number }>();
-    return res?.count || 0;
-  }
-
   async createReceipt(id: string, institutionId: string, paymentId: string, receiptNumber: string, userId?: string): Promise<void> {
     await this.db.prepare(`
       INSERT INTO fee_receipts (id, institution_id, payment_id, receipt_number, created_by, updated_by)

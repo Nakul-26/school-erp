@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmDialogContext';
+import { authFetch } from '../services/api';
 import './DocumentCenter.css';
 
 interface DocumentMetadata {
@@ -48,6 +50,7 @@ interface StorageStats {
 
 const DocumentCenter: React.FC = () => {
   const toast = useToast();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<'explorer' | 'upload' | 'analytics' | 'archive'>('explorer');
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -85,18 +88,14 @@ const DocumentCenter: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const baseUrl = '/api';
-
-      const sRes = await fetch(`${baseUrl}/documents/stats/dashboard`, { headers });
+      const sRes = await authFetch('/documents/stats/dashboard');
       if (sRes.ok) setStats(await sRes.json());
 
       if (activeTab === 'explorer') {
-        let url = `${baseUrl}/documents?limit=50&status=AVAILABLE`;
+        let url = '/documents?limit=50&status=AVAILABLE';
         if (categoryFilter) url += `&category=${categoryFilter}`;
         if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
-        const dRes = await fetch(url, { headers });
+        const dRes = await authFetch(url);
         if (dRes.ok) {
           const data = await dRes.json();
           setDocuments(data.documents || []);
@@ -105,7 +104,7 @@ const DocumentCenter: React.FC = () => {
       }
 
       if (activeTab === 'archive') {
-        const aRes = await fetch(`${baseUrl}/documents?limit=50&status=ARCHIVED`, { headers });
+        const aRes = await authFetch('/documents?limit=50&status=ARCHIVED');
         if (aRes.ok) {
           const data = await aRes.json();
           setArchivedDocs(data.documents || []);
@@ -126,7 +125,6 @@ const DocumentCenter: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('file', uploadFile);
       formData.append('category', uploadCategory);
@@ -134,9 +132,8 @@ const DocumentCenter: React.FC = () => {
       formData.append('entityId', uploadEntityId);
       formData.append('changeSummary', uploadChangeSummary);
 
-      const res = await fetch('/api/documents/upload', {
+      const res = await authFetch('/documents/upload', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
 
@@ -159,7 +156,6 @@ const DocumentCenter: React.FC = () => {
     if (!newVersionDoc || !versionFile) return;
 
     try {
-      const token = localStorage.getItem('token');
       const buffer = await versionFile.arrayBuffer();
       const bytes = new Uint8Array(buffer);
       let binary = '';
@@ -168,9 +164,9 @@ const DocumentCenter: React.FC = () => {
       }
       const base64 = btoa(binary);
 
-      const res = await fetch(`/api/documents/${newVersionDoc.id}/version`, {
+      const res = await authFetch(`/documents/${newVersionDoc.id}/version`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           originalFilename: versionFile.name,
           mimeType: versionFile.type || 'application/pdf',
@@ -195,13 +191,10 @@ const DocumentCenter: React.FC = () => {
 
   const handleDownloadSignedUrl = async (docId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/documents/${docId}/signed-url`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/documents/${docId}/signed-url`);
       if (res.ok) {
         const data = await res.json();
-        window.open(`/api/documents/${docId}/download`, '_blank');
+        window.open(`/documents/${docId}/download`, '_blank');
         toast.success('Generated signed download token!');
       }
     } catch (err) {
@@ -211,10 +204,7 @@ const DocumentCenter: React.FC = () => {
 
   const handleFetchVersions = async (doc: DocumentMetadata) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/documents/${doc.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/documents/${doc.id}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedDocVersions({ doc, versions: data.versions || [] });
@@ -226,11 +216,7 @@ const DocumentCenter: React.FC = () => {
 
   const handleArchive = async (docId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/documents/${docId}/archive`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/documents/${docId}/archive`, { method: 'POST' });
       if (res.ok) {
         toast.info('Document moved to archive');
         fetchData();
@@ -242,11 +228,7 @@ const DocumentCenter: React.FC = () => {
 
   const handleRestore = async (docId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/documents/${docId}/restore`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/documents/${docId}/restore`, { method: 'POST' });
       if (res.ok) {
         toast.success('Document restored to available items');
         fetchData();
@@ -257,13 +239,9 @@ const DocumentCenter: React.FC = () => {
   };
 
   const handleSoftDelete = async (docId: string) => {
-    if (!window.confirm('Move this document to trash?')) return;
+    if (!await confirm('Move this document to trash?')) return;
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/documents/${docId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/documents/${docId}`, { method: 'DELETE' });
       if (res.ok) {
         toast.info('Document moved to trash');
         fetchData();

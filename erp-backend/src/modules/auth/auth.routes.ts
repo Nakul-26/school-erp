@@ -18,19 +18,32 @@ const getServices = (c: any) => {
   return { userRepo, instRepo, service };
 };
 
+// Establishes the httpOnly session cookie plus a readable double-submit CSRF
+// cookie the frontend echoes back as X-CSRF-Token on mutating requests.
+function establishSession(c: any, token: string) {
+  setCookie(c, 'erp_token', token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'Lax',
+    path: '/',
+    maxAge: 86400 * 7
+  });
+  setCookie(c, 'erp_csrf', crypto.randomUUID(), {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'Lax',
+    path: '/',
+    maxAge: 86400 * 7
+  });
+}
+
 auth.post('/login', rateLimit(10, 15 * 60 * 1000), validateBody(LoginSchema), async (c) => {
   const { service } = getServices(c);
   const { email, password } = c.get('validBody');
   try {
     const result = await service.login(email, password);
     if (result && result.token) {
-      setCookie(c, 'erp_token', result.token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'Lax',
-        path: '/',
-        maxAge: 86400 * 7
-      });
+      establishSession(c, result.token);
     }
     return c.json(result);
   } catch (e: any) {
@@ -40,10 +53,11 @@ auth.post('/login', rateLimit(10, 15 * 60 * 1000), validateBody(LoginSchema), as
 
 auth.post('/logout', async (c) => {
   deleteCookie(c, 'erp_token', { path: '/' });
+  deleteCookie(c, 'erp_csrf', { path: '/' });
   return c.json({ success: true, message: 'Logged out successfully' });
 });
 
-auth.post('/register-institution', validateBody(RegisterInstitutionSchema), async (c) => {
+auth.post('/register-institution', rateLimit(5, 60 * 60 * 1000), validateBody(RegisterInstitutionSchema), async (c) => {
   const { service } = getServices(c);
   const data = c.get('validBody');
   
@@ -132,6 +146,7 @@ auth.post('/switch-branch', authMiddleware, async (c) => {
   dbUser.institution_id = institution_id;
   dbUser.permissions = await userRepo.getUserPermissions(dbUser.id);
   const newToken = await service.generateToken(dbUser);
+  establishSession(c, newToken);
 
   return c.json({
     success: true,

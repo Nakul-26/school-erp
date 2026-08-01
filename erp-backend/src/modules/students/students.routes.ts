@@ -639,7 +639,7 @@ students.post('/:id/documents/upload', async (c) => {
     return c.json({ error: 'No document file uploaded' }, 400);
   }
 
-  const validationError = validateUploadedFile(file);
+  const validationError = await validateUploadedFile(file);
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }
@@ -746,7 +746,7 @@ students.post('/:id/photo', requireRole('admin', 'super_admin'), async (c) => {
     return c.json({ error: 'No photo file uploaded' }, 400);
   }
 
-  const validationError = validateUploadedFile(file, { photoOnly: true });
+  const validationError = await validateUploadedFile(file, { photoOnly: true });
   if (validationError) {
     return c.json({ error: validationError }, 400);
   }

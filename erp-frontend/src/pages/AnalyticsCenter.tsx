@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../contexts/ToastContext';
+import { authFetch } from '../services/api';
 import './AnalyticsCenter.css';
 
 interface KPISnapshot {
@@ -72,17 +73,13 @@ const AnalyticsCenter: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const baseUrl = '/api';
-
-      const kRes = await fetch(`${baseUrl}/analytics/kpis`, { headers });
+      const kRes = await authFetch('/analytics/kpis');
       if (kRes.ok) setKpis(await kRes.json());
 
-      const dRes = await fetch(`${baseUrl}/analytics/daily?limit=30`, { headers });
+      const dRes = await authFetch('/analytics/daily?limit=30');
       if (dRes.ok) setDailyData(await dRes.json());
 
-      const sRes = await fetch(`${baseUrl}/analytics/reports/schedules`, { headers });
+      const sRes = await authFetch('/analytics/reports/schedules');
       if (sRes.ok) setScheduledReports(await sRes.json());
     } catch (err) {
       console.error('Failed to load Analytics data:', err);
@@ -94,11 +91,7 @@ const AnalyticsCenter: React.FC = () => {
   const handleManualRefresh = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/analytics/refresh', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch('/analytics/refresh', { method: 'POST' });
       if (res.ok) {
         toast.success('Analytics warehouse and KPI snapshots refreshed!');
         fetchData();
@@ -112,10 +105,9 @@ const AnalyticsCenter: React.FC = () => {
 
   const handleGenerateReportPreview = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/analytics/reports/builder', {
+      const res = await authFetch('/analytics/reports/builder', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reportType })
       });
       if (res.ok) {
@@ -130,10 +122,7 @@ const AnalyticsCenter: React.FC = () => {
 
   const handleExportCSV = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/analytics/reports/export?reportType=${reportType}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await authFetch(`/analytics/reports/export?reportType=${reportType}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -153,10 +142,9 @@ const AnalyticsCenter: React.FC = () => {
   const handleCreateSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/analytics/reports/schedules', {
+      const res = await authFetch('/analytics/reports/schedules', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: schedName,
           reportType: schedType,
@@ -176,11 +164,7 @@ const AnalyticsCenter: React.FC = () => {
 
   const handleTriggerReport = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/analytics/reports/schedules/${id}/trigger`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authFetch(`/analytics/reports/schedules/${id}/trigger`, { method: 'POST' });
       if (res.ok) {
         toast.success('Scheduled report executed and delivered!');
         fetchData();

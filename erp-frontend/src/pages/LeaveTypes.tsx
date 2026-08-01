@@ -5,6 +5,7 @@ import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { BookOpen, Plus, Trash2, Edit, RefreshCw, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useConfirm } from '../contexts/ConfirmDialogContext';
 import { hasAnyRole } from '../utils/accessControl';
 
 interface LeaveType {
@@ -21,6 +22,7 @@ interface AcademicYear {
 
 export default function LeaveTypes() {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const userRoles = user?.roles || (user?.role ? [user.role] : []);
   const canManageLeaveTypes = hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD']);
   const canSeedLeaveBalances = hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal']);
@@ -115,7 +117,7 @@ export default function LeaveTypes() {
       alert('You do not have permission to manage leave types.');
       return;
     }
-    if (!window.confirm(`Delete leave type "${lt.name}"? This cannot be undone.`)) return;
+    if (!await confirm({ message: `Delete leave type "${lt.name}"? This cannot be undone.`, danger: true, confirmLabel: 'Delete' })) return;
     try {
       await api.delete(`/leave/types/${lt.id}`);
       fetchAll();

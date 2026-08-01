@@ -83,16 +83,16 @@ export class PayrollRepository {
 
   async deletePayrollRun(id: string): Promise<void> {
     // Soft-delete the run and all its payslips
-    await this.db.prepare('UPDATE payslips SET is_active = 0 WHERE payroll_run_id = ?').bind(id).run();
-    await this.db.prepare('UPDATE payroll_runs SET is_active = 0 WHERE id = ?').bind(id).run();
+    await this.db.prepare("UPDATE payslips SET is_active = 0, deleted_at = datetime('now') WHERE payroll_run_id = ?").bind(id).run();
+    await this.db.prepare("UPDATE payroll_runs SET is_active = 0, deleted_at = datetime('now'), updated_at = datetime('now') WHERE id = ?").bind(id).run();
   }
 
   async reactivatePayrollRun(id: string, userId?: string): Promise<void> {
     await this.db.prepare(`
       UPDATE payroll_runs
-      SET is_active = 1, status = 'Draft', total_gross = 0, total_net = 0, generated_by = ?
+      SET is_active = 1, status = 'Draft', total_gross = 0, total_net = 0, generated_by = ?, deleted_at = NULL, updated_at = datetime('now'), updated_by = ?
       WHERE id = ?
-    `).bind(userId || null, id).run();
+    `).bind(userId || null, userId || null, id).run();
   }
 
   // --- PAYSLIPS ---

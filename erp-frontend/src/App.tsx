@@ -1,68 +1,72 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import Login from './pages/Login';
-import AccessDenied from './pages/AccessDenied';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import Dashboard from './pages/Dashboard';
-import ManageUsers from './pages/ManageUsers';
-import InstitutionSetup from './pages/InstitutionSetup';
-import AuditLogs from './pages/AuditLogs';
-import AcademicYears from './pages/AcademicYears';
-import Departments from './pages/Departments';
-import Classes from './pages/Classes';
-import SectionWorkspace from './pages/SectionWorkspace';
-import Subjects from './pages/Subjects';
-import SubjectWorkspace from './pages/SubjectWorkspace';
-import AcademicCalendar from './pages/AcademicCalendar';
-import Attendance from './pages/Attendance';
-import Students from './pages/Students';
-import StudentDetails from './pages/StudentDetails';
-import Teachers from './pages/Teachers';
-import TeacherDetails from './pages/TeacherDetails';
-import Exams from './pages/Exams';
-import Announcements from './pages/Announcements';
-import Notifications from './pages/Notifications';
-import FeeStructures from './pages/FeeStructures';
-import StudentFees from './pages/StudentFees';
-import Profile from './pages/Profile';
-import SystemSettings from './pages/SystemSettings';
-import ApprovalsInbox from './pages/ApprovalsInbox';
-import LeaveTypes from './pages/LeaveTypes';
-import MyLeaveApplications from './pages/MyLeaveApplications';
-import LeaveApprovals from './pages/LeaveApprovals';
-import GradeSettings from './pages/GradeSettings';
-import JobCenter from './pages/JobCenter';
-import DocumentCenter from './pages/DocumentCenter';
-import AnalyticsCenter from './pages/AnalyticsCenter';
-import IntegrationCenter from './pages/IntegrationCenter';
+import SkeletonLoader from './components/SkeletonLoader';
 
-import PayrollRuns from './pages/PayrollRuns';
-import PayrollRunDetail from './pages/PayrollRunDetail';
-import StudentLeaveApprovals from './pages/StudentLeaveApprovals';
-import HomeworkList from './pages/HomeworkList';
+const AccessDenied = lazy(() => import('./pages/AccessDenied'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const ManageUsers = lazy(() => import('./pages/ManageUsers'));
+const InstitutionSetup = lazy(() => import('./pages/InstitutionSetup'));
+const AuditLogs = lazy(() => import('./pages/AuditLogs'));
+const AcademicYears = lazy(() => import('./pages/AcademicYears'));
+const Departments = lazy(() => import('./pages/Departments'));
+const Classes = lazy(() => import('./pages/Classes'));
+const SectionWorkspace = lazy(() => import('./pages/SectionWorkspace'));
+const Subjects = lazy(() => import('./pages/Subjects'));
+const SubjectWorkspace = lazy(() => import('./pages/SubjectWorkspace'));
+const AcademicCalendar = lazy(() => import('./pages/AcademicCalendar'));
+const Attendance = lazy(() => import('./pages/Attendance'));
+const Students = lazy(() => import('./pages/Students'));
+const StudentDetails = lazy(() => import('./pages/StudentDetails'));
+const Teachers = lazy(() => import('./pages/Teachers'));
+const TeacherDetails = lazy(() => import('./pages/TeacherDetails'));
+const Exams = lazy(() => import('./pages/Exams'));
+const Profile = lazy(() => import('./pages/Profile'));
+const SystemSettings = lazy(() => import('./pages/SystemSettings'));
+const ApprovalsInbox = lazy(() => import('./pages/ApprovalsInbox'));
+const LeaveTypes = lazy(() => import('./pages/LeaveTypes'));
+const MyLeaveApplications = lazy(() => import('./pages/MyLeaveApplications'));
+const LeaveApprovals = lazy(() => import('./pages/LeaveApprovals'));
+const JobCenter = lazy(() => import('./pages/JobCenter'));
+const DocumentCenter = lazy(() => import('./pages/DocumentCenter'));
+const AnalyticsCenter = lazy(() => import('./pages/AnalyticsCenter'));
+const IntegrationCenter = lazy(() => import('./pages/IntegrationCenter'));
+
+const PayrollRunDetail = lazy(() => import('./pages/PayrollRunDetail'));
+const StudentLeaveApprovals = lazy(() => import('./pages/StudentLeaveApprovals'));
+const HomeworkList = lazy(() => import('./pages/HomeworkList'));
 
 // ── V2 Merged Pages ──────────────────────────────────────────────────────────
-import Admissions from './pages/Admissions';
-import DataTools from './pages/DataTools';
-import Reports from './pages/Reports';
-import Library from './pages/Library';
-import Transport from './pages/Transport';
-import Certificates from './pages/Certificates';
-import Messaging from './pages/Messaging';
-import TimetablePage from './pages/TimetablePage';
-import SchoolSetup from './pages/SchoolSetup';
-import Visitors from './pages/Visitors';
-import Assets from './pages/Assets';
-import Alumni from './pages/Alumni';
-import AcademicSetup from './pages/AcademicSetup';
-import Finance from './pages/Finance';
-import Communication from './pages/Communication';
+const Admissions = lazy(() => import('./pages/Admissions'));
+const DataTools = lazy(() => import('./pages/DataTools'));
+const Reports = lazy(() => import('./pages/Reports'));
+const Library = lazy(() => import('./pages/Library'));
+const Transport = lazy(() => import('./pages/Transport'));
+const Certificates = lazy(() => import('./pages/Certificates'));
+const TimetablePage = lazy(() => import('./pages/TimetablePage'));
+const SchoolSetup = lazy(() => import('./pages/SchoolSetup'));
+const Visitors = lazy(() => import('./pages/Visitors'));
+const Assets = lazy(() => import('./pages/Assets'));
+const Alumni = lazy(() => import('./pages/Alumni'));
+const AcademicSetup = lazy(() => import('./pages/AcademicSetup'));
+const Finance = lazy(() => import('./pages/Finance'));
+const Communication = lazy(() => import('./pages/Communication'));
 
 import ErrorBoundary from './components/ErrorBoundary';
+
+function RouteFallback() {
+  return (
+    <div style={{ padding: '2rem' }}>
+      <SkeletonLoader type="list" count={4} />
+    </div>
+  );
+}
 
 function App() {
   useEffect(() => {
@@ -97,7 +101,9 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <ToastProvider>
+        <ConfirmDialogProvider>
           <Router>
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
@@ -216,7 +222,9 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+        </Suspense>
       </Router>
+        </ConfirmDialogProvider>
       </ToastProvider>
     </AuthProvider>
     </ErrorBoundary>

@@ -3,19 +3,37 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { api, getAuthenticatedUrl, authFetch } from '../services/api';
-import { 
-  Plus, Calendar, GraduationCap, FileText, User, 
-  TrendingUp, IndianRupee, Clock, ArrowLeft, Upload, Trash2, 
-  CheckCircle2, Heart, MessageSquare, ShieldAlert, Phone, Mail
+import { getAuthenticatedUrl } from '../services/api';
+import {
+  Calendar, GraduationCap, FileText, User,
+  TrendingUp, IndianRupee, Clock, ArrowLeft, Heart, MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useConfirm } from '../contexts/ConfirmDialogContext';
 import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
+
+import { studentDetailsService } from './studentDetails/studentDetailsService';
+import { OverviewTab } from './studentDetails/components/OverviewTab';
+import { AcademicTab } from './studentDetails/components/AcademicTab';
+import { AttendanceTab } from './studentDetails/components/AttendanceTab';
+import { ResultsTab } from './studentDetails/components/ResultsTab';
+import { FeesTab } from './studentDetails/components/FeesTab';
+import { TimelineTab } from './studentDetails/components/TimelineTab';
+import { HealthTab } from './studentDetails/components/HealthTab';
+import { NotesTab } from './studentDetails/components/NotesTab';
+import { DocumentsTab } from './studentDetails/components/DocumentsTab';
+import { GuardiansTab } from './studentDetails/components/GuardiansTab';
+import { UploadDocumentModal } from './studentDetails/components/UploadDocumentModal';
+import { TransferStudentModal } from './studentDetails/components/TransferStudentModal';
+import { PromoteStudentModal } from './studentDetails/components/PromoteStudentModal';
+import { ChangeSectionModal } from './studentDetails/components/ChangeSectionModal';
+import { TransportModal } from './studentDetails/components/TransportModal';
 
 export default function StudentDetails() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'overview';
+  const confirm = useConfirm();
 
   const [student, setStudent] = useState<any>(null);
   const [guardians, setGuardians] = useState<any[]>([]);
@@ -35,8 +53,7 @@ export default function StudentDetails() {
   const [institutionType, setInstitutionType] = useState<string>('college');
 
   const getProgramLabel = () => institutionType === 'school' ? 'Class' : 'Program';
-  const getProgramsLabel = () => institutionType === 'school' ? 'Classes' : 'Programs';
-  
+
   // Custom states
   const [attendanceInfo, setAttendanceInfo] = useState<any>(null);
   const [ledger, setLedger] = useState<any[]>([]);
@@ -45,7 +62,7 @@ export default function StudentDetails() {
   const [notes, setNotes] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(true);
-  
+
   // Exams & Results states
   const [studentExams, setStudentExams] = useState<any[]>([]);
   const [selectedExamId, setSelectedExamId] = useState<string>('');
@@ -118,7 +135,7 @@ export default function StudentDetails() {
 
   const fetchExams = async () => {
     try {
-      const data = await api.get(`/exams/students/${id}/results`);
+      const data = await studentDetailsService.getStudentExamResults(id!);
       setStudentExams(data);
       if (data.length > 0) {
         setSelectedExamId(data[0].id);
@@ -131,7 +148,7 @@ export default function StudentDetails() {
   const fetchDetailedResult = async () => {
     try {
       setLoadingResult(true);
-      const data = await api.get(`/exams/students/${id}/exams/${selectedExamId}/result`);
+      const data = await studentDetailsService.getDetailedResult(id!, selectedExamId);
       setDetailedResult(data);
     } catch (err) {
       console.error(err);
@@ -148,33 +165,33 @@ export default function StudentDetails() {
   const fetchData = async () => {
     try {
       const [
-        studentData, guardiansData, enrollmentsData, yearsData, programsData, sectionsData, 
+        studentData, guardiansData, enrollmentsData, yearsData, programsData, sectionsData,
         attendanceData, ledgerData, paymentsData, documentsData, notesData,
         routesData, allocationsData
       ] = await Promise.all([
-        api.get(`/students/${id}`),
-        api.get(`/guardians/student/${id}`),
-        api.get(`/enrollments/student/${id}`),
-        api.get('/academic-years'),
-        api.get('/programs'),
-        api.get('/sections'),
-        api.get(`/attendance/student/${id}`).catch(() => null),
-        canViewFees ? api.get(`/fees/ledger/${id}`).catch(() => []) : Promise.resolve([]),
-        canViewFees ? api.get(`/fees/payments?student_id=${id}`).catch(() => []) : Promise.resolve([]),
-        canManageDocs ? api.get(`/students/${id}/documents`).catch(() => []) : Promise.resolve([]),
-        canWriteNotes ? api.get(`/students/${id}/notes`).catch(() => []) : Promise.resolve([]),
-        api.get('/transport/routes').catch(() => []),
-        api.get('/transport/allocations').catch(() => [])
+        studentDetailsService.getStudent(id!),
+        studentDetailsService.getGuardians(id!),
+        studentDetailsService.getEnrollments(id!),
+        studentDetailsService.getAcademicYears(),
+        studentDetailsService.getPrograms(),
+        studentDetailsService.getSections(),
+        studentDetailsService.getAttendance(id!),
+        canViewFees ? studentDetailsService.getLedger(id!) : Promise.resolve([]),
+        canViewFees ? studentDetailsService.getPayments(id!) : Promise.resolve([]),
+        canManageDocs ? studentDetailsService.getDocuments(id!) : Promise.resolve([]),
+        canWriteNotes ? studentDetailsService.getNotes(id!) : Promise.resolve([]),
+        studentDetailsService.getTransportRoutes(),
+        studentDetailsService.getTransportAllocations()
       ]);
-      
+
       setStudent(studentData);
       setGuardians(guardiansData);
       // Sort enrollments descending by created_at so the latest is first
-      const sortedEnrollments = (enrollmentsData || []).sort((a: any, b: any) => 
+      const sortedEnrollments = (enrollmentsData || []).sort((a: any, b: any) =>
         new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
       );
       setEnrollments(sortedEnrollments);
-      
+
       setAcademicYears(yearsData);
       setPrograms(programsData);
       setSections(sectionsData);
@@ -223,7 +240,7 @@ export default function StudentDetails() {
       }
 
       if (user?.institution_id) {
-        const inst = await api.get(`/institutions/${user.institution_id}`);
+        const inst = await studentDetailsService.getInstitution(user.institution_id);
         if (inst && inst.institution_type) {
           setInstitutionType(inst.institution_type);
         }
@@ -245,9 +262,9 @@ export default function StudentDetails() {
     if (!newNote.trim()) return;
     try {
       setAddingNote(true);
-      await api.post(`/students/${id}/notes`, { content: newNote });
+      await studentDetailsService.addNote(id!, newNote);
       setNewNote('');
-      const updatedNotes = await api.get(`/students/${id}/notes`);
+      const updatedNotes = await studentDetailsService.getNotes(id!);
       setNotes(updatedNotes || []);
     } catch (err) {
       console.error(err);
@@ -262,9 +279,9 @@ export default function StudentDetails() {
       alert('You do not have permission to delete student notes.');
       return;
     }
-    if (!confirm('Are you sure you want to delete this note?')) return;
+    if (!await confirm('Are you sure you want to delete this note?')) return;
     try {
-      await api.delete(`/students/${id}/notes/${noteId}`);
+      await studentDetailsService.deleteNote(id!, noteId);
       setNotes(notes.filter(n => n.id !== noteId));
     } catch (err) {
       console.error(err);
@@ -281,13 +298,13 @@ export default function StudentDetails() {
     if (!transportForm.route_id) return;
     try {
       setSubmittingTransport(true);
-      await api.post('/transport/allocations', {
+      await studentDetailsService.createTransportAllocation({
         student_id: id,
         route_id: transportForm.route_id,
         pickup_point: transportForm.pickup_point
       });
-      
-      const allocationsData = await api.get('/transport/allocations').catch(() => []);
+
+      const allocationsData = await studentDetailsService.getTransportAllocations();
       const stuAllocation = (allocationsData || []).find((a: any) => a.student_id === id);
       setAllocation(stuAllocation || null);
       setShowTransportModal(false);
@@ -304,10 +321,10 @@ export default function StudentDetails() {
       alert('You do not have permission to manage student transport assignments.');
       return;
     }
-    if (!confirm('Are you sure you want to remove this student from the transport route?')) return;
+    if (!await confirm('Are you sure you want to remove this student from the transport route?')) return;
     try {
       setSubmittingTransport(true);
-      await api.delete(`/transport/allocations/${id}`);
+      await studentDetailsService.deleteTransportAllocation(id!);
       setAllocation(null);
       setTransportForm({ route_id: '', pickup_point: '' });
       setShowTransportModal(false);
@@ -337,12 +354,12 @@ export default function StudentDetails() {
       formData.append('file', selectedFile);
       formData.append('document_type', newDocType);
 
-      await api.upload(`/students/${id}/documents/upload`, formData);
-      
+      await studentDetailsService.uploadDocument(id!, formData);
+
       // Refresh documents
-      const docs = await api.get(`/students/${id}/documents`);
+      const docs = await studentDetailsService.getDocuments(id!);
       setDocuments(docs || []);
-      
+
       setSelectedFile(null);
       setShowUploadModal(false);
     } catch (err: any) {
@@ -355,7 +372,7 @@ export default function StudentDetails() {
 
   const handleDownloadDoc = async (doc: any) => {
     try {
-      const response = await authFetch(`/students/${id}/documents/${doc.id}/download`);
+      const response = await studentDetailsService.downloadDocument(id!, doc.id);
       if (!response.ok) throw new Error('Download failed');
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -377,9 +394,9 @@ export default function StudentDetails() {
       alert('You do not have permission to delete student documents.');
       return;
     }
-    if (!confirm('Are you sure you want to delete this document?')) return;
+    if (!await confirm('Are you sure you want to delete this document?')) return;
     try {
-      await api.delete(`/students/${id}/documents/${docId}`);
+      await studentDetailsService.deleteDocument(id!, docId);
       setDocuments(documents.filter(d => d.id !== docId));
     } catch (err) {
       console.error(err);
@@ -396,7 +413,7 @@ export default function StudentDetails() {
     }
     try {
       setSavingHealth(true);
-      await api.put(`/students/${id}`, healthForm);
+      await studentDetailsService.updateStudent(id!, healthForm);
       setStudent({ ...student, ...healthForm });
       setShowHealthEdit(false);
     } catch (err) {
@@ -416,7 +433,7 @@ export default function StudentDetails() {
     }
     try {
       setLoading(true);
-      await api.put(`/students/${id}`, {
+      await studentDetailsService.updateStudent(id!, {
         academic_year_id: transferForm.academic_year_id,
         course_id: transferForm.course_id,
         section_id: transferForm.section_id,
@@ -440,7 +457,7 @@ export default function StudentDetails() {
     }
     try {
       setLoading(true);
-      await api.put(`/students/${id}`, {
+      await studentDetailsService.updateStudent(id!, {
         academic_year_id: promoteForm.academic_year_id,
         course_id: promoteForm.course_id,
         section_id: promoteForm.section_id,
@@ -469,7 +486,7 @@ export default function StudentDetails() {
         alert('No active enrollment to change section for.');
         return;
       }
-      await api.put(`/students/${id}`, {
+      await studentDetailsService.updateStudent(id!, {
         academic_year_id: currentEnroll.academic_year_id,
         course_id: currentEnroll.course_id,
         section_id: changeSectionForm.section_id,
@@ -488,8 +505,8 @@ export default function StudentDetails() {
   const handleTransferFieldChange = (field: string, value: any) => {
     const updatedForm = { ...transferForm, [field]: value };
     if (field === 'academic_year_id' || field === 'course_id') {
-      const matchingSections = sections.filter(s => 
-        s.academic_year_id === (field === 'academic_year_id' ? value : transferForm.academic_year_id) && 
+      const matchingSections = sections.filter(s =>
+        s.academic_year_id === (field === 'academic_year_id' ? value : transferForm.academic_year_id) &&
         s.course_id === (field === 'course_id' ? value : transferForm.course_id)
       );
       updatedForm.section_id = matchingSections[0]?.id || '';
@@ -500,8 +517,8 @@ export default function StudentDetails() {
   const handlePromoteFieldChange = (field: string, value: any) => {
     const updatedForm = { ...promoteForm, [field]: value };
     if (field === 'academic_year_id' || field === 'course_id') {
-      const matchingSections = sections.filter(s => 
-        s.academic_year_id === (field === 'academic_year_id' ? value : promoteForm.academic_year_id) && 
+      const matchingSections = sections.filter(s =>
+        s.academic_year_id === (field === 'academic_year_id' ? value : promoteForm.academic_year_id) &&
         s.course_id === (field === 'course_id' ? value : promoteForm.course_id)
       );
       updatedForm.section_id = matchingSections[0]?.id || '';
@@ -535,7 +552,7 @@ export default function StudentDetails() {
     },
     {
       title: `Enrolled in ${student.program_name || getProgramLabel()}`,
-      description: enrollments.length > 0 
+      description: enrollments.length > 0
         ? (institutionType === 'school'
             ? `Enrolled in Section: ${student.section_name || 'Section A'}`
             : `Enrolled in Section: ${student.section_name || 'Section A'} (Semester ${enrollments[0]?.semester || 1})`)
@@ -545,7 +562,7 @@ export default function StudentDetails() {
     },
     {
       title: 'Fee Structure Assigned',
-      description: ledger.length > 0 
+      description: ledger.length > 0
         ? `Financial ledger created. Assigned ${ledger.length} fee heads (Total ₹${totalAssignedFees.toLocaleString('en-IN')})`
         : 'No fee structures assigned yet',
       date: ledger[0]?.created_at?.split('T')[0] || enrollments[0]?.created_at?.split('T')[0] || null,
@@ -597,14 +614,14 @@ export default function StudentDetails() {
         <div className="student-details-col-6">
           <div className="student-details-row-7">
             {student.photo ? (
-              <img 
+              <img
                 src={getAuthenticatedUrl(
                   student.photo.startsWith('data:image') || student.photo.startsWith('/api') || student.photo.startsWith('http')
-                    ? student.photo 
+                    ? student.photo
                     : `/api/students/photo/${student.id}`
-                )} 
-                alt="Student Photo" 
-                className="student-details-avatar-img" 
+                )}
+                alt="Student Photo"
+                className="student-details-avatar-img"
               />
             ) : (
               '👤'
@@ -620,7 +637,7 @@ export default function StudentDetails() {
           <h2 className="student-details-title-10">
             {student.first_name} {student.middle_name ? student.middle_name + ' ' : ''}{student.last_name}
           </h2>
-          
+
           <div className="student-details-grid-11">
             <div>
               <span className="student-details-span-12">Admission No</span>
@@ -652,7 +669,7 @@ export default function StudentDetails() {
           const Icon = t.icon;
           const isSelected = activeTab === t.id;
           return (
-            <button 
+            <button
               key={t.id}
               className={`student-details-tab-btn ${isSelected ? 'is-selected' : ''}`}
               onClick={() => setActiveTab(t.id)}
@@ -666,1073 +683,173 @@ export default function StudentDetails() {
 
       {/* Tab Panels */}
       <div className="card student-tab-content-card">
-        
-        {/* OVERVIEW PANEL */}
-        {activeTab === 'overview' && (
-          <div>
-            <h3 className="student-details-title-24">Personal Information</h3>
-            <div className="student-details-grid-25">
-              <div>
-                <label className="student-details-label-26">First Name</label>
-                <span className="student-details-span-27">{student.first_name}</span>
-              </div>
-              {student.middle_name && (
-                <div>
-                  <label className="student-details-label-28">Middle Name</label>
-                  <span className="student-details-span-29">{student.middle_name}</span>
-                </div>
-              )}
-              <div>
-                <label className="student-details-label-30">Last Name</label>
-                <span className="student-details-span-31">{student.last_name}</span>
-              </div>
-              <div>
-                <label className="student-details-label-32">Admission No</label>
-                <span className="student-details-span-33">{student.admission_number}</span>
-              </div>
-              <div>
-                <label className="student-details-label-34">Roll No</label>
-                <span className="student-details-span-35">{student.roll_number || '-'}</span>
-              </div>
-              <div>
-                <label className="student-details-label-36">Email Address</label>
-                <span className="student-details-span-37">{student.email || '-'}</span>
-              </div>
-              <div>
-                <label className="student-details-label-38">Phone Number</label>
-                <span className="student-details-span-39">{student.phone || '-'}</span>
-              </div>
-              <div>
-                <label className="student-details-label-40">Gender</label>
-                <span className="student-details-span-41">{student.gender || '-'}</span>
-              </div>
-              <div>
-                <label className="student-details-label-42">Date of Birth</label>
-                <span className="student-details-span-43">{student.date_of_birth || '-'}</span>
-              </div>
-              <div>
-                <label className="student-details-label-44">Admission Date</label>
-                <span className="student-details-span-45">{student.admission_date || '-'}</span>
-              </div>
-              <div className="student-details-address-col">
-                <label className="student-details-label-44">Address</label>
-                <span className="student-details-span-45 student-details-address-val">{student.address || '-'}</span>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* ACADEMIC HISTORY PANEL */}
+        {activeTab === 'overview' && <OverviewTab student={student} />}
+
         {activeTab === 'academic' && (
-          <div>
-            <div className="student-details-row-46">
-              <h3 className="student-details-title-47">Academic Enrollment Hub</h3>
-            </div>
-
-            {/* Current Enrollment Status Card */}
-            {enrollments.length > 0 ? (
-              <div className="student-details-grid-48">
-                <div>
-                  <h4 className="student-details-row-49">
-                    <GraduationCap size={18} className="student-details-GraduationCap-50"  /> Current Enrollment Status
-                  </h4>
-                  <div className="student-details-grid-51">
-                    <div>
-                      <span className="student-details-span-52">Academic Year</span>
-                      <strong className="student-details-strong-53">
-                        {academicYears.find(y => y.id === enrollments[0].academic_year_id)?.name || 'N/A'}
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="student-details-span-54">{getProgramLabel()}</span>
-                      <strong className="student-details-strong-55">
-                        {programs.find(p => p.id === enrollments[0].course_id)?.name || 'N/A'}
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="student-details-span-56">Section</span>
-                      <strong className="student-details-strong-57">
-                        {sections.find(s => s.id === enrollments[0].section_id)?.name || 'N/A'}
-                      </strong>
-                    </div>
-                    {institutionType !== 'school' && (
-                      <div>
-                        <span className="student-details-span-58">Semester</span>
-                        <strong className="student-details-strong-59">
-                          Semester {enrollments[0].semester || 1}
-                        </strong>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Actions group */}
-                {canEditStudent && (
-                  <div className="student-details-col-60">
-                    <button className="btn btn-primary btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setTransferForm({ academic_year_id: currentEnroll.academic_year_id || '', course_id: currentEnroll.course_id || '', section_id: currentEnroll.section_id || '', semester: currentEnroll.semester || 1 }); setShowTransferModal(true); }}>
-                      Transfer Student
-                    </button>
-                    <button className="btn btn-outline btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setPromoteForm({ academic_year_id: currentEnroll.academic_year_id || '', course_id: currentEnroll.course_id || '', section_id: currentEnroll.section_id || '', semester: (currentEnroll.semester || 1) + 1 }); setShowPromoteModal(true); }}>
-                      Promote Student
-                    </button>
-                    <button className="btn btn-secondary btn-sm student-details-btn" onClick={() => { const currentEnroll = enrollments[0]; setChangeSectionForm({ section_id: currentEnroll.section_id || '' }); setShowChangeSectionModal(true); }}>
-                      Change Section
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="student-details-div-64">
-                <p className="student-details-text-65">This student is not enrolled in any academic year/class.</p>
-                {canEditStudent && (
-                  <button className="btn btn-primary btn-sm" onClick={() => {
-                    setTransferForm({
-                      academic_year_id: academicYears[0]?.id || '',
-                      course_id: programs[0]?.id || '',
-                      section_id: '',
-                      semester: 1
-                    });
-                    setShowTransferModal(true);
-                  }}>
-                    Enroll Student
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* History Table */}
-            <div>
-              <h4 className="student-details-title-66">
-                Enrollment Logs & History
-              </h4>
-              <div className="student-details-div-67">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Academic Year</th>
-                      <th>{getProgramLabel()}</th>
-                      <th>Section</th>
-                      {institutionType !== 'school' && <th>Semester</th>}
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {enrollments.map((e, idx) => (
-                      <tr key={e.id}>
-                        <td><strong>{academicYears.find(y => y.id === e.academic_year_id)?.name || 'Unknown'}</strong></td>
-                        <td>{programs.find(p => p.id === e.course_id)?.name || 'Unknown'}</td>
-                        <td>{sections.find(s => s.id === e.section_id)?.name || 'Unknown'}</td>
-                        {institutionType !== 'school' && <td>Semester {e.semester || '1'}</td>}
-                        <td>
-                          {idx === 0 ? (
-                            <span className="badge badge-success">Current</span>
-                          ) : (
-                            <span className="badge badge-secondary">Historic</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                    {enrollments.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="student-details-td-68">
-                          No enrollment history has been recorded for this student.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Transport Route Section */}
-            <div className="student-details-div-69">
-              <div className="student-details-row-70">
-                <div>
-                  <h4 className="student-details-title-71">
-                    🚌 Transport Route Assignment
-                  </h4>
-                  <p className="student-details-text-72">
-                    Manage bus routing and pick-up/drop-off settings for this student profile.
-                  </p>
-                </div>
-                {canEditStudent && (
-                  <button 
-                    className="btn btn-outline btn-sm"
-                    onClick={() => setShowTransportModal(true)}
-                  >
-                    {allocation ? 'Change Bus Route' : 'Assign Bus Route'}
-                  </button>
-                )}
-              </div>
-
-              {allocation ? (
-                <div className="student-details-grid-73">
-                  <div>
-                    <span className="student-details-span-74">Assigned Route</span>
-                    <strong className="student-details-strong-75">{allocation.route_name || 'Route Details'}</strong>
-                  </div>
-                  <div>
-                    <span className="student-details-span-76">Vehicle Number</span>
-                    <strong className="student-details-strong-77">{allocation.vehicle_number || 'N/A'}</strong>
-                  </div>
-                  <div>
-                    <span className="student-details-span-78">Pickup / Drop point</span>
-                    <strong className="student-details-strong-79">{allocation.pickup_point || 'Not specified'}</strong>
-                  </div>
-                  <div>
-                    <span className="student-details-span-80">Monthly Fare</span>
-                    <strong className="student-details-strong-81">₹{allocation.monthly_charge || 0}</strong>
-                  </div>
-                </div>
-              ) : (
-                <div className="student-details-div-82">
-                  This student is not currently assigned to any transport route.
-                </div>
-              )}
-            </div>
-          </div>
+          <AcademicTab
+            student={student}
+            enrollments={enrollments}
+            academicYears={academicYears}
+            programs={programs}
+            sections={sections}
+            institutionType={institutionType}
+            getProgramLabel={getProgramLabel}
+            canEditStudent={canEditStudent}
+            allocation={allocation}
+            onOpenTransfer={() => {
+              const currentEnroll = enrollments[0];
+              setTransferForm({ academic_year_id: currentEnroll.academic_year_id || '', course_id: currentEnroll.course_id || '', section_id: currentEnroll.section_id || '', semester: currentEnroll.semester || 1 });
+              setShowTransferModal(true);
+            }}
+            onOpenPromote={() => {
+              const currentEnroll = enrollments[0];
+              setPromoteForm({ academic_year_id: currentEnroll.academic_year_id || '', course_id: currentEnroll.course_id || '', section_id: currentEnroll.section_id || '', semester: (currentEnroll.semester || 1) + 1 });
+              setShowPromoteModal(true);
+            }}
+            onOpenChangeSection={() => {
+              const currentEnroll = enrollments[0];
+              setChangeSectionForm({ section_id: currentEnroll.section_id || '' });
+              setShowChangeSectionModal(true);
+            }}
+            onOpenEnroll={() => {
+              setTransferForm({
+                academic_year_id: academicYears[0]?.id || '',
+                course_id: programs[0]?.id || '',
+                section_id: '',
+                semester: 1
+              });
+              setShowTransferModal(true);
+            }}
+            onOpenTransport={() => setShowTransportModal(true)}
+          />
         )}
 
-        {/* ATTENDANCE PANEL */}
-        {activeTab === 'attendance' && (
-          <div>
-            <h3 className="student-details-title-83">Attendance Performance</h3>
-            
-            {attendanceInfo && attendanceInfo.total > 0 ? (
-              <div>
-                {/* KPI Summary Block */}
-                <div className="student-details-grid-84">
-                  <div className="student-details-div-85">
-                    <span className="student-details-span-86">Attendance Rate</span>
-                    <strong className={`student-details-attendance-pct ${attendanceInfo.percentage >= 75 ? 'is-good' : 'is-warning'}`}>
-                      {attendanceInfo.percentage}%
-                    </strong>
-                  </div>
-                  <div className="student-details-div-87">
-                    <span className="student-details-span-88">Classes Attended</span>
-                    <strong className="student-details-strong-89">
-                      {attendanceInfo.present}
-                    </strong>
-                  </div>
-                  <div className="student-details-div-90">
-                    <span className="student-details-span-91">Total Sessions</span>
-                    <strong className="student-details-strong-92">
-                      {attendanceInfo.total}
-                    </strong>
-                  </div>
-                </div>
+        {activeTab === 'attendance' && <AttendanceTab attendanceInfo={attendanceInfo} />}
 
-                {/* Detailed Logs Table */}
-                <h4 className="student-details-title-93">Detailed Session Records</h4>
-                <div className="student-details-div-94">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Subject</th>
-                        <th>Instructor</th>
-                        <th>Attendance Status</th>
-                        <th>Remarks</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {attendanceInfo.records?.map((record: any, index: number) => (
-                        <tr key={index}>
-                          <td><strong>{record.date}</strong></td>
-                          <td>{record.subject_name}</td>
-                          <td>{record.teacher_name}</td>
-                          <td>
-                            <span className={`badge badge-${record.status === 'present' || record.status === 'late' ? 'success' : 'danger'}`}>
-                              {record.status}
-                            </span>
-                          </td>
-                          <td>{record.remarks || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div>
-                {/* Clean Attendance KPI fallback when 0 sessions logged */}
-                <div className="student-details-grid-95">
-                  <div className="student-details-div-96">
-                    <span className="student-details-span-97">Attendance Rate</span>
-                    <strong className="student-details-strong-98">--</strong>
-                  </div>
-                  <div className="student-details-div-99">
-                    <span className="student-details-span-100">Classes Attended</span>
-                    <strong className="student-details-strong-101">0</strong>
-                  </div>
-                  <div className="student-details-div-102">
-                    <span className="student-details-span-103">Total Sessions</span>
-                    <strong className="student-details-strong-104">0</strong>
-                  </div>
-                </div>
-                <div className="student-details-div-105">
-                  <p className="student-details-text-106">No attendance data available yet.</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* RESULTS PANEL */}
         {activeTab === 'results' && (
-          <div>
-            <h3 className="student-details-title-107">Exam Performance</h3>
-            {studentExams.length === 0 ? (
-              <p className="student-details-text-108">No examinations recorded for this student.</p>
-            ) : (
-              <div>
-                <div className="form-group student-details-form-group">
-                  <label>Select Examination</label>
-                  <select value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)}>
-                    {studentExams.map(ex => (
-                      <option key={ex.id} value={ex.id}>{ex.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {loadingResult ? (
-                  <p>Fetching result card details...</p>
-                ) : detailedResult ? (
-                  <div>
-                    <div className="student-details-grid-110">
-                      <div>
-                        <span className="student-details-span-111">Total Marks Obtained</span>
-                        <strong className="student-details-strong-112">{detailedResult.total_obtained} / {detailedResult.total_max}</strong>
-                      </div>
-                      <div>
-                        <span className="student-details-span-113">Aggregated Percentage</span>
-                        <strong className="student-details-strong-114">{detailedResult.percentage}%</strong>
-                      </div>
-                      <div>
-                        <span className="student-details-span-115">Grade</span>
-                        <strong className="student-details-strong-116">{detailedResult.grade}</strong>
-                      </div>
-                      <div>
-                        <span className="student-details-span-117">Result Status</span>
-                        <span className={`badge badge-${detailedResult.result === 'PASS' ? 'success' : 'danger'}`}>
-                          {detailedResult.result}
-                        </span>
-                      </div>
-                    </div>
-
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Subject Code</th>
-                          <th>Subject Name</th>
-                          <th>Marks Obtained</th>
-                          <th>Maximum Marks</th>
-                          <th>Passing Threshold</th>
-                          <th>Subject Status</th>
-                          <th>Remarks</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {detailedResult.subjects?.map((sub: any) => (
-                          <tr key={sub.subject_id}>
-                            <td><strong>{sub.subject_code}</strong></td>
-                            <td>{sub.subject_name}</td>
-                            <td><strong>{sub.marks_obtained}</strong></td>
-                            <td>{sub.max_marks}</td>
-                            <td>{sub.min_marks}</td>
-                            <td>
-                              <span className={`badge badge-${sub.status === 'PASS' ? 'success' : 'danger'}`}>
-                                {sub.status}
-                              </span>
-                            </td>
-                            <td>{sub.remarks || '-'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="student-details-text-118">No evaluation records entered for this student in the selected exam.</p>
-                )}
-              </div>
-            )}
-          </div>
+          <ResultsTab
+            studentExams={studentExams}
+            selectedExamId={selectedExamId}
+            setSelectedExamId={setSelectedExamId}
+            loadingResult={loadingResult}
+            detailedResult={detailedResult}
+          />
         )}
 
-        {/* FEES PANEL */}
         {activeTab === 'fees' && canViewFees && (
-          <div>
-            <h3 className="student-details-title-119">Financial Fee Ledger</h3>
-            
-            {/* KPI Summary Block */}
-            <div className="student-details-grid-120">
-              <div className="student-details-div-121">
-                <span className="student-details-span-122">Assigned Charges</span>
-                <strong className="student-details-strong-123">
-                  ₹{totalAssignedFees.toLocaleString('en-IN')}
-                </strong>
-              </div>
-              <div className="student-details-div-124">
-                <span className="student-details-span-125">Total Paid Amount</span>
-                <strong className="student-details-strong-126">
-                  ₹{totalPaidFees.toLocaleString('en-IN')}
-                </strong>
-              </div>
-              <div className="student-details-div-127">
-                <span className="student-details-span-128">Pending Balance Due</span>
-                <strong className={`student-details-feedue-val ${remainingFeeDue > 0 ? 'is-due' : 'is-none'}`}>
-                  ₹{remainingFeeDue.toLocaleString('en-IN')}
-                </strong>
-              </div>
-            </div>
-
-            {/* Fee structure logs */}
-            <h4 className="student-details-title-129">Bill Ledger Items</h4>
-            <div className="student-details-div-130">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Academic Year</th>
-                    <th>Fee Type</th>
-                    <th>Due Date</th>
-                    <th>Total Amount</th>
-                    <th>Paid Amount</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ledger.map(record => (
-                    <tr key={record.id}>
-                      <td><strong>{record.academic_year_name}</strong></td>
-                      <td>{record.fee_type}</td>
-                      <td>{record.due_date || '-'}</td>
-                      <td><strong>₹{(record.total_amount || 0).toLocaleString('en-IN')}</strong></td>
-                      <td>₹{(record.paid_amount || 0).toLocaleString('en-IN')}</td>
-                      <td>
-                        <span className={`badge badge-${record.status === 'PAID' ? 'success' : record.status === 'PARTIALLY_PAID' ? 'warning' : 'danger'}`}>
-                          {record.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {ledger.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="student-details-td-131">No ledger charges assigned.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Payment history */}
-            <h4 className="student-details-title-132">Payment Transactions</h4>
-            <div className="student-details-div-133">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Receipt No</th>
-                    <th>Date</th>
-                    <th>Fee Head</th>
-                    <th>Payment Method</th>
-                    <th>Amount Collected</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map(payment => (
-                    <tr key={payment.id}>
-                      <td><strong>{payment.receipt_number || 'N/A'}</strong></td>
-                      <td>{payment.payment_date}</td>
-                      <td>{payment.fee_type}</td>
-                      <td>{payment.payment_method}</td>
-                      <td><strong>₹{(payment.amount || 0).toLocaleString('en-IN')}</strong></td>
-                      <td><span className="badge badge-success">Completed</span></td>
-                    </tr>
-                  ))}
-                  {payments.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="student-details-td-134">No transaction records found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <FeesTab
+            ledger={ledger}
+            payments={payments}
+            totalAssignedFees={totalAssignedFees}
+            totalPaidFees={totalPaidFees}
+            remainingFeeDue={remainingFeeDue}
+          />
         )}
 
-        {/* TIMELINE PANEL (NEW) */}
-        {activeTab === 'timeline' && (
-          <div>
-            <h3 className="student-details-title-135">Student Milestones Timeline</h3>
-            
-            <div className="student-details-col-136">
-              {/* Vertical line indicator */}
-              <div className="student-details-div-137"  />
-              
-              {timelineItems.map((item, index) => (
-                <div key={index} className="student-details-col-138">
-                  {/* Dot */}
-                  <div className={`student-details-timeline-dot ${item.completed ? 'is-completed' : ''}`} />
-                  
-                  <h5 className="student-details-row-139">
-                    {item.title}
-                    {item.completed ? (
-                      <span className="student-details-span-140">Completed</span>
-                    ) : (
-                      <span className="student-details-span-141">Pending</span>
-                    )}
-                  </h5>
-                  <p className="student-details-text-142">
-                    {item.description}
-                  </p>
-                  {item.date && (
-                    <span className="student-details-span-143">
-                      Date: {item.date}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {activeTab === 'timeline' && <TimelineTab timelineItems={timelineItems} />}
 
-        {/* HEALTH CARD PANEL (NEW) */}
         {activeTab === 'health' && (
-          <div>
-            <div className="student-details-row-144">
-              <h3 className="student-details-title-145">Student Health Profile</h3>
-              {!showHealthEdit && canEditStudent && (
-                <button className="btn btn-sm btn-outline" onClick={() => setShowHealthEdit(true)}>
-                  Edit Health Card
-                </button>
-              )}
-            </div>
-
-            {showHealthEdit && canEditStudent ? (
-              <form onSubmit={handleHealthSave} className="student-details-form-146">
-                <div className="form-group">
-                  <label>Blood Group</label>
-                  <select value={healthForm.blood_group} onChange={e => setHealthForm({...healthForm, blood_group: e.target.value})}>
-                    <option value="">-- Choose Blood Group --</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Emergency Contact Phone</label>
-                  <input type="text" value={healthForm.emergency_contact} onChange={e => setHealthForm({...healthForm, emergency_contact: e.target.value})} placeholder="e.g. +91 98765 43210 (Father)" />
-                </div>
-                <div className="form-group">
-                  <label>Medical Notes</label>
-                  <textarea value={healthForm.medical_notes} onChange={e => setHealthForm({...healthForm, medical_notes: e.target.value})} placeholder="e.g. Asthma, special instructions, etc." rows={2} />
-                </div>
-
-                <div className="student-details-row-147">
-                  <button type="submit" className="btn btn-primary btn-sm" disabled={savingHealth}>
-                    {savingHealth ? 'Saving...' : 'Save Health Card'}
-                  </button>
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowHealthEdit(false)}>
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="student-details-grid-148">
-                <div className="student-details-div-149">
-                  <span className="student-details-span-150">Blood Group</span>
-                  <strong className={`student-details-blood-val ${student.blood_group ? 'has-value' : ''}`}>
-                    {student.blood_group || 'Not Specified'}
-                  </strong>
-                </div>
-                <div className="student-details-div-151">
-                  <span className="student-details-span-152">Emergency Contact</span>
-                  <strong className="student-details-strong-153">
-                    {student.emergency_contact || 'None registered'}
-                  </strong>
-                </div>
-                <div className="student-details-div-154">
-                  <span className="student-details-span-155">Medical Notes</span>
-                  <p className="student-details-text-156">
-                    {student.medical_notes || 'No medical notes registered.'}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+          <HealthTab
+            student={student}
+            canEditStudent={canEditStudent}
+            showHealthEdit={showHealthEdit}
+            setShowHealthEdit={setShowHealthEdit}
+            healthForm={healthForm}
+            setHealthForm={setHealthForm}
+            savingHealth={savingHealth}
+            onSave={handleHealthSave}
+          />
         )}
 
-        {/* NOTES PANEL (NEW) */}
         {activeTab === 'notes' && canWriteNotes && (
-          <div>
-            <h3 className="student-details-title-160">Internal Student Notes</h3>
-            
-            {/* Note creation form */}
-            <form onSubmit={handleAddNote} className="student-details-form-161">
-              <div className="form-group student-details-form-group">
-                <textarea 
-                  value={newNote} 
-                  onChange={e => setNewNote(e.target.value)} 
-                  placeholder="Record parent meetings, disciplinary updates, or exceptional academic behavior notes here..."
-                  rows={3} 
-                  required
-                />
-              </div>
-              <button type="submit" className="btn btn-primary btn-sm" disabled={addingNote}>
-                {addingNote ? 'Adding...' : 'Post Internal Note'}
-              </button>
-            </form>
-
-            {/* Notes list */}
-            <div className="student-details-col-163">
-              {notes.map(note => (
-                <div key={note.id} className="student-details-col-164">
-                  <p className="student-details-text-165">
-                    {note.content}
-                  </p>
-                  <div className="student-details-row-166">
-                    <span>Author: <strong>{note.author_name}</strong></span>
-                    <span>Posted: {note.created_at?.split('.')[0] || note.created_at}</span>
-                  </div>
-                  {canWriteNotes && (
-                    <button onClick={() => handleDeleteNote(note.id)} className="student-details-btn-167" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </div>
-              ))}
-              {notes.length === 0 && (
-                <div className="student-details-div-168">
-                  <p className="student-details-text-169">No internal notes recorded for this student.</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <NotesTab
+            notes={notes}
+            newNote={newNote}
+            setNewNote={setNewNote}
+            addingNote={addingNote}
+            canWriteNotes={canWriteNotes}
+            onAddNote={handleAddNote}
+            onDeleteNote={handleDeleteNote}
+          />
         )}
 
-        {/* DOCUMENTS VAULT PANEL */}
         {activeTab === 'documents' && canManageDocs && (
-          <div>
-            <div className="student-details-row-170">
-              <h3 className="student-details-title-171">Digital Documents Vault</h3>
-              {canManageDocs && (
-                <button className="btn btn-sm btn-primary" onClick={() => setShowUploadModal(true)}>
-                  <Upload size={14} /> Upload Document
-                </button>
-              )}
-            </div>
-
-            {documents.length > 0 ? (
-              <div className="student-details-grid-172">
-                {documents.map(doc => (
-                  <div key={doc.id} className="student-details-row-173">
-                    <div className="student-details-row-174" onClick={() => handleDownloadDoc(doc)}>
-                      DOC
-                    </div>
-                    <div className="student-details-div-175" onClick={() => handleDownloadDoc(doc)}>
-                      <h5 className="student-details-title-176" title={doc.name}>
-                        {doc.name}
-                      </h5>
-                      <p className="student-details-text-177">
-                        {doc.document_type} • {(doc.file_size / 1024).toFixed(1)} KB
-                      </p>
-                      <p className="student-details-text-178">
-                        Uploaded: {doc.uploaded_at?.split(' ')[0]}
-                      </p>
-                    </div>
-                    {canManageDocs && (
-                      <button onClick={() => handleDocDelete(doc.id)} className="student-details-btn-179" onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'} onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="student-details-div-180">
-                <p className="student-details-text-181">No documents uploaded yet.</p>
-                {canManageDocs && (
-                  <button className="btn btn-outline btn-sm" onClick={() => setShowUploadModal(true)}>
-                    <Upload size={14} /> Upload First Document
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+          <DocumentsTab
+            documents={documents}
+            canManageDocs={canManageDocs}
+            onUploadClick={() => setShowUploadModal(true)}
+            onDownload={handleDownloadDoc}
+            onDelete={handleDocDelete}
+          />
         )}
 
-        {/* GUARDIANS PANEL (REDESIGNED CARD LAYOUT) */}
-        {activeTab === 'guardians' && (
-          <div>
-            <div className="student-details-row-182">
-              <h3 className="student-details-title-183">Family and Guardians</h3>
-            </div>
-            
-            <div className="student-details-grid-184">
-              {guardians.map((g, idx) => (
-                <div key={g.id} className="card student-guardian-card">
-                  <div className="student-details-row-186">
-                    <span className="student-details-span-187">{idx === 0 ? 'Primary Contact' : 'Secondary Contact'}</span>
-                    <span className="badge badge-success student-details-badge">Active</span>
-                  </div>
-                  <div>
-                    <span className="student-details-span-189">Name</span>
-                    <strong className="student-details-strong-190">{g.name}</strong>
-                  </div>
-                  <div>
-                    <span className="student-details-span-191">Relationship</span>
-                    <span className="student-details-span-192">{g.relationship}</span>
-                  </div>
-                  <div>
-                    <span className="student-details-span-193">Phone</span>
-                    <span className="student-details-row-194">
-                      <Phone size={12} className="student-details-Phone-195"  /> {g.phone || '-'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="student-details-span-196">Email</span>
-                    <span className="student-details-row-197">
-                      <Mail size={12} className="student-details-Mail-198"  /> {g.email || '-'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {guardians.length === 0 && (
-                <div className="student-details-div-199">
-                  <p className="student-details-text-200">No parents/guardians registered.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        {activeTab === 'guardians' && <GuardiansTab guardians={guardians} />}
 
       </div>
 
-      {/* Real Upload Document Modal */}
-      {showUploadModal && canManageDocs && (
-        <div className="modal student-details-modal">
-          <div className="modal-content student-details-modal-content">
-            <h3 className="student-details-title-203">Upload Student Document</h3>
-            <form onSubmit={handleDocUploadSubmit}>
-              
-              <div className="form-group">
-                <label>Document Type *</label>
-                <select value={newDocType} onChange={e => setNewDocType(e.target.value)}>
-                  <option value="Transfer Certificate">Transfer Certificate</option>
-                  <option value="Birth Certificate">Birth Certificate</option>
-                  <option value="High School Marksheet">High School Marksheet</option>
-                  <option value="Identity Proof (Aadhaar/ID)">Identity Proof (Aadhaar/ID)</option>
-                  <option value="Medical Record">Medical Record</option>
-                  <option value="Other">Other Document</option>
-                </select>
-              </div>
+      <UploadDocumentModal
+        show={showUploadModal && canManageDocs}
+        docType={newDocType}
+        setDocType={setNewDocType}
+        selectedFile={selectedFile}
+        setSelectedFile={setSelectedFile}
+        uploading={uploadingDoc}
+        onClose={() => { setShowUploadModal(false); setSelectedFile(null); }}
+        onSubmit={handleDocUploadSubmit}
+      />
 
-              <div className="form-group student-details-form-group">
-                <label>Choose File *</label>
-                <input required type="file" onChange={e => { const files = e.target.files; if (files && files[0]) { setSelectedFile(files[0]); } else { setSelectedFile(null); } }} className="student-details-input-205"  />
-              </div>
+      <TransferStudentModal
+        show={showTransferModal && canEditStudent}
+        form={transferForm}
+        onFieldChange={handleTransferFieldChange}
+        setForm={setTransferForm}
+        academicYears={academicYears}
+        programs={programs}
+        sections={sections}
+        institutionType={institutionType}
+        getProgramLabel={getProgramLabel}
+        onClose={() => setShowTransferModal(false)}
+        onSubmit={handleTransferSubmit}
+      />
 
-              <div className="modal-actions student-details-modal-actions">
-                <button type="button" onClick={() => { setShowUploadModal(false); setSelectedFile(null); }} className="btn btn-secondary" disabled={uploadingDoc}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={uploadingDoc || !selectedFile}>
-                  {uploadingDoc ? 'Uploading...' : 'Upload File'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <PromoteStudentModal
+        show={showPromoteModal && canEditStudent}
+        form={promoteForm}
+        onFieldChange={handlePromoteFieldChange}
+        setForm={setPromoteForm}
+        academicYears={academicYears}
+        programs={programs}
+        sections={sections}
+        institutionType={institutionType}
+        getProgramLabel={getProgramLabel}
+        onClose={() => setShowPromoteModal(false)}
+        onSubmit={handlePromoteSubmit}
+      />
 
-      {/* Transfer Student Modal */}
-      {showTransferModal && canEditStudent && (
-        <div className="modal student-details-modal">
-          <div className="modal-content student-details-modal-content">
-            <h3 className="student-details-title-209">Transfer Student</h3>
-            <form onSubmit={handleTransferSubmit}>
-              
-              <div className="form-group">
-                <label>Academic Year *</label>
-                <select 
-                  value={transferForm.academic_year_id} 
-                  onChange={e => handleTransferFieldChange('academic_year_id', e.target.value)}
-                  required
-                >
-                  <option value="">-- Select Academic Year --</option>
-                  {academicYears.map(ay => (
-                    <option key={ay.id} value={ay.id}>{ay.name}</option>
-                  ))}
-                </select>
-              </div>
+      <ChangeSectionModal
+        show={showChangeSectionModal && canEditStudent && enrollments.length > 0}
+        currentEnrollment={enrollments[0]}
+        programs={programs}
+        sections={sections}
+        getProgramLabel={getProgramLabel}
+        form={changeSectionForm}
+        setForm={setChangeSectionForm}
+        onClose={() => setShowChangeSectionModal(false)}
+        onSubmit={handleChangeSectionSubmit}
+      />
 
-              <div className="form-group student-details-form-group">
-                <label>{getProgramLabel()} *</label>
-                <select 
-                  value={transferForm.course_id} 
-                  onChange={e => handleTransferFieldChange('course_id', e.target.value)}
-                  required
-                >
-                  <option value="">-- Select {getProgramLabel()} --</option>
-                  {programs.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group student-details-form-group">
-                <label>Section *</label>
-                <select 
-                  value={transferForm.section_id} 
-                  onChange={e => setTransferForm({ ...transferForm, section_id: e.target.value })}
-                  required
-                >
-                  <option value="">-- Select Section --</option>
-                  {sections
-                    .filter(s => s.academic_year_id === transferForm.academic_year_id && s.course_id === transferForm.course_id)
-                    .map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                </select>
-                {sections.filter(s => s.academic_year_id === transferForm.academic_year_id && s.course_id === transferForm.course_id).length === 0 && (
-                  <span className="student-details-span-212">
-                    ⚠️ No sections available for this configuration. Please set up sections first.
-                  </span>
-                )}
-              </div>
-
-              {institutionType !== 'school' && (
-                <div className="form-group student-details-form-group">
-                  <label>Semester *</label>
-                  <input 
-                    type="number" 
-                    min={1} 
-                    max={8} 
-                    value={transferForm.semester} 
-                    onChange={e => setTransferForm({ ...transferForm, semester: parseInt(e.target.value) || 1 })}
-                    required
-                  />
-                </div>
-              )}
-
-              <div className="modal-actions student-details-modal-actions">
-                <button type="button" onClick={() => setShowTransferModal(false)} className="btn btn-secondary">Cancel</button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary"
-                  disabled={!transferForm.academic_year_id || !transferForm.course_id || !transferForm.section_id}
-                >
-                  Transfer Student
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Promote Student Modal */}
-      {showPromoteModal && canEditStudent && (
-        <div className="modal student-details-modal">
-          <div className="modal-content student-details-modal-content">
-            <h3 className="student-details-title-217">Promote Student</h3>
-            <form onSubmit={handlePromoteSubmit}>
-              
-              <div className="form-group">
-                <label>Target Academic Year *</label>
-                <select 
-                  value={promoteForm.academic_year_id} 
-                  onChange={e => handlePromoteFieldChange('academic_year_id', e.target.value)}
-                  required
-                >
-                  <option value="">-- Select Target Year --</option>
-                  {academicYears.map(ay => (
-                    <option key={ay.id} value={ay.id}>{ay.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group student-details-form-group">
-                <label>Target {getProgramLabel()} *</label>
-                <select 
-                  value={promoteForm.course_id} 
-                  onChange={e => handlePromoteFieldChange('course_id', e.target.value)}
-                  required
-                >
-                  <option value="">-- Select Target {getProgramLabel()} --</option>
-                  {programs.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group student-details-form-group">
-                <label>Target Section *</label>
-                <select 
-                  value={promoteForm.section_id} 
-                  onChange={e => setPromoteForm({ ...promoteForm, section_id: e.target.value })}
-                  required
-                >
-                  <option value="">-- Select Target Section --</option>
-                  {sections
-                    .filter(s => s.academic_year_id === promoteForm.academic_year_id && s.course_id === promoteForm.course_id)
-                    .map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                </select>
-                {sections.filter(s => s.academic_year_id === promoteForm.academic_year_id && s.course_id === promoteForm.course_id).length === 0 && (
-                  <span className="student-details-span-220">
-                    ⚠️ No sections available for this configuration. Please set up sections first.
-                  </span>
-                )}
-              </div>
-
-              {institutionType !== 'school' && (
-                <div className="form-group student-details-form-group">
-                  <label>Target Semester *</label>
-                  <input 
-                    type="number" 
-                    min={1} 
-                    max={8} 
-                    value={promoteForm.semester} 
-                    onChange={e => setPromoteForm({ ...promoteForm, semester: parseInt(e.target.value) || 1 })}
-                    required
-                  />
-                </div>
-              )}
-
-              <div className="modal-actions student-details-modal-actions">
-                <button type="button" onClick={() => setShowPromoteModal(false)} className="btn btn-secondary">Cancel</button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary"
-                  disabled={!promoteForm.academic_year_id || !promoteForm.course_id || !promoteForm.section_id}
-                >
-                  Promote Student
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Change Section Modal */}
-      {showChangeSectionModal && canEditStudent && enrollments.length > 0 && (
-        <div className="modal student-details-modal">
-          <div className="modal-content student-details-modal-content">
-            <h3 className="student-details-title-225">Change Section</h3>
-            <form onSubmit={handleChangeSectionSubmit}>
-              
-              <div className="student-details-div-226">
-                <div className="student-details-div-227">Current {getProgramLabel()}</div>
-                <strong className="student-details-strong-228">
-                  {programs.find(p => p.id === enrollments[0].course_id)?.name || 'Unknown'}
-                </strong>
-              </div>
-
-              <div className="form-group">
-                <label>New Section *</label>
-                <select 
-                  value={changeSectionForm.section_id} 
-                  onChange={e => setChangeSectionForm({ section_id: e.target.value })}
-                  required
-                >
-                  <option value="">-- Select Section --</option>
-                  {sections
-                    .filter(s => s.academic_year_id === enrollments[0].academic_year_id && s.course_id === enrollments[0].course_id)
-                    .map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                </select>
-                {sections.filter(s => s.academic_year_id === enrollments[0].academic_year_id && s.course_id === enrollments[0].course_id).length === 0 && (
-                  <span className="student-details-span-229">
-                    ⚠️ No other sections available for this class.
-                  </span>
-                )}
-              </div>
-
-              <div className="modal-actions student-details-modal-actions">
-                <button type="button" onClick={() => setShowChangeSectionModal(false)} className="btn btn-secondary">Cancel</button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary"
-                  disabled={!changeSectionForm.section_id || changeSectionForm.section_id === enrollments[0].section_id}
-                >
-                  Change Section
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Assign Transport Route Modal */}
-      {showTransportModal && canEditStudent && (
-        <div className="modal student-details-modal">
-          <div className="modal-content student-details-modal-content">
-            <h3 className="student-details-title-233">
-              {allocation ? 'Change Transport Route' : 'Assign Transport Route'}
-            </h3>
-            <form onSubmit={handleTransportSubmit}>
-              
-              <div className="form-group">
-                <label>Select Transport Route *</label>
-                <select 
-                  value={transportForm.route_id} 
-                  onChange={e => setTransportForm({ ...transportForm, route_id: e.target.value })}
-                  required
-                >
-                  <option value="">-- Choose Route --</option>
-                  {transportRoutes.map(route => (
-                    <option key={route.id} value={route.id}>
-                      {route.route_name} (₹{route.monthly_charge}/mo, {route.vehicle_number})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group student-details-form-group">
-                <label>Pickup / Drop Point Name (Optional)</label>
-                <input 
-                  type="text" 
-                  value={transportForm.pickup_point} 
-                  onChange={e => setTransportForm({ ...transportForm, pickup_point: e.target.value })}
-                  placeholder="e.g. Main Gate, Sector 15 Cross"
-                />
-              </div>
-
-              <div className="modal-actions student-details-modal-actions">
-                {allocation ? (
-                  <button type="button" onClick={handleRemoveTransport} className="btn btn-danger student-details-btn" disabled={submittingTransport}>
-                    Remove Route
-                  </button>
-                ) : <div />}
-                
-                <div className="student-details-row-237">
-                  <button 
-                    type="button" 
-                    onClick={() => setShowTransportModal(false)} 
-                    className="btn btn-secondary"
-                    disabled={submittingTransport}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary"
-                    disabled={submittingTransport}
-                  >
-                    {submittingTransport ? 'Saving...' : 'Save Assignment'}
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
+      <TransportModal
+        show={showTransportModal && canEditStudent}
+        allocation={allocation}
+        transportRoutes={transportRoutes}
+        form={transportForm}
+        setForm={setTransportForm}
+        submitting={submittingTransport}
+        onClose={() => setShowTransportModal(false)}
+        onSubmit={handleTransportSubmit}
+        onRemove={handleRemoveTransport}
+      />
     </Layout>
   );
 }

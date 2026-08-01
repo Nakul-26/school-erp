@@ -316,8 +316,9 @@ export default function TeacherDetails() {
       setPayslips(payslipsData || []);
       setLeaveTypes(leaveTypesData || []);
 
-      if (leaveTypesData && leaveTypesData.length > 0) {
-        setLeaveForm(prev => ({ ...prev, leave_type_id: leaveTypesData[0].id }));
+      const firstLeaveType = leaveTypesData?.[0];
+      if (firstLeaveType) {
+        setLeaveForm(prev => ({ ...prev, leave_type_id: firstLeaveType.id }));
       }
 
       await fetchDocumentsAndTimeline(canReadDocsAndTimeline, canWriteTimeline);

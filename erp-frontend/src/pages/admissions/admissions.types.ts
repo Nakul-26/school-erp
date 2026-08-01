@@ -1,6 +1,7 @@
 export interface AcademicYear {
   id: string;
   name: string;
+  is_current?: number;
 }
 
 export interface Program {
@@ -65,6 +66,12 @@ export interface BoardCard {
   status: string;
   createdDate: string;
   rawItem: any;
+}
+
+export interface ApproveApplicationResult {
+  success: boolean;
+  studentId: string;
+  admissionNumber: string;
 }
 
 export interface InquiryAddForm {

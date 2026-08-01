@@ -189,8 +189,9 @@ export default function Students() {
         }
 
         // Auto-select program if only one exists
-        if (progs && progs.length === 1) {
-          setAddForm(prev => ({ ...prev, course_id: progs[0].id }));
+        const onlyProgram = progs && progs.length === 1 ? progs[0] : undefined;
+        if (onlyProgram) {
+          setAddForm(prev => ({ ...prev, course_id: onlyProgram.id }));
         }
 
         if (user?.institution_id) {

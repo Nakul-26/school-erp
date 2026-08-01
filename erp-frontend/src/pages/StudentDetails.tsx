@@ -137,8 +137,9 @@ export default function StudentDetails() {
     try {
       const data = await studentDetailsService.getStudentExamResults(id!);
       setStudentExams(data);
-      if (data.length > 0) {
-        setSelectedExamId(data[0].id);
+      const firstExam = data[0];
+      if (firstExam) {
+        setSelectedExamId(firstExam.id);
       }
     } catch (err) {
       console.error(err);

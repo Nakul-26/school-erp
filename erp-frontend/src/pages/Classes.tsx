@@ -200,15 +200,15 @@ export default function Classes() {
       // Initialize defaults for section form if needed
       setSectionForm(f => {
         const updated = { ...f };
-        if (yearsData.length > 0 && !updated.academic_year_id) {
-          updated.academic_year_id = yearsData[0].id;
+        const firstYear = yearsData[0];
+        if (firstYear && !updated.academic_year_id) {
+          updated.academic_year_id = firstYear.id;
         }
         if (programsData.length > 0 && !updated.course_id) {
           const activePrograms = programsData.filter((p: any) => p.is_active === 1);
-          if (activePrograms.length > 0) {
-            updated.course_id = activePrograms[0].id;
-          } else {
-            updated.course_id = programsData[0].id;
+          const defaultProgram = activePrograms[0] || programsData[0];
+          if (defaultProgram) {
+            updated.course_id = defaultProgram.id;
           }
         }
         return updated;

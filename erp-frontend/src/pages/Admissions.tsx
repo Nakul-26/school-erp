@@ -95,8 +95,8 @@ export default function Admissions() {
       setPrograms(progs);
 
       // Default form fields to current active year if found
-      if (years.length > 0) {
-        const currentYear = years.find((y: any) => y.is_current) || years[0];
+      const currentYear = years.find((y) => y.is_current) || years[0];
+      if (currentYear) {
         setInqAddForm(f => ({ ...f, academic_year_id: currentYear.id }));
         setAppAddForm(f => ({ ...f, academic_year_id: currentYear.id }));
       }

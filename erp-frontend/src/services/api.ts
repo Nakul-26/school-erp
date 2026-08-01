@@ -17,7 +17,7 @@ function buildHeaders(method: string, extra?: Record<string, string>): Record<st
   return headers;
 }
 
-async function parseResponse(res: Response) {
+async function parseResponse<T = any>(res: Response): Promise<T> {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (typeof window !== 'undefined') {
@@ -37,57 +37,57 @@ async function parseResponse(res: Response) {
 // is required so the browser attaches it (frontend/backend run on different
 // ports in dev and are cross-origin, even though same-site).
 export const api = {
-  get: async (path: string) => {
+  get: async <T = any>(path: string): Promise<T> => {
     const res = await fetch(`${BASE_URL}${path}`, {
       credentials: 'include',
       headers: buildHeaders('GET'),
     });
-    return parseResponse(res);
+    return parseResponse<T>(res);
   },
-  post: async (path: string, body: any) => {
+  post: async <T = any>(path: string, body: any): Promise<T> => {
     const res = await fetch(`${BASE_URL}${path}`, {
       method: 'POST',
       credentials: 'include',
       headers: buildHeaders('POST', { 'Content-Type': 'application/json' }),
       body: JSON.stringify(body),
     });
-    return parseResponse(res);
+    return parseResponse<T>(res);
   },
-  put: async (path: string, body: any) => {
+  put: async <T = any>(path: string, body: any): Promise<T> => {
     const res = await fetch(`${BASE_URL}${path}`, {
       method: 'PUT',
       credentials: 'include',
       headers: buildHeaders('PUT', { 'Content-Type': 'application/json' }),
       body: JSON.stringify(body),
     });
-    return parseResponse(res);
+    return parseResponse<T>(res);
   },
-  patch: async (path: string, body: any) => {
+  patch: async <T = any>(path: string, body: any): Promise<T> => {
     const res = await fetch(`${BASE_URL}${path}`, {
       method: 'PATCH',
       credentials: 'include',
       headers: buildHeaders('PATCH', { 'Content-Type': 'application/json' }),
       body: JSON.stringify(body),
     });
-    return parseResponse(res);
+    return parseResponse<T>(res);
   },
-  delete: async (path: string, body?: any) => {
+  delete: async <T = any>(path: string, body?: any): Promise<T> => {
     const res = await fetch(`${BASE_URL}${path}`, {
       method: 'DELETE',
       credentials: 'include',
       headers: buildHeaders('DELETE', body ? { 'Content-Type': 'application/json' } : undefined),
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
-    return parseResponse(res);
+    return parseResponse<T>(res);
   },
-  upload: async (path: string, formData: FormData) => {
+  upload: async <T = any>(path: string, formData: FormData): Promise<T> => {
     const res = await fetch(`${BASE_URL}${path}`, {
       method: 'POST',
       credentials: 'include',
       headers: buildHeaders('POST'),
       body: formData,
     });
-    return parseResponse(res);
+    return parseResponse<T>(res);
   }
 };
 

@@ -172,4 +172,81 @@ export class IntegrationsService {
       created_at: cred.created_at
     };
   }
+
+  // ==================== SMS GATEWAY DISPATCH ==================== //
+
+  async sendSms(integrationId: string, phone: string, text: string): Promise<{ success: boolean; provider: string }> {
+    const integration = await this.repo.getIntegrationById(integrationId);
+    if (!integration) throw new Error(`Integration not found: ${integrationId}`);
+
+    const apiKeyCred = await this.repo.getCredentialByType(integrationId, 'API_KEY');
+    if (!apiKeyCred) {
+      console.log(`[SMS Gateway] No API_KEY credential saved for integration ${integrationId} — cannot send.`);
+      return { success: false, provider: integration.provider };
+    }
+    const apiKey = decryptSecret(apiKeyCred.encrypted_secret);
+    const number = phone.replace(/[^0-9]/g, '');
+
+    try {
+      switch (integration.provider) {
+        case 'Fast2SMS': {
+          const res = await fetch(integration.base_url || 'https://www.fast2sms.com/dev/bulkV2', {
+            method: 'POST',
+            headers: { authorization: apiKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ route: 'q', message: text, language: 'english', numbers: number })
+          });
+          return { success: res.ok, provider: integration.provider };
+        }
+        case 'MSG91': {
+          const senderCred = await this.repo.getCredentialByType(integrationId, 'SENDER_ID');
+          const sender = senderCred ? decryptSecret(senderCred.encrypted_secret) : 'MSGIND';
+          const url = new URL(integration.base_url || 'https://api.msg91.com/api/v2/sendsms');
+          url.searchParams.set('authkey', apiKey);
+          url.searchParams.set('mobiles', number);
+          url.searchParams.set('message', text);
+          url.searchParams.set('sender', sender);
+          url.searchParams.set('route', '4');
+          const res = await fetch(url.toString(), { method: 'POST' });
+          return { success: res.ok, provider: integration.provider };
+        }
+        case 'Twilio': {
+          const sidCred = await this.repo.getCredentialByType(integrationId, 'ACCOUNT_SID');
+          const fromCred = await this.repo.getCredentialByType(integrationId, 'SENDER_ID');
+          if (!sidCred || !fromCred) return { success: false, provider: integration.provider };
+          const accountSid = decryptSecret(sidCred.encrypted_secret);
+          const from = decryptSecret(fromCred.encrypted_secret);
+          const body = new URLSearchParams({ To: `+${number}`, From: from, Body: text });
+          const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Basic ${btoa(`${accountSid}:${apiKey}`)}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body.toString()
+          });
+          return { success: res.ok, provider: integration.provider };
+        }
+        case 'GenericSMS':
+        default: {
+          if (!integration.base_url) return { success: false, provider: integration.provider };
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (integration.auth_type === 'BEARER_TOKEN') headers['Authorization'] = `Bearer ${apiKey}`;
+          else headers['Authorization'] = apiKey;
+          const res = await fetch(integration.base_url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ to: number, message: text })
+          });
+          return { success: res.ok, provider: integration.provider };
+        }
+      }
+    } catch (err) {
+      console.error('[SMS Gateway Error]:', err);
+      return { success: false, provider: integration.provider };
+    }
+  }
+
+  async sendTestSms(integrationId: string, phone: string): Promise<{ success: boolean; provider: string }> {
+    return this.sendSms(integrationId, phone, 'This is a test message from your TrackFlow ERP SMS gateway configuration.');
+  }
 }

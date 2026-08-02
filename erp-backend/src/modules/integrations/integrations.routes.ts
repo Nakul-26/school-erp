@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { Env } from '../../types';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { IntegrationsRepository } from './integrations.repository';
 import { IntegrationsService } from './integrations.service';
 import { encryptSecret } from './crypto.utils';
@@ -8,6 +8,7 @@ import { encryptSecret } from './crypto.utils';
 const integrations = new Hono<{ Bindings: Env }>();
 
 integrations.use('*', authMiddleware);
+integrations.use('*', requirePermission('institution.manage'));
 
 function getService(c: any) {
   const repo = new IntegrationsRepository(c.env.DB);
@@ -86,6 +87,24 @@ integrations.get('/:id/credentials', async (c) => {
   const masked = await service.getMaskedCredentials(integrationId);
   if (!masked) return c.json({ error: 'No credentials found' }, 404);
   return c.json(masked);
+});
+
+// 4b. Send Test SMS (for SMS-provider integrations)
+integrations.post('/:id/test-sms', async (c) => {
+  const service = getService(c);
+  const integrationId = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+
+  if (!body.phone) {
+    return c.json({ error: 'phone is required' }, 400);
+  }
+
+  try {
+    const result = await service.sendTestSms(integrationId, body.phone);
+    return c.json(result);
+  } catch (err: any) {
+    return c.json({ error: err.message }, 400);
+  }
 });
 
 // 5. List Webhook Subscriptions

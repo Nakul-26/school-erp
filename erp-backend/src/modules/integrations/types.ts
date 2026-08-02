@@ -1,8 +1,11 @@
-export type IntegrationProvider = 'CustomWebhook' | 'Moodle' | 'GoogleWorkspace' | 'Microsoft365' | 'Razorpay' | 'Stripe' | 'LDAP' | 'SAML' | 'GenericREST';
-export type IntegrationType = 'OUTBOUND_WEBHOOK' | 'INBOUND_REST' | 'OAUTH2';
+export type IntegrationProvider = 'CustomWebhook' | 'Moodle' | 'GoogleWorkspace' | 'Microsoft365' | 'Razorpay' | 'Stripe' | 'LDAP' | 'SAML' | 'GenericREST' | 'Fast2SMS' | 'MSG91' | 'Twilio' | 'GenericSMS';
+export type IntegrationType = 'OUTBOUND_WEBHOOK' | 'INBOUND_REST' | 'OAUTH2' | 'SMS_GATEWAY';
 export type IntegrationStatus = 'ACTIVE' | 'INACTIVE' | 'DEGRADED';
 export type AuthType = 'NONE' | 'BEARER_TOKEN' | 'API_KEY' | 'HMAC_SECRET' | 'OAUTH2';
 export type DeliveryStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'RETRYING' | 'DLQ';
+
+// SMS providers dispatchable via IntegrationsService.sendSms — kept in sync with the switch in that method.
+export const SMS_PROVIDERS: IntegrationProvider[] = ['Fast2SMS', 'MSG91', 'Twilio', 'GenericSMS'];
 
 export interface Integration {
   id: string;

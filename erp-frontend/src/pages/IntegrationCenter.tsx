@@ -59,6 +59,18 @@ const IntegrationCenter: React.FC = () => {
   const [intProvider, setIntProvider] = useState<string>('CustomWebhook');
   const [intType, setIntType] = useState<string>('OUTBOUND_WEBHOOK');
   const [intBaseUrl, setIntBaseUrl] = useState<string>('https://webhook.site/demo-endpoint');
+  const [intApiKey, setIntApiKey] = useState<string>('');
+  const [intSenderId, setIntSenderId] = useState<string>('');
+  const [intAccountSid, setIntAccountSid] = useState<string>('');
+
+  const SMS_PROVIDERS = ['Fast2SMS', 'MSG91', 'Twilio', 'GenericSMS'];
+  const isSmsProvider = SMS_PROVIDERS.includes(intProvider);
+
+  // Test SMS
+  const [showTestSmsModal, setShowTestSmsModal] = useState<boolean>(false);
+  const [testSmsIntegrationId, setTestSmsIntegrationId] = useState<string>('');
+  const [testSmsPhone, setTestSmsPhone] = useState<string>('');
+  const [testSmsResult, setTestSmsResult] = useState<{ success: boolean; provider: string } | null>(null);
 
   // Subscription Form
   const [subName, setSubName] = useState<string>('Student Admission Dispatcher');
@@ -109,18 +121,66 @@ const IntegrationCenter: React.FC = () => {
         body: JSON.stringify({
           name: intName,
           provider: intProvider,
-          type: intType,
-          baseUrl: intBaseUrl,
-          authType: 'HMAC_SECRET'
+          type: isSmsProvider ? 'SMS_GATEWAY' : intType,
+          baseUrl: isSmsProvider && intProvider === 'Twilio' ? undefined : (intBaseUrl || undefined),
+          authType: isSmsProvider ? 'API_KEY' : 'HMAC_SECRET'
         })
       });
-      if (res.ok) {
-        toast.success('Integration registered successfully!');
-        setShowIntegrationModal(false);
-        fetchData();
+      if (!res.ok) {
+        toast.error('Failed to register integration');
+        return;
       }
+      const created = await res.json();
+
+      if (isSmsProvider) {
+        if (intApiKey) {
+          await authFetch(`/integrations/${created.id}/credentials`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: intApiKey, credentialType: 'API_KEY' })
+          });
+        }
+        if ((intProvider === 'MSG91' || intProvider === 'Twilio') && intSenderId) {
+          await authFetch(`/integrations/${created.id}/credentials`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: intSenderId, credentialType: 'SENDER_ID' })
+          });
+        }
+        if (intProvider === 'Twilio' && intAccountSid) {
+          await authFetch(`/integrations/${created.id}/credentials`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: intAccountSid, credentialType: 'ACCOUNT_SID' })
+          });
+        }
+      }
+
+      toast.success('Integration registered successfully!');
+      setShowIntegrationModal(false);
+      setIntApiKey('');
+      setIntSenderId('');
+      setIntAccountSid('');
+      fetchData();
     } catch (err) {
       toast.error('Failed to register integration');
+    }
+  };
+
+  const handleSendTestSms = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await authFetch(`/integrations/${testSmsIntegrationId}/test-sms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: testSmsPhone })
+      });
+      const data = await res.json();
+      setTestSmsResult(data);
+      if (data.success) toast.success('Test SMS dispatched!');
+      else toast.error('Test SMS failed to send — check credentials.');
+    } catch (err) {
+      toast.error('Failed to send test SMS');
     }
   };
 
@@ -273,12 +333,13 @@ const IntegrationCenter: React.FC = () => {
                 <th>Rate Limit</th>
                 <th>Status</th>
                 <th>Registered At</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {integrations.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
                     No external integrations registered yet.
                   </td>
                 </tr>
@@ -293,6 +354,20 @@ const IntegrationCenter: React.FC = () => {
                     <td>{i.rate_limit_rpm} rpm</td>
                     <td><span className="status-badge status-success">{i.status}</span></td>
                     <td>{new Date(i.created_at).toLocaleDateString()}</td>
+                    <td>
+                      {SMS_PROVIDERS.includes(i.provider) && (
+                        <button
+                          className="btn btn-sm btn-primary"
+                          onClick={() => {
+                            setTestSmsIntegrationId(i.id);
+                            setTestSmsResult(null);
+                            setShowTestSmsModal(true);
+                          }}
+                        >
+                          📱 Send Test SMS
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
@@ -496,18 +571,68 @@ const IntegrationCenter: React.FC = () => {
                     <option value="Razorpay">Razorpay Payments</option>
                     <option value="Stripe">Stripe</option>
                     <option value="GenericREST">Generic REST System</option>
+                    <option value="Fast2SMS">SMS: Fast2SMS</option>
+                    <option value="MSG91">SMS: MSG91</option>
+                    <option value="Twilio">SMS: Twilio</option>
+                    <option value="GenericSMS">SMS: Generic SMS Gateway</option>
                   </select>
                 </div>
-                <div>
-                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '4px' }}>Target Base URL</label>
-                  <input
-                    type="url"
-                    required
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
-                    value={intBaseUrl}
-                    onChange={(e) => setIntBaseUrl(e.target.value)}
-                  />
-                </div>
+                {!(isSmsProvider && intProvider === 'Twilio') && (
+                  <div>
+                    <label style={{ fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                      {isSmsProvider ? 'Gateway Endpoint URL (optional — default provider endpoint used if blank)' : 'Target Base URL'}
+                    </label>
+                    <input
+                      type="url"
+                      required={!isSmsProvider}
+                      style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                      value={intBaseUrl}
+                      onChange={(e) => setIntBaseUrl(e.target.value)}
+                    />
+                  </div>
+                )}
+                {isSmsProvider && (
+                  <>
+                    <div>
+                      <label style={{ fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                        {intProvider === 'Twilio' ? 'Auth Token' : 'API Key'}
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                        value={intApiKey}
+                        onChange={(e) => setIntApiKey(e.target.value)}
+                      />
+                    </div>
+                    {intProvider === 'Twilio' && (
+                      <div>
+                        <label style={{ fontWeight: 600, display: 'block', marginBottom: '4px' }}>Account SID</label>
+                        <input
+                          type="text"
+                          required
+                          style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                          value={intAccountSid}
+                          onChange={(e) => setIntAccountSid(e.target.value)}
+                        />
+                      </div>
+                    )}
+                    {(intProvider === 'MSG91' || intProvider === 'Twilio') && (
+                      <div>
+                        <label style={{ fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                          {intProvider === 'Twilio' ? 'From Number (e.g. +14155552671)' : 'Sender ID (6-char DLT-approved, e.g. MSGIND)'}
+                        </label>
+                        <input
+                          type="text"
+                          required={intProvider === 'Twilio'}
+                          style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                          value={intSenderId}
+                          onChange={(e) => setIntSenderId(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
                   <button type="button" className="btn btn-secondary" onClick={() => setShowIntegrationModal(false)}>Cancel</button>
                   <button type="submit" className="btn btn-primary">Register Integration</button>
@@ -577,6 +702,44 @@ const IntegrationCenter: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
                   <button type="button" className="btn btn-secondary" onClick={() => setShowSubscriptionModal(false)}>Cancel</button>
                   <button type="submit" className="btn btn-primary">Create Subscription</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* MODAL: SEND TEST SMS */}
+      {showTestSmsModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0 }}>📱 Send Test SMS</h3>
+              <button style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }} onClick={() => setShowTestSmsModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleSendTestSms}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '4px' }}>Phone Number</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="9876543210"
+                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    value={testSmsPhone}
+                    onChange={(e) => setTestSmsPhone(e.target.value)}
+                  />
+                </div>
+                {testSmsResult && (
+                  <div style={{ fontSize: '13px' }}>
+                    <span className={`status-badge ${testSmsResult.success ? 'status-success' : 'status-failed'}`}>
+                      {testSmsResult.success ? 'SENT' : 'FAILED'}
+                    </span>{' '}
+                    via <code>{testSmsResult.provider}</code>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowTestSmsModal(false)}>Close</button>
+                  <button type="submit" className="btn btn-primary">Send Test SMS</button>
                 </div>
               </div>
             </form>

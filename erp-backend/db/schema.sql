@@ -828,7 +828,8 @@ CREATE TABLE IF NOT EXISTS library_books (
       available_copies INTEGER NOT NULL DEFAULT 1,
       rack_location TEXT,
       is_active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT DEFAULT (datetime('now'))
+      created_at TEXT DEFAULT (datetime('now')),
+      is_reference INTEGER NOT NULL DEFAULT 0
     );
 
 CREATE TABLE IF NOT EXISTS library_transactions (
@@ -1284,6 +1285,70 @@ CREATE TABLE IF NOT EXISTS students (
   updated_by TEXT
 );
 
+-- Structured medical history underneath students.blood_group/emergency_contact/medical_notes
+-- (those three stay as quick-reference summary fields; these add a real history).
+CREATE TABLE IF NOT EXISTS student_health_visits (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  visit_date TEXT NOT NULL DEFAULT (date('now')),
+  reason TEXT NOT NULL,
+  diagnosis TEXT,
+  treatment TEXT,
+  referred_to TEXT,
+  follow_up_date TEXT,
+  recorded_by TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
+CREATE TABLE IF NOT EXISTS student_immunizations (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  vaccine_name TEXT NOT NULL,
+  dose_number INTEGER,
+  administered_date TEXT,
+  next_due_date TEXT,
+  administered_by TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
+CREATE TABLE IF NOT EXISTS student_health_incidents (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  incident_date TEXT NOT NULL DEFAULT (date('now')),
+  incident_type TEXT NOT NULL DEFAULT 'OTHER' CHECK(incident_type IN ('INJURY','ILLNESS','ALLERGY_REACTION','OTHER')),
+  description TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'MINOR' CHECK(severity IN ('MINOR','MODERATE','SEVERE')),
+  action_taken TEXT,
+  parent_notified INTEGER NOT NULL DEFAULT 0,
+  recorded_by TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_health_visits_student ON student_health_visits(student_id);
+CREATE INDEX IF NOT EXISTS idx_immunizations_student ON student_immunizations(student_id);
+CREATE INDEX IF NOT EXISTS idx_health_incidents_student ON student_health_incidents(student_id);
+CREATE INDEX IF NOT EXISTS idx_health_visits_inst ON student_health_visits(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_immunizations_inst ON student_immunizations(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_health_incidents_inst ON student_health_incidents(institution_id, deleted_at);
+
 CREATE TABLE IF NOT EXISTS subject_assessments (
   id TEXT PRIMARY KEY,
   subject_id TEXT NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
@@ -1504,6 +1569,65 @@ CREATE TABLE IF NOT EXISTS transport_routes (
       is_active INTEGER NOT NULL DEFAULT 1,
       created_at TEXT DEFAULT (datetime('now'))
     );
+
+-- Hostel/Dormitory management (new — zero prior code existed for this).
+CREATE TABLE IF NOT EXISTS hostel_blocks (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  block_type TEXT NOT NULL DEFAULT 'CO_ED' CHECK(block_type IN ('BOYS','GIRLS','CO_ED')),
+  warden_name TEXT,
+  warden_phone TEXT,
+  address TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
+CREATE TABLE IF NOT EXISTS hostel_rooms (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  block_id TEXT NOT NULL REFERENCES hostel_blocks(id) ON DELETE CASCADE,
+  room_number TEXT NOT NULL,
+  floor TEXT,
+  capacity INTEGER NOT NULL DEFAULT 1,
+  room_type TEXT NOT NULL DEFAULT 'SHARED' CHECK(room_type IN ('SINGLE','SHARED','DORM')),
+  monthly_charge REAL NOT NULL DEFAULT 0.0,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(block_id, room_number)
+);
+
+CREATE TABLE IF NOT EXISTS hostel_allocations (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  room_id TEXT NOT NULL REFERENCES hostel_rooms(id),
+  bed_label TEXT,
+  allocated_date TEXT NOT NULL DEFAULT (date('now')),
+  vacated_date TEXT,
+  status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK(status IN ('ACTIVE','VACATED')),
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_hostel_alloc_active_student ON hostel_allocations(student_id) WHERE status = 'ACTIVE';
+CREATE INDEX IF NOT EXISTS idx_hostel_rooms_block ON hostel_rooms(block_id);
+CREATE INDEX IF NOT EXISTS idx_hostel_alloc_room ON hostel_allocations(room_id) WHERE status = 'ACTIVE';
+CREATE INDEX IF NOT EXISTS idx_hostel_blocks_inst ON hostel_blocks(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_hostel_rooms_inst ON hostel_rooms(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_hostel_alloc_inst ON hostel_allocations(institution_id, deleted_at);
 
 CREATE TABLE IF NOT EXISTS user_notification_preferences (
   user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,

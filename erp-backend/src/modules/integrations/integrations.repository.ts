@@ -95,6 +95,22 @@ export class IntegrationsRepository {
     return row ? (row as IntegrationCredential) : null;
   }
 
+  async getCredentialByType(integrationId: string, credentialType: string): Promise<IntegrationCredential | null> {
+    const row = await this.db.prepare(
+      `SELECT * FROM integration_credentials WHERE integration_id = ? AND credential_type = ? ORDER BY created_at DESC LIMIT 1`
+    ).bind(integrationId, credentialType).first();
+    return row ? (row as IntegrationCredential) : null;
+  }
+
+  async getActiveIntegrationByProviders(institutionId: string, providers: string[]): Promise<Integration | null> {
+    if (providers.length === 0) return null;
+    const placeholders = providers.map(() => '?').join(', ');
+    const row = await this.db.prepare(
+      `SELECT * FROM integrations WHERE institution_id = ? AND provider IN (${placeholders}) AND is_active = 1 AND status = 'ACTIVE' ORDER BY updated_at DESC LIMIT 1`
+    ).bind(institutionId, ...providers).first();
+    return row ? (row as Integration) : null;
+  }
+
   // ==================== WEBHOOK SUBSCRIPTIONS ==================== //
 
   async createSubscription(data: {

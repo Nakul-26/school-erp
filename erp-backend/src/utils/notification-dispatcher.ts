@@ -1,6 +1,9 @@
 import type { Env } from '../types';
 import { sendPushToUsers } from './webpush';
 import { sendEmail } from './email';
+import { IntegrationsRepository } from '../modules/integrations/integrations.repository';
+import { IntegrationsService } from '../modules/integrations/integrations.service';
+import { SMS_PROVIDERS } from '../modules/integrations/types';
 
 export interface NotificationDispatchPayload {
   notificationId?: string;
@@ -118,9 +121,9 @@ export async function dispatchNotification(
   if (channels.includes('sms') && (prefs?.sms_enabled ?? 1) === 1 && phone) {
     const startTime = Date.now();
     try {
-      const smsOk = await sendSmsHook(env, phone, `${title}: ${message}`);
-      results.sms = smsOk;
-      await logAudit(env.DB, institutionId, notificationId || null, 'FAST2SMS', 'sms', smsOk ? 'DELIVERED' : 'FAILED', JSON.stringify({ success: smsOk }), null, Date.now() - startTime);
+      const smsResult = await sendSmsHook(env, institutionId, phone, `${title}: ${message}`);
+      results.sms = smsResult.success;
+      await logAudit(env.DB, institutionId, notificationId || null, smsResult.provider, 'sms', smsResult.success ? 'DELIVERED' : 'FAILED', JSON.stringify({ success: smsResult.success }), null, Date.now() - startTime);
     } catch (err: any) {
       console.error('[NotificationDispatcher] SMS dispatch error:', err);
       await logAudit(env.DB, institutionId, notificationId || null, 'FAST2SMS', 'sms', 'FAILED', JSON.stringify({ error: err.message }), null, Date.now() - startTime);
@@ -143,11 +146,20 @@ export async function dispatchNotification(
   return results;
 }
 
-async function sendSmsHook(env: Env, phone: string, text: string): Promise<boolean> {
+async function sendSmsHook(env: Env, institutionId: string, phone: string, text: string): Promise<{ success: boolean; provider: string }> {
+  // Prefer a per-institution SMS provider registered in the Integrations module (multi-tenant, own API key).
+  const repo = new IntegrationsRepository(env.DB);
+  const integration = await repo.getActiveIntegrationByProviders(institutionId, SMS_PROVIDERS);
+  if (integration) {
+    const service = new IntegrationsService(repo);
+    return service.sendSms(integration.id, phone, text);
+  }
+
+  // Legacy fallback: a single shared Fast2SMS key for installs that haven't registered a per-institution integration yet.
   const smsApiKey = (env as any).SMS_API_KEY;
   if (!smsApiKey) {
     console.log(`[SMS Gateway Simulated] To: ${phone} | Text: ${text}`);
-    return true;
+    return { success: true, provider: 'SIMULATED' };
   }
 
   try {
@@ -164,10 +176,10 @@ async function sendSmsHook(env: Env, phone: string, text: string): Promise<boole
         numbers: phone.replace(/[^0-9]/g, '')
       })
     });
-    return res.ok;
+    return { success: res.ok, provider: 'FAST2SMS' };
   } catch (err) {
     console.error('[SMS Gateway Error]:', err);
-    return false;
+    return { success: false, provider: 'FAST2SMS' };
   }
 }
 

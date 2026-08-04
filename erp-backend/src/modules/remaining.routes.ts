@@ -206,13 +206,43 @@ alumni.use('*', authMiddleware);
 alumni.get('/', async (c) => {
   const user = c.get('user');
   const db = c.env.DB;
-  
+
   try {
     const { results } = await db
-      .prepare('SELECT * FROM alumni WHERE institution_id = ? ORDER BY graduation_year DESC, last_name ASC')
+      .prepare('SELECT * FROM alumni WHERE institution_id = ? AND is_active = 1 ORDER BY graduation_year DESC, last_name ASC')
       .bind(user.institution_id)
       .all();
     return c.json(results);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+// Registered before the '/:id' route below so 'events' is never captured as an alumni id.
+alumni.get('/events', async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+  try {
+    const { results } = await db.prepare(`
+      SELECT e.*, (SELECT COUNT(*) FROM alumni_event_rsvps r WHERE r.event_id = e.id AND r.status = 'GOING') as going_count
+      FROM alumni_events e
+      WHERE e.institution_id = ? AND e.is_active = 1
+      ORDER BY e.start_date DESC
+    `).bind(user.institution_id).all();
+    return c.json(results);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+alumni.get('/:id', async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+  const id = c.req.param('id');
+  try {
+    const row = await db.prepare('SELECT * FROM alumni WHERE id = ? AND institution_id = ? AND is_active = 1').bind(id, user.institution_id).first();
+    if (!row) return c.json({ error: 'Alumnus not found' }, 404);
+    return c.json(row);
   } catch (e: any) {
     return c.json({ error: e.message }, 500);
   }
@@ -246,6 +276,116 @@ alumni.post('/', requireRole('admin', 'super_admin', 'Principal'), async (c) => 
     );
 
     return c.json({ success: true, id }, 201);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+alumni.put('/:id', requireRole('admin', 'super_admin', 'Principal', 'HOD'), async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+  const id = c.req.param('id');
+  const input = await c.req.json();
+
+  try {
+    const existing = await db.prepare('SELECT id FROM alumni WHERE id = ? AND institution_id = ? AND is_active = 1').bind(id, user.institution_id).first();
+    if (!existing) return c.json({ error: 'Alumnus not found' }, 404);
+
+    await db.prepare(`
+      UPDATE alumni SET first_name = ?, last_name = ?, graduation_year = ?, current_status = ?, institution = ?, contact = ?, updated_at = ?
+      WHERE id = ? AND institution_id = ?
+    `).bind(
+      input.first_name, input.last_name, input.graduation_year, input.current_status || null,
+      input.institution || null, input.contact || null, new Date().toISOString(), id, user.institution_id
+    ).run();
+
+    await createAuditLog(db, user.sub || null, 'UPDATE_ALUMNI_RECORD', 'alumni', id, `Updated alumnus record: ${input.first_name} ${input.last_name}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+alumni.delete('/:id', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+  const id = c.req.param('id');
+  try {
+    await db.prepare('UPDATE alumni SET is_active = 0, updated_at = ? WHERE id = ? AND institution_id = ?')
+      .bind(new Date().toISOString(), id, user.institution_id).run();
+    await createAuditLog(db, user.sub || null, 'DELETE_ALUMNI_RECORD', 'alumni', id, `Removed alumnus record ${id}`);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+// ─── ALUMNI EVENTS (write endpoints; GET /events is registered above, before '/:id') ────────
+
+alumni.post('/events', requireRole('admin', 'super_admin', 'Principal', 'HOD'), async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+  const input = await c.req.json();
+
+  if (!input.name || !input.start_date) {
+    return c.json({ error: 'Event name and start date are required' }, 400);
+  }
+
+  const id = generateUuid();
+  try {
+    await db.prepare(`
+      INSERT INTO alumni_events (id, institution_id, name, event_type, start_date, end_date, location, description, created_by, updated_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id, user.institution_id, input.name, input.event_type || 'reunion', input.start_date,
+      input.end_date || null, input.location || null, input.description || null, user.sub || null, user.sub || null
+    ).run();
+
+    await createAuditLog(db, user.sub || null, 'CREATE_ALUMNI_EVENT', 'alumni_events', id, `Created alumni event: ${input.name}`);
+    return c.json({ success: true, id }, 201);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+alumni.delete('/events/:id', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+  const id = c.req.param('id');
+  try {
+    await db.prepare('UPDATE alumni_events SET is_active = 0, updated_at = ? WHERE id = ? AND institution_id = ?')
+      .bind(new Date().toISOString(), id, user.institution_id).run();
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
+});
+
+// RSVP: identified by the alumni record linked to the caller's own student_id (self-service) or explicit alumniId (staff on behalf).
+alumni.post('/events/:id/rsvp', async (c) => {
+  const user = c.get('user');
+  const db = c.env.DB;
+  const eventId = c.req.param('id');
+  const input = await c.req.json();
+
+  let alumniId = input.alumniId;
+  if (!alumniId) {
+    const own = await db.prepare(`
+      SELECT a.id FROM alumni a JOIN students s ON s.id = a.student_id
+      WHERE s.user_id = ? AND a.institution_id = ? AND a.is_active = 1
+    `).bind(user.sub, user.institution_id).first<{ id: string }>();
+    alumniId = own?.id;
+  }
+  if (!alumniId) return c.json({ error: 'No linked alumni record found for this user; specify alumniId explicitly.' }, 400);
+
+  const status = ['INTERESTED', 'GOING', 'DECLINED'].includes(input.status) ? input.status : 'INTERESTED';
+  try {
+    const id = generateUuid();
+    await db.prepare(`
+      INSERT INTO alumni_event_rsvps (id, event_id, alumni_id, status) VALUES (?, ?, ?, ?)
+      ON CONFLICT(event_id, alumni_id) DO UPDATE SET status = excluded.status
+    `).bind(id, eventId, alumniId, status).run();
+    return c.json({ success: true, status });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
   }

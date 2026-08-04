@@ -322,6 +322,44 @@ export interface PlacementApplicationView {
   remarks: string | null;
 }
 
+export interface HealthVisit {
+  id: string;
+  visit_date: string;
+  reason: string;
+  diagnosis: string | null;
+  treatment: string | null;
+  referred_to: string | null;
+  follow_up_date: string | null;
+}
+
+export interface Immunization {
+  id: string;
+  vaccine_name: string;
+  dose_number: number | null;
+  administered_date: string | null;
+  next_due_date: string | null;
+}
+
+export interface HealthIncident {
+  id: string;
+  incident_date: string;
+  incident_type: 'INJURY' | 'ILLNESS' | 'ALLERGY_REACTION' | 'OTHER';
+  description: string;
+  severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+  action_taken: string | null;
+  parent_notified: number;
+}
+
+export interface MedicalSummary {
+  student_id: string;
+  blood_group: string | null;
+  emergency_contact: string | null;
+  medical_notes: string | null;
+  visits: HealthVisit[];
+  immunizations: Immunization[];
+  incidents: HealthIncident[];
+}
+
 export interface StudentElectiveChoice {
   id: string;
   subject_id: string;

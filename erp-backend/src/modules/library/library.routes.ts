@@ -18,9 +18,16 @@ async function ensureLibraryTables(db: D1Database) {
       available_copies INTEGER NOT NULL DEFAULT 1,
       rack_location TEXT,
       is_active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT DEFAULT (datetime('now'))
+      created_at TEXT DEFAULT (datetime('now')),
+      is_reference INTEGER NOT NULL DEFAULT 0
     )
   `).run();
+
+  try {
+    await db.prepare(`ALTER TABLE library_books ADD COLUMN is_reference INTEGER NOT NULL DEFAULT 0`).run();
+  } catch (err) {
+    // Ignore error if column already exists
+  }
 
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS library_transactions (
@@ -67,10 +74,11 @@ library.post('/books', authMiddleware, async (c) => {
 
   const id = crypto.randomUUID();
   const total = Number(body.total_copies) || 1;
+  const isReference = body.is_reference ? 1 : 0;
 
   await c.env.DB.prepare(`
-    INSERT INTO library_books (id, institution_id, title, author, isbn, category, total_copies, available_copies, rack_location)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO library_books (id, institution_id, title, author, isbn, category, total_copies, available_copies, rack_location, is_reference)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id,
     user.institution_id,
@@ -79,8 +87,10 @@ library.post('/books', authMiddleware, async (c) => {
     body.isbn || '',
     body.category || 'General',
     total,
-    total,
-    body.rack_location || ''
+    // Reference (non-circulating) books have zero copies available for issue by definition.
+    isReference ? 0 : total,
+    body.rack_location || '',
+    isReference
   ).run();
 
   return c.json({ success: true, id }, 201);
@@ -95,18 +105,19 @@ library.put('/books/:id', authMiddleware, async (c) => {
 
   // Get current book to calculate new available copies
   const book = await c.env.DB.prepare(`
-    SELECT total_copies, available_copies FROM library_books WHERE id = ? AND institution_id = ?
-  `).bind(id, user.institution_id).first<{ total_copies: number; available_copies: number }>();
+    SELECT total_copies, available_copies, is_reference FROM library_books WHERE id = ? AND institution_id = ?
+  `).bind(id, user.institution_id).first<{ total_copies: number; available_copies: number; is_reference: number }>();
 
   if (!book) return c.json({ error: 'Book not found' }, 404);
 
   const newTotal = Number(body.total_copies) ?? book.total_copies;
+  const isReference = body.is_reference !== undefined ? (body.is_reference ? 1 : 0) : book.is_reference;
   const diff = newTotal - book.total_copies;
-  const newAvailable = Math.max(0, book.available_copies + diff);
+  const newAvailable = isReference ? 0 : Math.max(0, book.available_copies + diff);
 
   await c.env.DB.prepare(`
-    UPDATE library_books 
-    SET title = ?, author = ?, isbn = ?, category = ?, total_copies = ?, available_copies = ?, rack_location = ?
+    UPDATE library_books
+    SET title = ?, author = ?, isbn = ?, category = ?, total_copies = ?, available_copies = ?, rack_location = ?, is_reference = ?
     WHERE id = ? AND institution_id = ?
   `).bind(
     body.title,
@@ -116,6 +127,7 @@ library.put('/books/:id', authMiddleware, async (c) => {
     newTotal,
     newAvailable,
     body.rack_location || '',
+    isReference,
     id,
     user.institution_id
   ).run();
@@ -168,10 +180,13 @@ library.post('/transactions/issue', authMiddleware, async (c) => {
 
   // Check availability
   const book = await c.env.DB.prepare(`
-    SELECT available_copies FROM library_books WHERE id = ? AND institution_id = ? AND is_active = 1
-  `).bind(body.book_id, user.institution_id).first<{ available_copies: number }>();
+    SELECT available_copies, is_reference FROM library_books WHERE id = ? AND institution_id = ? AND is_active = 1
+  `).bind(body.book_id, user.institution_id).first<{ available_copies: number; is_reference: number }>();
 
   if (!book) return c.json({ error: 'Book not found' }, 404);
+  if (book.is_reference) {
+    return c.json({ error: 'This is a reference (non-circulating) title — it can only be used in the library, not issued.' }, 400);
+  }
   if (book.available_copies <= 0) {
     return c.json({ error: 'No copies of this book are currently available for issue.' }, 400);
   }

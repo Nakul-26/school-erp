@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, GraduationCap, Building, Briefcase, Mail } from 'lucide-react';
+import { Plus, GraduationCap, Building, Briefcase, Mail, Calendar, Trash2 } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 
@@ -17,11 +17,26 @@ interface Alumnus {
   contact: string | null;
 }
 
+interface AlumniEvent {
+  id: string;
+  name: string;
+  event_type: 'reunion' | 'webinar' | 'fundraiser' | 'mentorship' | 'other';
+  start_date: string;
+  end_date: string | null;
+  location: string | null;
+  description: string | null;
+  going_count: number;
+}
+
 export default function Alumni() {
+  const [activeTab, setActiveTab] = useState<'directory' | 'events'>('directory');
   const [alumni, setAlumni] = useState<Alumnus[]>([]);
+  const [events, setEvents] = useState<AlumniEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [eventForm, setEventForm] = useState({ name: '', event_type: 'reunion', start_date: '', end_date: '', location: '', description: '' });
 
   const [form, setForm] = useState({
     first_name: '',
@@ -35,8 +50,12 @@ export default function Alumni() {
   const fetchAlumni = async () => {
     try {
       setLoading(true);
-      const data = await api.get('/alumni');
-      setAlumni(data);
+      const [alumniData, eventsData] = await Promise.all([
+        api.get('/alumni'),
+        api.get('/alumni/events'),
+      ]);
+      setAlumni(alumniData);
+      setEvents(eventsData);
     } catch (err) {
       console.error('Error fetching alumni records:', err);
     } finally {
@@ -47,6 +66,46 @@ export default function Alumni() {
   useEffect(() => {
     fetchAlumni();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Remove this alumnus record?')) return;
+    try {
+      await api.delete(`/alumni/${id}`);
+      fetchAlumni();
+    } catch (err: any) {
+      alert(err.message || 'Failed to remove alumnus record.');
+    }
+  };
+
+  const resetEventForm = () => setEventForm({ name: '', event_type: 'reunion', start_date: '', end_date: '', location: '', description: '' });
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!eventForm.name || !eventForm.start_date) {
+      return alert('Event name and start date are required.');
+    }
+    try {
+      setSaving(true);
+      await api.post('/alumni/events', eventForm);
+      setShowEventModal(false);
+      resetEventForm();
+      fetchAlumni();
+    } catch (err: any) {
+      alert(err.message || 'Failed to create event.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm('Delete this alumni event?')) return;
+    try {
+      await api.delete(`/alumni/events/${id}`);
+      fetchAlumni();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete event.');
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,11 +168,30 @@ export default function Alumni() {
             Graduate tracking, carrier pathways, and batch lists
           </p>
         </div>
-        <button className="btn btn-primary alumni-btn" onClick={() => setShowAddModal(true)}>
-          <Plus size={18} /> Add Alumnus
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          {activeTab === 'events' ? (
+            <button className="btn btn-primary alumni-btn" onClick={() => setShowEventModal(true)}>
+              <Plus size={18} /> New Event
+            </button>
+          ) : (
+            <button className="btn btn-primary alumni-btn" onClick={() => setShowAddModal(true)}>
+              <Plus size={18} /> Add Alumnus
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="page-tabs" style={{ marginBottom: '1.5rem' }}>
+        <button className={`page-tab ${activeTab === 'directory' ? 'active' : ''}`} onClick={() => setActiveTab('directory')}>
+          Directory ({alumni.length})
+        </button>
+        <button className={`page-tab ${activeTab === 'events' ? 'active' : ''}`} onClick={() => setActiveTab('events')}>
+          Events ({events.length})
         </button>
       </div>
 
+      {activeTab === 'directory' && (
+      <>
       {/* Stats Summary cards */}
       <div className="alumni-grid-3">
         <div className="card alumni-card">
@@ -170,6 +248,7 @@ export default function Alumni() {
                   <th>Career Status</th>
                   <th>Current University / Company</th>
                   <th>Contact Details</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -196,6 +275,11 @@ export default function Alumni() {
                         <span className="alumni-span-20">No contact</span>
                       )}
                     </td>
+                    <td>
+                      <button className="btn btn-sm btn-outline" onClick={() => handleDelete(a.id)} title="Remove alumnus record">
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -203,6 +287,54 @@ export default function Alumni() {
           </div>
         )}
       </div>
+      </>
+      )}
+
+      {activeTab === 'events' && (
+        <div className="card">
+          {loading ? (
+            <SkeletonLoader type="table" rows={4} cols={5} />
+          ) : events.length === 0 ? (
+            <EmptyState
+              title="No Alumni Events Yet"
+              description="Create reunions, webinars, fundraisers, or mentorship sessions to keep alumni engaged."
+              icon={Calendar}
+              action={{ label: 'New Event', onClick: () => setShowEventModal(true) }}
+            />
+          ) : (
+            <div className="table-responsive">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Event</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Interested/Going</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {events.map(ev => (
+                    <tr key={ev.id}>
+                      <td><strong>{ev.name}</strong>{ev.description && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{ev.description}</div>}</td>
+                      <td><span className="badge badge-primary">{ev.event_type}</span></td>
+                      <td>{new Date(ev.start_date).toLocaleDateString()}{ev.end_date ? ` – ${new Date(ev.end_date).toLocaleDateString()}` : ''}</td>
+                      <td>{ev.location || '—'}</td>
+                      <td>{ev.going_count}</td>
+                      <td>
+                        <button className="btn btn-sm btn-outline" onClick={() => handleDeleteEvent(ev.id)} title="Delete event">
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add Alumnus Modal */}
       {showAddModal && (
@@ -275,6 +407,58 @@ export default function Alumni() {
                 <button type="button" className="btn btn-outline" onClick={() => setShowAddModal(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
                   {saving ? 'Creating...' : 'Create Alumnus'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Event Modal */}
+      {showEventModal && (
+        <div className="modal-overlay" onClick={() => setShowEventModal(false)}>
+          <div className="modal alumni-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Create Alumni Event</h3>
+              <button className="modal-close" onClick={() => setShowEventModal(false)}>×</button>
+            </div>
+            <form onSubmit={handleCreateEvent}>
+              <div className="modal-body alumni-modal-body">
+                <div className="form-group">
+                  <label>Event Name *</label>
+                  <input required value={eventForm.name} onChange={e => setEventForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Class of 2020 Reunion" />
+                </div>
+                <div className="form-group">
+                  <label>Event Type</label>
+                  <select value={eventForm.event_type} onChange={e => setEventForm(f => ({ ...f, event_type: e.target.value }))}>
+                    <option value="reunion">Reunion</option>
+                    <option value="webinar">Webinar</option>
+                    <option value="fundraiser">Fundraiser</option>
+                    <option value="mentorship">Mentorship Session</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Start Date *</label>
+                  <input type="date" required value={eventForm.start_date} onChange={e => setEventForm(f => ({ ...f, start_date: e.target.value }))} />
+                </div>
+                <div className="form-group">
+                  <label>End Date (Optional)</label>
+                  <input type="date" value={eventForm.end_date} onChange={e => setEventForm(f => ({ ...f, end_date: e.target.value }))} />
+                </div>
+                <div className="form-group alumni-form-group">
+                  <label>Location</label>
+                  <input value={eventForm.location} onChange={e => setEventForm(f => ({ ...f, location: e.target.value }))} placeholder="e.g. Main Auditorium / Zoom" />
+                </div>
+                <div className="form-group alumni-form-group">
+                  <label>Description</label>
+                  <textarea value={eventForm.description} onChange={e => setEventForm(f => ({ ...f, description: e.target.value }))} rows={3} />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline" onClick={() => setShowEventModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? 'Creating...' : 'Create Event'}
                 </button>
               </div>
             </form>

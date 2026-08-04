@@ -39,4 +39,8 @@ export const teacherDetailsService = {
   updateTeacher: async (id: string, data: any) => await api.put<Teacher>(`/teachers/${id}`, data),
   createUser: async (data: any) => await api.post<CreateUserResponse>('/users', data),
   applyLeave: async (data: any) => await api.post<LeaveApplication>('/leave/applications', data),
+
+  getPublications: async (teacherId: string) => await api.get<any[]>(`/faculty-research/teacher/${teacherId}`).catch(() => []),
+  createPublication: async (data: any) => await api.post<{ id: string }>('/faculty-research', data),
+  deletePublication: async (pubId: string) => await api.delete(`/faculty-research/${pubId}`),
 };

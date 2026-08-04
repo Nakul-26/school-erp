@@ -49,6 +49,11 @@ const DataTools = lazy(() => import('./pages/DataTools'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Library = lazy(() => import('./pages/Library'));
 const Transport = lazy(() => import('./pages/Transport'));
+const Hostel = lazy(() => import('./pages/Hostel'));
+const Canteen = lazy(() => import('./pages/Canteen'));
+const StudyMaterials = lazy(() => import('./pages/StudyMaterials'));
+const GLAccounting = lazy(() => import('./pages/GLAccounting'));
+const Compliance = lazy(() => import('./pages/Compliance'));
 const Certificates = lazy(() => import('./pages/Certificates'));
 const TimetablePage = lazy(() => import('./pages/TimetablePage'));
 const SchoolSetup = lazy(() => import('./pages/SchoolSetup'));
@@ -167,6 +172,11 @@ function App() {
           <Route path="/notifications" element={<Navigate to="/communication?tab=notifications" replace />} />
           <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           <Route path="/transport" element={<ProtectedRoute><Transport /></ProtectedRoute>} />
+          <Route path="/hostel" element={<ProtectedRoute><Hostel /></ProtectedRoute>} />
+          <Route path="/canteen" element={<ProtectedRoute><Canteen /></ProtectedRoute>} />
+          <Route path="/study-materials" element={<ProtectedRoute><StudyMaterials /></ProtectedRoute>} />
+          <Route path="/gl-accounting" element={<ProtectedRoute><GLAccounting /></ProtectedRoute>} />
+          <Route path="/compliance" element={<ProtectedRoute><Compliance /></ProtectedRoute>} />
           <Route path="/certificates" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Certificates /></ProtectedRoute>} />
           <Route path="/messaging" element={<Navigate to="/communication?tab=inbox" replace />} />
 

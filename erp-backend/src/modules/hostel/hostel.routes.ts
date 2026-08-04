@@ -63,7 +63,7 @@ hostel.post('/blocks', requirePermission('hostel.manage'), async (c) => {
 hostel.put('/blocks/:id', requirePermission('hostel.manage'), async (c) => {
   const user = c.get('user');
   const service = getService(c);
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   const body = await c.req.json();
   try {
     await service.updateBlock(user.institution_id, id, body, user.sub);
@@ -76,7 +76,7 @@ hostel.put('/blocks/:id', requirePermission('hostel.manage'), async (c) => {
 hostel.delete('/blocks/:id', requirePermission('hostel.manage'), async (c) => {
   const user = c.get('user');
   const service = getService(c);
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   try {
     await service.deleteBlock(user.institution_id, id);
     return c.json({ success: true });
@@ -110,7 +110,7 @@ hostel.post('/rooms', requirePermission('hostel.manage'), async (c) => {
 hostel.put('/rooms/:id', requirePermission('hostel.manage'), async (c) => {
   const user = c.get('user');
   const service = getService(c);
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   const body = await c.req.json();
   try {
     await service.updateRoom(user.institution_id, id, body, user.sub);
@@ -123,7 +123,7 @@ hostel.put('/rooms/:id', requirePermission('hostel.manage'), async (c) => {
 hostel.delete('/rooms/:id', requirePermission('hostel.manage'), async (c) => {
   const user = c.get('user');
   const service = getService(c);
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   try {
     await service.deleteRoom(user.institution_id, id);
     return c.json({ success: true });
@@ -145,7 +145,7 @@ hostel.get('/allocations', requirePermission('hostel.view'), async (c) => {
 // Single student's current hostel allocation (self/parent/staff) — used for the per-student modal.
 hostel.get('/student/:studentId', async (c) => {
   const user = c.get('user');
-  const studentId = c.req.param('studentId');
+  const studentId = c.req.param('studentId')!;
   if (!(await canAccessStudentHostel(c, user, studentId))) {
     return c.json({ error: "Forbidden: cannot access this student's hostel record" }, 403);
   }
@@ -170,7 +170,7 @@ hostel.post('/allocations', requirePermission('hostel.manage'), async (c) => {
 hostel.post('/allocations/:id/vacate', requirePermission('hostel.manage'), async (c) => {
   const user = c.get('user');
   const service = getService(c);
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   try {
     await service.vacateAllocation(user.institution_id, id, user.sub);
     await createAuditLog(c.env.DB, { institutionId: user.institution_id, userId: user.sub, module: 'HOSTEL', action: 'VACATE_ROOM', entityType: 'hostel_allocations', entityId: id });

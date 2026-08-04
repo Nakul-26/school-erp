@@ -56,7 +56,7 @@ async function getUserPermissions(c: any, user: JwtPayload): Promise<string[]> {
 // GET /medical/:studentId/summary — self/parent/staff-with-medical.view
 medical.get('/:studentId/summary', async (c) => {
   const user = c.get('user');
-  const studentId = c.req.param('studentId');
+  const studentId = c.req.param('studentId')!;
   const permissions = await getUserPermissions(c, user);
 
   if (!(await canViewStudentMedical(c, user, studentId, permissions))) {
@@ -76,7 +76,7 @@ medical.get('/:studentId/summary', async (c) => {
 
 medical.post('/:studentId/visits', requirePermission('medical.manage'), async (c) => {
   const user = c.get('user');
-  const studentId = c.req.param('studentId');
+  const studentId = c.req.param('studentId')!;
   const body = await c.req.json();
   try {
     const service = getService(c);
@@ -90,7 +90,7 @@ medical.post('/:studentId/visits', requirePermission('medical.manage'), async (c
 
 medical.delete('/visits/:id', requirePermission('medical.manage'), async (c) => {
   const user = c.get('user');
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   await getService(c).deleteVisit(user.institution_id, id);
   return c.json({ success: true });
 });
@@ -99,7 +99,7 @@ medical.delete('/visits/:id', requirePermission('medical.manage'), async (c) => 
 
 medical.post('/:studentId/immunizations', requirePermission('medical.manage'), async (c) => {
   const user = c.get('user');
-  const studentId = c.req.param('studentId');
+  const studentId = c.req.param('studentId')!;
   const body = await c.req.json();
   try {
     const service = getService(c);
@@ -113,7 +113,7 @@ medical.post('/:studentId/immunizations', requirePermission('medical.manage'), a
 
 medical.delete('/immunizations/:id', requirePermission('medical.manage'), async (c) => {
   const user = c.get('user');
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   await getService(c).deleteImmunization(user.institution_id, id);
   return c.json({ success: true });
 });
@@ -122,7 +122,7 @@ medical.delete('/immunizations/:id', requirePermission('medical.manage'), async 
 
 medical.post('/:studentId/incidents', requirePermission('medical.manage'), async (c) => {
   const user = c.get('user');
-  const studentId = c.req.param('studentId');
+  const studentId = c.req.param('studentId')!;
   const body = await c.req.json();
   try {
     const service = getService(c);
@@ -136,7 +136,7 @@ medical.post('/:studentId/incidents', requirePermission('medical.manage'), async
 
 medical.delete('/incidents/:id', requirePermission('medical.manage'), async (c) => {
   const user = c.get('user');
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   await getService(c).deleteIncident(user.institution_id, id);
   return c.json({ success: true });
 });

@@ -8,22 +8,31 @@ import {
   ChevronDown, ChevronRight, LogOut, Users, Calendar,
   ClipboardList, FileSpreadsheet, Building2, Layers, BookOpen,
   BarChart3, Landmark, CalendarDays, UserPlus, Clipboard, CheckSquare,
-  Library, Bus, MessageSquare, Package, Briefcase
+  Library, Bus, MessageSquare, Package, Briefcase,
+  UtensilsCrossed, BookMarked, Wallet, ShieldCheck
 } from 'lucide-react';
 import { isAllowedNav } from '../config/roleNav';
 import { useAuth } from '../contexts/AuthContext';
 
+// All true: every one of these modules is implemented and reachable by direct URL/role/permission
+// already — these flags were found hardcoded to false, hiding their sidebar links for all users
+// regardless of role (dead scaffolding, never wired to any institution setting).
 const FEATURES = {
   homework: true,
-  library: false,
-  transport: false,
-  certificates: false,
-  alumni: false,
-  visitors: false,
-  assets: false,
-  calendar: false,
-  leave: false,
-  approvals: false,
+  library: true,
+  transport: true,
+  certificates: true,
+  alumni: true,
+  visitors: true,
+  assets: true,
+  calendar: true,
+  leave: true,
+  approvals: true,
+  hostel: true,
+  canteen: true,
+  study_materials: true,
+  gl_accounting: true,
+  compliance: true,
 };
 
 interface SidebarProps {
@@ -152,6 +161,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/exams', label: 'Exams & Results', icon: Award },
         { to: '/placements', label: 'Placements', icon: Briefcase },
         { to: '/homework', label: 'Homework', icon: Clipboard, feature: 'homework' },
+        { to: '/study-materials', label: 'Study Materials', icon: BookMarked, feature: 'study_materials' },
         { to: '/calendar', label: 'Calendar', icon: Calendar, feature: 'calendar' },
       ],
     },
@@ -159,8 +169,11 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       key: 'finance', label: 'Finance & Operations',
       links: [
         { to: '/finance', label: 'Finance', icon: IndianRupee },
+        { to: '/gl-accounting', label: 'General Ledger', icon: Wallet, feature: 'gl_accounting' },
         { to: '/library', label: 'Library', icon: Library, feature: 'library' },
         { to: '/transport', label: 'Transport', icon: Bus, feature: 'transport' },
+        { to: '/hostel', label: 'Hostel', icon: Building2, feature: 'hostel' },
+        { to: '/canteen', label: 'Canteen', icon: UtensilsCrossed, feature: 'canteen' },
         { to: '/certificates', label: 'Certificates', icon: Award, feature: 'certificates' },
         { to: '/visitors', label: 'Visitors', icon: UserPlus, feature: 'visitors' },
         { to: '/assets', label: 'Assets', icon: Package, feature: 'assets' },
@@ -185,6 +198,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         { to: '/data-tools', label: 'Data Tools', icon: FileSpreadsheet },
         { to: '/audit-logs', label: 'Audit Logs', icon: ClipboardList },
         { to: '/access-control', label: 'Access Control', icon: UserCog },
+        { to: '/compliance', label: 'Compliance Reports', icon: ShieldCheck, feature: 'compliance' },
       ],
     },
   ];

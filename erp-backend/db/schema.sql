@@ -11,9 +11,6 @@
 
 PRAGMA foreign_keys = ON;
 
--- Tracks which db/migration-*.sql files (beyond this baseline schema) have
--- been applied to a given database, so the migration runner never re-applies
--- one. See db/MIGRATIONS.md.
 CREATE TABLE IF NOT EXISTS _migrations (
   filename TEXT PRIMARY KEY,
   applied_at TEXT DEFAULT (datetime('now'))
@@ -122,8 +119,42 @@ CREATE TABLE IF NOT EXISTS alumni (
   current_status TEXT,
   institution TEXT,
   contact TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
 );
+
+CREATE TABLE IF NOT EXISTS alumni_events (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  event_type TEXT NOT NULL DEFAULT 'reunion' CHECK(event_type IN ('reunion','webinar','fundraiser','mentorship','other')),
+  start_date TEXT NOT NULL,
+  end_date TEXT,
+  location TEXT,
+  description TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
+CREATE TABLE IF NOT EXISTS alumni_event_rsvps (
+  id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL REFERENCES alumni_events(id) ON DELETE CASCADE,
+  alumni_id TEXT NOT NULL REFERENCES alumni(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'INTERESTED' CHECK(status IN ('INTERESTED','GOING','DECLINED')),
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(event_id, alumni_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_alumni_events_inst ON alumni_events(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_alumni_event_rsvps_event ON alumni_event_rsvps(event_id);
 
 CREATE TABLE IF NOT EXISTS analytics_daily (
   id TEXT PRIMARY KEY,
@@ -693,6 +724,36 @@ CREATE TABLE IF NOT EXISTS institutions (
   created_by TEXT,
   updated_by TEXT
 );
+
+CREATE TABLE IF NOT EXISTS certificate_templates (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'CUSTOM' CHECK(type IN ('ID_CARD','BONAFIDE','TRANSFER_CERTIFICATE','CUSTOM')),
+  body_html TEXT NOT NULL,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+
+CREATE TABLE IF NOT EXISTS certificate_issuances (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  template_id TEXT NOT NULL REFERENCES certificate_templates(id),
+  student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  reference_number TEXT NOT NULL,
+  rendered_html TEXT NOT NULL,
+  issued_by TEXT,
+  issued_at TEXT DEFAULT (datetime('now')),
+  is_active INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_cert_templates_inst ON certificate_templates(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_cert_issuances_student ON certificate_issuances(student_id);
+CREATE INDEX IF NOT EXISTS idx_cert_issuances_inst ON certificate_issuances(institution_id);
 
 CREATE TABLE IF NOT EXISTS integration_credentials (
   id TEXT PRIMARY KEY,
@@ -1285,8 +1346,6 @@ CREATE TABLE IF NOT EXISTS students (
   updated_by TEXT
 );
 
--- Structured medical history underneath students.blood_group/emergency_contact/medical_notes
--- (those three stay as quick-reference summary fields; these add a real history).
 CREATE TABLE IF NOT EXISTS student_health_visits (
   id TEXT PRIMARY KEY,
   institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
@@ -1570,7 +1629,6 @@ CREATE TABLE IF NOT EXISTS transport_routes (
       created_at TEXT DEFAULT (datetime('now'))
     );
 
--- Hostel/Dormitory management (new — zero prior code existed for this).
 CREATE TABLE IF NOT EXISTS hostel_blocks (
   id TEXT PRIMARY KEY,
   institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
@@ -1885,6 +1943,150 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_academic_years_active_status_per_institutio
 CREATE UNIQUE INDEX IF NOT EXISTS uq_academic_years_current_per_institution
   ON academic_years(institution_id)
   WHERE is_current = 1 AND is_active = 1;
+
+CREATE TABLE IF NOT EXISTS canteen_menu_items (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'General' CHECK(category IN ('Breakfast','Lunch','Snacks','Dinner','Beverages','General')),
+  price REAL NOT NULL DEFAULT 0.0,
+  is_available INTEGER NOT NULL DEFAULT 1,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_canteen_menu_inst ON canteen_menu_items(institution_id, deleted_at);
+
+CREATE TABLE IF NOT EXISTS canteen_meal_plans (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  monthly_price REAL NOT NULL DEFAULT 0.0,
+  meal_types TEXT NOT NULL DEFAULT 'Lunch',
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_canteen_plans_inst ON canteen_meal_plans(institution_id, deleted_at);
+
+CREATE TABLE IF NOT EXISTS canteen_subscriptions (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  meal_plan_id TEXT NOT NULL REFERENCES canteen_meal_plans(id) ON DELETE RESTRICT,
+  start_date TEXT NOT NULL DEFAULT (date('now')),
+  end_date TEXT,
+  status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK(status IN ('ACTIVE','CANCELLED','EXPIRED')),
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_canteen_subs_inst ON canteen_subscriptions(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_canteen_subs_student ON canteen_subscriptions(student_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_canteen_subs_active_per_student
+  ON canteen_subscriptions(student_id)
+  WHERE status = 'ACTIVE';
+
+CREATE TABLE IF NOT EXISTS study_materials (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  section_id TEXT NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+  subject_id TEXT NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  teacher_id TEXT NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  material_type TEXT NOT NULL DEFAULT 'DOCUMENT' CHECK(material_type IN ('DOCUMENT','VIDEO','LINK','PRESENTATION','OTHER')),
+  file_key TEXT,
+  external_url TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_study_materials_inst ON study_materials(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_study_materials_section ON study_materials(section_id);
+CREATE INDEX IF NOT EXISTS idx_study_materials_subject ON study_materials(subject_id);
+
+CREATE TABLE IF NOT EXISTS faculty_publications (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  teacher_id TEXT NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  publication_type TEXT NOT NULL DEFAULT 'JOURNAL' CHECK(publication_type IN ('JOURNAL','CONFERENCE','BOOK','BOOK_CHAPTER','PATENT','OTHER')),
+  venue_name TEXT,
+  publication_date TEXT,
+  co_authors TEXT,
+  doi_or_url TEXT,
+  description TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_faculty_pubs_inst ON faculty_publications(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_faculty_pubs_teacher ON faculty_publications(teacher_id);
+
+CREATE TABLE IF NOT EXISTS gl_accounts (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  code TEXT NOT NULL,
+  name TEXT NOT NULL,
+  account_type TEXT NOT NULL CHECK(account_type IN ('ASSET','LIABILITY','EQUITY','INCOME','EXPENSE')),
+  parent_account_id TEXT REFERENCES gl_accounts(id) ON DELETE SET NULL,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT,
+  UNIQUE(institution_id, code)
+);
+CREATE INDEX IF NOT EXISTS idx_gl_accounts_inst ON gl_accounts(institution_id, deleted_at);
+
+CREATE TABLE IF NOT EXISTS gl_journal_entries (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  entry_number TEXT NOT NULL,
+  entry_date TEXT NOT NULL DEFAULT (date('now')),
+  reference TEXT,
+  description TEXT,
+  status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT','POSTED','VOID')),
+  posted_at TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  deleted_at TEXT,
+  created_by TEXT,
+  updated_by TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_gl_journal_inst ON gl_journal_entries(institution_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_gl_journal_date ON gl_journal_entries(institution_id, entry_date);
+
+CREATE TABLE IF NOT EXISTS gl_journal_lines (
+  id TEXT PRIMARY KEY,
+  journal_entry_id TEXT NOT NULL REFERENCES gl_journal_entries(id) ON DELETE CASCADE,
+  account_id TEXT NOT NULL REFERENCES gl_accounts(id) ON DELETE RESTRICT,
+  debit_amount REAL NOT NULL DEFAULT 0.0,
+  credit_amount REAL NOT NULL DEFAULT 0.0,
+  memo TEXT,
+  line_order INTEGER NOT NULL DEFAULT 0,
+  CHECK (debit_amount >= 0 AND credit_amount >= 0),
+  CHECK (NOT (debit_amount > 0 AND credit_amount > 0))
+);
+CREATE INDEX IF NOT EXISTS idx_gl_lines_entry ON gl_journal_lines(journal_entry_id);
+CREATE INDEX IF NOT EXISTS idx_gl_lines_account ON gl_journal_lines(account_id);
 
 -- ============================================
 -- Historical migration baseline

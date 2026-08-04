@@ -4,9 +4,9 @@ import Layout from '../components/Layout';
 import { PageGuidance } from '../components/PageGuidance';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  Award, Shield, FileText, Search, Printer, 
-  User, Calendar, Layers, MapPin, Phone 
+import { useToast } from '../contexts/ToastContext';
+import {
+  Search, Printer, Settings, Plus, Trash2, Edit,
 } from 'lucide-react';
 
 interface Student {
@@ -14,93 +14,149 @@ interface Student {
   first_name: string;
   last_name: string;
   admission_number: string;
-  roll_number: string | null;
-  email: string;
-  phone: string | null;
-  date_of_birth: string;
-  blood_group: string | null;
-  course_name?: string;
-  section_name?: string;
+}
+
+interface CertificateTemplate {
+  id: string;
+  name: string;
+  type: 'ID_CARD' | 'BONAFIDE' | 'TRANSFER_CERTIFICATE' | 'CUSTOM';
+  body_html: string;
 }
 
 export default function Certificates() {
   const { user } = useAuth();
+  const toastCtx = useToast();
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    if (type === 'success') toastCtx.success(message);
+    else toastCtx.error(message);
+  };
+
+  const userPermissions: string[] = user?.permissions || [];
+  const userRoles = user?.roles || (user?.role ? [user.role] : []);
+  const canManageTemplates = userPermissions.includes('certificates.manage') ||
+    userRoles.some(r => ['super_admin', 'Super Admin', 'admin', 'Admin', 'Principal'].includes(r));
+
   const [students, setStudents] = useState<Student[]>([]);
+  const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Search & Selection
+  const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [issuing, setIssuing] = useState(false);
+  const [lastReference, setLastReference] = useState<string | null>(null);
+  const [showManageTemplates, setShowManageTemplates] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState<'idcard' | 'bonafide' | 'tc'>('idcard');
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
-  // Institution profile fallback
-  const institutionName = (user as any)?.institution_name || 'Greenwood International School';
-  const institutionAddress = 'Sector 15, Knowledge Park, Metro City, IN';
+  // Template editor
+  const [editingTemplate, setEditingTemplate] = useState<CertificateTemplate | null>(null);
+  const [templateForm, setTemplateForm] = useState({ name: '', type: 'CUSTOM', body_html: '' });
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   useEffect(() => {
-    fetchStudents();
+    fetchData();
   }, []);
 
-  const fetchStudents = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const data = await api.get('/students');
-      setStudents(data);
-      if (data.length > 0) {
-        setSelectedStudentId(data[0].id);
-      }
+      const [studentsData, templatesData] = await Promise.all([
+        api.get('/students'),
+        api.get('/certificates/templates'),
+      ]);
+      setStudents(studentsData);
+      setTemplates(templatesData);
+      if (studentsData.length > 0) setSelectedStudentId(studentsData[0].id);
+      if (templatesData.length > 0) setSelectedTemplateId(templatesData[0].id);
     } catch (err) {
-      console.error('Error fetching students:', err);
+      console.error('Error fetching certificate data:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const getSelectedStudent = () => {
-    return students.find(s => s.id === selectedStudentId);
+  useEffect(() => {
+    if (selectedStudentId && selectedTemplateId) {
+      fetchPreview();
+    } else {
+      setPreviewHtml('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStudentId, selectedTemplateId]);
+
+  const fetchPreview = async () => {
+    try {
+      setLoadingPreview(true);
+      setLastReference(null);
+      const res = await api.post('/certificates/preview', { templateId: selectedTemplateId, studentId: selectedStudentId });
+      setPreviewHtml(res.html);
+    } catch (err: any) {
+      setPreviewHtml(`<p style="color:red;">${err.message || 'Failed to render certificate preview.'}</p>`);
+    } finally {
+      setLoadingPreview(false);
+    }
   };
 
-  const filteredStudents = students.filter(s => 
-    s.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const handlePrintAndIssue = async () => {
+    try {
+      setIssuing(true);
+      const res = await api.post('/certificates/issue', { templateId: selectedTemplateId, studentId: selectedStudentId });
+      setPreviewHtml(res.html);
+      setLastReference(res.reference_number);
+      setTimeout(() => window.print(), 100);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to issue certificate', 'error');
+    } finally {
+      setIssuing(false);
+    }
+  };
+
+  const resetTemplateForm = () => setTemplateForm({ name: '', type: 'CUSTOM', body_html: '' });
+
+  const handleTemplateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingTemplate) {
+        await api.put(`/certificates/templates/${editingTemplate.id}`, templateForm);
+        showToast('Template updated successfully');
+      } else {
+        await api.post('/certificates/templates', templateForm);
+        showToast('Template created successfully');
+      }
+      setShowTemplateModal(false);
+      setEditingTemplate(null);
+      resetTemplateForm();
+      fetchData();
+    } catch (err: any) {
+      showToast(err.message || 'Error saving template', 'error');
+    }
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    if (!confirm('Delete this certificate template?')) return;
+    try {
+      await api.delete(`/certificates/templates/${id}`);
+      fetchData();
+    } catch (err: any) {
+      showToast(err.message || 'Error deleting template', 'error');
+    }
+  };
+
+  const filteredStudents = students.filter(s =>
+    `${s.first_name} ${s.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.admission_number.includes(searchQuery)
   );
 
-  const student = getSelectedStudent();
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Convert Date
-  const getFormattedDate = (dateStr?: string) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
-
-  // Number to words converter (simplified for birth years)
-  const getYearInWords = (dateStr?: string) => {
-    if (!dateStr) return '';
-    try {
-      const year = new Date(dateStr).getFullYear();
-      // Simple lookup for demo
-      return year.toString();
-    } catch {
-      return '';
-    }
-  };
+  const selectedStudent = students.find(s => s.id === selectedStudentId);
 
   return (
     <Layout>
       <div className="no-print">
         <PageGuidance
           title="Official Credentials &amp; Certificates"
-          description="Generate ready-to-print student ID cards, bonafide enrollment certificates, and checkout transfer certificates (TC)."
-          steps={["Select a student and search using the dropdown list.","Choose your template: Student ID Card, Bonafide Certificate, or Transfer Certificate.","Click the Print button to open your printer options (automatically formatted for clean output)."]}
+          description="Generate ready-to-print student ID cards, bonafide enrollment certificates, and transfer certificates from configurable, editable templates."
+          steps={["Select a student and a certificate template.", "Review the live preview, which is rendered from your institution's own editable template.", "Click Print & Issue to record a permanent issuance reference and open your printer options."]}
         />
       </div>
 
@@ -111,7 +167,42 @@ export default function Certificates() {
             Generate and print verified academic templates, ID badges, and leaving credentials
           </p>
         </div>
+        {canManageTemplates && (
+          <button className="btn btn-outline" onClick={() => setShowManageTemplates(!showManageTemplates)}>
+            <Settings size={16} /> {showManageTemplates ? 'Hide Template Manager' : 'Manage Templates'}
+          </button>
+        )}
       </div>
+
+      {showManageTemplates && canManageTemplates && (
+        <div className="card no-print certificates-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ margin: 0 }}>Certificate Templates</h3>
+            <button className="btn btn-primary btn-sm" onClick={() => { setEditingTemplate(null); resetTemplateForm(); setShowTemplateModal(true); }}>
+              <Plus size={14} /> New Template
+            </button>
+          </div>
+          <table className="table">
+            <thead><tr><th>Name</th><th>Type</th><th></th></tr></thead>
+            <tbody>
+              {templates.map(t => (
+                <tr key={t.id}>
+                  <td>{t.name}</td>
+                  <td><code>{t.type}</code></td>
+                  <td style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-sm btn-outline" onClick={() => { setEditingTemplate(t); setTemplateForm({ name: t.name, type: t.type, body_html: t.body_html }); setShowTemplateModal(true); }}>
+                      <Edit size={14} />
+                    </button>
+                    <button className="btn btn-sm btn-outline" onClick={() => handleDeleteTemplate(t.id)}>
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Control panel */}
       <div className="card no-print certificates-card">
@@ -121,7 +212,7 @@ export default function Certificates() {
           <div className="form-group certificates-form-group">
             <label>Search Student</label>
             <div className="certificates-div-5">
-              <Search size={14} className="certificates-Search-6"  />
+              <Search size={14} className="certificates-Search-6" />
               <input
                 type="text"
                 placeholder="Type student name or admission number..."
@@ -154,8 +245,6 @@ export default function Certificates() {
                       borderBottom: '1px solid var(--border)',
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                     }}
-                    onMouseEnter={e => { if (selectedStudentId !== s.id) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-main)'; }}
-                    onMouseLeave={e => { if (selectedStudentId !== s.id) (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
                   >
                     <span>{s.first_name} {s.last_name}</span>
                     <span className="certificates-span-9">{s.admission_number}</span>
@@ -163,250 +252,82 @@ export default function Certificates() {
                 ))}
               </div>
             )}
-            {selectedStudentId && student && (
+            {selectedStudentId && selectedStudent && (
               <div className="certificates-row-10">
-                ✓ {student.first_name} {student.last_name} selected
+                ✓ {selectedStudent.first_name} {selectedStudent.last_name} selected
               </div>
             )}
           </div>
 
           <div className="form-group certificates-form-group">
             <label>Credential Type</label>
-            <select value={selectedTemplate} onChange={(e) => setSelectedTemplate(e.target.value as any)} className="certificates-select-12">
-              <option value="idcard">🪪 Student ID Badge</option>
-              <option value="bonafide">📄 Bonafide Certificate</option>
-              <option value="tc">📋 Transfer Certificate (TC)</option>
+            <select value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)} className="certificates-select-12">
+              {templates.length === 0 && <option value="">No templates configured</option>}
+              {templates.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
             </select>
           </div>
 
-          <button className="btn btn-primary certificates-btn" onClick={handlePrint} disabled={!selectedStudentId}>
-            <Printer size={16} /> Print Document
+          <button className="btn btn-primary certificates-btn" onClick={handlePrintAndIssue} disabled={!selectedStudentId || !selectedTemplateId || issuing}>
+            <Printer size={16} /> {issuing ? 'Issuing...' : 'Print & Issue'}
           </button>
         </div>
       </div>
 
-      {/* Main Print Container Area */}
-      {loading ? <p>Loading students list...</p> : !student ? (
-        <p className="no-data">Select a student from the control panel to generate credential.</p>
+      {/* Preview / Print Container Area */}
+      {loading ? <p>Loading students list...</p> : !selectedStudentId || !selectedTemplateId ? (
+        <p className="no-data">Select a student and a template from the control panel to generate a credential.</p>
       ) : (
         <div className="print-canvas-wrapper certificates-print-canvas-wrapper">
-          
-          {/* Template 1: Student ID Badge */}
-          {selectedTemplate === 'idcard' && (
-            <div id="printable-idcard" className="idcard-box certificates-idcard-box">
-              {/* Card Header */}
-              <div className="certificates-div-16">
-                <h2 className="certificates-title-17">
-                  {institutionName}
-                </h2>
-                <span className="certificates-span-18">
-                  Student Identity Card
-                </span>
-              </div>
-
-              {/* Photo & Basic Details */}
-              <div className="certificates-col-19">
-                {/* Photo frame */}
-                <div className="certificates-row-20">
-                  <User size={36} />
-                </div>
-
-                <h3 className="certificates-title-21">
-                  {student.first_name} {student.last_name}
-                </h3>
-                <span className="certificates-span-22">
-                  {student.course_name || 'Class Section'} {student.section_name && ` - ${student.section_name}`}
-                </span>
-
-                {/* Grid attributes */}
-                <div className="certificates-grid-23">
-                  <div>
-                    <span className="certificates-span-24">Admission ID</span>
-                    <strong>{student.admission_number}</strong>
-                  </div>
-                  <div>
-                    <span className="certificates-span-25">Roll Number</span>
-                    <strong>{student.roll_number || 'N/A'}</strong>
-                  </div>
-                  <div>
-                    <span className="certificates-span-26">Date of Birth</span>
-                    <strong>{getFormattedDate(student.date_of_birth)}</strong>
-                  </div>
-                  <div>
-                    <span className="certificates-span-27">Blood Group</span>
-                    <strong>{student.blood_group || 'O+'}</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Footer */}
-              <div className="certificates-row-28">
-                <div>
-                  <span className="certificates-span-29">Emergency Contact</span>
-                  <strong>{student.phone || '98765-43210'}</strong>
-                </div>
-                <div className="certificates-div-30">
-                  <div className="certificates-row-31">
-                    {/* Simulated barcode */}
-                    <div className="certificates-div-32"  />
-                  </div>
-                </div>
-              </div>
+          {lastReference && (
+            <div className="no-print" style={{ marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Issued — Reference Number: <strong>{lastReference}</strong>
             </div>
           )}
-
-          {/* Template 2: Bonafide Certificate */}
-          {selectedTemplate === 'bonafide' && (
-            <div id="printable-bonafide" className="bonafide-box certificates-bonafide-box">
-              {/* Header */}
-              <div className="certificates-div-34">
-                <h1 className="certificates-title-35">
-                  {institutionName}
-                </h1>
-                <p className="certificates-text-36">
-                  {institutionAddress}
-                </p>
-              </div>
-
-              {/* Title */}
-              <div className="certificates-div-37">
-                <h2 className="certificates-title-38">
-                  BONAFIDE CERTIFICATE
-                </h2>
-              </div>
-
-              {/* Certificate content */}
-              <div className="certificates-div-39">
-                This is to certify that <strong>{student.first_name} {student.last_name}</strong>, 
-                son/daughter of <strong>Mr./Mrs. Guardian</strong>, is a bonafide student of 
-                {` ${institutionName}`}. He/She is currently enrolled in 
-                <strong> Class Section {student.section_name || 'A'}</strong> under the 
-                <strong> {student.course_name || 'Primary Program'}</strong> course, 
-                registered under Admission Number <strong>{student.admission_number}</strong>.
-              </div>
-
-              <div className="certificates-div-40">
-                According to the admission register, his/her date of birth is 
-                <strong> {getFormattedDate(student.date_of_birth)}</strong>. 
-                His/Her conduct and character during their study has been consistently satisfactory.
-              </div>
-
-              {/* Signature block */}
-              <div className="certificates-row-41">
-                <div>
-                  <p>Date: {new Date().toLocaleDateString()}</p>
-                  <p>Place: School Office</p>
-                </div>
-                <div className="certificates-div-42">
-                  <strong>Principal Signature</strong>
-                  <div className="certificates-div-43">Greenwood High School</div>
-                </div>
-              </div>
-            </div>
+          {loadingPreview ? (
+            <p>Rendering preview...</p>
+          ) : (
+            <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
           )}
+        </div>
+      )}
 
-          {/* Template 3: Transfer Certificate (TC) */}
-          {selectedTemplate === 'tc' && (
-            <div id="printable-tc" className="tc-box certificates-tc-box">
-              {/* Header */}
-              <div className="certificates-div-45">
-                <h1 className="certificates-title-46">
-                  {institutionName}
-                </h1>
-                <p className="certificates-text-47">
-                  {institutionAddress}
-                </p>
-                <h2 className="certificates-title-48">
-                  School Leaving / Transfer Certificate
-                </h2>
+      {/* Template Editor Modal */}
+      {showTemplateModal && (
+        <div className="modal no-print">
+          <div className="modal-content" style={{ maxWidth: '700px' }}>
+            <h3>{editingTemplate ? 'Edit Template' : 'New Certificate Template'}</h3>
+            <form onSubmit={handleTemplateSubmit}>
+              <div className="form-group">
+                <label>Template Name</label>
+                <input type="text" value={templateForm.name} onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })} required />
               </div>
-
-              {/* Meta details */}
-              <div className="certificates-row-49">
-                <div><strong>TC Register Page No:</strong> TC-{Date.now().toString().slice(-4)}</div>
-                <div><strong>Admission ID:</strong> {student.admission_number}</div>
-                <div><strong>Date of Issue:</strong> {new Date().toLocaleDateString()}</div>
+              <div className="form-group">
+                <label>Type</label>
+                <select value={templateForm.type} onChange={(e) => setTemplateForm({ ...templateForm, type: e.target.value })}>
+                  <option value="ID_CARD">ID Card</option>
+                  <option value="BONAFIDE">Bonafide Certificate</option>
+                  <option value="TRANSFER_CERTIFICATE">Transfer Certificate</option>
+                  <option value="CUSTOM">Custom</option>
+                </select>
               </div>
-
-              {/* Checklist details */}
-              <table className="tc-table certificates-tc-table">
-                <tbody>
-                  <tr className="certificates-tr-51">
-                    <td className="certificates-td-52">1. Name of the Pupil</td>
-                    <td className="certificates-td-53">: {student.first_name} {student.last_name}</td>
-                  </tr>
-                  <tr className="certificates-tr-54">
-                    <td className="certificates-td-55">2. Father's / Guardian's Name</td>
-                    <td className="certificates-td-56">: Parent Guardian</td>
-                  </tr>
-                  <tr className="certificates-tr-57">
-                    <td className="certificates-td-58">3. Nationality</td>
-                    <td className="certificates-td-59">: Indian</td>
-                  </tr>
-                  <tr className="certificates-tr-60">
-                    <td className="certificates-td-61">4. Date of first admission in School</td>
-                    <td className="certificates-td-62">: {getFormattedDate(student.date_of_birth)}</td>
-                  </tr>
-                  <tr className="certificates-tr-63">
-                    <td className="certificates-td-64">5. Date of Birth (in Christian Era)</td>
-                    <td className="certificates-td-65">: {getFormattedDate(student.date_of_birth)} (Year: {getYearInWords(student.date_of_birth)})</td>
-                  </tr>
-                  <tr className="certificates-tr-66">
-                    <td className="certificates-td-67">6. Class in which pupil last studied</td>
-                    <td className="certificates-td-68">: {student.course_name || 'Standard Syllabus'}</td>
-                  </tr>
-                  <tr className="certificates-tr-69">
-                    <td className="certificates-td-70">7. School / Board Annual Exam last taken</td>
-                    <td className="certificates-td-71">: Passed and Cleared</td>
-                  </tr>
-                  <tr className="certificates-tr-72">
-                    <td className="certificates-td-73">8. Whether failed, if so once/twice</td>
-                    <td className="certificates-td-74">: No</td>
-                  </tr>
-                  <tr className="certificates-tr-75">
-                    <td className="certificates-td-76">9. Subjects Studied</td>
-                    <td className="certificates-td-77">: English, Mathematics, Sciences, Social Studies</td>
-                  </tr>
-                  <tr className="certificates-tr-78">
-                    <td className="certificates-td-79">10. Whether qualified for promotion</td>
-                    <td className="certificates-td-80">: Yes, promoted to next grade</td>
-                  </tr>
-                  <tr className="certificates-tr-81">
-                    <td className="certificates-td-82">11. Month up to which pupil has paid dues</td>
-                    <td className="certificates-td-83">: Fully Cleared</td>
-                  </tr>
-                  <tr className="certificates-tr-84">
-                    <td className="certificates-td-85">12. Any fee concession availed of</td>
-                    <td className="certificates-td-86">: No</td>
-                  </tr>
-                  <tr className="certificates-tr-87">
-                    <td className="certificates-td-88">13. Total No. of working days</td>
-                    <td className="certificates-td-89">: 210 Days</td>
-                  </tr>
-                  <tr className="certificates-tr-90">
-                    <td className="certificates-td-91">14. Total No. of working days present</td>
-                    <td className="certificates-td-92">: 198 Days</td>
-                  </tr>
-                  <tr className="certificates-tr-93">
-                    <td className="certificates-td-94">15. Reason for leaving the School</td>
-                    <td className="certificates-td-95">: Parent Relocation / Relocated to another city</td>
-                  </tr>
-                  <tr className="certificates-tr-96">
-                    <td className="certificates-td-97">16. General Conduct</td>
-                    <td className="certificates-td-98">: Exemplary</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              {/* Signatures */}
-              <div className="certificates-row-99">
-                <div className="certificates-div-100">Class Teacher</div>
-                <div className="certificates-div-101">Checked by (Clerk)</div>
-                <div className="certificates-div-102">Principal Signature</div>
+              <div className="form-group">
+                <label>HTML Body (supports {'{{student.full_name}}'}, {'{{student.admission_number}}'}, {'{{institution.name}}'}, {'{{guardian.name}}'}, {'{{certificate.reference_number}}'}, etc.)</label>
+                <textarea
+                  value={templateForm.body_html}
+                  onChange={(e) => setTemplateForm({ ...templateForm, body_html: e.target.value })}
+                  rows={14}
+                  style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                  required
+                />
               </div>
-            </div>
-          )}
-
+              <div className="modal-actions">
+                <button type="button" className="btn btn-secondary" onClick={() => { setShowTemplateModal(false); setEditingTemplate(null); }}>Cancel</button>
+                <button type="submit" className="btn btn-primary">{editingTemplate ? 'Update Template' : 'Create Template'}</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </Layout>

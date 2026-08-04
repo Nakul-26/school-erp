@@ -184,9 +184,9 @@ export class HostelRepository {
   }
 
   async countActiveOccupants(roomId: string): Promise<number> {
-    const row = await this.db.prepare(
+    const row: any = await this.db.prepare(
       `SELECT COUNT(*) as cnt FROM hostel_allocations WHERE room_id = ? AND status = 'ACTIVE'`
-    ).bind(roomId).first<{ cnt: number }>();
+    ).bind(roomId).first();
     return row?.cnt || 0;
   }
 

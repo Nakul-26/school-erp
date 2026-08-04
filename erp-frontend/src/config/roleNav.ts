@@ -4,14 +4,15 @@ export type NavKey =
   | '/dashboard' | '/announcements' | '/notifications' | '/messaging'
   | '/admissions' | '/students' | '/teachers'
   | '/classes' | '/subjects' | '/timetable' | '/attendance' | '/teacher-attendance'
-  | '/homework' | '/exams' | '/calendar' | '/library' | '/transport' | '/certificates'
+  | '/homework' | '/exams' | '/calendar' | '/library' | '/transport' | '/hostel' | '/certificates'
   | '/fee-structures' | '/student-fees'
   | '/payroll/salary-structures' | '/payroll/runs'
   | '/leave/my' | '/leave/approvals' | '/leave/types' | '/student-leaves/approvals'
   | '/reports' | '/data-tools' | '/approvals'
   | '/setup' | '/settings' | '/users' | '/access-control' | '/audit-logs' | '/institution-setup' | '/profile'
   | '/visitors' | '/assets' | '/alumni'
-  | '/academic-setup' | '/finance' | '/communication' | '/placements';
+  | '/academic-setup' | '/finance' | '/communication' | '/placements'
+  | '/canteen' | '/study-materials' | '/gl-accounting' | '/compliance';
 
 const ADMIN_ROLES = ['admin', 'super_admin', 'Principal'];
 const ACADEMIC_MANAGER_ROLES = [...ADMIN_ROLES, 'HOD'];
@@ -51,6 +52,11 @@ export const ROUTE_POLICIES: Record<string, AccessPolicy> = {
   '/messaging': { roles: PORTAL_ROLES, permissions: ['messaging.access'] },
   '/library': { roles: PORTAL_ROLES, permissions: ['library.access', 'library.manage'] },
   '/transport': { roles: PORTAL_ROLES, permissions: ['transport.view', 'transport.manage'] },
+  '/hostel': { roles: PORTAL_ROLES, permissions: ['hostel.view', 'hostel.manage'] },
+  '/canteen': { roles: PORTAL_ROLES, permissions: ['canteen.view', 'canteen.manage'] },
+  '/study-materials': { roles: [...STAFF_ROLES, 'Student', 'Parent', 'Guardian'], permissions: ['study_materials.view', 'study_materials.manage'] },
+  '/gl-accounting': { roles: FINANCE_ROLES, permissions: ['gl.view', 'gl.manage'] },
+  '/compliance': { roles: ADMIN_ROLES, permissions: ['compliance.view', 'compliance.manage'] },
   '/certificates': { roles: STAFF_ROLES, permissions: ['certificates.view', 'certificates.manage'] },
 
   '/finance': { roles: [...FINANCE_ROLES, 'Student', 'Parent', 'Guardian'], permissions: ['finance.access', 'fees.view', 'fees.collect'] },

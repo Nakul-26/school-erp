@@ -1,0 +1,209 @@
+/* Component stylesheet for Canteen.tsx */
+
+.canteen-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.canteen-row-2 {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.canteen-page-tabs {
+  margin-bottom: 1.5rem;
+}
+
+.canteen-div-5 {
+  position: relative;
+}
+
+.canteen-Search-6 {
+  color: var(--text-muted);
+  left: 0.75rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.canteen-input-7 {
+  margin-bottom: 0px;
+  padding-left: 2.25rem;
+  width: 100%;
+}
+
+.canteen-card {
+  margin-bottom: 1.5rem;
+}
+
+.canteen-card-full {
+  margin-bottom: 1.5rem;
+  padding: 0;
+}
+
+.canteen-no-data {
+  color: var(--text-muted);
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.canteen-th-right {
+  text-align: right;
+}
+
+.canteen-th-center {
+  text-align: center;
+}
+
+.canteen-badge {
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.canteen-btn {
+  align-items: center;
+  display: inline-flex;
+  font-size: 0.75rem;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  justify-content: center;
+  margin-right: 0.35rem;
+}
+
+.canteen-grid-8 {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+}
+
+.canteen-icon-muted {
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.canteen-title-11 {
+  color: var(--text-main);
+  margin-bottom: 0.25rem;
+}
+
+.canteen-text-12 {
+  color: var(--text-muted);
+}
+
+.canteen-plan-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: space-between;
+}
+
+.canteen-row-14 {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.canteen-span-16 {
+  color: var(--text-main);
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.canteen-span-17 {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: normal;
+}
+
+.canteen-title-18 {
+  color: var(--text-main);
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-top: 0.75rem;
+}
+
+.canteen-row-32 {
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 0.75rem;
+}
+
+.canteen-add-card {
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  border: 2px dashed var(--border);
+  min-height: 160px;
+  text-align: center;
+}
+
+.canteen-add-card:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.canteen-div-41 {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.canteen-div-46 {
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+.canteen-row-48 {
+  align-items: center;
+  display: flex;
+  font-size: 1.2rem;
+  font-weight: 800;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.canteen-IndianRupee-49 {
+  color: var(--primary);
+}
+
+.canteen-text-50 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.canteen-form-group {
+  margin-top: 1.25rem;
+}
+
+.canteen-btn-wide {
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.canteen-grid-55 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.canteen-checkbox-label {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.canteen-modal-content {
+  max-width: 500px;
+}
+
+.canteen-modal-actions {
+  margin-top: 2rem;
+}

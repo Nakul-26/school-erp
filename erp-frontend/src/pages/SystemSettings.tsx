@@ -69,6 +69,8 @@ export default function SystemSettings() {
 
   // Backup state
   const [backupFile, setBackupFile] = useState<File | null>(null);
+  const [backupHistory, setBackupHistory] = useState<{ key: string; size: number; uploaded: string }[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // Loading / Banner states
   const [loading, setLoading] = useState(false);
@@ -81,6 +83,13 @@ export default function SystemSettings() {
     fetchSettingsAndYears();
     fetchScales();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'backup') {
+      fetchBackupHistory();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const handleTabChange = (tab: SettingsTab) => {
     setActiveTab(tab);
@@ -343,6 +352,35 @@ export default function SystemSettings() {
       setError(err.message || 'Database restoration failed. Verify backup file corresponds to this tenant.');
     } finally {
       setBackupLoading(false);
+    }
+  };
+
+  const fetchBackupHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const data = await api.get('/system/backup/history');
+      setBackupHistory(data);
+    } catch (err) {
+      console.error('Failed to load backup history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleDownloadBackup = async (key: string) => {
+    try {
+      const res = await authFetch(`/system/backup/download?key=${encodeURIComponent(key)}`);
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', key.split('/').pop() || 'backup.sql');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err: any) {
+      setError(err.message || 'Failed to download backup.');
     }
   };
 
@@ -619,6 +657,37 @@ export default function SystemSettings() {
                   </button>
                 </form>
               </div>
+            </div>
+
+            {/* Automated nightly backups (real Cron Trigger + background job, written to R2) */}
+            <div className="card" style={{ marginTop: '1.5rem' }}>
+              <h3>Automated Backup History</h3>
+              <p className="system-settings-text-13">
+                Produced by the scheduled <code>BackupDatabaseJob</code> (configure its cadence from Job Center's Cron Schedules). These are stored separately from manual exports above.
+              </p>
+              {loadingHistory ? (
+                <p>Loading backup history...</p>
+              ) : backupHistory.length === 0 ? (
+                <p className="no-data">No automated backups yet — set up a cron schedule for <code>BackupDatabaseJob</code> in Job Center.</p>
+              ) : (
+                <table className="table">
+                  <thead><tr><th>Backup</th><th>Size</th><th>Created</th><th></th></tr></thead>
+                  <tbody>
+                    {backupHistory.map(b => (
+                      <tr key={b.key}>
+                        <td><code>{b.key.split('/').pop()}</code></td>
+                        <td>{(b.size / (1024 * 1024)).toFixed(2)} MB</td>
+                        <td>{new Date(b.uploaded).toLocaleString()}</td>
+                        <td>
+                          <button className="btn btn-sm btn-outline" onClick={() => handleDownloadBackup(b.key)}>
+                            <Download size={14} /> Download
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         )}

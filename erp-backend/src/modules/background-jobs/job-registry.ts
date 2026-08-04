@@ -1,5 +1,6 @@
 import { JobHandler, JobHandlerContext, JobHandlerResult } from './types';
 import { eventBus } from '../../utils/event-bus';
+import { buildDatabaseDump } from '../../utils/backup';
 
 class JobRegistry {
   private handlers: Map<string, JobHandler> = new Map();
@@ -95,19 +96,30 @@ class JobRegistry {
       };
     });
 
-    // 3. BackupDatabaseJob
+    // 3. BackupDatabaseJob - real SQL dump written to R2, not a simulated ID/size.
     this.register('BackupDatabaseJob', async (payload: any, ctx: JobHandlerContext): Promise<JobHandlerResult> => {
-      ctx.log(`[BackupDatabaseJob] Starting cloud database snapshot & backup job...`);
-      ctx.log(`[BackupDatabaseJob] Compressing table schemas and WAL log segments...`);
-      
+      ctx.log(`[BackupDatabaseJob] Starting database snapshot for institution ${ctx.job.institution_id}...`);
+
+      if (!ctx.db || !ctx.env?.FILES) {
+        return { success: false, error: 'DB or R2 (FILES) binding unavailable in job context.' };
+      }
+
+      const dumpText = await buildDatabaseDump(ctx.db, ctx.job.institution_id);
       const backupId = `bkp_${Date.now()}`;
-      const simulatedSizeMb = (Math.random() * 50 + 10).toFixed(2);
-      ctx.log(`[BackupDatabaseJob] Backup archive ${backupId}.sql.gz (${simulatedSizeMb} MB) verified and saved.`);
+      const key = `backups/${ctx.job.institution_id}/${backupId}.sql`;
+
+      await ctx.env.FILES.put(key, dumpText, {
+        httpMetadata: { contentType: 'application/sql' }
+      });
+
+      const sizeBytes = new TextEncoder().encode(dumpText).length;
+      const sizeMb = parseFloat((sizeBytes / (1024 * 1024)).toFixed(2));
+      ctx.log(`[BackupDatabaseJob] Wrote ${key} (${sizeMb} MB) to R2.`);
 
       return {
         success: true,
-        message: `Database snapshot ${backupId} completed successfully (${simulatedSizeMb} MB).`,
-        data: { backupId, archiveSizeMb: parseFloat(simulatedSizeMb) }
+        message: `Database snapshot ${backupId} completed successfully (${sizeMb} MB).`,
+        data: { backupId, key, archiveSizeMb: sizeMb }
       };
     });
 

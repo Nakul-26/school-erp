@@ -1,6 +1,6 @@
 -- Phase E item 3b: Medical/health records (new).
 -- students.blood_group / emergency_contact / medical_notes stay as-is (quick-reference summary
--- fields shown at the top of the Health tab); these three tables add structured history underneath.
+-- fields shown at the top of the Health tab) - these three tables add structured history underneath.
 
 CREATE TABLE IF NOT EXISTS student_health_visits (
   id TEXT PRIMARY KEY,

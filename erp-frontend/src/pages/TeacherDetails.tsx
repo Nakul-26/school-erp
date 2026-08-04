@@ -23,10 +23,13 @@ import { LeaveTab } from './teacherDetails/components/LeaveTab';
 import { PayrollTab } from './teacherDetails/components/PayrollTab';
 import { DocumentsTab } from './teacherDetails/components/DocumentsTab';
 import { TimelineTab } from './teacherDetails/components/TimelineTab';
+import { ResearchTab } from './teacherDetails/components/ResearchTab';
 import { ApplyLeaveModal } from './teacherDetails/components/ApplyLeaveModal';
 import { EditProfileModal } from './teacherDetails/components/EditProfileModal';
 import { CreateLoginModal } from './teacherDetails/components/CreateLoginModal';
 import { AddTimelineEventModal } from './teacherDetails/components/AddTimelineEventModal';
+import { AddPublicationModal } from './teacherDetails/components/AddPublicationModal';
+import type { PublicationForm } from './teacherDetails/components/AddPublicationModal';
 import { PayslipPreviewModal } from './teacherDetails/components/PayslipPreviewModal';
 
 export default function TeacherDetails() {
@@ -56,6 +59,8 @@ export default function TeacherDetails() {
   const canApplyLeave = isSelfTeacherProfile;
   const canViewPayroll = hasAnyPermission(userPermissions, ['payroll.view', 'finance.access']) || isAdmin || isSelfTeacherProfile;
   const canViewTeacherDocs = isTeacherManager || isSelfTeacherProfile;
+  const canViewResearch = isTeacherManager || isSelfTeacherProfile || hasAnyPermission(userPermissions, ['faculty_research.view', 'faculty_research.manage']);
+  const canManageResearch = isSelfTeacherProfile || hasAnyPermission(userPermissions, ['faculty_research.manage']);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [programs, setPrograms] = useState<any[]>([]);
@@ -78,6 +83,12 @@ export default function TeacherDetails() {
   // Custom Redesign States (Phase 9/10 Polish)
   const [teacherDocs, setTeacherDocs] = useState<any[]>([]);
   const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
+  const [publications, setPublications] = useState<any[]>([]);
+  const [showPublicationModal, setShowPublicationModal] = useState(false);
+  const [savingPublication, setSavingPublication] = useState(false);
+  const [publicationForm, setPublicationForm] = useState<PublicationForm>({
+    title: '', publication_type: 'JOURNAL', venue_name: '', publication_date: '', co_authors: '', doi_or_url: '', description: '',
+  });
   const [showHelp, setShowHelp] = useState(false);
 
   const fetchDocumentsAndTimeline = async (canReadDocsAndTimeline: boolean, canSeedTimeline: boolean) => {
@@ -228,15 +239,50 @@ export default function TeacherDetails() {
       (activeTab === 'payroll' && !canViewPayroll) ||
       (activeTab === 'documents' && !canViewTeacherDocs) ||
       (activeTab === 'leave' && !canApplyLeave && !isTeacherManager) ||
-      (activeTab === 'timeline' && !canViewTeacherDocs)
+      (activeTab === 'timeline' && !canViewTeacherDocs) ||
+      (activeTab === 'research' && !canViewResearch)
     ) {
       setActiveTab('overview');
     }
-  }, [activeTab, canViewPayroll, canViewTeacherDocs, canApplyLeave, isTeacherManager]);
+  }, [activeTab, canViewPayroll, canViewTeacherDocs, canApplyLeave, isTeacherManager, canViewResearch]);
 
   useEffect(() => {
     fetchData();
   }, [id, isTeacherManager, isTeacherRole, isAdmin, canWriteTimeline]);
+
+  useEffect(() => {
+    if (activeTab === 'research' && canViewResearch && id) {
+      teacherDetailsService.getPublications(id).then(setPublications);
+    }
+  }, [activeTab, canViewResearch, id]);
+
+  const handleAddPublication = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!publicationForm.title.trim()) return toastError('Publication title is required');
+    try {
+      setSavingPublication(true);
+      await teacherDetailsService.createPublication({ teacher_id: id, ...publicationForm });
+      toastSuccess('Publication added');
+      setShowPublicationModal(false);
+      setPublicationForm({ title: '', publication_type: 'JOURNAL', venue_name: '', publication_date: '', co_authors: '', doi_or_url: '', description: '' });
+      if (id) setPublications(await teacherDetailsService.getPublications(id));
+    } catch (err: any) {
+      toastError(err.message || 'Error adding publication');
+    } finally {
+      setSavingPublication(false);
+    }
+  };
+
+  const handleDeletePublication = async (pubId: string) => {
+    if (!(await confirm({ message: 'Delete this publication record?', danger: true, confirmLabel: 'Delete' }))) return;
+    try {
+      await teacherDetailsService.deletePublication(pubId);
+      toastSuccess('Publication deleted');
+      if (id) setPublications(await teacherDetailsService.getPublications(id));
+    } catch (err: any) {
+      toastError(err.message || 'Error deleting publication');
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -771,6 +817,7 @@ export default function TeacherDetails() {
           { tab: 'leave', label: 'Leaves Register', icon: Clipboard, show: canApplyLeave || isTeacherManager },
           { tab: 'payroll', label: 'Payroll & Payslips', icon: FileText, show: canViewPayroll },
           { tab: 'documents', label: 'HR Documents', icon: FileText, show: canViewTeacherDocs },
+          { tab: 'research', label: 'Research', icon: BookOpen, show: canViewResearch },
           { tab: 'timeline', label: 'Action Timeline', icon: Clock, show: canViewTeacherDocs }
         ].filter(t => t.show !== false).map(t => {
           const Icon = t.icon;
@@ -856,6 +903,15 @@ export default function TeacherDetails() {
           />
         )}
 
+        {activeTab === 'research' && canViewResearch && (
+          <ResearchTab
+            publications={publications}
+            canManage={canManageResearch}
+            onAdd={() => setShowPublicationModal(true)}
+            onDelete={handleDeletePublication}
+          />
+        )}
+
         {activeTab === 'timeline' && canViewTeacherDocs && (
           <TimelineTab
             timelineEvents={timelineEvents}
@@ -905,6 +961,15 @@ export default function TeacherDetails() {
         setForm={setTimelineForm}
         onClose={() => setShowTimelineModal(false)}
         onSubmit={handleTimelineSubmit}
+      />
+
+      <AddPublicationModal
+        show={showPublicationModal && canManageResearch}
+        form={publicationForm}
+        setForm={setPublicationForm}
+        saving={savingPublication}
+        onClose={() => setShowPublicationModal(false)}
+        onSubmit={handleAddPublication}
       />
 
       <PayslipPreviewModal

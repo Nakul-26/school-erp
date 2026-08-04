@@ -1,0 +1,130 @@
+/* Component stylesheet for GLAccounting.tsx */
+
+.gl-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.gl-page-tabs {
+  margin-bottom: 1.5rem;
+}
+
+.gl-card-full {
+  margin-bottom: 1.5rem;
+  padding: 0;
+}
+
+.gl-th-right {
+  text-align: right;
+}
+
+.gl-th-center {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.gl-badge {
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.gl-status-draft {
+  background-color: var(--warning-soft, #fef3c7);
+  color: var(--warning, #b45309);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.gl-status-posted {
+  background-color: var(--success-soft, #d1fae5);
+  color: var(--success, #047857);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.gl-status-void {
+  background-color: var(--danger-soft, #fee2e2);
+  color: var(--danger, #b91c1c);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.gl-btn {
+  align-items: center;
+  display: inline-flex;
+  font-size: 0.75rem;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  justify-content: center;
+  margin-right: 0.35rem;
+}
+
+.gl-row-48 {
+  align-items: center;
+  display: flex;
+  font-size: 1.1rem;
+  font-weight: 800;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.gl-icon {
+  color: var(--primary);
+}
+
+.gl-totals-row {
+  border-top: 2px solid var(--border);
+}
+
+.gl-modal-content {
+  max-width: 500px;
+}
+
+.gl-modal-content-wide {
+  max-width: 800px;
+  width: 100%;
+}
+
+.gl-modal-actions {
+  margin-top: 1.5rem;
+}
+
+.gl-grid-2 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.gl-grid-3 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.gl-lines-table {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+}
+
+.gl-amount-input {
+  text-align: right;
+  width: 100px;
+}
+
+.gl-memo-input {
+  width: 100%;
+}
+
+.gl-balanced {
+  color: var(--success, #047857);
+  font-weight: 700;
+}
+
+.gl-unbalanced {
+  color: var(--danger, #b91c1c);
+  font-weight: 700;
+}

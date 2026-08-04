@@ -26,5 +26,12 @@
 			"binding": "FILES",
 			"bucket_name": "erp-files"
 		}
-	]
+	],
+	"triggers": {
+		// Hourly dispatcher tick for the scheduled() handler in src/index.ts - it evaluates
+		// job_cron_schedules (per-institution cron expressions, e.g. nightly backups) and
+		// enqueues anything due, then drains the background job queue. Previously this
+		// scheduled() export existed but was never actually wired to a real Cron Trigger.
+		"crons": ["0 * * * *"]
+	}
 }

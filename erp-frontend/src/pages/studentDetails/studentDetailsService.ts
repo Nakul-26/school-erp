@@ -4,6 +4,7 @@ import type {
   AttendanceSummary, StudentFeeRecord, FeePayment, StudentDocument, StudentNote,
   TransportRoute, TransportAllocation, Exam, StudentExamResult, TranscriptResult,
   ElectiveOffering, StudentElectiveChoice, PlacementDriveInfo, PlacementEligibility, PlacementApplicationView,
+  MedicalSummary,
 } from './studentDetails.types';
 
 export const studentDetailsService = {
@@ -46,6 +47,17 @@ export const studentDetailsService = {
   getMyApplications: async (studentId: string) =>
     await api.get<PlacementApplicationView[]>(`/placements/my/${studentId}`).catch(() => []),
   withdrawApplication: async (applicationId: string) => await api.delete(`/placements/applications/${applicationId}`),
+
+  getMedicalSummary: async (studentId: string) => await api.get<MedicalSummary>(`/medical/${studentId}/summary`),
+  addHealthVisit: async (studentId: string, data: { visit_date?: string | undefined; reason: string; diagnosis?: string | undefined; treatment?: string | undefined; referred_to?: string | undefined; follow_up_date?: string | undefined }) =>
+    await api.post<{ id: string }>(`/medical/${studentId}/visits`, data),
+  deleteHealthVisit: async (visitId: string) => await api.delete(`/medical/visits/${visitId}`),
+  addImmunization: async (studentId: string, data: { vaccine_name: string; dose_number?: number | undefined; administered_date?: string | undefined; next_due_date?: string | undefined }) =>
+    await api.post<{ id: string }>(`/medical/${studentId}/immunizations`, data),
+  deleteImmunization: async (immunizationId: string) => await api.delete(`/medical/immunizations/${immunizationId}`),
+  addHealthIncident: async (studentId: string, data: { incident_date?: string | undefined; incident_type?: string | undefined; description: string; severity?: string | undefined; action_taken?: string | undefined; parent_notified?: boolean | undefined }) =>
+    await api.post<{ id: string }>(`/medical/${studentId}/incidents`, data),
+  deleteHealthIncident: async (incidentId: string) => await api.delete(`/medical/incidents/${incidentId}`),
 
   addNote: async (id: string, content: string) => await api.post<StudentNote>(`/students/${id}/notes`, { content }),
   deleteNote: async (id: string, noteId: string) => await api.delete(`/students/${id}/notes/${noteId}`),

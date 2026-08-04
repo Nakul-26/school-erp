@@ -53,6 +53,7 @@ export default function StudentDetails() {
   const canViewFees = hasAnyPermission(userPermissions, ['fees.view', 'fee.view', 'finance.access']) || hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD', 'Accountant']);
   const canManageDocs = canEditStudent;
   const canWriteNotes = canEditStudent;
+  const canManageMedical = hasAnyPermission(userPermissions, ['medical.manage']) || hasAnyRole(userRoles, ['admin', 'super_admin', 'Principal', 'HOD']);
   const [institutionType, setInstitutionType] = useState<string>('college');
 
   const getProgramLabel = () => institutionType === 'school' ? 'Class' : 'Program';
@@ -102,6 +103,13 @@ export default function StudentDetails() {
     emergency_contact: '',
     medical_notes: ''
   });
+
+  // Medical history (visits/immunizations/incidents) state
+  const [medicalSummary, setMedicalSummary] = useState<any>(null);
+  const [loadingMedical, setLoadingMedical] = useState(false);
+  const [visitForm, setVisitForm] = useState({ visit_date: '', reason: '', diagnosis: '', treatment: '', follow_up_date: '' });
+  const [immunizationForm, setImmunizationForm] = useState({ vaccine_name: '', dose_number: '', administered_date: '', next_due_date: '' });
+  const [incidentForm, setIncidentForm] = useState({ incident_date: '', incident_type: 'OTHER', description: '', severity: 'MINOR', action_taken: '', parent_notified: false });
 
   // Enrollment Management modal states
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -167,6 +175,12 @@ export default function StudentDetails() {
       fetchPlacements(currentCourseId);
     }
   }, [activeTab, currentCourseId]);
+
+  useEffect(() => {
+    if (activeTab === 'health') {
+      fetchMedical();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (selectedExamId) {
@@ -292,6 +306,100 @@ export default function StudentDetails() {
       if (currentCourseId) await fetchPlacements(currentCourseId);
     } catch (err: any) {
       alert(err.message || 'Error withdrawing application');
+    }
+  };
+
+  const fetchMedical = async () => {
+    try {
+      setLoadingMedical(true);
+      const data = await studentDetailsService.getMedicalSummary(id!);
+      setMedicalSummary(data);
+    } catch (err) {
+      console.error(err);
+      setMedicalSummary(null);
+    } finally {
+      setLoadingMedical(false);
+    }
+  };
+
+  const handleAddVisit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await studentDetailsService.addHealthVisit(id!, {
+        visit_date: visitForm.visit_date || undefined,
+        reason: visitForm.reason,
+        diagnosis: visitForm.diagnosis || undefined,
+        treatment: visitForm.treatment || undefined,
+        follow_up_date: visitForm.follow_up_date || undefined,
+      });
+      setVisitForm({ visit_date: '', reason: '', diagnosis: '', treatment: '', follow_up_date: '' });
+      fetchMedical();
+    } catch (err: any) {
+      alert(err.message || 'Error logging health visit');
+    }
+  };
+
+  const handleDeleteVisit = async (visitId: string) => {
+    if (!await confirm('Delete this health visit record?')) return;
+    try {
+      await studentDetailsService.deleteHealthVisit(visitId);
+      fetchMedical();
+    } catch (err: any) {
+      alert(err.message || 'Error deleting visit record');
+    }
+  };
+
+  const handleAddImmunization = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await studentDetailsService.addImmunization(id!, {
+        vaccine_name: immunizationForm.vaccine_name,
+        dose_number: immunizationForm.dose_number ? Number(immunizationForm.dose_number) : undefined,
+        administered_date: immunizationForm.administered_date || undefined,
+        next_due_date: immunizationForm.next_due_date || undefined,
+      });
+      setImmunizationForm({ vaccine_name: '', dose_number: '', administered_date: '', next_due_date: '' });
+      fetchMedical();
+    } catch (err: any) {
+      alert(err.message || 'Error adding immunization record');
+    }
+  };
+
+  const handleDeleteImmunization = async (immunizationId: string) => {
+    if (!await confirm('Delete this immunization record?')) return;
+    try {
+      await studentDetailsService.deleteImmunization(immunizationId);
+      fetchMedical();
+    } catch (err: any) {
+      alert(err.message || 'Error deleting immunization record');
+    }
+  };
+
+  const handleAddIncident = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await studentDetailsService.addHealthIncident(id!, {
+        incident_date: incidentForm.incident_date || undefined,
+        incident_type: incidentForm.incident_type,
+        description: incidentForm.description,
+        severity: incidentForm.severity,
+        action_taken: incidentForm.action_taken || undefined,
+        parent_notified: incidentForm.parent_notified,
+      });
+      setIncidentForm({ incident_date: '', incident_type: 'OTHER', description: '', severity: 'MINOR', action_taken: '', parent_notified: false });
+      fetchMedical();
+    } catch (err: any) {
+      alert(err.message || 'Error logging health incident');
+    }
+  };
+
+  const handleDeleteIncident = async (incidentId: string) => {
+    if (!await confirm('Delete this incident report?')) return;
+    try {
+      await studentDetailsService.deleteHealthIncident(incidentId);
+      fetchMedical();
+    } catch (err: any) {
+      alert(err.message || 'Error deleting incident report');
     }
   };
 
@@ -938,6 +1046,21 @@ export default function StudentDetails() {
             setHealthForm={setHealthForm}
             savingHealth={savingHealth}
             onSave={handleHealthSave}
+            canManageMedical={canManageMedical}
+            medicalSummary={medicalSummary}
+            medicalLoading={loadingMedical}
+            visitForm={visitForm}
+            setVisitForm={setVisitForm}
+            onAddVisit={handleAddVisit}
+            onDeleteVisit={handleDeleteVisit}
+            immunizationForm={immunizationForm}
+            setImmunizationForm={setImmunizationForm}
+            onAddImmunization={handleAddImmunization}
+            onDeleteImmunization={handleDeleteImmunization}
+            incidentForm={incidentForm}
+            setIncidentForm={setIncidentForm}
+            onAddIncident={handleAddIncident}
+            onDeleteIncident={handleDeleteIncident}
           />
         )}
 

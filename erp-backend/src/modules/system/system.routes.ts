@@ -3,6 +3,7 @@ import { Env, JwtPayload } from '../../types';
 import { authMiddleware, requireRole } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 import { validateUploadedFile, sanitizeFileName } from '../../utils/file-upload';
+import { buildDatabaseDump } from '../../utils/backup';
 
 const system = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -614,84 +615,8 @@ system.post('/imports/subjects', requireRole('admin', 'super_admin', 'Principal'
 // --- DATABASE BACKUP / EXPORT ---
 system.get('/backup/export', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
   const user = c.get('user');
-  const db = c.env.DB;
+  const dumpText = await buildDatabaseDump(c.env.DB, user.institution_id);
 
-  const tables = [
-    'institutions', 'users', 'roles', 'user_roles', 'permissions', 'role_permissions',
-    'academic_years', 'departments', 'courses', 'sections', 'subjects',
-    'teachers', 'students', 'guardians', 'academic_calendar', 'timetable_slots',
-    'weekly_timetable', 'attendance_sessions', 'student_attendance', 'student_enrollments',
-    'exams', 'exam_subjects', 'student_marks', 'teacher_attendance', 'announcements',
-    'notifications', 'fee_structures', 'student_fee_records', 'fee_payments', 'fee_receipts'
-  ];
-
-  const sqlLines: string[] = [];
-  sqlLines.push(`-- College ERP Backup SQL Dump`);
-  sqlLines.push(`-- Institution ID: ${user.institution_id}`);
-  sqlLines.push(`-- Exported At: ${new Date().toISOString()}`);
-  sqlLines.push(`PRAGMA foreign_keys=OFF;`);
-  sqlLines.push(`BEGIN TRANSACTION;`);
-
-  for (const table of tables) {
-    let selectQuery = `SELECT * FROM ${table}`;
-    if (['institutions'].includes(table)) {
-      selectQuery = `SELECT * FROM ${table} WHERE id = '${user.institution_id}'`;
-    } else if (['users', 'academic_years', 'departments', 'courses', 'sections', 'subjects', 'teachers', 'students', 'academic_calendar', 'timetable_slots', 'weekly_timetable', 'attendance_sessions', 'student_attendance', 'teacher_attendance', 'announcements', 'notifications', 'fee_structures', 'student_fee_records', 'fee_payments', 'fee_receipts', 'exams', 'exam_subjects', 'student_marks'].includes(table)) {
-      selectQuery = `SELECT * FROM ${table} WHERE institution_id = '${user.institution_id}'`;
-    } else if (table === 'guardians') {
-      selectQuery = `SELECT g.* FROM guardians g JOIN students s ON g.student_id = s.id WHERE s.institution_id = '${user.institution_id}'`;
-    } else if (table === 'student_enrollments') {
-      selectQuery = `SELECT se.* FROM student_enrollments se JOIN students s ON se.student_id = s.id WHERE s.institution_id = '${user.institution_id}'`;
-    } else if (table === 'user_roles') {
-      selectQuery = `SELECT ur.* FROM user_roles ur JOIN users u ON ur.user_id = u.id WHERE u.institution_id = '${user.institution_id}'`;
-    }
-    
-    try {
-      const { results } = await db.prepare(selectQuery).all<any>();
-      if (results && results.length > 0) {
-        sqlLines.push(`\n-- Dumping data for table ${table}`);
-        
-        let deleteQuery = `DELETE FROM ${table};`;
-        if (['institutions'].includes(table)) {
-          deleteQuery = `DELETE FROM ${table} WHERE id = '${user.institution_id}';`;
-        } else if (['users', 'academic_years', 'departments', 'courses', 'sections', 'subjects', 'teachers', 'students', 'academic_calendar', 'timetable_slots', 'weekly_timetable', 'attendance_sessions', 'student_attendance', 'teacher_attendance', 'announcements', 'notifications', 'fee_structures', 'student_fee_records', 'fee_payments', 'fee_receipts', 'exams', 'exam_subjects', 'student_marks'].includes(table)) {
-          deleteQuery = `DELETE FROM ${table} WHERE institution_id = '${user.institution_id}';`;
-        } else if (table === 'guardians') {
-          deleteQuery = `DELETE FROM guardians WHERE student_id IN (SELECT id FROM students WHERE institution_id = '${user.institution_id}');`;
-        } else if (table === 'student_enrollments') {
-          deleteQuery = `DELETE FROM student_enrollments WHERE student_id IN (SELECT id FROM students WHERE institution_id = '${user.institution_id}');`;
-        } else if (table === 'user_roles') {
-          deleteQuery = `DELETE FROM user_roles WHERE user_id IN (SELECT id FROM users WHERE institution_id = '${user.institution_id}');`;
-        } else if (['roles', 'permissions', 'role_permissions'].includes(table)) {
-          deleteQuery = '';
-        }
-        
-        if (deleteQuery) {
-          sqlLines.push(deleteQuery);
-        }
-
-        for (const row of results) {
-          const colNames = Object.keys(row).join(', ');
-          const colValues = Object.values(row).map(val => {
-            if (val === null || val === undefined) return 'NULL';
-            if (typeof val === 'number') return String(val);
-            return `'${String(val).replace(/'/g, "''")}'`;
-          }).join(', ');
-          
-          const insertVerb = ['roles', 'permissions', 'role_permissions'].includes(table) ? 'INSERT OR IGNORE' : 'INSERT';
-          sqlLines.push(`${insertVerb} INTO ${table} (${colNames}) VALUES (${colValues});`);
-        }
-      }
-    } catch (e: any) {
-      sqlLines.push(`-- Failed to dump table ${table}: ${e.message}`);
-    }
-  }
-
-  sqlLines.push(`\nCOMMIT;`);
-  sqlLines.push(`PRAGMA foreign_keys=ON;`);
-
-  const dumpText = sqlLines.join('\n');
-  
   await createAuditLog(c.env.DB, user.sub, 'EXPORT_DATABASE_BACKUP', 'system', user.institution_id, `Database data backup exported`);
 
   return new Response(dumpText, {
@@ -731,6 +656,42 @@ system.post('/backup/restore', requireRole('admin', 'super_admin', 'Principal'),
     return c.json({ success: true });
   } catch (err: any) {
     return c.json({ error: `Restore failed: ${err.message}` }, 500);
+  }
+});
+
+// --- AUTOMATED (SCHEDULED) BACKUP HISTORY ---
+// Lists the R2-stored dumps produced by the real BackupDatabaseJob (see job-registry.ts),
+// as opposed to the manual on-demand export above.
+system.get('/backup/history', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
+  const user = c.get('user');
+  try {
+    const listed = await c.env.FILES.list({ prefix: `backups/${user.institution_id}/` });
+    const items = listed.objects
+      .sort((a: any, b: any) => (b.uploaded > a.uploaded ? 1 : -1))
+      .map((obj: any) => ({ key: obj.key, size: obj.size, uploaded: obj.uploaded }));
+    return c.json(items);
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+system.get('/backup/download', requireRole('admin', 'super_admin', 'Principal'), async (c) => {
+  const user = c.get('user');
+  const key = c.req.query('key');
+  if (!key || !key.startsWith(`backups/${user.institution_id}/`)) {
+    return c.json({ error: 'Invalid or unauthorized backup key' }, 403);
+  }
+  try {
+    const file = await c.env.FILES.get(key);
+    if (!file) return c.json({ error: 'Backup file not found' }, 404);
+    return new Response(file.body, {
+      headers: {
+        'Content-Type': 'application/sql',
+        'Content-Disposition': `attachment; filename="${key.split('/').pop()}"`
+      }
+    });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
   }
 });
 

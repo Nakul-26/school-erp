@@ -20,6 +20,7 @@ interface BookType {
   total_copies: number;
   available_copies: number;
   rack_location: string;
+  is_reference: number;
 }
 
 interface TransactionType {
@@ -64,7 +65,8 @@ export default function Library() {
     isbn: '',
     category: 'General',
     total_copies: 1,
-    rack_location: ''
+    rack_location: '',
+    is_reference: false
   });
 
   const [issueForm, setIssueForm] = useState({
@@ -123,7 +125,7 @@ export default function Library() {
       }
       setShowBookModal(false);
       setEditingBook(null);
-      setBookForm({ title: '', author: '', isbn: '', category: 'General', total_copies: 1, rack_location: '' });
+      setBookForm({ title: '', author: '', isbn: '', category: 'General', total_copies: 1, rack_location: '', is_reference: false });
       fetchData();
     } catch (err) {
       showToast('Error saving book details', 'error');
@@ -245,7 +247,7 @@ export default function Library() {
             <button className="btn btn-outline" onClick={() => setShowIssueModal(true)}>
               <BookOpen size={16} /> Issue Book
             </button>
-            <button className="btn btn-primary" onClick={() => { setEditingBook(null); setBookForm({ title: '', author: '', isbn: '', category: 'General', total_copies: 1, rack_location: '' }); setShowBookModal(true); }}>
+            <button className="btn btn-primary" onClick={() => { setEditingBook(null); setBookForm({ title: '', author: '', isbn: '', category: 'General', total_copies: 1, rack_location: '', is_reference: false }); setShowBookModal(true); }}>
               <Plus size={16} /> Add New Book
             </button>
           </div>
@@ -306,6 +308,11 @@ export default function Library() {
                     <span className="badge library-badge">
                       {book.category}
                     </span>
+                    {!!book.is_reference && (
+                      <span className="badge badge-warning library-badge" title="Non-circulating — library use only">
+                        📖 Reference Only
+                      </span>
+                    )}
                     {book.rack_location && (
                       <span className="library-span-27">
                         📍 Rack {book.rack_location}
@@ -328,14 +335,20 @@ export default function Library() {
                 <div className="library-row-31">
                   <div>
                     <span className="library-span-32">Availability</span>
-                    <span style={{ fontSize: '1.1rem', fontWeight: 800, color: book.available_copies > 0 ? 'var(--success)' : 'var(--danger)' }}>
-                      {book.available_copies} / {book.total_copies} available
-                    </span>
+                    {book.is_reference ? (
+                      <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-secondary, #64748b)' }}>
+                        Not for issue ({book.total_copies} in library)
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '1.1rem', fontWeight: 800, color: book.available_copies > 0 ? 'var(--success)' : 'var(--danger)' }}>
+                        {book.available_copies} / {book.total_copies} available
+                      </span>
+                    )}
                   </div>
 
                   {canManage && (
                     <div className="library-row-33">
-                      <button className="btn btn-outline library-btn" onClick={() => { setEditingBook(book); setBookForm({ title: book.title, author: book.author, isbn: book.isbn, category: book.category, total_copies: book.total_copies, rack_location: book.rack_location }); setShowBookModal(true); }} title="Edit Book Details">
+                      <button className="btn btn-outline library-btn" onClick={() => { setEditingBook(book); setBookForm({ title: book.title, author: book.author, isbn: book.isbn, category: book.category, total_copies: book.total_copies, rack_location: book.rack_location, is_reference: !!book.is_reference }); setShowBookModal(true); }} title="Edit Book Details">
                         <Edit size={14} />
                       </button>
                       <button className="btn btn-outline library-btn" onClick={() => handleDeleteBook(book.id)} title="Delete Book">
@@ -488,6 +501,17 @@ export default function Library() {
                     onChange={(e) => setBookForm({ ...bookForm, rack_location: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'normal' }}>
+                  <input
+                    type="checkbox"
+                    checked={bookForm.is_reference}
+                    onChange={(e) => setBookForm({ ...bookForm, is_reference: e.target.checked })}
+                  />
+                  Reference (non-circulating) — library-use only, cannot be issued
+                </label>
               </div>
 
               <div className="modal-actions library-modal-actions">

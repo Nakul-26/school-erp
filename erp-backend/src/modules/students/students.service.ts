@@ -132,6 +132,41 @@ export class StudentService {
     }
 
     await this.repo.update(id, input, userId);
+
+    const newStatus = input.status?.toUpperCase();
+    if (newStatus && (newStatus === 'GRADUATED' || newStatus === 'ALUMNI') && existing.status !== newStatus) {
+      await this.autoPopulateAlumni(id, institutionId, existing);
+    }
+  }
+
+  // Auto-populates an alumni record the first time a student transitions to GRADUATED/ALUMNI,
+  // rather than requiring staff to re-key the same data into the separate Alumni page by hand.
+  private async autoPopulateAlumni(studentId: string, institutionId: string, student: any): Promise<void> {
+    if (!this.db) return;
+    try {
+      const alreadyExists = await this.db.prepare(
+        'SELECT id FROM alumni WHERE student_id = ? AND institution_id = ? AND is_active = 1'
+      ).bind(studentId, institutionId).first();
+      if (alreadyExists) return;
+
+      const enrollment = await this.db.prepare(`
+        SELECT ay.end_date FROM student_enrollments se
+        JOIN academic_years ay ON ay.id = se.academic_year_id
+        WHERE se.student_id = ? ORDER BY se.created_at DESC LIMIT 1
+      `).bind(studentId).first<{ end_date: string }>();
+      const graduationYear = enrollment?.end_date ? new Date(enrollment.end_date).getFullYear() : new Date().getFullYear();
+
+      await this.db.prepare(`
+        INSERT INTO alumni (id, institution_id, student_id, first_name, last_name, graduation_year, current_status, contact, created_by, updated_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        crypto.randomUUID(), institutionId, studentId, student.first_name, student.last_name || '',
+        graduationYear, 'Recently Graduated', student.email || student.phone || null, null, null
+      ).run();
+    } catch (err) {
+      // Best-effort: never let alumni auto-population block the actual status update that triggered it.
+      console.error('[StudentService] autoPopulateAlumni failed:', err);
+    }
   }
 
   async archiveStudent(id: string, institutionId: string, userId?: string): Promise<void> {

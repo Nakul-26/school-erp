@@ -1,0 +1,78 @@
+/* Component stylesheet for StudyMaterials.tsx */
+
+.study-materials-text-1 {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.study-materials-card {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.study-materials-row-3 {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.study-materials-label-4 {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.study-materials-div-11 {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.study-materials-text-13 {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.study-materials-badge {
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.study-materials-th-actions {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.study-materials-td-16 {
+  color: var(--text-muted);
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.study-materials-icon-muted {
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.study-materials-modal {
+  max-width: 600px;
+}
+
+.study-materials-modal-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.study-materials-small {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}

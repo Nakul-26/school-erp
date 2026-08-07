@@ -14,14 +14,6 @@ export const ResetPasswordSchema = z.object({
   new_password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-export const RegisterInstitutionSchema = z.object({
-  name: z.string().min(2, 'Institution name must be at least 2 characters'),
-  admin_name: z.string().min(2, 'Admin name must be at least 2 characters'),
-  admin_email: z.string().email('Invalid admin email'),
-  admin_password: z.string().min(6, 'Password must be at least 6 characters'),
-  invite_code: z.string().optional(),
-});
-
 export const VALID_INSTITUTION_TYPES = [
   'school',
   'college',
@@ -31,6 +23,19 @@ export const VALID_INSTITUTION_TYPES = [
   'university',
   'coaching'
 ] as const;
+
+export const RegisterInstitutionSchema = z.object({
+  name: z.string().min(2, 'Institution name must be at least 2 characters'),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  institution_type: z.enum(VALID_INSTITUTION_TYPES).default('college'),
+  admin_name: z.string().min(2, 'Admin name must be at least 2 characters'),
+  admin_email: z.string().email('Invalid admin email'),
+  admin_phone: z.string().optional(),
+  admin_password: z.string().min(6, 'Password must be at least 6 characters'),
+  invite_code: z.string().optional(),
+});
 
 export const InstitutionCreateSchema = z.object({
   name: z.string().min(2, 'Institution name must be at least 2 characters'),

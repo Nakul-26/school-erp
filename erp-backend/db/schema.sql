@@ -1322,7 +1322,7 @@ CREATE TABLE IF NOT EXISTS students (
   id TEXT PRIMARY KEY,
   institution_id TEXT NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
   user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
-  admission_number TEXT UNIQUE NOT NULL,
+  admission_number TEXT NOT NULL,
   roll_number TEXT,
   first_name TEXT NOT NULL,
   middle_name TEXT,
@@ -1343,7 +1343,8 @@ CREATE TABLE IF NOT EXISTS students (
   updated_at TEXT DEFAULT (datetime('now')),
   deleted_at TEXT,
   created_by TEXT,
-  updated_by TEXT
+  updated_by TEXT,
+  UNIQUE(institution_id, admission_number)
 );
 
 CREATE TABLE IF NOT EXISTS student_health_visits (

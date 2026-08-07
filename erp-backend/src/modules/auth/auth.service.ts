@@ -66,19 +66,23 @@ export class AuthService {
 
     const institutionId = crypto.randomUUID();
     await this.instRepo.create(institutionId, {
-      name: data.institution_name,
+      name: data.name,
       address: data.address,
-      email: data.contact_email,
-      phone: data.contact_phone,
+      email: data.email,
+      phone: data.phone,
       institution_type: data.institution_type,
     });
 
     const hash = await hashPassword(data.admin_password);
     const userId = crypto.randomUUID();
-    
+    // No admin-chosen username in the signup form; usernames are only
+    // unique per-institution, and this is a brand-new institution, so the
+    // email's local part is always available here.
+    const username = data.admin_email.split('@')[0];
+
     await this.userRepo.create(userId, {
       institution_id: institutionId,
-      username: data.admin_username,
+      username,
       email: data.admin_email,
       password_hash: hash,
       name: data.admin_name,
@@ -89,9 +93,9 @@ export class AuthService {
     const user = { id: userId, name: data.admin_name, email: data.admin_email, roles: ['Principal'], role: 'Principal', permissions: await this.userRepo.getUserPermissions(userId), institution_id: institutionId };
     const token = await this.generateToken(user);
 
-    await createAuditLog(this.env.DB, userId, 'REGISTER_INSTITUTION', 'auth', institutionId, `Registered institution ${data.institution_name} with admin ${data.admin_email}`);
+    await createAuditLog(this.env.DB, userId, 'REGISTER_INSTITUTION', 'auth', institutionId, `Registered institution ${data.name} with admin ${data.admin_email}`);
 
-    return { token, user, institution: { id: institutionId, name: data.institution_name } };
+    return { token, user, institution: { id: institutionId, name: data.name } };
   }
 
   async forgotPassword(email: string) {

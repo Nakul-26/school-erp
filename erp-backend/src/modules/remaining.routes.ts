@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { Env, JwtPayload } from '../types';
-import { authMiddleware, requireRole } from '../middleware/auth';
+import { authMiddleware, requireRole, requirePermission } from '../middleware/auth';
 import { createAuditLog } from '../utils/audit';
 
 // Helper to generate UUIDs locally if needed
@@ -10,6 +10,9 @@ const generateUuid = () => crypto.randomUUID();
 
 export const visitors = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 visitors.use('*', authMiddleware);
+// Front-desk/visitor register — staff only, same permission the seeded RBAC
+// catalog already reserves for this module (never granted to student/parent/teacher).
+visitors.use('*', requirePermission('visitors.manage'));
 
 visitors.get('/', async (c) => {
   const user = c.get('user');

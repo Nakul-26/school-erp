@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { Env } from '../../types';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { AnalyticsRepository } from './analytics.repository';
 import { AnalyticsService } from './analytics.service';
 import { ReportType, ReportFormat } from './types';
@@ -8,6 +8,9 @@ import { ReportType, ReportFormat } from './types';
 const analytics = new Hono<{ Bindings: Env }>();
 
 analytics.use('*', authMiddleware);
+// School-wide KPIs/reports — gate the whole workspace behind reports.access
+// (students/guardians don't hold it in the seeded permission catalog).
+analytics.use('*', requirePermission('reports.access'));
 
 function getService(c: any) {
   const repo = new AnalyticsRepository(c.env.DB);

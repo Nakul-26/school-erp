@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { Env } from '../../types';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware, requireRole } from '../../middleware/auth';
 import { BackgroundJobsRepository } from './background-jobs.repository';
 import { BackgroundJobsService } from './background-jobs.service';
 import { jobRegistry } from './job-registry';
@@ -8,6 +8,9 @@ import { jobRegistry } from './job-registry';
 const jobs = new Hono<{ Bindings: Env }>();
 
 jobs.use('*', authMiddleware);
+// System-internal queue/worker administration — admin-only, not a role any
+// teacher/accountant/student should be able to reach.
+jobs.use('*', requireRole('admin'));
 
 function getService(c: any) {
   const repo = new BackgroundJobsRepository(c.env.DB);

@@ -6,6 +6,7 @@ import { authMiddleware, requireRole } from '../../middleware/auth';
 import { UserRepository } from '../users/users.repository';
 import { UserService } from '../users/users.service';
 import { validateUploadedFile, sanitizeFileName } from '../../utils/file-upload';
+import { createAuditLog } from '../../utils/audit';
 
 const teachers = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -101,7 +102,13 @@ teachers.get('/:id', async (c) => {
 teachers.post('/', requireRole('admin', 'super_admin'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
-  
+
+  // Validate required fields up front — binding `undefined` to a D1 prepared
+  // statement throws an opaque D1_TYPE_ERROR instead of a usable message.
+  if (!input.employee_id || !String(input.employee_id).trim()) return c.json({ error: 'Employee ID is required' }, 400);
+  if (!input.first_name || !String(input.first_name).trim()) return c.json({ error: 'First name is required' }, 400);
+  if (!input.last_name || !String(input.last_name).trim()) return c.json({ error: 'Last name is required' }, 400);
+
   const userRepo = new UserRepository(c.env.DB);
   const userService = new UserService(userRepo);
   const teacherRepo = new TeacherRepository(c.env.DB);
@@ -148,7 +155,9 @@ teachers.post('/', requireRole('admin', 'super_admin'), async (c) => {
       user_id: linkedUserId
     }, user.sub);
 
-    return c.json({ 
+    await createAuditLog(c.env.DB, user.sub, 'CREATE_TEACHER', 'teachers', teacherId, `Created teacher ${input.first_name || ''} ${input.last_name || ''}`.trim());
+
+    return c.json({
       id: teacherId,
       login_created: !!linkedUserId,
       username: finalUsername,
@@ -185,6 +194,7 @@ teachers.put('/:id', requireRole('admin', 'super_admin', 'Principal'), async (c)
   
   try {
     await service.updateTeacher(id, input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'UPDATE_TEACHER', 'teachers', id, `Updated teacher ${existing.first_name || ''} ${existing.last_name || ''}`.trim());
     return c.json({ success: true });
   } catch (e: any) {
     if (e.message?.includes('UNIQUE constraint failed: teachers.employee_id') || e.message?.includes('teachers.employee_id')) {
@@ -206,6 +216,7 @@ teachers.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
   }
   
   await service.deleteTeacher(id, user.sub);
+  await createAuditLog(c.env.DB, user.sub, 'DELETE_TEACHER', 'teachers', id, `Deleted teacher ${existing.first_name || ''} ${existing.last_name || ''}`.trim());
   return c.json({ success: true });
 });
 
@@ -228,6 +239,7 @@ teachers.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
       await db.prepare("UPDATE teachers SET department = ?, updated_at = datetime('now'), updated_by = ? WHERE id = ? AND institution_id = ? AND is_active = 1")
         .bind(department, user.sub, tId, user.institution_id).run();
     }
+    await createAuditLog(c.env.DB, user.sub, 'BULK_ASSIGN_DEPARTMENT_TEACHERS', 'teachers', null, `Bulk-assigned department "${department}" for ${teacher_ids.length} teacher(s)`);
     return c.json({ success: true, message: `Successfully updated department for ${teacher_ids.length} teachers.` });
   }
 
@@ -236,6 +248,7 @@ teachers.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
       await db.prepare("UPDATE teachers SET status = 'INACTIVE', updated_at = datetime('now'), updated_by = ? WHERE id = ? AND institution_id = ? AND is_active = 1")
         .bind(user.sub, tId, user.institution_id).run();
     }
+    await createAuditLog(c.env.DB, user.sub, 'BULK_DEACTIVATE_TEACHERS', 'teachers', null, `Bulk-deactivated ${teacher_ids.length} teacher(s)`);
     return c.json({ success: true, message: `Successfully deactivated ${teacher_ids.length} teachers.` });
   }
 
@@ -244,19 +257,23 @@ teachers.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
       await db.prepare("UPDATE teachers SET status = 'ACTIVE', updated_at = datetime('now'), updated_by = ? WHERE id = ? AND institution_id = ? AND is_active = 1")
         .bind(user.sub, tId, user.institution_id).run();
     }
+    await createAuditLog(c.env.DB, user.sub, 'BULK_REACTIVATE_TEACHERS', 'teachers', null, `Bulk-reactivated ${teacher_ids.length} teacher(s)`);
     return c.json({ success: true, message: `Successfully reactivated ${teacher_ids.length} teachers.` });
   }
 
   if (action === 'delete') {
     const repo = new TeacherRepository(db);
     const service = new TeacherService(repo);
+    const deletedIds: string[] = [];
     for (const tId of teacher_ids) {
       const existing = await service.getTeacher(tId);
       if (!existing || existing.institution_id !== user.institution_id) {
         continue;
       }
       await service.deleteTeacher(tId, user.sub);
+      deletedIds.push(tId);
     }
+    await createAuditLog(c.env.DB, user.sub, 'BULK_DELETE_TEACHERS', 'teachers', null, `Bulk-deleted ${deletedIds.length} teacher(s): ${deletedIds.join(', ')}`);
     return c.json({ success: true, message: `Successfully deleted ${teacher_ids.length} teachers.` });
   }
 

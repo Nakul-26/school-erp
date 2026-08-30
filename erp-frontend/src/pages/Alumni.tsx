@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, GraduationCap, Building, Briefcase, Mail, Calendar, Trash2 } from 'lucide-react';
+import { Plus, GraduationCap, Building, Briefcase, Mail, Calendar, Trash2, Pencil, CalendarCheck } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 
@@ -37,6 +37,11 @@ export default function Alumni() {
   const [showEventModal, setShowEventModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [eventForm, setEventForm] = useState({ name: '', event_type: 'reunion', start_date: '', end_date: '', location: '', description: '' });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [rsvpEvent, setRsvpEvent] = useState<AlumniEvent | null>(null);
+  const [rsvpAlumniId, setRsvpAlumniId] = useState('');
+  const [rsvpStatus, setRsvpStatus] = useState<'INTERESTED' | 'GOING' | 'DECLINED'>('GOING');
+  const [rsvpSaving, setRsvpSaving] = useState(false);
 
   const [form, setForm] = useState({
     first_name: '',
@@ -115,19 +120,35 @@ export default function Alumni() {
 
     try {
       setSaving(true);
-      await api.post('/alumni', {
-        ...form,
-        graduation_year: Number(form.graduation_year)
-      });
+      const payload = { ...form, graduation_year: Number(form.graduation_year) };
+      if (editingId) {
+        await api.put(`/alumni/${editingId}`, payload);
+      } else {
+        await api.post('/alumni', payload);
+      }
       setShowAddModal(false);
+      setEditingId(null);
       resetForm();
-      alert('Alumnus record added.');
+      alert(editingId ? 'Alumnus record updated.' : 'Alumnus record added.');
       fetchAlumni();
     } catch (err: any) {
-      alert(err.message || 'Failed to add alumnus.');
+      alert(err.message || 'Failed to save alumnus.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleOpenEdit = (a: Alumnus) => {
+    setEditingId(a.id);
+    setForm({
+      first_name: a.first_name,
+      last_name: a.last_name,
+      graduation_year: a.graduation_year,
+      current_status: (a.current_status || 'Higher Studies') as any,
+      institution: a.institution || '',
+      contact: a.contact || '',
+    });
+    setShowAddModal(true);
   };
 
   const resetForm = () => {
@@ -139,6 +160,28 @@ export default function Alumni() {
       institution: '',
       contact: '',
     });
+  };
+
+  const handleOpenRsvp = (ev: AlumniEvent) => {
+    setRsvpEvent(ev);
+    setRsvpAlumniId('');
+    setRsvpStatus('GOING');
+  };
+
+  const handleSubmitRsvp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rsvpEvent) return;
+    if (!rsvpAlumniId) return alert('Select an alumnus to RSVP on behalf of.');
+    try {
+      setRsvpSaving(true);
+      await api.post(`/alumni/events/${rsvpEvent.id}/rsvp`, { alumniId: rsvpAlumniId, status: rsvpStatus });
+      setRsvpEvent(null);
+      fetchAlumni();
+    } catch (err: any) {
+      alert(err.message || 'Failed to record RSVP.');
+    } finally {
+      setRsvpSaving(false);
+    }
   };
 
   // Stats calculation
@@ -174,7 +217,7 @@ export default function Alumni() {
               <Plus size={18} /> New Event
             </button>
           ) : (
-            <button className="btn btn-primary alumni-btn" onClick={() => setShowAddModal(true)}>
+            <button className="btn btn-primary alumni-btn" onClick={() => { setEditingId(null); resetForm(); setShowAddModal(true); }}>
               <Plus size={18} /> Add Alumnus
             </button>
           )}
@@ -276,9 +319,14 @@ export default function Alumni() {
                       )}
                     </td>
                     <td>
-                      <button className="btn btn-sm btn-outline" onClick={() => handleDelete(a.id)} title="Remove alumnus record">
-                        <Trash2 size={14} />
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        <button className="btn btn-sm btn-outline" onClick={() => handleOpenEdit(a)} title="Edit alumnus record">
+                          <Pencil size={14} />
+                        </button>
+                        <button className="btn btn-sm btn-outline" onClick={() => handleDelete(a.id)} title="Remove alumnus record">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -323,9 +371,14 @@ export default function Alumni() {
                       <td>{ev.location || '—'}</td>
                       <td>{ev.going_count}</td>
                       <td>
-                        <button className="btn btn-sm btn-outline" onClick={() => handleDeleteEvent(ev.id)} title="Delete event">
-                          <Trash2 size={14} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <button className="btn btn-sm btn-outline" onClick={() => handleOpenRsvp(ev)} title="Record an alumnus RSVP">
+                            <CalendarCheck size={14} />
+                          </button>
+                          <button className="btn btn-sm btn-outline" onClick={() => handleDeleteEvent(ev.id)} title="Delete event">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -336,13 +389,13 @@ export default function Alumni() {
         </div>
       )}
 
-      {/* Add Alumnus Modal */}
+      {/* Add/Edit Alumnus Modal */}
       {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+        <div className="modal-overlay" onClick={() => { setShowAddModal(false); setEditingId(null); resetForm(); }}>
           <div className="modal alumni-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 className="modal-title">Record Graduate Alumnus</h3>
-              <button className="modal-close" onClick={() => setShowAddModal(false)}>×</button>
+              <h3 className="modal-title">{editingId ? 'Edit Graduate Alumnus' : 'Record Graduate Alumnus'}</h3>
+              <button className="modal-close" onClick={() => { setShowAddModal(false); setEditingId(null); resetForm(); }}>×</button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body alumni-modal-body">
@@ -404,9 +457,48 @@ export default function Alumni() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-outline" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="button" className="btn btn-outline" onClick={() => { setShowAddModal(false); setEditingId(null); resetForm(); }}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Creating...' : 'Create Alumnus'}
+                  {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create Alumnus'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Record RSVP Modal */}
+      {rsvpEvent && (
+        <div className="modal-overlay" onClick={() => setRsvpEvent(null)}>
+          <div className="modal alumni-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">RSVP — {rsvpEvent.name}</h3>
+              <button className="modal-close" onClick={() => setRsvpEvent(null)}>×</button>
+            </div>
+            <form onSubmit={handleSubmitRsvp}>
+              <div className="modal-body alumni-modal-body">
+                <div className="form-group alumni-form-group">
+                  <label>Alumnus *</label>
+                  <select required value={rsvpAlumniId} onChange={e => setRsvpAlumniId(e.target.value)}>
+                    <option value="">Select an alumnus...</option>
+                    {alumni.map(a => (
+                      <option key={a.id} value={a.id}>{a.first_name} {a.last_name} (Class of {a.graduation_year})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group alumni-form-group">
+                  <label>Response</label>
+                  <select value={rsvpStatus} onChange={e => setRsvpStatus(e.target.value as any)}>
+                    <option value="GOING">Going</option>
+                    <option value="INTERESTED">Interested</option>
+                    <option value="DECLINED">Declined</option>
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline" onClick={() => setRsvpEvent(null)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={rsvpSaving}>
+                  {rsvpSaving ? 'Saving...' : 'Record RSVP'}
                 </button>
               </div>
             </form>

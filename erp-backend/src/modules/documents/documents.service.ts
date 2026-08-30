@@ -99,7 +99,8 @@ export class DocumentsService {
       storage_key: storageKey,
       version: 1,
       status: 'AVAILABLE',
-      uploaded_by: dto.uploadedBy
+      uploaded_by: dto.uploadedBy,
+      visibility: dto.visibility || 'all'
     });
 
     // 6. Record Initial Version Record (v1)

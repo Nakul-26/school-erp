@@ -65,34 +65,32 @@ export class ApprovalsRepository {
     `).bind(id, institutionId).first();
   }
 
-  async processApproval(id: string, institutionId: string, approverId: string, status: 'Approved' | 'Rejected', remarks?: string): Promise<void> {
-    const approval = await this.db.prepare(`
-      SELECT * FROM approvals WHERE id = ? AND institution_id = ? AND status = 'Pending'
-    `).bind(id, institutionId).first<any>();
+  // Marks the approval request itself Approved/Rejected. Does NOT touch the
+  // underlying entity — callers dispatch to the real domain service first
+  // (e.g. LeaveService.approveApplication, which deducts balance and enforces
+  // quota) and only mark this row once that real action has succeeded, so the
+  // Inbox never shows a status the underlying record doesn't actually have.
+  async markProcessed(id: string, institutionId: string, approverId: string, status: 'Approved' | 'Rejected', remarks?: string): Promise<void> {
+    const { meta } = await this.db.prepare(`
+      UPDATE approvals
+      SET status = ?, remarks = ?, approver_id = ?, approved_rejected_at = datetime('now'), updated_at = datetime('now'), updated_by = ?
+      WHERE id = ? AND institution_id = ? AND status = 'Pending'
+    `).bind(status, remarks || null, approverId, approverId, id, institutionId).run();
 
-    if (!approval) {
+    if (meta.changes === 0) {
       throw new Error('Approval request not found or already processed.');
     }
+  }
 
-    const statements = [
-      this.db.prepare(`
-        UPDATE approvals
-        SET status = ?, remarks = ?, approver_id = ?, approved_rejected_at = datetime('now'), updated_at = datetime('now'), updated_by = ?
-        WHERE id = ? AND institution_id = ?
-      `).bind(status, remarks || null, approverId, approverId, id, institutionId)
-    ];
-
-    const tableRegex = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
-    if (tableRegex.test(approval.entity_type)) {
-      statements.push(
-        this.db.prepare(`
-          UPDATE ${approval.entity_type}
-          SET status = ?, updated_at = datetime('now'), updated_by = ?
-          WHERE id = ? AND institution_id = ?
-        `).bind(status, approverId, approval.entity_id, institutionId)
-      );
-    }
-
-    await this.db.batch(statements);
+  // Best-effort sync: when the underlying entity is approved/rejected through
+  // its own dedicated page (e.g. Leave Approvals) rather than through the
+  // Inbox, keep any matching pending Inbox entry from going stale. No-op if
+  // no approval request was ever raised for this entity.
+  async syncStatusForEntity(entityType: string, entityId: string, institutionId: string, status: 'Approved' | 'Rejected', approverId: string, remarks?: string): Promise<void> {
+    await this.db.prepare(`
+      UPDATE approvals
+      SET status = ?, remarks = COALESCE(?, remarks), approver_id = ?, approved_rejected_at = datetime('now'), updated_at = datetime('now'), updated_by = ?
+      WHERE entity_type = ? AND entity_id = ? AND institution_id = ? AND status = 'Pending'
+    `).bind(status, remarks || null, approverId, approverId, entityType, entityId, institutionId).run();
   }
 }

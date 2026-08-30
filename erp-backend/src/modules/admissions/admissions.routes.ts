@@ -222,7 +222,7 @@ admissions.patch(
       );
       return c.json({ success: true });
     } catch (e: any) {
-      return c.json({ error: e.message }, 400);
+      return c.json({ error: e.message }, e.statusCode || 400);
     }
   }
 );

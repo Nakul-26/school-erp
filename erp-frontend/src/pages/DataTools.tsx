@@ -224,20 +224,44 @@ export default function DataTools() {
     }
   };
 
+  // Backend import endpoints only understand CSV. When the user picks an
+  // .xlsx/.xls file, parse its first sheet client-side (SheetJS is already
+  // a dependency for exports) and convert it to a CSV file before upload —
+  // this makes "Excel import" genuinely work rather than silently rejecting
+  // spreadsheet files while only the label said CSV.
+  const convertSpreadsheetFileToCsv = async (file: File): Promise<File> => {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const firstSheetName = workbook.SheetNames[0];
+    if (!firstSheetName) {
+      throw new Error('The spreadsheet has no sheets to import.');
+    }
+    const sheet = workbook.Sheets[firstSheetName];
+    if (!sheet) {
+      throw new Error('The spreadsheet has no sheets to import.');
+    }
+    const csv = XLSX.utils.sheet_to_csv(sheet);
+    const csvName = file.name.replace(/\.(xlsx|xls)$/i, '.csv');
+    return new File([csv], csvName, { type: 'text/csv' });
+  };
+
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!importFile) {
-      setImportError('Please select a CSV file to upload.');
+      setImportError('Please select a CSV or Excel file to upload.');
       return;
     }
     setImportError(null);
     setImportResult(null);
     setImportLoading(true);
 
-    const formData = new FormData();
-    formData.append('file', importFile);
-
     try {
+      const isSpreadsheet = /\.(xlsx|xls)$/i.test(importFile.name);
+      const fileToUpload = isSpreadsheet ? await convertSpreadsheetFileToCsv(importFile) : importFile;
+
+      const formData = new FormData();
+      formData.append('file', fileToUpload);
+
       const response = await api.upload(`/system/imports/${importTab}`, formData);
       setImportResult(response);
       setImportFile(null);
@@ -465,9 +489,9 @@ export default function DataTools() {
         <div className="card guide-card">
           <div className="guide-header">
             <HelpCircle size={20} className="data-tools-HelpCircle-5"  />
-            <h3>CSV Formatting Requirements</h3>
+            <h3>File Formatting Requirements</h3>
           </div>
-          <p>Your spreadsheet file must contain a header row matching the fields below (order does not matter):</p>
+          <p>Your CSV or Excel (.xlsx) file must contain a header row matching the fields below (order does not matter). For Excel files, only the first sheet is imported.</p>
 
           <div className="headers-box">
             {currentTemplate.headers.map(h => <code key={h}>{h}</code>)}
@@ -492,7 +516,7 @@ export default function DataTools() {
 
         {/* Upload Form Card */}
         <div className="card form-card">
-          <h3>Upload CSV File</h3>
+          <h3>Upload CSV or Excel File</h3>
 
           {importError && (
             <div className="alert alert-danger data-tools-alert">
@@ -527,10 +551,10 @@ export default function DataTools() {
           <form onSubmit={handleUploadSubmit} className="upload-form">
             <div className="file-dropzone">
               <Upload size={32} className="data-tools-Upload-13"  />
-              <p>{importFile ? `Selected file: ${importFile.name}` : 'Drag and drop or select a CSV spreadsheet'}</p>
+              <p>{importFile ? `Selected file: ${importFile.name}` : 'Drag and drop or select a CSV or Excel (.xlsx) spreadsheet'}</p>
               <label className="btn btn-outline data-tools-btn">
                 Browse Files
-                <input type="file" accept=".csv" onChange={handleFileChange} disabled={importLoading} className="data-tools-input-15"  />
+                <input type="file" accept=".csv,.xlsx,.xls" onChange={handleFileChange} disabled={importLoading} className="data-tools-input-15"  />
               </label>
             </div>
 

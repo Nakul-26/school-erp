@@ -2,6 +2,7 @@ import { AnalyticsRepository } from './analytics.repository';
 import { DailyAnalytics, MonthlyAnalytics, KPISnapshot, ScheduledReport, ReportFilterDTO, KPICategory, KPITrend } from './types';
 import { eventBus } from '../../utils/event-bus';
 import { createAuditLog } from '../../utils/audit';
+import { sendEmail } from '../../utils/email';
 
 export class AnalyticsService {
   constructor(public repo: AnalyticsRepository) {}
@@ -270,6 +271,31 @@ export class AnalyticsService {
       reportType: report.report_type
     });
 
+    // Actually email the configured recipients — this used to only publish
+    // an internal event and mark last_sent_at, with recipients_json never
+    // read by anything, so nobody actually received scheduled reports.
+    let recipients: string[] = [];
+    try {
+      recipients = JSON.parse(report.recipients_json || '[]');
+    } catch (e) {
+      recipients = [];
+    }
+
+    if (env && recipients.length > 0) {
+      const html = this.renderReportEmailHtml(title, rows);
+      for (const to of recipients) {
+        try {
+          await sendEmail(env, {
+            to,
+            subject: `Scheduled Report: ${report.name}`,
+            html
+          });
+        } catch (err) {
+          console.error(`Failed to email scheduled report ${reportId} to ${to}:`, err);
+        }
+      }
+    }
+
     const now = new Date().toISOString();
     await this.repo.updateScheduledReport(reportId, { last_sent_at: now });
 
@@ -297,5 +323,32 @@ export class AnalyticsService {
     });
 
     return true;
+  }
+
+  // Simple inline HTML table — capped at 50 rows so the email stays a
+  // reasonable size; recipients needing the full dataset can pull it from
+  // the Analytics/Reports export instead.
+  private renderReportEmailHtml(title: string, rows: any[]): string {
+    if (rows.length === 0) {
+      return `<h2>${title}</h2><p>No data available for this reporting period.</p>`;
+    }
+    const headers = Object.keys(rows[0]);
+    const displayRows = rows.slice(0, 50);
+    const headerHtml = headers.map(h => `<th style="padding:6px 10px;border:1px solid #ddd;text-align:left;">${h}</th>`).join('');
+    const bodyHtml = displayRows.map(row =>
+      `<tr>${headers.map(h => `<td style="padding:6px 10px;border:1px solid #ddd;">${row[h] ?? ''}</td>`).join('')}</tr>`
+    ).join('');
+    const truncatedNote = rows.length > displayRows.length
+      ? `<p>Showing ${displayRows.length} of ${rows.length} rows. Export the full report from Analytics for the complete dataset.</p>`
+      : '';
+
+    return `
+      <h2>${title}</h2>
+      <table style="border-collapse:collapse;font-family:sans-serif;font-size:13px;">
+        <thead><tr>${headerHtml}</tr></thead>
+        <tbody>${bodyHtml}</tbody>
+      </table>
+      ${truncatedNote}
+    `;
   }
 }

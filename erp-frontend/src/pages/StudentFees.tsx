@@ -208,7 +208,7 @@ export default function StudentFees({ isSubComponent = false }: { isSubComponent
         return alert('Student is not enrolled in any Course / Section. Enroll student first!');
       }
 
-      await api.post('/fees/generate-ledger', {
+      await api.post('/fees/records/generate', {
         student_id: selectedStudent.student_id,
         academic_year_id: studentEnrollment.academic_year_id,
         course_id: studentEnrollment.course_id,

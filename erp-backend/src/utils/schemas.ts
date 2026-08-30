@@ -14,6 +14,17 @@ export const ResetPasswordSchema = z.object({
   new_password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
+export const UpdateProfileSchema = z.object({
+  name: z.string().min(1, 'Name cannot be empty').optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Invalid email address').optional(),
+  current_password: z.string().optional(),
+  new_password: z.string().min(6, 'Password must be at least 6 characters').optional(),
+}).refine(
+  (data) => !data.new_password || Boolean(data.current_password),
+  { message: 'current_password is required to set a new_password', path: ['current_password'] }
+);
+
 export const VALID_INSTITUTION_TYPES = [
   'school',
   'college',

@@ -88,3 +88,46 @@ describe('AdmissionsService.approveApplication', () => {
     expect(losers.length).toBe(1);
   });
 });
+
+describe('AdmissionsService.rejectApplication', () => {
+  it('rejects a pending application and sets status to Rejected', async () => {
+    const { approverId, applicationId, repo, service } = await makeApplicationFixture();
+
+    await service.rejectApplication(applicationId, 'Not a fit', approverId);
+
+    const app = await repo.getApplicationById(applicationId);
+    expect(app.status).toBe('Rejected');
+  });
+
+  it('refuses to reject an already-approved application, leaving it Approved with its student link intact', async () => {
+    const { institutionId, approverId, applicationId, repo, service } = await makeApplicationFixture();
+
+    const result = await service.approveApplication(applicationId, institutionId, approverId);
+
+    await expect(
+      service.rejectApplication(applicationId, 'Changed my mind', approverId)
+    ).rejects.toThrow(/already been approved/);
+
+    const app = await repo.getApplicationById(applicationId);
+    expect(app.status).toBe('Approved');
+    expect(app.converted_student_id).toBe(result.studentId);
+
+    const student = await env.DB.prepare('SELECT * FROM students WHERE id = ?').bind(result.studentId).first<any>();
+    expect(student).not.toBeNull();
+  });
+
+  it('rejects a concurrent approve-then-reject race, leaving the application Approved', async () => {
+    const { institutionId, approverId, applicationId, repo, service } = await makeApplicationFixture();
+
+    // Approve and reject "race" - approve wins first in this ordering, so the
+    // guarded reject update should affect zero rows and the service should
+    // surface that as a clean error rather than silently corrupting status.
+    await service.approveApplication(applicationId, institutionId, approverId);
+    const guardResult = await repo.rejectApplicationIfNotApproved(applicationId, 'Race attempt', approverId);
+
+    expect(guardResult.meta.changes).toBe(0);
+
+    const app = await repo.getApplicationById(applicationId);
+    expect(app.status).toBe('Approved');
+  });
+});

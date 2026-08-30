@@ -45,6 +45,157 @@ interface StudentMarkRecord {
   remarks: string | null;
 }
 
+// Renders the marks table + header/footer for a single student's report card.
+// Shared between the single-student modal and the bulk (whole-exam) print view.
+function ReportCardBody({ card, fallbackInstitutionName }: { card: any; fallbackInstitutionName?: string | undefined }) {
+  return (
+    <div className="report-card-container">
+      {/* Institutional Header */}
+      <div className="report-card-header">
+        <div className="report-card-brand">
+          <div className="report-card-logo">
+            <Award size={28} />
+          </div>
+          <div>
+            <h2 className="report-card-inst-name">
+              {card.exam?.institution_name || fallbackInstitutionName || 'Academic Institution'}
+            </h2>
+            <p className="report-card-inst-subtitle">Official Statement of Academic Marks & Progress</p>
+          </div>
+        </div>
+        <div className="report-card-doc-title">
+          <span>ACADEMIC REPORT CARD</span>
+          <span className="report-card-term-badge">{card.exam?.name || 'Examination Event'}</span>
+        </div>
+      </div>
+
+      {/* Student Information Grid */}
+      <div className="report-card-info-grid">
+        <div className="report-card-info-col">
+          <div className="info-row">
+            <span className="info-label">Student Name</span>
+            <span className="info-val highlight">{card.student.first_name} {card.student.last_name}</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Roll Number</span>
+            <span className="info-val">{card.student.roll_number || '-'}</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Admission No</span>
+            <span className="info-val">{card.student.admission_number || '-'}</span>
+          </div>
+        </div>
+        <div className="report-card-info-col">
+          <div className="info-row">
+            <span className="info-label">Academic Year</span>
+            <span className="info-val">{card.exam.academic_year}</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Program / Class</span>
+            <span className="info-val">{card.exam.course}</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Examination</span>
+            <span className="info-val">{card.exam.name}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Subject Marks Table */}
+      <table className="report-card-table">
+        <thead>
+          <tr>
+            <th style={{ textAlign: 'left' }}>Subject Code</th>
+            <th style={{ textAlign: 'left' }}>Subject Name</th>
+            <th>Max</th>
+            <th>Obtained</th>
+            <th>%</th>
+            <th>Grade</th>
+            <th>GP</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {card.subjects.map((sub: any, idx: number) => {
+            const gradeClean = sub.grade?.toString().toLowerCase().replace('+', 'plus') || 'default';
+            return (
+              <tr key={idx}>
+                <td style={{ textAlign: 'left', fontWeight: 600 }}>{sub.subject_code}</td>
+                <td style={{ textAlign: 'left' }}>{sub.subject_name}</td>
+                <td>{sub.max_marks}</td>
+                <td style={{ fontWeight: 700 }}>{sub.marks_obtained}</td>
+                <td>{sub.percent}%</td>
+                <td>
+                  <span className={`grade-badge grade-${gradeClean}`}>
+                    {sub.grade}
+                  </span>
+                </td>
+                <td>{sub.grade_point}</td>
+                <td>
+                  <span className={`status-pill ${sub.is_passing ? 'pass' : 'fail'}`}>
+                    {sub.is_passing ? 'PASS' : 'FAIL'}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+          <tr className="report-card-total-row">
+            <td colSpan={2} style={{ textAlign: 'left', fontWeight: 800 }}>GRAND TOTAL</td>
+            <td>{card.total.max_marks}</td>
+            <td style={{ fontWeight: 800, fontSize: '1.05rem' }}>{card.total.marks_obtained}</td>
+            <td style={{ fontWeight: 800 }}>{card.total.percent}%</td>
+            <td>
+              <span className={`grade-badge grade-${card.total.grade?.toString().toLowerCase().replace('+', 'plus') || 'default'}`}>
+                {card.total.grade}
+              </span>
+            </td>
+            <td>{card.total.grade_point}</td>
+            <td>
+              <span className={`status-pill ${card.result === 'PASS' ? 'pass' : 'fail'}`}>
+                {card.result}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Summary & Metrics */}
+      <div className="report-card-stats-row">
+        <div className="stat-box">
+          <span className="stat-label">Class Rank</span>
+          <span className="stat-val">{card.total.rank ? `#${card.total.rank}` : 'N/A'}</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-label">Attendance</span>
+          <span className="stat-val">{card.attendance_percent !== null ? `${card.attendance_percent}%` : 'N/A'}</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-label">Final Result</span>
+          <span className={`stat-val ${card.result === 'PASS' ? 'text-success' : 'text-danger'}`}>
+            {card.result}
+          </span>
+        </div>
+      </div>
+
+      {/* Signatures */}
+      <div className="report-card-signatures">
+        <div className="sig-block">
+          <div className="sig-line"></div>
+          <span>Class Teacher</span>
+        </div>
+        <div className="sig-block">
+          <div className="sig-line"></div>
+          <span>Controller of Exams</span>
+        </div>
+        <div className="sig-block">
+          <div className="sig-line"></div>
+          <span>Principal</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Exams() {
   const { user } = useAuth();
   const userRoles = user?.roles || (user?.role ? [user.role] : []);
@@ -73,6 +224,9 @@ export default function Exams() {
   const [selectedReportCard, setSelectedReportCard] = useState<any | null>(null);
   const [showReportCardModal, setShowReportCardModal] = useState(false);
   const [loadingReportCard, setLoadingReportCard] = useState(false);
+  const [bulkReportCards, setBulkReportCards] = useState<any[] | null>(null);
+  const [showBulkReportCardModal, setShowBulkReportCardModal] = useState(false);
+  const [loadingBulkReportCards, setLoadingBulkReportCards] = useState(false);
 
   // --- SEARCH & FILTER STATES ---
   const [examSearchQuery, setExamSearchQuery] = useState('');
@@ -319,6 +473,20 @@ export default function Exams() {
       setShowReportCardModal(false);
     } finally {
       setLoadingReportCard(false);
+    }
+  };
+
+  const handleOpenBulkReportCards = async (examId: string) => {
+    try {
+      setLoadingBulkReportCards(true);
+      setShowBulkReportCardModal(true);
+      const data = await api.get(`/grades/report-card/${examId}`);
+      setBulkReportCards(data);
+    } catch (err: any) {
+      alert(err.message || 'Error loading report cards');
+      setShowBulkReportCardModal(false);
+    } finally {
+      setLoadingBulkReportCards(false);
     }
   };
 
@@ -924,6 +1092,15 @@ export default function Exams() {
                 <option value="F">Grade F Only</option>
               </select>
             </div>
+
+            <button
+              className="btn btn-outline"
+              disabled={!examResults || examResults.length === 0}
+              onClick={() => handleOpenBulkReportCards(selectedExam.id)}
+              title="Generate and print report cards for every student in this exam"
+            >
+              <Printer size={14} /> Print All Report Cards
+            </button>
           </div>
 
           <div className="card">
@@ -997,149 +1174,8 @@ export default function Exams() {
                   <p style={{ color: 'var(--text-muted)' }}>Building academic report card...</p>
                 </div>
               ) : selectedReportCard ? (
-                <div id="printable-report-card" className="report-card-container">
-                  {/* Institutional Header */}
-                  <div className="report-card-header">
-                    <div className="report-card-brand">
-                      <div className="report-card-logo">
-                        <Award size={28} />
-                      </div>
-                      <div>
-                        <h2 className="report-card-inst-name">
-                          {selectedReportCard.exam?.institution_name || user?.institution_name || 'Academic Institution'}
-                        </h2>
-                        <p className="report-card-inst-subtitle">Official Statement of Academic Marks & Progress</p>
-                      </div>
-                    </div>
-                    <div className="report-card-doc-title">
-                      <span>ACADEMIC REPORT CARD</span>
-                      <span className="report-card-term-badge">{selectedReportCard.exam?.name || 'Examination Event'}</span>
-                    </div>
-                  </div>
-
-                  {/* Student Information Grid */}
-                  <div className="report-card-info-grid">
-                    <div className="report-card-info-col">
-                      <div className="info-row">
-                        <span className="info-label">Student Name</span>
-                        <span className="info-val highlight">{selectedReportCard.student.first_name} {selectedReportCard.student.last_name}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Roll Number</span>
-                        <span className="info-val">{selectedReportCard.student.roll_number || '-'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Admission No</span>
-                        <span className="info-val">{selectedReportCard.student.admission_number || '-'}</span>
-                      </div>
-                    </div>
-                    <div className="report-card-info-col">
-                      <div className="info-row">
-                        <span className="info-label">Academic Year</span>
-                        <span className="info-val">{selectedReportCard.exam.academic_year}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Program / Class</span>
-                        <span className="info-val">{selectedReportCard.exam.course}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Examination</span>
-                        <span className="info-val">{selectedReportCard.exam.name}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Subject Marks Table */}
-                  <table className="report-card-table">
-                    <thead>
-                      <tr>
-                        <th style={{ textAlign: 'left' }}>Subject Code</th>
-                        <th style={{ textAlign: 'left' }}>Subject Name</th>
-                        <th>Max</th>
-                        <th>Obtained</th>
-                        <th>%</th>
-                        <th>Grade</th>
-                        <th>GP</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedReportCard.subjects.map((sub: any, idx: number) => {
-                        const gradeClean = sub.grade?.toString().toLowerCase().replace('+', 'plus') || 'default';
-                        return (
-                          <tr key={idx}>
-                            <td style={{ textAlign: 'left', fontWeight: 600 }}>{sub.subject_code}</td>
-                            <td style={{ textAlign: 'left' }}>{sub.subject_name}</td>
-                            <td>{sub.max_marks}</td>
-                            <td style={{ fontWeight: 700 }}>{sub.marks_obtained}</td>
-                            <td>{sub.percent}%</td>
-                            <td>
-                              <span className={`grade-badge grade-${gradeClean}`}>
-                                {sub.grade}
-                              </span>
-                            </td>
-                            <td>{sub.grade_point}</td>
-                            <td>
-                              <span className={`status-pill ${sub.is_passing ? 'pass' : 'fail'}`}>
-                                {sub.is_passing ? 'PASS' : 'FAIL'}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      <tr className="report-card-total-row">
-                        <td colSpan={2} style={{ textAlign: 'left', fontWeight: 800 }}>GRAND TOTAL</td>
-                        <td>{selectedReportCard.total.max_marks}</td>
-                        <td style={{ fontWeight: 800, fontSize: '1.05rem' }}>{selectedReportCard.total.marks_obtained}</td>
-                        <td style={{ fontWeight: 800 }}>{selectedReportCard.total.percent}%</td>
-                        <td>
-                          <span className={`grade-badge grade-${selectedReportCard.total.grade?.toString().toLowerCase().replace('+', 'plus') || 'default'}`}>
-                            {selectedReportCard.total.grade}
-                          </span>
-                        </td>
-                        <td>{selectedReportCard.total.grade_point}</td>
-                        <td>
-                          <span className={`status-pill ${selectedReportCard.result === 'PASS' ? 'pass' : 'fail'}`}>
-                            {selectedReportCard.result}
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  {/* Summary & Metrics */}
-                  <div className="report-card-stats-row">
-                    <div className="stat-box">
-                      <span className="stat-label">Class Rank</span>
-                      <span className="stat-val">{selectedReportCard.total.rank ? `#${selectedReportCard.total.rank}` : 'N/A'}</span>
-                    </div>
-                    <div className="stat-box">
-                      <span className="stat-label">Attendance</span>
-                      <span className="stat-val">{selectedReportCard.attendance_percent !== null ? `${selectedReportCard.attendance_percent}%` : 'N/A'}</span>
-                    </div>
-                    <div className="stat-box">
-                      <span className="stat-label">Final Result</span>
-                      <span className={`stat-val ${selectedReportCard.result === 'PASS' ? 'text-success' : 'text-danger'}`}>
-                        {selectedReportCard.result}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Signatures */}
-                  <div className="report-card-signatures">
-                    <div className="sig-block">
-                      <div className="sig-line"></div>
-                      <span>Class Teacher</span>
-                    </div>
-                    <div className="sig-block">
-                      <div className="sig-line"></div>
-                      <span>Controller of Exams</span>
-                    </div>
-                    <div className="sig-block">
-                      <div className="sig-line"></div>
-                      <span>Principal</span>
-                    </div>
-                  </div>
+                <div id="printable-report-card">
+                  <ReportCardBody card={selectedReportCard} fallbackInstitutionName={user?.institution_name} />
                 </div>
               ) : <p>No report card data loaded</p>}
             </div>
@@ -1152,7 +1188,48 @@ export default function Exams() {
           </div>
         </div>
       )}
-      
+
+      {showBulkReportCardModal && (
+        <div className="modal-overlay no-print" onClick={() => { setShowBulkReportCardModal(false); setBulkReportCards(null); }}>
+          <div className="modal exams-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '900px' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Award size={20} style={{ color: 'var(--primary)' }} />
+                <h3 style={{ margin: 0 }}>All Report Cards — {selectedExam?.name}</h3>
+              </div>
+              <button className="modal-close" onClick={() => { setShowBulkReportCardModal(false); setBulkReportCards(null); }}>✕</button>
+            </div>
+            <div className="modal-body" style={{ padding: '1.25rem' }}>
+              {loadingBulkReportCards ? (
+                <div style={{ textAlign: 'center', padding: '3rem' }}>
+                  <Award size={36} className="spinning" style={{ opacity: 0.6, marginBottom: '1rem' }} />
+                  <p style={{ color: 'var(--text-muted)' }}>Building report cards for all students...</p>
+                </div>
+              ) : bulkReportCards && bulkReportCards.length > 0 ? (
+                <>
+                  <p className="no-print" style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                    {bulkReportCards.length} report card{bulkReportCards.length === 1 ? '' : 's'} ready. Printing will place each on its own page.
+                  </p>
+                  <div id="printable-bulk-report-cards">
+                    {bulkReportCards.map((card: any, idx: number) => (
+                      <div key={card.student?.id || idx} className={idx < bulkReportCards.length - 1 ? 'report-card-page-break' : ''}>
+                        <ReportCardBody card={card} fallbackInstitutionName={user?.institution_name} />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : <p>No report cards available for this exam yet — marks may not be entered.</p>}
+            </div>
+            <div className="modal-footer no-print">
+              <button className="btn btn-outline" onClick={() => { setShowBulkReportCardModal(false); setBulkReportCards(null); }}>Close</button>
+              <button className="btn btn-primary" onClick={() => window.print()} disabled={!bulkReportCards || bulkReportCards.length === 0}>
+                <Printer size={16} /> Print All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </Layout>
   );
 }

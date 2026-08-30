@@ -1,0 +1,66 @@
+/* Component stylesheet for RegisterInstitution.tsx */
+
+.register-institution-card {
+  max-width: 560px;
+}
+
+.register-institution-subtitle {
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.register-institution-fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1rem 0.25rem;
+  margin: 0 0 1.25rem;
+}
+
+.register-institution-fieldset legend {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 0 0.4rem;
+}
+
+.register-institution-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 560px) {
+  .register-institution-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.register-institution-hint {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-top: 0.25rem;
+}
+
+.register-institution-error {
+  color: var(--danger);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.register-institution-btn {
+  width: 100%;
+}
+
+.register-institution-footer {
+  margin-top: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.register-institution-footer a {
+  color: var(--primary);
+  text-decoration: none;
+}

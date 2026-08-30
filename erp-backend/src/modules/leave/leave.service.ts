@@ -52,6 +52,20 @@ export class LeaveService {
     if (!app) throw new Error('Leave application not found');
     if (app.status !== 'Pending') throw new Error(`Application is already ${app.status}`);
 
+    // Quota check: don't let an approval push used_days past total_days. If no
+    // balance row exists at all, treat it as zero quota rather than unlimited —
+    // balances are provisioned via seedBalancesForYear() and an unseeded
+    // teacher/year/leave-type combo should block approval, not silently allow it.
+    const balance = await this.repo.getBalance(app.teacher_id, app.leave_type_id, app.academic_year_id);
+    const totalDays = balance?.total_days ?? 0;
+    const usedDays = balance?.used_days ?? 0;
+    const remaining = totalDays - usedDays;
+    if (app.days_count > remaining) {
+      throw new Error(
+        `Insufficient leave balance: ${app.teacher_first_name} ${app.teacher_last_name} has ${remaining} day(s) remaining of ${app.leave_type_name} (requested ${app.days_count}).`
+      );
+    }
+
     await this.repo.approveApplication(id, approverId, remarks);
     await this.repo.deductLeaveBalance(app.teacher_id, app.leave_type_id, app.academic_year_id, app.days_count);
   }

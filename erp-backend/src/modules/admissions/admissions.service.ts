@@ -132,6 +132,21 @@ export class AdmissionsService {
   }
 
   async rejectApplication(id: string, reason: string, approverId: string): Promise<void> {
-    await this.repo.rejectApplication(id, reason, approverId);
+    const app = await this.repo.getApplicationById(id);
+    if (!app) {
+      throw new Error('Application not found');
+    }
+    if (app.status === 'Approved') {
+      const err: any = new Error('Cannot reject an application that has already been approved and converted to a student record');
+      err.statusCode = 409;
+      throw err;
+    }
+
+    const guardResult = await this.repo.rejectApplicationIfNotApproved(id, reason, approverId);
+    if (guardResult.meta.changes === 0) {
+      const err: any = new Error('Application was approved by another request before this rejection could be applied');
+      err.statusCode = 409;
+      throw err;
+    }
   }
 }

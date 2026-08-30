@@ -21,3 +21,10 @@
   width: 100%;
 }
 
+.login-div-4 {
+  margin-top: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+

@@ -4,6 +4,7 @@ import { LeaveRepository } from './leave.repository';
 import { LeaveService } from './leave.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
+import { ApprovalsRepository } from '../approvals/approvals.repository';
 
 const leave = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -182,6 +183,22 @@ leave.post('/applications', async (c) => {
       reason,
     }, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'APPLY_LEAVE', 'leave', id, `Applied for leave from ${from_date} to ${to_date}`);
+
+    // Surface the request in the shared Approvals Inbox alongside the
+    // dedicated Leave Approvals page. Best-effort: a failure here shouldn't
+    // fail the leave application itself.
+    try {
+      const approvalsRepo = new ApprovalsRepository(c.env.DB);
+      await approvalsRepo.create(crypto.randomUUID(), user.institution_id, user.sub, {
+        approval_type: 'LEAVE_REQUEST',
+        entity_type: 'leave_applications',
+        entity_id: id,
+        remarks: reason
+      });
+    } catch (err) {
+      console.error('Failed to raise Approvals Inbox entry for leave application:', err);
+    }
+
     return c.json({ id }, 201);
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
@@ -225,6 +242,16 @@ leave.patch('/applications/:id/approve', requireRole('admin', 'super_admin', 'Pr
   try {
     await service.approveApplication(id, user.sub, remarks);
     await createAuditLog(c.env.DB, user.sub, 'APPROVE_LEAVE', 'leave', id, `Approved leave application ${id}`);
+
+    // Keep the Approvals Inbox in sync if this application was also raised
+    // there — approving here, on the dedicated page, shouldn't leave a stale
+    // "Pending" entry behind.
+    try {
+      await new ApprovalsRepository(c.env.DB).syncStatusForEntity('leave_applications', id, user.institution_id, 'Approved', user.sub, remarks);
+    } catch (err) {
+      console.error('Failed to sync Approvals Inbox entry for leave application:', err);
+    }
+
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
@@ -246,6 +273,13 @@ leave.patch('/applications/:id/reject', requireRole('admin', 'super_admin', 'Pri
   try {
     await service.rejectApplication(id, user.sub, remarks);
     await createAuditLog(c.env.DB, user.sub, 'REJECT_LEAVE', 'leave', id, `Rejected leave application ${id}: ${remarks}`);
+
+    try {
+      await new ApprovalsRepository(c.env.DB).syncStatusForEntity('leave_applications', id, user.institution_id, 'Rejected', user.sub, remarks);
+    } catch (err) {
+      console.error('Failed to sync Approvals Inbox entry for leave application:', err);
+    }
+
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);

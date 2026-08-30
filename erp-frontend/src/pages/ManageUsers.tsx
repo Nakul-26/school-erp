@@ -260,6 +260,16 @@ export default function ManageUsers() {
     }
   };
 
+  const handleResetPassword = async (user: User) => {
+    if (!confirm(`Reset the password for ${user.name} (${user.email})? A new temporary password will be generated.`)) return;
+    try {
+      const res = await api.post(`/users/${user.id}/reset-password`, {});
+      alert(`Temporary password for ${user.email}:\n\n${res.temp_password}\n\nShare this with the user securely — they should change it after logging in.`);
+    } catch (err: any) {
+      alert(err.message || 'Failed to reset password');
+    }
+  };
+
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -502,6 +512,7 @@ export default function ManageUsers() {
                       <td>
                         <div className="manage-users-row-5">
                           <button className="btn btn-sm btn-outline" onClick={() => handleOpenEdit(user)}><Edit size={12} /> Edit</button>
+                          <button className="btn btn-sm btn-outline" onClick={() => handleResetPassword(user)}><KeyRound size={12} /> Reset Password</button>
                           <button className="btn btn-sm btn-danger" onClick={() => handleDelete(user.id)} disabled={user.email === 'admin@oxford.edu'}><Trash2 size={12} /> Delete</button>
                         </div>
                       </td>
@@ -530,6 +541,7 @@ export default function ManageUsers() {
                     </div>
                     <div className="manage-users-row-5" style={{ marginTop: '1rem', flexWrap: 'wrap' }}>
                       <button className="btn btn-sm btn-outline" onClick={() => handleOpenEdit(user)}><Edit size={12} /> Edit</button>
+                      <button className="btn btn-sm btn-outline" onClick={() => handleResetPassword(user)}><KeyRound size={12} /> Reset Password</button>
                       <button className="btn btn-sm btn-danger" onClick={() => handleDelete(user.id)} disabled={user.email === 'admin@oxford.edu'}><Trash2 size={12} /> Delete</button>
                     </div>
                   </div>

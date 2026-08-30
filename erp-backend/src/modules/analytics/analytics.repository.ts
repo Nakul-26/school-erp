@@ -312,6 +312,16 @@ export class AnalyticsRepository {
         attendanceRatePct = Math.round(((attRes.total - absentCount) / attRes.total) * 1000) / 10;
       }
 
+      const marksRes = await this.db.prepare(`
+        SELECT COUNT(*) as total, SUM(CASE WHEN sm.marks_obtained >= es.min_marks THEN 1 ELSE 0 END) as passed
+        FROM student_marks sm
+        JOIN exam_subjects es ON es.id = sm.exam_subject_id
+        WHERE sm.institution_id = ? AND sm.is_active = 1 AND es.is_active = 1
+      `).bind(institutionId).first();
+      if (marksRes && marksRes.total > 0) {
+        passRatePct = Math.round((marksRes.passed / marksRes.total) * 1000) / 10;
+      }
+
       const feeRes = await this.db.prepare(`SELECT SUM(CASE WHEN status = 'PAID' THEN amount_paid ELSE 0 END) as paid, SUM(CASE WHEN status != 'PAID' THEN amount_due ELSE 0 END) as pending FROM fee_allocations WHERE institution_id = ?`).bind(institutionId).first();
       if (feeRes) {
         totalRevenue = feeRes.paid || totalRevenue;

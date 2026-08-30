@@ -5,8 +5,12 @@ import { UserService } from './users.service';
 import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 import { validateUploadedFile, sanitizeFileName } from '../../utils/file-upload';
+import { generatePassword, hashPassword } from '../../utils/password';
+import { sendEmail } from '../../utils/email';
+import { validateBody } from '../../middleware/validate';
+import { UpdateProfileSchema } from '../../utils/schemas';
 
-const users = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
+const users = new Hono<{ Bindings: Env; Variables: { user: JwtPayload; validBody: any } }>();
 
 users.use('*', authMiddleware);
 
@@ -116,6 +120,43 @@ users.put('/:id', async (c) => {
   return c.json({ success: true });
 });
 
+// Admin-initiated reset of another staff member's password. Distinct from the
+// self-service forgot/reset-password token flow in auth.routes.ts — this sets
+// the password directly (no email link round-trip) since the admin already
+// authenticated and is acting on behalf of a locked-out colleague.
+users.post('/:id/reset-password', requirePermission('user.manage'), async (c) => {
+  const user = c.get('user');
+  const id = c.req.param('id')!;
+  const repo = new UserRepository(c.env.DB);
+  const service = new UserService(repo);
+
+  const targetUser = await service.getUser(id);
+  if (!targetUser) return c.json({ error: 'User not found' }, 404);
+  if (targetUser.institution_id !== user.institution_id) {
+    return c.json({ error: 'Unauthorized' }, 403);
+  }
+
+  const tempPassword = generatePassword();
+  const password_hash = await hashPassword(tempPassword);
+
+  await repo.update(id, { password_hash, reset_token: null, reset_expires: null }, user.sub);
+  await createAuditLog(c.env.DB, user.sub, 'ADMIN_RESET_PASSWORD', 'users', id, `Admin reset password for user ${targetUser.email}`);
+
+  // Best-effort notification — the temp password is still returned in the
+  // response below so the admin can hand it out even if email delivery fails.
+  try {
+    await sendEmail(c.env, {
+      to: targetUser.email,
+      subject: 'Your password has been reset',
+      html: `<p>Hi ${targetUser.name},</p><p>An administrator reset your account password. Your temporary password is:</p><p><strong>${tempPassword}</strong></p><p>Please log in and change it as soon as possible.</p>`,
+    });
+  } catch (err) {
+    console.error('Failed to email temp password after admin reset:', err);
+  }
+
+  return c.json({ success: true, temp_password: tempPassword });
+});
+
 users.delete('/:id', requirePermission('user.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
@@ -134,9 +175,9 @@ users.delete('/:id', requirePermission('user.manage'), async (c) => {
   return c.json({ success: true });
 });
 
-users.post('/profile', async (c) => {
+users.post('/profile', validateBody(UpdateProfileSchema), async (c) => {
   const user = c.get('user');
-  const input = await c.req.json();
+  const input = c.get('validBody');
   const repo = new UserRepository(c.env.DB);
   const service = new UserService(repo);
 
@@ -148,6 +189,7 @@ users.post('/profile', async (c) => {
   if (input.current_password && input.new_password) {
     // We need to fetch the password_hash from db since getUser doesn't return it
     const fullUser = await repo.findByEmail(targetUser.email);
+    if (!fullUser) return c.json({ error: 'User not found' }, 404);
     const { verifyPassword, hashPassword } = await import('../../utils/password');
     const valid = await verifyPassword(input.current_password, fullUser.password_hash);
     if (!valid) {

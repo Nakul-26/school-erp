@@ -1,5 +1,6 @@
 export type DocumentStatus = 'UPLOADING' | 'AVAILABLE' | 'ARCHIVED' | 'DELETED';
 export type StorageProviderType = 'R2' | 'S3' | 'LOCAL';
+export type DocumentVisibility = 'all' | 'staff';
 
 export interface DocumentMetadata {
   id: string;
@@ -21,6 +22,7 @@ export interface DocumentMetadata {
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
+  visibility: DocumentVisibility;
 }
 
 export interface DocumentVersion {
@@ -55,6 +57,7 @@ export interface UploadDocumentDTO {
   uploadedBy: string;
   storageProvider?: StorageProviderType;
   changeSummary?: string;
+  visibility?: DocumentVisibility;
 }
 
 export interface SignedUrlPayload {

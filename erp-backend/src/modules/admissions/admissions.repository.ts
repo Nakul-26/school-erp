@@ -192,11 +192,15 @@ export class AdmissionsRepository {
     );
   }
 
-  async rejectApplication(id: string, reason: string, approverId: string): Promise<void> {
-    await this.db.prepare(`
+  // Guarded like approveApplicationIfNotApproved: an already-Approved
+  // application has a real linked student record, so rejecting it afterward
+  // (by mistake, or a race with a concurrent approval) would leave the
+  // application marked Rejected while the student it created still exists.
+  async rejectApplicationIfNotApproved(id: string, reason: string, approverId: string): Promise<D1Result> {
+    return this.db.prepare(`
       UPDATE admission_applications
       SET status = 'Rejected', rejection_reason = ?, approved_by = ?, updated_at = datetime('now')
-      WHERE id = ?
+      WHERE id = ? AND status != 'Approved'
     `).bind(reason, approverId, id).run();
   }
 }

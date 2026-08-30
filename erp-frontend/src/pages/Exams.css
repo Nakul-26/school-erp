@@ -485,5 +485,22 @@
   .no-print {
     display: none !important;
   }
+
+  #printable-bulk-report-cards, #printable-bulk-report-cards * {
+    visibility: visible;
+  }
+
+  #printable-bulk-report-cards {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 24px;
+  }
+
+  .report-card-page-break {
+    page-break-after: always;
+  }
 }
 

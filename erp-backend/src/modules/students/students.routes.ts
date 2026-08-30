@@ -5,6 +5,7 @@ import { StudentService } from './students.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
 import { getTeacherIdForUser, isTeacherOnly, teacherCanAccessStudent } from '../../utils/teacher-scope';
 import { validateUploadedFile, sanitizeFileName } from '../../utils/file-upload';
+import { createAuditLog } from '../../utils/audit';
 
 const students = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -382,6 +383,7 @@ students.post('/', requireRole('admin', 'super_admin'), async (c) => {
 
   try {
     const id = await service.createStudent(user.institution_id, input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'CREATE_STUDENT', 'students', id, `Created student ${input.first_name || ''} ${input.last_name || ''}`.trim());
     return c.json({ id }, 201);
   } catch (err: any) {
     const status = err.statusCode || 400;
@@ -403,6 +405,7 @@ students.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
   
   try {
     await service.updateStudent(id, user.institution_id, input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'UPDATE_STUDENT', 'students', id, `Updated student ${existing.first_name || ''} ${existing.last_name || ''}`.trim());
     return c.json({ success: true });
   } catch (err: any) {
     const status = err.statusCode || 400;
@@ -418,6 +421,7 @@ students.post('/:id/archive', requireRole('admin', 'super_admin'), async (c) => 
 
   try {
     await service.archiveStudent(id, user.institution_id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'ARCHIVE_STUDENT', 'students', id, `Archived student ${id}`);
     return c.json({ success: true });
   } catch (err: any) {
     const status = err.statusCode || 400;
@@ -433,6 +437,7 @@ students.post('/:id/restore', requireRole('admin', 'super_admin'), async (c) => 
 
   try {
     await service.restoreStudent(id, user.institution_id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'RESTORE_STUDENT', 'students', id, `Restored student ${id}`);
     return c.json({ success: true });
   } catch (err: any) {
     const status = err.statusCode || 400;
@@ -447,14 +452,15 @@ students.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
 
   const repo = new StudentRepository(c.env.DB);
   const service = new StudentService(repo, c.env.DB);
-  
+
   const existing = await service.getStudent(id);
   if (!existing || existing.institution_id !== user.institution_id) {
     return c.json({ error: 'Student not found' }, 404);
   }
-  
+
   try {
     await service.deleteStudent(id, user.institution_id, user.sub, force);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_STUDENT', 'students', id, `Deleted student ${existing.first_name || ''} ${existing.last_name || ''}`.trim());
     return c.json({ success: true });
   } catch (err: any) {
     const status = err.statusCode || 400;
@@ -500,6 +506,7 @@ students.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
           .bind(enrollId, sId, secExists.academic_year_id, secExists.course_id, section_id, user.sub, user.sub).run();
       }
     }
+    await createAuditLog(c.env.DB, user.sub, 'BULK_ASSIGN_SECTION_STUDENTS', 'students', section_id, `Bulk-assigned ${student_ids.length} student(s) to section ${section_id}`);
     return c.json({ success: true, message: `Successfully assigned section for ${student_ids.length} students.` });
   }
 
@@ -515,6 +522,7 @@ students.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
           .bind(nextSem, user.sub, activeEnrollment.id).run();
       }
     }
+    await createAuditLog(c.env.DB, user.sub, 'BULK_PROMOTE_STUDENTS', 'students', null, `Bulk-promoted semester for ${student_ids.length} student(s)`);
     return c.json({ success: true, message: `Successfully promoted semester for ${student_ids.length} students.` });
   }
 
@@ -523,6 +531,7 @@ students.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
       await db.prepare('UPDATE students SET status = \'DROPPED\', updated_at = datetime(\'now\'), updated_by = ? WHERE id = ? AND institution_id = ?')
         .bind(user.sub, sId, user.institution_id).run();
     }
+    await createAuditLog(c.env.DB, user.sub, 'BULK_DEACTIVATE_STUDENTS', 'students', null, `Bulk-deactivated ${student_ids.length} student(s)`);
     return c.json({ success: true, message: `Successfully deactivated ${student_ids.length} students.` });
   }
 
@@ -531,6 +540,7 @@ students.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
       await db.prepare('UPDATE students SET status = \'ACTIVE\', updated_at = datetime(\'now\'), updated_by = ? WHERE id = ? AND institution_id = ?')
         .bind(user.sub, sId, user.institution_id).run();
     }
+    await createAuditLog(c.env.DB, user.sub, 'BULK_REACTIVATE_STUDENTS', 'students', null, `Bulk-reactivated ${student_ids.length} student(s)`);
     return c.json({ success: true, message: `Successfully reactivated ${student_ids.length} students.` });
   }
 
@@ -538,8 +548,9 @@ students.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
     const repo = new StudentRepository(db);
     const service = new StudentService(repo);
     for (const sId of student_ids) {
-      await service.deleteStudent(sId, user.sub);
+      await service.deleteStudent(sId, user.institution_id, user.sub);
     }
+    await createAuditLog(c.env.DB, user.sub, 'BULK_DELETE_STUDENTS', 'students', null, `Bulk-deleted ${student_ids.length} student(s): ${student_ids.join(', ')}`);
     return c.json({ success: true, message: `Successfully deleted ${student_ids.length} students.` });
   }
 

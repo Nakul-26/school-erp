@@ -1,30 +1,59 @@
 import { Hono } from 'hono';
-import { Env } from '../../types';
-import { authMiddleware } from '../../middleware/auth';
+import { Env, JwtPayload } from '../../types';
+import { authMiddleware, requireRole } from '../../middleware/auth';
 import { DocumentsRepository } from './documents.repository';
 import { DocumentsService } from './documents.service';
 
-const docs = new Hono<{ Bindings: Env }>();
+const docs = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 docs.use('*', authMiddleware);
+
+// Roles allowed to manage documents (upload/version/archive/restore/delete/purge)
+// and to see documents marked visibility: 'staff'. Matches the staff-role sets
+// used elsewhere (e.g. sections.routes.ts, leave.routes.ts).
+const STAFF_ROLES = ['admin', 'super_admin', 'Admin', 'Super Admin', 'Principal', 'HOD', 'Teacher', 'teacher', 'Accountant', 'accountant'];
+
+function requireStaff() {
+  return requireRole(...STAFF_ROLES);
+}
+
+function isStaffRole(user: any): boolean {
+  const roles: string[] = user?.roles || (user?.role ? [user.role] : []);
+  return roles.some((r) => STAFF_ROLES.includes(r));
+}
 
 function getService(c: any) {
   const repo = new DocumentsRepository(c.env.DB);
   return new DocumentsService(repo);
 }
 
+// authMiddleware runs on every route in this router and returns 401 before
+// `next()` if it can't set `user`, so `user` is always present here. No
+// fallback to a fake institution/user — if that invariant is ever broken,
+// this should fail loudly (TypeError), not silently operate as 'inst-1'/'ADMIN'.
 function getInstId(c: any): string {
-  const user = c.get('user');
-  return user?.institution_id || c.req.header('x-institution-id') || 'inst-1';
+  return c.get('user').institution_id;
 }
 
 function getUserId(c: any): string {
-  const user = c.get('user');
-  return user?.sub || 'ADMIN';
+  return c.get('user').sub;
+}
+
+// Confirms the document exists and belongs to the caller's institution before
+// a mutating action touches it, so a staff member can't archive/version/
+// restore/delete another institution's document by guessing/reusing an id.
+async function assertOwnedDoc(c: any, id: string | undefined): Promise<Response | null> {
+  if (!id) return c.json({ error: 'Document not found' }, 404);
+  const service = getService(c);
+  const doc = await service.repo.getDocumentById(id);
+  if (!doc || doc.institution_id !== getInstId(c)) {
+    return c.json({ error: 'Document not found' }, 404);
+  }
+  return null;
 }
 
 // 1. Dashboard Metrics
-docs.get('/stats/dashboard', async (c) => {
+docs.get('/stats/dashboard', requireStaff(), async (c) => {
   const service = getService(c);
   const institutionId = getInstId(c);
   const stats = await service.repo.getStorageStats(institutionId);
@@ -51,14 +80,15 @@ docs.get('/', async (c) => {
     status,
     search,
     limit,
-    offset
+    offset,
+    viewerIsStaff: isStaffRole(c.get('user'))
   });
 
   return c.json(result);
 });
 
 // 3. Upload Document Endpoint (JSON Base64 or FormData)
-docs.post('/upload', async (c) => {
+docs.post('/upload', requireStaff(), async (c) => {
   const service = getService(c);
   const institutionId = getInstId(c);
   const userId = getUserId(c);
@@ -70,6 +100,7 @@ docs.post('/upload', async (c) => {
   let entityId = 'system';
   let buffer: ArrayBuffer = new Uint8Array(0).buffer;
   let changeSummary = 'Initial upload';
+  let visibility: 'all' | 'staff' = 'all';
 
   const contentType = c.req.header('Content-Type') || '';
 
@@ -84,6 +115,7 @@ docs.post('/upload', async (c) => {
     if (formData['category']) category = String(formData['category']);
     if (formData['entityType']) entityType = String(formData['entityType']);
     if (formData['entityId']) entityId = String(formData['entityId']);
+    if (formData['visibility'] === 'staff') visibility = 'staff';
   } else {
     const body = await c.req.json();
     filename = body.filename || body.originalFilename || filename;
@@ -92,6 +124,7 @@ docs.post('/upload', async (c) => {
     entityType = body.entityType || entityType;
     entityId = body.entityId || entityId;
     changeSummary = body.changeSummary || changeSummary;
+    if (body.visibility === 'staff') visibility = 'staff';
 
     if (body.contentBase64) {
       const binaryString = atob(body.contentBase64);
@@ -117,7 +150,8 @@ docs.post('/upload', async (c) => {
       mimeType,
       buffer,
       uploadedBy: userId,
-      changeSummary
+      changeSummary,
+      visibility
     }, c.env);
 
     return c.json(doc, 201);
@@ -131,7 +165,10 @@ docs.get('/:id', async (c) => {
   const service = getService(c);
   const id = c.req.param('id');
   const doc = await service.repo.getDocumentById(id);
-  if (!doc) return c.json({ error: 'Document not found' }, 404);
+  if (!doc || doc.institution_id !== getInstId(c)) return c.json({ error: 'Document not found' }, 404);
+  if (doc.visibility === 'staff' && !isStaffRole(c.get('user'))) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   const versions = await service.repo.listDocumentVersions(id);
   return c.json({
@@ -141,9 +178,11 @@ docs.get('/:id', async (c) => {
 });
 
 // 5. Upload New Version
-docs.post('/:id/version', async (c) => {
+docs.post('/:id/version', requireStaff(), async (c) => {
   const service = getService(c);
   const id = c.req.param('id');
+  const denied = await assertOwnedDoc(c, id);
+  if (denied) return denied;
   const userId = getUserId(c);
   const body = await c.req.json();
 
@@ -165,7 +204,7 @@ docs.post('/:id/version', async (c) => {
   }
 
   try {
-    const updated = await service.uploadNewVersion(id, {
+    const updated = await service.uploadNewVersion(id!, {
       originalFilename: filename,
       mimeType,
       buffer,
@@ -179,8 +218,27 @@ docs.post('/:id/version', async (c) => {
   }
 });
 
+// Shared visibility gate for the read endpoints below — fetches the doc,
+// 404s if it's not in the caller's institution, 403s if it's staff-only and
+// the caller isn't staff. Returns the doc so callers don't re-fetch it.
+async function loadDocForRead(c: any): Promise<{ doc: any } | { error: Response }> {
+  const service = getService(c);
+  const id = c.req.param('id');
+  const doc = await service.repo.getDocumentById(id);
+  if (!doc || doc.institution_id !== getInstId(c)) {
+    return { error: c.json({ error: 'Document not found' }, 404) };
+  }
+  if (doc.visibility === 'staff' && !isStaffRole(c.get('user'))) {
+    return { error: c.json({ error: 'Forbidden' }, 403) };
+  }
+  return { doc };
+}
+
 // 6. Generate Signed Download URL
 docs.get('/:id/signed-url', async (c) => {
+  const gate = await loadDocForRead(c);
+  if ('error' in gate) return gate.error;
+
   const service = getService(c);
   const id = c.req.param('id');
   const expiresIn = parseInt(c.req.query('expires_in') || '900');
@@ -195,6 +253,9 @@ docs.get('/:id/signed-url', async (c) => {
 
 // 7. Download File Content
 docs.get('/:id/download', async (c) => {
+  const gate = await loadDocForRead(c);
+  if ('error' in gate) return gate.error;
+
   const service = getService(c);
   const id = c.req.param('id');
 
@@ -211,6 +272,9 @@ docs.get('/:id/download', async (c) => {
 
 // 8. Verify Checksum Integrity
 docs.get('/:id/verify', async (c) => {
+  const gate = await loadDocForRead(c);
+  if ('error' in gate) return gate.error;
+
   const service = getService(c);
   const id = c.req.param('id');
 
@@ -223,13 +287,15 @@ docs.get('/:id/verify', async (c) => {
 });
 
 // 9. Archive Document
-docs.post('/:id/archive', async (c) => {
+docs.post('/:id/archive', requireStaff(), async (c) => {
   const service = getService(c);
   const id = c.req.param('id');
+  const denied = await assertOwnedDoc(c, id);
+  if (denied) return denied;
   const userId = getUserId(c);
 
   try {
-    const updated = await service.archiveDocument(id, userId);
+    const updated = await service.archiveDocument(id!, userId);
     return c.json(updated);
   } catch (err: any) {
     return c.json({ error: err.message }, 400);
@@ -237,13 +303,15 @@ docs.post('/:id/archive', async (c) => {
 });
 
 // 10. Restore Document
-docs.post('/:id/restore', async (c) => {
+docs.post('/:id/restore', requireStaff(), async (c) => {
   const service = getService(c);
   const id = c.req.param('id');
+  const denied = await assertOwnedDoc(c, id);
+  if (denied) return denied;
   const userId = getUserId(c);
 
   try {
-    const updated = await service.restoreDocument(id, userId);
+    const updated = await service.restoreDocument(id!, userId);
     return c.json(updated);
   } catch (err: any) {
     return c.json({ error: err.message }, 400);
@@ -251,13 +319,15 @@ docs.post('/:id/restore', async (c) => {
 });
 
 // 11. Soft Delete Document
-docs.delete('/:id', async (c) => {
+docs.delete('/:id', requireStaff(), async (c) => {
   const service = getService(c);
   const id = c.req.param('id');
+  const denied = await assertOwnedDoc(c, id);
+  if (denied) return denied;
   const userId = getUserId(c);
 
   try {
-    const updated = await service.softDeleteDocument(id, userId);
+    const updated = await service.softDeleteDocument(id!, userId);
     return c.json(updated);
   } catch (err: any) {
     return c.json({ error: err.message }, 400);
@@ -265,7 +335,7 @@ docs.delete('/:id', async (c) => {
 });
 
 // 12. Purge Expired Deleted Documents
-docs.post('/purge-expired', async (c) => {
+docs.post('/purge-expired', requireStaff(), async (c) => {
   const service = getService(c);
   const institutionId = getInstId(c);
   const userId = getUserId(c);

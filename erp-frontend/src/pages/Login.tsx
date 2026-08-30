@@ -61,6 +61,9 @@ export default function Login() {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+        <div className="login-div-4">
+          New institution? <Link to="/register-institution" className="login-Link-2">Register here</Link>
+        </div>
       </div>
     </div>
   )

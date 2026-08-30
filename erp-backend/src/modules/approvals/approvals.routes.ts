@@ -4,6 +4,8 @@ import { ApprovalsRepository } from './approvals.repository';
 import { CreateApprovalInput } from './approvals.types';
 import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
+import { LeaveRepository } from '../leave/leave.repository';
+import { LeaveService } from '../leave/leave.service';
 
 const approvals = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -79,9 +81,29 @@ approvals.post('/:id/action', async (c) => {
   }
 
   const repo = new ApprovalsRepository(c.env.DB);
+  const record = await repo.findById(id, user.institution_id);
+  if (!record) {
+    return c.json({ error: 'Approval request not found' }, 404);
+  }
+  if (record.status !== 'Pending') {
+    return c.json({ error: `Approval request is already ${record.status}` }, 400);
+  }
 
   try {
-    await repo.processApproval(id, user.institution_id, user.sub, body.status, body.remarks);
+    // Dispatch to the real domain action for entity types that have one, so
+    // approving here actually performs the underlying effect (e.g. deducting
+    // leave balance, subject to the same quota check as the dedicated Leave
+    // Approvals page) rather than just flipping a status flag.
+    if (record.entity_type === 'leave_applications') {
+      const leaveService = new LeaveService(new LeaveRepository(c.env.DB));
+      if (body.status === 'Approved') {
+        await leaveService.approveApplication(record.entity_id, user.sub, body.remarks);
+      } else {
+        await leaveService.rejectApplication(record.entity_id, user.sub, body.remarks || 'Rejected via Approvals Inbox');
+      }
+    }
+
+    await repo.markProcessed(id, user.institution_id, user.sub, body.status, body.remarks);
     await createAuditLog(
       c.env.DB,
       user.sub,
@@ -93,7 +115,8 @@ approvals.post('/:id/action', async (c) => {
 
     return c.json({ success: true });
   } catch (err: any) {
-    return c.json({ error: err.message }, 500);
+    const status = err.statusCode || 400;
+    return c.json({ error: err.message }, status as any);
   }
 });
 

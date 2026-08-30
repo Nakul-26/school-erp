@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import SkeletonLoader from './components/SkeletonLoader';
 
 const AccessDenied = lazy(() => import('./pages/AccessDenied'));
+const RegisterInstitution = lazy(() => import('./pages/RegisterInstitution'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -113,6 +114,7 @@ function App() {
           <Routes>
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/register-institution" element={<RegisterInstitution />} />
           <Route path="/access-denied" element={<AccessDenied />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />

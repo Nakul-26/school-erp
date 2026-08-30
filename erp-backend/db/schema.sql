@@ -449,7 +449,7 @@ CREATE TABLE IF NOT EXISTS documents (
   uploaded_by TEXT REFERENCES users(id) ON DELETE SET NULL,
   created_at TEXT DEFAULT (datetime('now')),
   is_active INTEGER DEFAULT 1
-, category TEXT DEFAULT 'General', original_filename TEXT DEFAULT '', stored_filename TEXT DEFAULT '', extension TEXT DEFAULT '', size_bytes INTEGER DEFAULT 0, checksum_sha256 TEXT DEFAULT '', storage_provider TEXT DEFAULT 'R2', storage_key TEXT DEFAULT '', version INTEGER DEFAULT 1, status TEXT DEFAULT 'AVAILABLE', updated_at TEXT DEFAULT (datetime('now')), deleted_at TEXT);
+, category TEXT DEFAULT 'General', original_filename TEXT DEFAULT '', stored_filename TEXT DEFAULT '', extension TEXT DEFAULT '', size_bytes INTEGER DEFAULT 0, checksum_sha256 TEXT DEFAULT '', storage_provider TEXT DEFAULT 'R2', storage_key TEXT DEFAULT '', version INTEGER DEFAULT 1, status TEXT DEFAULT 'AVAILABLE', updated_at TEXT DEFAULT (datetime('now')), deleted_at TEXT, visibility TEXT NOT NULL DEFAULT 'all');
 
 CREATE TABLE IF NOT EXISTS exam_subjects (
   id TEXT PRIMARY KEY,

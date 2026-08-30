@@ -41,13 +41,22 @@ teacherAssignments.get('/section/:sectionId', async (c) => {
 teacherAssignments.post('/', requireRole('admin', 'super_admin'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
-  const repo = new TeacherAssignmentRepository(c.env.DB);
-  if (!await repo.referencesBelongToInstitution(input, user.institution_id)) {
-    return c.json({ error: 'Invalid assignment references' }, 400);
+
+  if (!input.teacher_id || !input.subject_id || !input.course_id || !input.section_id || !input.academic_year_id) {
+    return c.json({ error: 'teacher_id, subject_id, course_id, section_id, and academic_year_id are required' }, 400);
   }
-  const service = new TeacherAssignmentService(repo);
-  const id = await service.createAssignment(input, user.sub);
-  return c.json({ id }, 201);
+
+  const repo = new TeacherAssignmentRepository(c.env.DB);
+  try {
+    if (!await repo.referencesBelongToInstitution(input, user.institution_id)) {
+      return c.json({ error: 'Invalid assignment references' }, 400);
+    }
+    const service = new TeacherAssignmentService(repo);
+    const id = await service.createAssignment(input, user.sub);
+    return c.json({ id }, 201);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
 teacherAssignments.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
@@ -57,9 +66,13 @@ teacherAssignments.delete('/:id', requireRole('admin', 'super_admin'), async (c)
   if (!await repo.belongsToInstitution(id, user.institution_id)) {
     return c.json({ error: 'Assignment not found' }, 404);
   }
-  const service = new TeacherAssignmentService(repo);
-  await service.deleteAssignment(id, user.sub);
-  return c.json({ success: true });
+  try {
+    const service = new TeacherAssignmentService(repo);
+    await service.deleteAssignment(id, user.sub);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
 export default teacherAssignments;

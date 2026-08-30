@@ -50,13 +50,22 @@ enrollments.get('/student/:studentId', async (c) => {
 enrollments.post('/', requireRole('admin', 'super_admin'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
-  const repo = new EnrollmentRepository(c.env.DB);
-  if (!await repo.referencesBelongToInstitution(input, user.institution_id)) {
-    return c.json({ error: 'Invalid enrollment references' }, 400);
+
+  if (!input.student_id || !input.academic_year_id || !input.course_id || !input.section_id) {
+    return c.json({ error: 'student_id, academic_year_id, course_id, and section_id are required' }, 400);
   }
-  const service = new EnrollmentService(repo);
-  const id = await service.createEnrollment(input, user.sub);
-  return c.json({ id }, 201);
+
+  const repo = new EnrollmentRepository(c.env.DB);
+  try {
+    if (!await repo.referencesBelongToInstitution(input, user.institution_id)) {
+      return c.json({ error: 'Invalid enrollment references' }, 400);
+    }
+    const service = new EnrollmentService(repo);
+    const id = await service.createEnrollment(input, user.sub);
+    return c.json({ id }, 201);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
 enrollments.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
@@ -67,12 +76,16 @@ enrollments.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
   if (!await repo.belongsToInstitution(id, user.institution_id)) {
     return c.json({ error: 'Enrollment not found' }, 404);
   }
-  if (!await repo.updateReferencesBelongToInstitution(id, input, user.institution_id)) {
-    return c.json({ error: 'Invalid enrollment references' }, 400);
+  try {
+    if (!await repo.updateReferencesBelongToInstitution(id, input, user.institution_id)) {
+      return c.json({ error: 'Invalid enrollment references' }, 400);
+    }
+    const service = new EnrollmentService(repo);
+    await service.updateEnrollment(id, input, user.sub);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
   }
-  const service = new EnrollmentService(repo);
-  await service.updateEnrollment(id, input, user.sub);
-  return c.json({ success: true });
 });
 
 enrollments.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
@@ -82,9 +95,13 @@ enrollments.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
   if (!await repo.belongsToInstitution(id, user.institution_id)) {
     return c.json({ error: 'Enrollment not found' }, 404);
   }
-  const service = new EnrollmentService(repo);
-  await service.deleteEnrollment(id, user.sub);
-  return c.json({ success: true });
+  try {
+    const service = new EnrollmentService(repo);
+    await service.deleteEnrollment(id, user.sub);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
 export default enrollments;

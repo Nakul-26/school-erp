@@ -1,4 +1,4 @@
-import { DocumentMetadata, DocumentVersion, DocumentStatus, StorageProviderType } from './types';
+import { DocumentMetadata, DocumentVersion, DocumentStatus, StorageProviderType, DocumentVisibility } from './types';
 
 export class DocumentsRepository {
   constructor(private db: any) {}
@@ -20,19 +20,21 @@ export class DocumentsRepository {
     version?: number;
     status?: DocumentStatus;
     uploaded_by: string;
+    visibility?: DocumentVisibility;
   }): Promise<DocumentMetadata> {
     const now = new Date().toISOString();
     const status = data.status || 'AVAILABLE';
     const provider = data.storage_provider || 'R2';
     const version = data.version || 1;
+    const visibility = data.visibility || 'all';
 
     await this.db.prepare(
       `INSERT INTO documents (
         id, institution_id, entity_type, entity_id, category,
         original_filename, stored_filename, mime_type, extension,
         size_bytes, checksum_sha256, storage_provider, storage_key,
-        version, status, uploaded_by, name, file_key, file_size, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        version, status, uploaded_by, name, file_key, file_size, created_at, updated_at, visibility
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       data.id,
       data.institution_id,
@@ -54,7 +56,8 @@ export class DocumentsRepository {
       data.storage_key,      // legacy file_key
       data.size_bytes,       // legacy file_size
       now,
-      now
+      now,
+      visibility
     ).run();
 
     return (await this.getDocumentById(data.id))!;
@@ -75,11 +78,17 @@ export class DocumentsRepository {
     uploaded_by?: string;
     limit?: number;
     offset?: number;
+    viewerIsStaff?: boolean;
   }): Promise<{ documents: DocumentMetadata[]; total: number }> {
     let query = `SELECT * FROM documents WHERE institution_id = ?`;
     let countQuery = `SELECT COUNT(*) as count FROM documents WHERE institution_id = ?`;
     const params: any[] = [filters.institution_id];
     const countParams: any[] = [filters.institution_id];
+
+    if (!filters.viewerIsStaff) {
+      query += ` AND visibility != 'staff'`;
+      countQuery += ` AND visibility != 'staff'`;
+    }
 
     if (filters.status) {
       query += ` AND status = ?`;

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { Env, JwtPayload } from '../../types';
 import { WeeklyTimetableRepository } from './weekly-timetable.repository';
 import { WeeklyTimetableService } from './weekly-timetable.service';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 import { isYearLockedOrArchived } from '../../utils/academic-year-lock';
 import { isTeacherOnly, getTeacherIdForUser, teacherHasSectionAccess } from '../../utils/teacher-scope';
@@ -11,7 +11,7 @@ const timetable = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>()
 
 timetable.use('*', authMiddleware);
 
-timetable.get('/', async (c) => {
+timetable.get('/', requirePermission('timetable.view'), async (c) => {
   const user = c.get('user');
   let sectionId = c.req.query('section_id');
   let teacherId = c.req.query('teacher_id');
@@ -49,7 +49,7 @@ timetable.get('/', async (c) => {
   return c.json(results);
 });
 
-timetable.get('/:id', async (c) => {
+timetable.get('/:id', requirePermission('timetable.view'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const db = c.env.DB;
@@ -70,7 +70,7 @@ timetable.get('/:id', async (c) => {
   return c.json(result);
 });
 
-timetable.post('/', async (c) => {
+timetable.post('/', requirePermission('timetable.manage'), async (c) => {
   const user = c.get('user');
   if (isTeacherOnly(user)) {
     return c.json({ error: 'Forbidden: Teachers cannot modify timetable entries' }, 403);
@@ -95,7 +95,7 @@ timetable.post('/', async (c) => {
   }
 });
 
-timetable.put('/:id', async (c) => {
+timetable.put('/:id', requirePermission('timetable.manage'), async (c) => {
   const user = c.get('user');
   if (isTeacherOnly(user)) {
     return c.json({ error: 'Forbidden: Teachers cannot modify timetable entries' }, 403);
@@ -127,7 +127,7 @@ timetable.put('/:id', async (c) => {
   }
 });
 
-timetable.delete('/:id', async (c) => {
+timetable.delete('/:id', requirePermission('timetable.manage'), async (c) => {
   const user = c.get('user');
   if (isTeacherOnly(user)) {
     return c.json({ error: 'Forbidden: Teachers cannot modify timetable entries' }, 403);

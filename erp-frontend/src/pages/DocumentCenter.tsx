@@ -23,6 +23,7 @@ interface DocumentMetadata {
   uploaded_by: string;
   created_at: string;
   updated_at: string;
+  visibility: 'all' | 'staff';
 }
 
 interface DocumentVersion {
@@ -76,6 +77,7 @@ const DocumentCenter: React.FC = () => {
   const [uploadEntityId, setUploadEntityId] = useState<string>('stud-101');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadChangeSummary, setUploadChangeSummary] = useState<string>('Initial document upload');
+  const [uploadVisibility, setUploadVisibility] = useState<'all' | 'staff'>('all');
 
   // Version Form
   const [versionFile, setVersionFile] = useState<File | null>(null);
@@ -131,6 +133,7 @@ const DocumentCenter: React.FC = () => {
       formData.append('entityType', uploadEntityType);
       formData.append('entityId', uploadEntityId);
       formData.append('changeSummary', uploadChangeSummary);
+      formData.append('visibility', uploadVisibility);
 
       const res = await authFetch('/documents/upload', {
         method: 'POST',
@@ -584,6 +587,17 @@ const DocumentCenter: React.FC = () => {
                     value={uploadEntityId}
                     onChange={(e) => setUploadEntityId(e.target.value)}
                   />
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={uploadVisibility === 'staff'}
+                      onChange={(e) => setUploadVisibility(e.target.checked ? 'staff' : 'all')}
+                    />
+                    Staff only (hidden from students &amp; parents)
+                  </label>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>

@@ -88,6 +88,14 @@ export class LeaveRepository {
     return results || [];
   }
 
+  async getBalance(teacherId: string, leaveTypeId: string, academicYearId: string): Promise<{ total_days: number; used_days: number } | null> {
+    return await this.db.prepare(`
+      SELECT total_days, used_days
+      FROM leave_balances
+      WHERE teacher_id = ? AND leave_type_id = ? AND academic_year_id = ? AND is_active = 1
+    `).bind(teacherId, leaveTypeId, academicYearId).first<{ total_days: number; used_days: number }>();
+  }
+
   async getAllBalancesForYear(institutionId: string, academicYearId: string): Promise<any[]> {
     const { results } = await this.db.prepare(`
       SELECT lb.*,

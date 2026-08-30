@@ -6,14 +6,21 @@ export class UserService {
   constructor(private repo: UserRepository) {}
 
   async createUser(input: CreateUserInput & { password?: string; roles?: string[] }, userId?: string): Promise<string> {
+    // Validate required fields up front — binding `undefined` to a D1 prepared
+    // statement throws an opaque D1_TYPE_ERROR instead of a usable message,
+    // so catch missing fields here and fail with a clean, actionable error.
+    if (!input.email || !input.email.trim()) throw new Error('Email is required');
+    if (!input.username || !input.username.trim()) throw new Error('Username is required');
+    if (!input.name || !input.name.trim()) throw new Error('Name is required');
+
     const id = crypto.randomUUID();
     const password = input.password || generatePassword();
     const password_hash = await hashPassword(password);
-    
+
     // Check if username/email exists
     const existingEmail = await this.repo.findByEmail(input.email);
     if (existingEmail) throw new Error('Email already exists');
-    
+
     const existingUsername = await this.repo.findByUsername(input.username);
     if (existingUsername) throw new Error('Username already exists');
 

@@ -19,8 +19,8 @@ export class TeacherRepository {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id, institutionId, input.user_id || null, input.employee_id, input.first_name, input.middle_name || null, input.last_name,
-      input.email || null, input.phone || null, input.joining_date || null, input.designation || null, 
-      input.department || null, input.status, userId || null, userId || null,
+      input.email || null, input.phone || null, input.joining_date || null, input.designation || null,
+      input.department || null, input.status || 'ACTIVE', userId || null, userId || null,
       input.qualification || null, input.experience || null
     ).run();
   }

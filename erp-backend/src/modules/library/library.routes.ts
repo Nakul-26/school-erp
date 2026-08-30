@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware, requirePermission } from '../../middleware/auth';
 import type { Env } from '../../types';
 
 const library = new Hono<{ Bindings: Env }>();
@@ -49,7 +49,7 @@ async function ensureLibraryTables(db: D1Database) {
 }
 
 // 1. Get all books
-library.get('/books', authMiddleware, async (c) => {
+library.get('/books', authMiddleware, requirePermission('library.access'), async (c) => {
   const user = c.get('user');
   await ensureLibraryTables(c.env.DB);
   
@@ -63,7 +63,7 @@ library.get('/books', authMiddleware, async (c) => {
 });
 
 // 2. Add book
-library.post('/books', authMiddleware, async (c) => {
+library.post('/books', authMiddleware, requirePermission('library.manage'), async (c) => {
   const user = c.get('user');
   await ensureLibraryTables(c.env.DB);
   const body = await c.req.json();
@@ -97,7 +97,7 @@ library.post('/books', authMiddleware, async (c) => {
 });
 
 // 3. Edit book
-library.put('/books/:id', authMiddleware, async (c) => {
+library.put('/books/:id', authMiddleware, requirePermission('library.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   await ensureLibraryTables(c.env.DB);
@@ -136,7 +136,7 @@ library.put('/books/:id', authMiddleware, async (c) => {
 });
 
 // 4. Delete book (Soft delete)
-library.delete('/books/:id', authMiddleware, async (c) => {
+library.delete('/books/:id', authMiddleware, requirePermission('library.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   await ensureLibraryTables(c.env.DB);
@@ -149,7 +149,7 @@ library.delete('/books/:id', authMiddleware, async (c) => {
 });
 
 // 5. Get transactions (Issue/returns list)
-library.get('/transactions', authMiddleware, async (c) => {
+library.get('/transactions', authMiddleware, requirePermission('library.access'), async (c) => {
   const user = c.get('user');
   await ensureLibraryTables(c.env.DB);
 
@@ -169,7 +169,7 @@ library.get('/transactions', authMiddleware, async (c) => {
 });
 
 // 6. Issue book
-library.post('/transactions/issue', authMiddleware, async (c) => {
+library.post('/transactions/issue', authMiddleware, requirePermission('library.manage'), async (c) => {
   const user = c.get('user');
   await ensureLibraryTables(c.env.DB);
   const body = await c.req.json();
@@ -217,7 +217,7 @@ library.post('/transactions/issue', authMiddleware, async (c) => {
 });
 
 // 7. Return book & calculate fines
-library.post('/transactions/:id/return', authMiddleware, async (c) => {
+library.post('/transactions/:id/return', authMiddleware, requirePermission('library.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   await ensureLibraryTables(c.env.DB);
@@ -259,7 +259,7 @@ library.post('/transactions/:id/return', authMiddleware, async (c) => {
 });
 
 // 8. Pay fine
-library.post('/transactions/:id/pay-fine', authMiddleware, async (c) => {
+library.post('/transactions/:id/pay-fine', authMiddleware, requirePermission('library.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   await ensureLibraryTables(c.env.DB);

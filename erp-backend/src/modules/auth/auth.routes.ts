@@ -69,6 +69,9 @@ auth.post('/register-institution', rateLimit(5, 60 * 60 * 1000), validateBody(Re
 
   try {
     const result = await service.registerInstitution(data);
+    if (result && result.token) {
+      establishSession(c, result.token);
+    }
     return c.json(result, 201);
   } catch (e: any) {
     return c.json({ error: e.message }, 400);

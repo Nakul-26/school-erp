@@ -36,13 +36,22 @@ guardians.get('/:id', async (c) => {
 guardians.post('/', requireRole('admin', 'super_admin'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
+
+  if (!input.student_id || !input.name || !input.relationship) {
+    return c.json({ error: 'student_id, name, and relationship are required' }, 400);
+  }
+
   const repo = new GuardianRepository(c.env.DB);
   if (!await repo.studentBelongsToInstitution(input.student_id, user.institution_id)) {
     return c.json({ error: 'Student not found' }, 404);
   }
-  const service = new GuardianService(repo);
-  const id = await service.createGuardian(input, user.sub);
-  return c.json({ id }, 201);
+  try {
+    const service = new GuardianService(repo);
+    const id = await service.createGuardian(input, user.sub);
+    return c.json({ id }, 201);
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
 guardians.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
@@ -53,9 +62,13 @@ guardians.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
   if (!await repo.belongsToInstitution(id, user.institution_id)) {
     return c.json({ error: 'Guardian not found' }, 404);
   }
-  const service = new GuardianService(repo);
-  await service.updateGuardian(id, input, user.sub);
-  return c.json({ success: true });
+  try {
+    const service = new GuardianService(repo);
+    await service.updateGuardian(id, input, user.sub);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
 guardians.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
@@ -65,9 +78,13 @@ guardians.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
   if (!await repo.belongsToInstitution(id, user.institution_id)) {
     return c.json({ error: 'Guardian not found' }, 404);
   }
-  const service = new GuardianService(repo);
-  await service.deleteGuardian(id, user.sub);
-  return c.json({ success: true });
+  try {
+    const service = new GuardianService(repo);
+    await service.deleteGuardian(id, user.sub);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 400);
+  }
 });
 
 export default guardians;

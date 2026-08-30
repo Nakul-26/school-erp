@@ -125,30 +125,68 @@ class JobRegistry {
 
     // 4. GenerateReportCardJob
     this.register('GenerateReportCardJob', async (payload: any, ctx: JobHandlerContext): Promise<JobHandlerResult> => {
-      const sectionId = payload?.sectionId || 'all';
-      ctx.log(`[GenerateReportCardJob] Compiling academic report cards for section: ${sectionId}`);
-      
-      let count = payload?.studentCount || 45;
-      ctx.log(`[GenerateReportCardJob] Rendered ${count} PDF student grade reports.`);
+      const examId = payload?.examId;
+      if (!examId) {
+        return {
+          success: false,
+          message: 'GenerateReportCardJob requires a payload.examId identifying which exam to build report cards for.',
+          data: { generatedCount: 0 }
+        };
+      }
+
+      ctx.log(`[GenerateReportCardJob] Compiling academic report cards for exam: ${examId}`);
+
+      let count = 0;
+      if (ctx.db) {
+        try {
+          const { GradesRepository } = await import('../grades/grades.repository');
+          const { GradesService } = await import('../grades/grades.service');
+          const repo = new GradesRepository(ctx.db);
+          const service = new GradesService(repo);
+          const cards = await service.buildAllReportCards(examId, ctx.job.institution_id);
+          count = cards.length;
+        } catch (e) {
+          ctx.log(`[GenerateReportCardJob] Warning: ${(e as Error).message}`);
+          return {
+            success: false,
+            message: `Failed to build report cards for exam ${examId}: ${(e as Error).message}`,
+            data: { generatedCount: 0, examId }
+          };
+        }
+      }
+
+      ctx.log(`[GenerateReportCardJob] Computed ${count} student report cards from real marks data.`);
 
       return {
         success: true,
-        message: `Generated ${count} report cards for section ${sectionId}.`,
-        data: { generatedCount: count, sectionId }
+        message: `Generated ${count} report cards for exam ${examId}.`,
+        data: { generatedCount: count, examId }
       };
     });
 
     // 5. NotificationJob
     this.register('NotificationJob', async (payload: any, ctx: JobHandlerContext): Promise<JobHandlerResult> => {
       ctx.log(`[NotificationJob] Processing queued multi-channel notification dispatch...`);
-      
-      const channel = payload?.channel || 'all';
-      ctx.log(`[NotificationJob] Dispatched notification payloads via provider bindings (${channel}).`);
+
+      let result = { processed: 0, succeeded: 0, failed: 0, deadLetter: 0 };
+      if (ctx.db && ctx.env) {
+        try {
+          const { NotificationsRepository } = await import('../notifications/notifications.repository');
+          const { NotificationsService } = await import('../notifications/notifications.service');
+          const repo = new NotificationsRepository(ctx.db);
+          const service = new NotificationsService(repo, ctx.db);
+          result = await service.processNotificationQueue(ctx.env);
+        } catch (e) {
+          ctx.log(`[NotificationJob] Warning: ${(e as Error).message}`);
+        }
+      }
+
+      ctx.log(`[NotificationJob] Processed ${result.processed} queued notifications (${result.succeeded} delivered, ${result.failed} failed, ${result.deadLetter} dead-lettered).`);
 
       return {
         success: true,
-        message: `Dispatched notification channel: ${channel}`,
-        data: { channel }
+        message: `Processed ${result.processed} queued notifications: ${result.succeeded} delivered, ${result.failed} failed, ${result.deadLetter} dead-lettered.`,
+        data: result
       };
     });
 

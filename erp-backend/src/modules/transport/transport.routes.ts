@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware, requirePermission } from '../../middleware/auth';
 import type { Env } from '../../types';
 
 const transport = new Hono<{ Bindings: Env }>();
@@ -44,7 +44,7 @@ async function ensureTransportTables(db: D1Database) {
 }
 
 // 1. Get all routes
-transport.get('/routes', authMiddleware, async (c) => {
+transport.get('/routes', authMiddleware, requirePermission('transport.view'), async (c) => {
   const user = c.get('user');
   await ensureTransportTables(c.env.DB);
   
@@ -58,7 +58,7 @@ transport.get('/routes', authMiddleware, async (c) => {
 });
 
 // 2. Create route
-transport.post('/routes', authMiddleware, async (c) => {
+transport.post('/routes', authMiddleware, requirePermission('transport.manage'), async (c) => {
   const user = c.get('user');
   await ensureTransportTables(c.env.DB);
   const body = await c.req.json();
@@ -88,7 +88,7 @@ transport.post('/routes', authMiddleware, async (c) => {
 });
 
 // 3. Edit route
-transport.put('/routes/:id', authMiddleware, async (c) => {
+transport.put('/routes/:id', authMiddleware, requirePermission('transport.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   await ensureTransportTables(c.env.DB);
@@ -115,7 +115,7 @@ transport.put('/routes/:id', authMiddleware, async (c) => {
 });
 
 // 4. Delete route (Soft delete)
-transport.delete('/routes/:id', authMiddleware, async (c) => {
+transport.delete('/routes/:id', authMiddleware, requirePermission('transport.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   await ensureTransportTables(c.env.DB);
@@ -128,7 +128,7 @@ transport.delete('/routes/:id', authMiddleware, async (c) => {
 });
 
 // 4.5 Send alert notification to all users allocated to route
-transport.post('/routes/:id/notify', authMiddleware, async (c) => {
+transport.post('/routes/:id/notify', authMiddleware, requirePermission('transport.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   const { message, priority } = await c.req.json();
@@ -240,7 +240,7 @@ transport.post('/routes/:id/notify', authMiddleware, async (c) => {
 });
 
 // 5. Get all transport allocations
-transport.get('/allocations', authMiddleware, async (c) => {
+transport.get('/allocations', authMiddleware, requirePermission('transport.view'), async (c) => {
   const user = c.get('user');
   await ensureTransportTables(c.env.DB);
 
@@ -262,7 +262,7 @@ transport.get('/allocations', authMiddleware, async (c) => {
 });
 
 // 6. Assign student to route
-transport.post('/allocations', authMiddleware, async (c) => {
+transport.post('/allocations', authMiddleware, requirePermission('transport.manage'), async (c) => {
   const user = c.get('user');
   await ensureTransportTables(c.env.DB);
   const body = await c.req.json();
@@ -302,7 +302,7 @@ transport.post('/allocations', authMiddleware, async (c) => {
 });
 
 // 7. Remove student from route (soft delete)
-transport.delete('/allocations/:studentId', authMiddleware, async (c) => {
+transport.delete('/allocations/:studentId', authMiddleware, requirePermission('transport.manage'), async (c) => {
   const user = c.get('user');
   const studentId = c.req.param('studentId');
   await ensureTransportTables(c.env.DB);
@@ -316,7 +316,7 @@ transport.delete('/allocations/:studentId', authMiddleware, async (c) => {
 });
 
 // 8. Generate monthly billing in student_fee_records
-transport.post('/billing/generate', authMiddleware, async (c) => {
+transport.post('/billing/generate', authMiddleware, requirePermission('transport.manage'), async (c) => {
   const user = c.get('user');
   await ensureTransportTables(c.env.DB);
   const { due_date, billing_month_name } = await c.req.json(); // e.g. "July 2026", "2026-07-31"

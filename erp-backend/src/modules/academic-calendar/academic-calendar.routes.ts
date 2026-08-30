@@ -2,14 +2,14 @@ import { Hono } from 'hono';
 import { Env, JwtPayload } from '../../types';
 import { AcademicCalendarRepository } from './academic-calendar.repository';
 import { AcademicCalendarService } from './academic-calendar.service';
-import { authMiddleware } from '../../middleware/auth';
+import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 
 const calendar = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
 calendar.use('*', authMiddleware);
 
-calendar.get('/', async (c) => {
+calendar.get('/', requirePermission('calendar.view'), async (c) => {
   const user = c.get('user');
   const repo = new AcademicCalendarRepository(c.env.DB);
   const service = new AcademicCalendarService(repo);
@@ -17,7 +17,7 @@ calendar.get('/', async (c) => {
   return c.json(results);
 });
 
-calendar.get('/:id', async (c) => {
+calendar.get('/:id', requirePermission('calendar.view'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new AcademicCalendarRepository(c.env.DB);
@@ -30,12 +30,17 @@ calendar.get('/:id', async (c) => {
   return c.json(result);
 });
 
-calendar.post('/', async (c) => {
+calendar.post('/', requirePermission('calendar.manage'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
+
+  if (!input.name || !input.start_date || !input.end_date || !input.type) {
+    return c.json({ error: 'name, start_date, end_date, and type are required' }, 400);
+  }
+
   const repo = new AcademicCalendarRepository(c.env.DB);
   const service = new AcademicCalendarService(repo);
-  
+
   try {
     const id = await service.createCalendarEntry(user.institution_id, input, user.sub);
     await createAuditLog(c.env.DB, user.sub, 'CREATE_CALENDAR_ENTRY', 'academic-calendar', id, `Created calendar entry: ${input.name} (${input.type})`);
@@ -82,7 +87,7 @@ calendar.post('/', async (c) => {
   }
 });
 
-calendar.put('/:id', async (c) => {
+calendar.put('/:id', requirePermission('calendar.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const input = await c.req.json();
@@ -103,7 +108,7 @@ calendar.put('/:id', async (c) => {
   }
 });
 
-calendar.delete('/:id', async (c) => {
+calendar.delete('/:id', requirePermission('calendar.manage'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const repo = new AcademicCalendarRepository(c.env.DB);

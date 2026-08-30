@@ -41,6 +41,15 @@ export default function Admissions() {
   // Drag over columns tracking (for styling)
   const [dragOverStage, setDragOverStage] = useState<BoardStage | null>(null);
 
+  // Kanban columns are unbounded lists with no pagination — rather than force
+  // numbered pages onto a drag-and-drop board, each column renders only its
+  // first PAGE_SIZE cards with a "Show more" affordance, so a large dataset
+  // doesn't dump hundreds of cards into the DOM at once.
+  const KANBAN_PAGE_SIZE = 20;
+  const [visibleLeadCount, setVisibleLeadCount] = useState(KANBAN_PAGE_SIZE);
+  const [visibleAppliedCount, setVisibleAppliedCount] = useState(KANBAN_PAGE_SIZE);
+  const [visibleOutcomeCount, setVisibleOutcomeCount] = useState(KANBAN_PAGE_SIZE);
+
   // Inquiry – Add modal
   const [inqShowAdd, setInqShowAdd] = useState(false);
   const [inqAddForm, setInqAddForm] = useState<InquiryAddForm>({
@@ -110,6 +119,15 @@ export default function Admissions() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Reset each column back to its first page whenever the filters change, so
+  // a narrower result set never leaves "Show more" stuck past the new total.
+  useEffect(() => {
+    setVisibleLeadCount(KANBAN_PAGE_SIZE);
+    setVisibleAppliedCount(KANBAN_PAGE_SIZE);
+    setVisibleOutcomeCount(KANBAN_PAGE_SIZE);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, classFilter, yearFilter]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -477,7 +495,7 @@ export default function Admissions() {
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, 'lead')}
           >
-            {filteredLeads.map(card => (
+            {filteredLeads.slice(0, visibleLeadCount).map(card => (
               <LeadCard
                 key={card.id}
                 card={card}
@@ -495,6 +513,12 @@ export default function Admissions() {
                 icon={UserPlus}
               />
             )}
+
+            {filteredLeads.length > visibleLeadCount && (
+              <button className="btn btn-outline btn-sm admissions-show-more-btn" onClick={() => setVisibleLeadCount(c => c + KANBAN_PAGE_SIZE)}>
+                Show more ({filteredLeads.length - visibleLeadCount} remaining)
+              </button>
+            )}
           </KanbanColumn>
 
           {/* COLUMN 2: Applied & In Review */}
@@ -508,7 +532,7 @@ export default function Admissions() {
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, 'applied')}
           >
-            {filteredApplied.map(card => (
+            {filteredApplied.slice(0, visibleAppliedCount).map(card => (
               <AppliedCard
                 key={card.id}
                 card={card}
@@ -526,6 +550,12 @@ export default function Admissions() {
                 icon={ClipboardList}
               />
             )}
+
+            {filteredApplied.length > visibleAppliedCount && (
+              <button className="btn btn-outline btn-sm admissions-show-more-btn" onClick={() => setVisibleAppliedCount(c => c + KANBAN_PAGE_SIZE)}>
+                Show more ({filteredApplied.length - visibleAppliedCount} remaining)
+              </button>
+            )}
           </KanbanColumn>
 
           {/* COLUMN 3: Outcomes */}
@@ -539,7 +569,7 @@ export default function Admissions() {
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, 'outcome')}
           >
-            {filteredOutcomes.map(card => (
+            {filteredOutcomes.slice(0, visibleOutcomeCount).map(card => (
               <OutcomeCard key={card.id} card={card} onView={handleOutcomeView} />
             ))}
 
@@ -549,6 +579,12 @@ export default function Admissions() {
                 description="Admitted and rejected profiles will appear in this column."
                 icon={CheckCircle}
               />
+            )}
+
+            {filteredOutcomes.length > visibleOutcomeCount && (
+              <button className="btn btn-outline btn-sm admissions-show-more-btn" onClick={() => setVisibleOutcomeCount(c => c + KANBAN_PAGE_SIZE)}>
+                Show more ({filteredOutcomes.length - visibleOutcomeCount} remaining)
+              </button>
             )}
           </KanbanColumn>
         </div>

@@ -4,8 +4,10 @@ import { AdmissionsRepository } from './admissions.repository';
 import { AdmissionsService } from './admissions.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
+import { validateBody } from '../../middleware/validate';
+import { CreateInquirySchema, CreateApplicationSchema } from '../../utils/schemas';
 
-const admissions = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
+const admissions = new Hono<{ Bindings: Env; Variables: { user: JwtPayload; validBody: any } }>();
 
 admissions.use('*', authMiddleware);
 
@@ -27,9 +29,10 @@ admissions.get(
 admissions.post(
   '/inquiries',
   requireRole('admin', 'super_admin', 'Principal', 'HOD'),
+  validateBody(CreateInquirySchema),
   async (c) => {
     const user = c.get('user');
-    const input = await c.req.json();
+    const input = c.get('validBody');
     const repo = new AdmissionsRepository(c.env.DB);
     const service = new AdmissionsService(repo);
 
@@ -140,9 +143,10 @@ admissions.get(
 admissions.post(
   '/applications',
   requireRole('admin', 'super_admin', 'Principal', 'HOD'),
+  validateBody(CreateApplicationSchema),
   async (c) => {
     const user = c.get('user');
-    const input = await c.req.json();
+    const input = c.get('validBody');
     const repo = new AdmissionsRepository(c.env.DB);
     const service = new AdmissionsService(repo);
 

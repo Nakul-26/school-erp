@@ -76,6 +76,21 @@ export class AdmissionsService {
       previous_class: appInput.previous_class || inquiry.applying_for_class || undefined,
     };
 
+    // The assembled input mixes inquiry data with optional overrides — a few
+    // fields required downstream (academic_year_id in particular) have no
+    // guaranteed source if the inquiry itself never captured one and the
+    // caller didn't supply an override, so check for that here with a clean
+    // error rather than letting a raw D1 bind failure surface instead.
+    const missing: string[] = [];
+    if (!input.student_first_name) missing.push('student_first_name');
+    if (!input.student_last_name) missing.push('student_last_name');
+    if (!input.academic_year_id) missing.push('academic_year_id');
+    if (!input.parent_name) missing.push('parent_name');
+    if (!input.parent_phone) missing.push('parent_phone');
+    if (missing.length > 0) {
+      throw new Error(`Cannot convert inquiry to application — missing required field(s): ${missing.join(', ')}. Supply them explicitly since the inquiry doesn't have them.`);
+    }
+
     const applicationId = await this.createApplication(institutionId, input, userId);
 
     // Update inquiry status to Applied

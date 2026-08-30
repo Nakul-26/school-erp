@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware, requirePermission } from '../../middleware/auth';
+import { createAuditLog } from '../../utils/audit';
 import type { Env } from '../../types';
 
 const library = new Hono<{ Bindings: Env }>();
@@ -93,6 +94,7 @@ library.post('/books', authMiddleware, requirePermission('library.manage'), asyn
     isReference
   ).run();
 
+  await createAuditLog(c.env.DB, user.sub, 'CREATE_LIBRARY_BOOK', 'library', id, `Added book "${body.title}" by ${body.author}`);
   return c.json({ success: true, id }, 201);
 });
 
@@ -132,6 +134,7 @@ library.put('/books/:id', authMiddleware, requirePermission('library.manage'), a
     user.institution_id
   ).run();
 
+  await createAuditLog(c.env.DB, user.sub, 'UPDATE_LIBRARY_BOOK', 'library', id, `Updated book "${body.title}"`);
   return c.json({ success: true });
 });
 
@@ -145,6 +148,7 @@ library.delete('/books/:id', authMiddleware, requirePermission('library.manage')
     UPDATE library_books SET is_active = 0 WHERE id = ? AND institution_id = ?
   `).bind(id, user.institution_id).run();
 
+  await createAuditLog(c.env.DB, user.sub, 'DELETE_LIBRARY_BOOK', 'library', id, `Deleted library book ${id}`);
   return c.json({ success: true });
 });
 
@@ -213,6 +217,7 @@ library.post('/transactions/issue', authMiddleware, requirePermission('library.m
     UPDATE library_books SET available_copies = available_copies - 1 WHERE id = ?
   `).bind(body.book_id).run();
 
+  await createAuditLog(c.env.DB, user.sub, 'ISSUE_LIBRARY_BOOK', 'library', id, `Issued book ${body.book_id} to student ${body.student_id}, due ${body.due_date}`);
   return c.json({ success: true, id }, 201);
 });
 
@@ -255,6 +260,7 @@ library.post('/transactions/:id/return', authMiddleware, requirePermission('libr
     UPDATE library_books SET available_copies = available_copies + 1 WHERE id = ?
   `).bind(txn.book_id).run();
 
+  await createAuditLog(c.env.DB, user.sub, 'RETURN_LIBRARY_BOOK', 'library', id, `Returned book ${txn.book_id}${fine > 0 ? `, fine of ₹${fine} assessed` : ''}`);
   return c.json({ success: true, fine_amount: fine });
 });
 
@@ -268,6 +274,7 @@ library.post('/transactions/:id/pay-fine', authMiddleware, requirePermission('li
     UPDATE library_transactions SET fine_status = 'PAID' WHERE id = ? AND institution_id = ?
   `).bind(id, user.institution_id).run();
 
+  await createAuditLog(c.env.DB, user.sub, 'PAY_LIBRARY_FINE', 'library', id, `Marked library fine paid for transaction ${id}`);
   return c.json({ success: true });
 });
 

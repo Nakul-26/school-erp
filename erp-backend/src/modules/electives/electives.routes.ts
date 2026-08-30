@@ -7,6 +7,7 @@ import { PrerequisitesService } from '../prerequisites/prerequisites.service';
 import { GradesRepository } from '../grades/grades.repository';
 import { GradesService } from '../grades/grades.service';
 import { authMiddleware } from '../../middleware/auth';
+import { createAuditLog } from '../../utils/audit';
 
 const electives = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -144,6 +145,7 @@ electives.post('/', async (c) => {
       semester: Number(body.semester),
       subject_id: body.subject_id,
     }, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'REGISTER_ELECTIVE', 'electives', id, `Registered student ${studentId} for elective subject ${body.subject_id}`);
     return c.json({ id }, 201);
   } catch (e: any) {
     const status = e instanceof ElectivesServiceError ? e.statusCode : 400;
@@ -171,6 +173,7 @@ electives.delete('/:id', async (c) => {
   try {
     const service = buildService(c.env.DB);
     await service.withdrawElective(user.institution_id, id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'WITHDRAW_ELECTIVE', 'electives', id, `Withdrew elective registration ${id} for student ${existing.student_id}`);
     return c.json({ success: true });
   } catch (e: any) {
     const status = e instanceof ElectivesServiceError ? e.statusCode : 400;

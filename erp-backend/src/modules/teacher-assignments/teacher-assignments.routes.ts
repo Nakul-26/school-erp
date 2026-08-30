@@ -3,6 +3,7 @@ import { Env, JwtPayload } from '../../types';
 import { TeacherAssignmentRepository } from './teacher-assignments.repository';
 import { TeacherAssignmentService } from './teacher-assignments.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
+import { createAuditLog } from '../../utils/audit';
 
 // NOTE: This module and the underlying teacher_subject_assignments table are DEPRECATED.
 // Active features should migrate to the teaching-allocations module.
@@ -53,6 +54,7 @@ teacherAssignments.post('/', requireRole('admin', 'super_admin'), async (c) => {
     }
     const service = new TeacherAssignmentService(repo);
     const id = await service.createAssignment(input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'CREATE_TEACHER_ASSIGNMENT', 'teacher-assignments', id, `Assigned teacher ${input.teacher_id} to subject ${input.subject_id} in section ${input.section_id}`);
     return c.json({ id }, 201);
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
@@ -69,6 +71,7 @@ teacherAssignments.delete('/:id', requireRole('admin', 'super_admin'), async (c)
   try {
     const service = new TeacherAssignmentService(repo);
     await service.deleteAssignment(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_TEACHER_ASSIGNMENT', 'teacher-assignments', id, `Deleted teacher assignment ${id}`);
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);

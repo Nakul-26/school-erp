@@ -61,13 +61,13 @@ No gaps found. Single endpoint, internally role-branched, self-scoped by design 
 
 | Requirement | Impl. | Test | Work | Status | Evidence |
 |---|:---:|:---:|:---:|---|---|
-| Create inquiry | ⚠️ | ❌ | — | Partial | `admissions.routes.ts:14-123` — role-gated but only status field is validated |
-| Convert inquiry → application | ✅ | ❌ | — | Needs testing | Kanban drag-to-convert UI |
-| Create application | ⚠️ | ❌ | — | Partial | No schema validation — relies on client-side HTML `required` only, bypassable via direct API |
+| Create inquiry | ✅ | ✅ | ✅ | **Fixed 2026-08-31** | Added `CreateInquirySchema` (zod) via `validateBody()` — `student_name`/`parent_name`/`parent_phone`/`applying_for_class` now required, `parent_email` format-checked. Live-verified: missing fields return a clean `Validation error: ...` 400, a valid payload still creates the inquiry |
+| Convert inquiry → application | ✅ | ✅ | ✅ | **Hardened 2026-08-31** | Kanban drag-to-convert UI. The assembled application input mixes inquiry data with optional overrides — added a check in `convertInquiryToApplication()` that a few fields required downstream (notably `academic_year_id`) actually ended up populated, throwing a clean error instead of letting a raw D1 bind failure surface if the inquiry itself never captured one |
+| Create application | ✅ | ✅ | ✅ | **Fixed 2026-08-31** | Added `CreateApplicationSchema` (zod) via `validateBody()` — `student_first_name`/`student_last_name`/`academic_year_id`/`parent_name`/`parent_phone` now required, `parent_email` format-checked; previously relied on client-side HTML `required` only, bypassable via direct API. Live-verified: missing fields return a clean 400, a valid payload still creates the application |
 | **Approve application → creates student** | ✅ | ✅ | ✅ | **Complete** | Atomic guarded UPDATE + batch student creation; **genuinely tested**, including a real concurrency race (see §Tests below) |
 | Reject application | ✅ | ✅ | ✅ | **Fixed 2026-08-30 — real data-integrity bug** | Was a blind `UPDATE ... WHERE id = ?` with no status guard, unlike `approveApplication` which is carefully guarded against double-processing. Added `rejectApplicationIfNotApproved()` (same guarded-update pattern) plus a service-level check that throws a clean 409 if the application is already Approved. Live-verified end-to-end: approved a test application (creating a real student), then attempted to reject it — got `409 Cannot reject an application that has already been approved...`, confirmed the application's `status` stayed `Approved` in the DB (not corrupted to `Rejected` while a live student record still pointed at it); a normal reject-while-pending still works |
-| Document upload | 🔴 | — | — | Not implemented | No endpoint, no DB columns — only a decorative icon in the UI |
-| Pagination | 🔴 | — | — | Not implemented | Confirmed absent both sides |
+| Document upload | 🔴 | — | — | Not implemented (product-scope question, not a bug) | No endpoint, no DB columns — only a decorative icon in the UI. Not built this pass — building it is a real feature addition, not a fix, and wasn't in the explicitly-approved scope |
+| Pagination (Kanban board) | ✅ | ✅ | ✅ | **Fixed 2026-08-31** | The board's 3 columns rendered every matching card unbounded. Rather than force numbered pages onto a drag-and-drop board, each column now renders only its first 20 cards with a "Show more" button (resets to 20 whenever a filter changes) — caps DOM size on a large dataset while keeping full drag-and-drop over the visible subset intact |
 | Admission number generation | ✅ | 🟡 | ✅ | Working | Auto-generated, format verified in this session's live testing |
 
 **Test coverage (`admissions-approval.test.ts`):** (1) approve creates student atomically and links it; (2) a second sequential approval is rejected, no duplicate student created; (3) two **concurrent** approval calls — exactly one wins (`changes:1`), the other loses cleanly (`changes:0`). **Added 2026-08-30**, matching the reject-guard fix: (4) a pending application rejects cleanly; (5) rejecting an already-Approved application is refused, student link intact; (6) a concurrent approve-then-reject race leaves the application `Approved`. Inquiry flow is still untested.
@@ -85,8 +85,8 @@ No gaps found. Single endpoint, internally role-branched, self-scoped by design 
 | Bulk actions (general) | ✅ | ❌ | — | Needs testing | `routes.ts:466-535` |
 | **Bulk delete** | ✅ | ✅ | ✅ | **Fixed 2026-08-28** | Was: `routes.ts:541` called `service.deleteStudent(sId, user.sub)` but the real signature is `(id, institutionId, userId, force)` — the user ID landed in the institution-ID slot, so the ownership check mismatched and delete silently no-opped per row while the route still reported `success:true`. Fixed to pass `user.institution_id`; verified live — a test student was correctly soft-deleted (`is_active`→0, `status`→`WITHDRAWN`) |
 | Bulk import (Excel) | ✅ | ❌ | — | Needs testing | Client-side loop over `POST /students`, template download, drag-drop |
-| Guardian dedicated CRUD (`/guardians`) | ✅ | ✅ | ✅ | **Fixed 2026-08-30** | Added required-field validation (`student_id`/`name`/`relationship`) and try/catch around create/update/delete, matching the pattern used elsewhere for D1_TYPE_ERROR hardening. `GuardiansTab.tsx` remains read-only; real guardian data still flows through the student create/update payload — these mutating routes exist for API/future-UI use, not currently wired to the frontend |
-| Enrollment dedicated CRUD | ✅ | ✅ | ✅ | **Fixed 2026-08-30** | Same fix — required-field validation plus try/catch. Live-verified: missing fields return a clean 400, a valid create/delete cycle still works |
+| Guardian dedicated CRUD (`/guardians`) | ✅ | ✅ | ✅ | **Fixed 2026-08-30, audit logging added 2026-08-31** | Added required-field validation (`student_id`/`name`/`relationship`) and try/catch around create/update/delete, matching the pattern used elsewhere for D1_TYPE_ERROR hardening. `GuardiansTab.tsx` remains read-only; real guardian data still flows through the student create/update payload — these mutating routes exist for API/future-UI use, not currently wired to the frontend. `CREATE_GUARDIAN`/`UPDATE_GUARDIAN`/`DELETE_GUARDIAN` audit events added and live-verified |
+| Enrollment dedicated CRUD | ✅ | ✅ | ✅ | **Fixed 2026-08-30, audit logging added 2026-08-31** | Same fix — required-field validation plus try/catch. Live-verified: missing fields return a clean 400, a valid create/delete cycle still works. `CREATE_ENROLLMENT`/`UPDATE_ENROLLMENT`/`DELETE_ENROLLMENT` audit events added |
 | **Audit logging (create/update/archive/restore/delete/bulk)** | ✅ | ✅ | ✅ | **Fixed 2026-08-28** | Was zero audit events for any Students CRUD. Added `createAuditLog()` calls across all mutating routes and bulk-action branches; live-verified `ARCHIVE_STUDENT`/`RESTORE_STUDENT` rows land in `audit_logs` |
 
 **Note:** This session's earlier live API testing exercised the students → teachers → classes → attendance → exams happy path end-to-end and it worked; the bulk-delete bug above was found separately by direct code inspection, not by that earlier test run (bulk actions weren't part of that smoke test).
@@ -101,11 +101,11 @@ No gaps found. Single endpoint, internally role-branched, self-scoped by design 
 | Edit teacher | ✅ | ❌ | — | Needs testing | `teachers.routes.ts:101-210` |
 | Deactivate / reactivate | ✅ | ❌ | — | Needs testing | UI buttons confirmed present |
 | Search / filter (dept, designation, status) | ✅ | ❌ | — | Needs testing | `Teachers.tsx` |
-| Pagination | 🔴 | — | — | Not implemented | Full filtered list rendered with no pagination control — `Teachers.tsx:690-722` |
+| Pagination | ✅ | ✅ | ✅ | **Fixed 2026-08-31** | Filtering was (and remains) client-side over the full fetched list, so server-side pagination would have broken filtering across pages; added client-side pagination instead — 20 rows/page, numbered controls matching `Students.tsx`'s existing pattern, resets to page 1 on any filter change. Applies to both grid and table view modes |
 | Bulk import/export (Excel) | ✅ | ❌ | — | Needs testing | Confirmed present |
 | Teacher notes / documents | ✅ | ❌ | — | Needs testing | File-type validated, role-gated |
 | **Known bug — teacher create via raw API** | ✅ | ✅ | ✅ | **Fixed 2026-08-28** | Was: `teachers.repository.ts` `create()` bound `input.status` with no fallback — a request missing it crashed with `D1_TYPE_ERROR`. Fixed with `input.status \|\| 'ACTIVE'` plus clean 400 validation for missing `employee_id`/`first_name`/`last_name` in the route. Live-verified: create without `status` now succeeds (201), missing `employee_id` returns a clean 400 |
-| Teacher assignments (deprecated module) | ✅ | ✅ | ✅ | **Fixed 2026-08-30** | Added required-field validation and try/catch around the reference check in `teacher-assignments.routes.ts`. Live-verified: missing fields return a clean 400; a real UNIQUE-constraint violation (duplicate assignment) that would previously have been an unhandled 500 now returns a clean `400` with the DB's own message |
+| Teacher assignments (deprecated module) | ✅ | ✅ | ✅ | **Fixed 2026-08-30, audit logging added 2026-08-31** | Added required-field validation and try/catch around the reference check in `teacher-assignments.routes.ts`. Live-verified: missing fields return a clean 400; a real UNIQUE-constraint violation (duplicate assignment) that would previously have been an unhandled 500 now returns a clean `400` with the DB's own message. `CREATE_TEACHER_ASSIGNMENT`/`DELETE_TEACHER_ASSIGNMENT` audit events added |
 | Teacher-assignment GET routes | ✅ | ✅ | — | **Investigated 2026-08-30 — intentional, not fixed** | No role restriction beyond `authMiddleware` (any authenticated user, including students, can query them) — but confirmed the active successor module (`teaching-allocations`) has the *identical* behavior on its GET routes (`allocations.routes.ts` — only mutations are `requirePermission`-gated, reads are open to any authenticated institution member). This is a codebase-wide convention, not a one-off bug in the deprecated module; "fixing" only the deprecated module would be inconsistent with its replacement and wouldn't close any real gap. Left as-is |
 | Teaching allocations (workload/conflict engine) | ✅ | ❌ | — | Needs testing | Thorough validation: duplicate/overload/45hr-cap checks, `requirePermission('academic.manage')` |
 | Teaching-allocations dashboard/conflicts endpoints | ✅ | ✅ | ✅ | **Fixed 2026-08-30** | Added a Workload & Conflict Report panel to the existing Teacher↔Subject Assignments UI in `AcademicSetup.tsx`, consuming `GET /teaching-allocations/dashboard` + `/conflicts` and refreshing after every allocation add/edit/remove. Live-verified against real seed data (returned real unallocated-subject warnings for the active academic year) |
@@ -164,7 +164,7 @@ No gaps found. Single endpoint, internally role-branched, self-scoped by design 
 | Backlogs (course-wide + per-student) | ✅ | ❌ | — | Needs testing — real UI, not backend-only | `BacklogsPanel.tsx`, `TranscriptTab.tsx` |
 | Transcript (SGPA/CGPA) | ✅ | ❌ | — | Needs testing | `TranscriptTab.tsx` — real CGPA/SGPA table, pass/fail badges |
 | Prerequisites (add/list/delete) | ✅ | ❌ | — | Needs testing | `PrerequisitesPanel.tsx` — real Add/Delete UI |
-| Electives (register/withdraw/roster) | ✅ | ❌ | — | Needs testing | `ElectivesTab.tsx` — real eligibility-badge + register/withdraw buttons |
+| Electives (register/withdraw/roster) | ✅ | ❌ | — | Needs testing | `ElectivesTab.tsx` — real eligibility-badge + register/withdraw buttons; `REGISTER_ELECTIVE`/`WITHDRAW_ELECTIVE` audit logging added 2026-08-31 |
 
 ---
 
@@ -231,7 +231,7 @@ No gaps found — this is a well-built double-entry engine, just entirely untest
 | Approve / reject | ✅ | ❌ | — | Needs testing | Checks status is Pending, requires remarks on reject |
 | **Over-quota rejection** | ✅ | ✅ | ✅ | **Fixed 2026-08-28** | `leave.service.ts` `approveApplication()` now fetches the balance and blocks approval if `days_count > remaining`. Live-verified: 10-day request against 5-day quota blocked; 3-day approved and deducted correctly; second 3-day request blocked with 2 remaining |
 | Student leave (separate module) | ✅ | ❌ | — | Needs testing | Role/relationship-scoped access control |
-| Duplicate leave pages | ⚠️ | — | — | Possible dead code | `Leaves.tsx` (unified tabs) duplicates the separate `LeaveTypes.tsx`/`MyLeaveApplications.tsx`/`LeaveApprovals.tsx` pages — unclear which is actually routed |
+| Duplicate leave pages | ✅ | ✅ | ✅ | **Fixed 2026-08-28 (stale row corrected 2026-08-31)** | `Leaves.tsx`/`Leaves.css` were the dead, unrouted duplicate and have been deleted; `LeaveTypes.tsx`/`MyLeaveApplications.tsx`/`LeaveApprovals.tsx` are the real routed pages |
 
 ---
 
@@ -240,12 +240,12 @@ No gaps found — this is a well-built double-entry engine, just entirely untest
 | Requirement | Impl. | Test | Work | Status | Evidence |
 |---|:---:|:---:|:---:|---|---|
 | Announcements CRUD + audience targeting | ✅ | ❌ | — | Needs testing | Real audience filtering in SQL (`visible_to_students/teachers/parents`), plus section-scoping — `announcements.service.ts:17-46` |
-| Direct messaging | ✅ | ❌ | — | Needs testing | Real contacts/send/history/unread-count; polling every 4s, **not real-time** (`Messaging.tsx:48-50`) |
+| Direct messaging | ✅ | ❌ | — | Needs testing | Real contacts/send/history/unread-count; polling every 4s, **not real-time** (`Messaging.tsx:48-50`); message-send audit logging added 2026-08-31 (`SEND_MESSAGE`, logs sender→receiver only, not content) |
 | Broadcasts — audience targeting | ✅ | ❌ | — | Needs testing | Real SQL-resolved recipients by class/section/department/role/custom |
 | Broadcast — email delivery | ✅ | ❌ | — | Needs testing (real) | Resend API, falls back to console-log mock only if key unset |
 | **Broadcast — SMS/WhatsApp delivery** | 🔴 | — | — | **Fake** | `broadcasts/notification.service.ts:57-75` — pure `console.log` stubs, no real provider, despite UI presenting these as working channels |
 | Notification templates/queue/preferences/analytics | ✅ | ❌ | — | Needs testing | Full 5-tab UI |
-| Push subscriptions | ⚠️ | ❌ | — | Partial | VAPID endpoint exists; no dedicated device-registration UI confirmed |
+| Push subscriptions | ✅ | ✅ | ✅ | **Stale row corrected 2026-08-31 — already fully built** | This row's "no dedicated device-registration UI confirmed" claim was wrong/stale: `services/pushNotification.ts` has a complete, correct subscribe/unsubscribe flow (VAPID key fetch, `PushManager.subscribe`, posts to `/notifications/push/subscribe`); `public/sw.js` has real `push`/`notificationclick` handlers; `main.tsx` registers the service worker in production and auto-resubscribes; `Layout.tsx` has a topbar bell toggle plus an opt-in banner; `Profile.tsx` has a full "Notifications" tab (permission state, enable/disable, category preferences via `/push/preferences`) and a "Devices" tab (list registered devices via `/push/devices`, unregister via `DELETE /push/devices/:id`). Nothing to fix — this was a documentation error, not a code gap |
 | Real-time delivery (WebSocket/SSE) | 🔴 | — | — | Not implemented | Zero WebSocket/EventSource usage found anywhere in frontend — everything is polling-based despite push-subscription plumbing existing |
 
 ---
@@ -259,6 +259,7 @@ No gaps found — this is a well-built double-entry engine, just entirely untest
 | Return + fine | ✅ | ❌ | — | Needs testing | ₹5/day overdue calculated server-side |
 | Search catalog | ✅ | ❌ | — | Needs testing | `Library.tsx:52-54` |
 | **Permission gating** | ✅ | ✅ | ✅ | **Fixed 2026-08-28** | `requirePermission('library.access')` on reads, `requirePermission('library.manage')` on writes. Live-verified with a real student token: reads succeed, writes 403 |
+| **Audit logging** | ✅ | ✅ | ✅ | **Fixed 2026-08-31** | Was zero audit events for any Library mutation. Added `createAuditLog()` to add/edit/delete book, issue, return, and pay-fine (6 sites); live-verified `CREATE_LIBRARY_BOOK`/`ISSUE_LIBRARY_BOOK` rows land in `audit_logs` |
 
 ---
 
@@ -270,6 +271,7 @@ No gaps found — this is a well-built double-entry engine, just entirely untest
 | Assign student to route | ✅ | ❌ | — | Needs testing | Upserts allocation |
 | Route billing generation | ✅ | ❌ | — | Needs testing | Idempotent, skips already-billed |
 | **Permission gating** | ✅ | ✅ | ✅ | **Fixed 2026-08-28** | `requirePermission('transport.view')` on reads, `requirePermission('transport.manage')` on writes (routes, allocations, notify, billing). Live-verified with a real student token |
+| **Audit logging** | ✅ | ✅ | ✅ | **Fixed 2026-08-31** | Was zero audit events for any Transport mutation. Added `createAuditLog()` to route create/edit/delete, route alert notify, allocation assign/reassign/remove, and monthly billing generation (7 sites); live-verified `CREATE_TRANSPORT_ROUTE` lands in `audit_logs` |
 
 ---
 
@@ -444,7 +446,7 @@ This was the single most significant finding in this report and has been resolve
 | Filters (search/module/action/status/date/request-id) | ✅ | ❌ | — | Needs testing | `AuditLogs.tsx:47-54,260-288` |
 | Pagination, CSV/JSON export | ✅ | ❌ | — | Needs testing | Confirmed present |
 | Security-events tab | ✅ | ❌ | — | Needs testing | Stricter role gate |
-| **Actual audit coverage across modules** | ⚠️ | — | — | **Gap narrowed 2026-08-28** | Real coverage confirmed for `fees` (15 sites), `attendance` (3), `exams` (6), `users`, `background-jobs`, `integrations`, `system-settings`, `approvals`, and now **`students`/`teachers`** (added this session — create/update/archive/restore/delete/bulk-actions, live-verified). **Still zero coverage** for `enrollments`, `guardians`, `library`, `transport`, `messaging`, `transcript`, `backlogs`, `compliance`, `electives`, `dashboard`, `teacher-assignments` |
+| **Actual audit coverage across modules** | ✅ | ✅ | ✅ | **Gap closed 2026-08-31** | Real coverage confirmed for `fees` (15 sites), `attendance` (3), `exams` (6), `users`, `background-jobs`, `integrations`, `system-settings`, `approvals`, `students`/`teachers` (2026-08-28). This pass added `createAuditLog()` calls to every real mutation in `enrollments`, `guardians`, `library` (6 mutation sites), `transport` (7 sites incl. route-alert notify and monthly billing), `messaging` (message send, sender→receiver only — not message content), and `electives` (register/withdraw) — live-verified a representative sample (library create/issue, transport route create, guardian create) landed correctly in `audit_logs`. `transcript`, `backlogs`, `compliance`, and `dashboard` were investigated and found to have **zero mutation endpoints at all** (pure read-only reporting views over data already audited at its source) — there is genuinely nothing to log there, so they're not a gap. |
 
 ---
 

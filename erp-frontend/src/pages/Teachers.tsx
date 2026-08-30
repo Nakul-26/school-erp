@@ -2,7 +2,7 @@ import './Teachers.css';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { Plus, Grid, List, Trash2, Archive, Check } from 'lucide-react';
+import { Plus, Grid, List, Trash2, Archive, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmDialogContext';
@@ -51,6 +51,13 @@ export default function Teachers() {
   const setSelectedDepartment = (value: string) => updateSearchParam('department', value);
   const setSelectedDesignation = (value: string) => updateSearchParam('designation', value);
   const setSelectedStatus = (value: string) => updateSearchParam('status', value);
+
+  // Pagination — client-side, over the already-filtered list (no server round-trip
+  // needed since filtering itself is also client-side over the full fetched list;
+  // this only caps how many rows are ever rendered into the DOM at once)
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const setPage = (value: number) => updateSearchParam('page', value.toString());
+  const PAGE_SIZE = 20;
 
   // Layout View State
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -115,6 +122,13 @@ export default function Teachers() {
     fetchDepartments();
     fetchMetadata();
   }, []);
+
+  // Reset to page 1 whenever a filter changes, so a narrower result set never
+  // leaves the view stranded on a page number that no longer exists.
+  useEffect(() => {
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, selectedDepartment, selectedDesignation, selectedStatus]);
 
   // F-4: Close menus when clicking outside the teacher menu container
   useEffect(() => {
@@ -565,6 +579,9 @@ export default function Teachers() {
     new Set(teachers.map(t => t.designation).filter(Boolean))
   ) as string[];
 
+  const totalPages = Math.ceil(filteredTeachers.length / PAGE_SIZE) || 1;
+  const paginatedTeachers = filteredTeachers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const selectedTeachers = teachers.filter(t => selectedTeacherIds.includes(t.id));
   const showDeactivateBtn = selectedTeachers.some(t => t.status !== 'INACTIVE');
   const showReactivateBtn = selectedTeachers.some(t => t.status === 'INACTIVE');
@@ -689,7 +706,7 @@ export default function Teachers() {
 
               {viewMode === 'grid' ? (
                 <div className="teachers-grid-container">
-                  {filteredTeachers.map(t => (
+                  {paginatedTeachers.map(t => (
                     <TeacherCard
                       key={t.id}
                       teacher={t}
@@ -708,7 +725,7 @@ export default function Teachers() {
                 </div>
               ) : (
                 <TeachersTable
-                  teachers={filteredTeachers}
+                  teachers={paginatedTeachers}
                   selectedTeacherIds={selectedTeacherIds}
                   handleSelectAll={handleSelectAll}
                   handleSelectOne={handleSelectOne}
@@ -725,6 +742,42 @@ export default function Teachers() {
                 <div className="card teachers-empty-card">
                   <p className="teachers-empty-title">No teacher records found.</p>
                   <p className="teachers-empty-subtitle">Try clearing filters or refining your search parameters.</p>
+                </div>
+              )}
+
+              {filteredTeachers.length > 0 && (
+                <div className="teachers-pagination-row">
+                  <span className="teachers-pagination-summary">
+                    Showing <strong>{((page - 1) * PAGE_SIZE) + 1}</strong> to <strong>{Math.min(page * PAGE_SIZE, filteredTeachers.length)}</strong> of <strong>{filteredTeachers.length}</strong> teachers
+                  </span>
+
+                  <div className="pagination teachers-pagination-btn-group">
+                    <button
+                      disabled={page === 1}
+                      onClick={() => setPage(page - 1)}
+                      className="btn btn-outline btn-icon teachers-btn-pagination"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`btn ${page === p ? 'btn-primary' : 'btn-outline'} teachers-btn-pagination`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+
+                    <button
+                      disabled={page === totalPages}
+                      onClick={() => setPage(page + 1)}
+                      className="btn btn-outline btn-icon teachers-btn-pagination"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
                 </div>
               )}
             </>

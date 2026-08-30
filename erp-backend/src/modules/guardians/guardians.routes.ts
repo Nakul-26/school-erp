@@ -3,6 +3,7 @@ import { Env, JwtPayload } from '../../types';
 import { GuardianRepository } from './guardians.repository';
 import { GuardianService } from './guardians.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
+import { createAuditLog } from '../../utils/audit';
 
 const guardians = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -48,6 +49,7 @@ guardians.post('/', requireRole('admin', 'super_admin'), async (c) => {
   try {
     const service = new GuardianService(repo);
     const id = await service.createGuardian(input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'CREATE_GUARDIAN', 'guardians', id, `Added guardian "${input.name}" (${input.relationship}) for student ${input.student_id}`);
     return c.json({ id }, 201);
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
@@ -65,6 +67,7 @@ guardians.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
   try {
     const service = new GuardianService(repo);
     await service.updateGuardian(id, input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'UPDATE_GUARDIAN', 'guardians', id, `Updated guardian ${id}`);
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
@@ -81,6 +84,7 @@ guardians.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
   try {
     const service = new GuardianService(repo);
     await service.deleteGuardian(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_GUARDIAN', 'guardians', id, `Deleted guardian ${id}`);
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);

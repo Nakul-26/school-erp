@@ -1,5 +1,12 @@
 /* Component stylesheet for Admissions.tsx */
 
+.admissions-show-more-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
 /* Page-level flex wrapper: fills the main-content height */
 .admissions-page-wrap {
   display: flex;

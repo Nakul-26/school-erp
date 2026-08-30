@@ -61,6 +61,33 @@ export const InstitutionCreateSchema = z.object({
 
 export const InstitutionUpdateSchema = InstitutionCreateSchema.partial();
 
+export const CreateInquirySchema = z.object({
+  student_name: z.string().min(1, 'Student name is required'),
+  parent_name: z.string().min(1, 'Parent/guardian name is required'),
+  parent_phone: z.string().min(1, 'Parent/guardian phone is required'),
+  parent_email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  date_of_birth: z.string().optional(),
+  applying_for_class: z.string().min(1, 'Class applying for is required'),
+  academic_year_id: z.string().optional(),
+  source: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const CreateApplicationSchema = z.object({
+  inquiry_id: z.string().optional(),
+  student_first_name: z.string().min(1, 'Student first name is required'),
+  student_last_name: z.string().min(1, 'Student last name is required'),
+  date_of_birth: z.string().optional(),
+  gender: z.string().optional(),
+  applying_for_course_id: z.string().optional(),
+  academic_year_id: z.string().min(1, 'Academic year is required'),
+  parent_name: z.string().min(1, 'Parent/guardian name is required'),
+  parent_phone: z.string().min(1, 'Parent/guardian phone is required'),
+  parent_email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  previous_school: z.string().optional(),
+  previous_class: z.string().optional(),
+});
+
 export const StudentCreateSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   middle_name: z.string().optional(),

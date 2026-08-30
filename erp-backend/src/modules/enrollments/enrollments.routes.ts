@@ -3,6 +3,7 @@ import { Env, JwtPayload } from '../../types';
 import { EnrollmentRepository } from './enrollments.repository';
 import { EnrollmentService } from './enrollments.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
+import { createAuditLog } from '../../utils/audit';
 
 const enrollments = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -62,6 +63,7 @@ enrollments.post('/', requireRole('admin', 'super_admin'), async (c) => {
     }
     const service = new EnrollmentService(repo);
     const id = await service.createEnrollment(input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'CREATE_ENROLLMENT', 'enrollments', id, `Enrolled student ${input.student_id} into section ${input.section_id}`);
     return c.json({ id }, 201);
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
@@ -82,6 +84,7 @@ enrollments.put('/:id', requireRole('admin', 'super_admin'), async (c) => {
     }
     const service = new EnrollmentService(repo);
     await service.updateEnrollment(id, input, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'UPDATE_ENROLLMENT', 'enrollments', id, `Updated enrollment ${id}`);
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);
@@ -98,6 +101,7 @@ enrollments.delete('/:id', requireRole('admin', 'super_admin'), async (c) => {
   try {
     const service = new EnrollmentService(repo);
     await service.deleteEnrollment(id, user.sub);
+    await createAuditLog(c.env.DB, user.sub, 'DELETE_ENROLLMENT', 'enrollments', id, `Deleted enrollment ${id}`);
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ error: e.message }, 400);

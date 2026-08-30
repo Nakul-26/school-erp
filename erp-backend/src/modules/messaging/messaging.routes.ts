@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../../middleware/auth';
+import { createAuditLog } from '../../utils/audit';
 import type { Env } from '../../types';
 
 const messaging = new Hono<{ Bindings: Env }>();
@@ -185,6 +186,11 @@ messaging.post('/send', authMiddleware, async (c) => {
   } catch (err) {
     // Silent fail
   }
+
+  // Log that a message was sent (who → whom, not the content itself — a full
+  // transcript already lives in direct_messages; the audit trail just needs
+  // to record the fact of contact for compliance purposes).
+  await createAuditLog(c.env.DB, user.sub, 'SEND_MESSAGE', 'messaging', id, `Sent a direct message to user ${receiver_id}`);
 
   return c.json({ success: true, id }, 201);
 });

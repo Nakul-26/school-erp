@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware, requirePermission } from '../../middleware/auth';
+import { createAuditLog } from '../../utils/audit';
 import type { Env } from '../../types';
 
 const transport = new Hono<{ Bindings: Env }>();
@@ -84,6 +85,7 @@ transport.post('/routes', authMiddleware, requirePermission('transport.manage'),
     body.stops || ''
   ).run();
 
+  await createAuditLog(c.env.DB, user.sub, 'CREATE_TRANSPORT_ROUTE', 'transport', id, `Created transport route "${body.route_name}"`);
   return c.json({ success: true, id }, 201);
 });
 
@@ -111,6 +113,7 @@ transport.put('/routes/:id', authMiddleware, requirePermission('transport.manage
     user.institution_id
   ).run();
 
+  await createAuditLog(c.env.DB, user.sub, 'UPDATE_TRANSPORT_ROUTE', 'transport', id, `Updated transport route "${body.route_name}"`);
   return c.json({ success: true });
 });
 
@@ -124,6 +127,7 @@ transport.delete('/routes/:id', authMiddleware, requirePermission('transport.man
     UPDATE transport_routes SET is_active = 0 WHERE id = ? AND institution_id = ?
   `).bind(id, user.institution_id).run();
 
+  await createAuditLog(c.env.DB, user.sub, 'DELETE_TRANSPORT_ROUTE', 'transport', id, `Deleted transport route ${id}`);
   return c.json({ success: true });
 });
 
@@ -236,6 +240,7 @@ transport.post('/routes/:id/notify', authMiddleware, requirePermission('transpor
     }
   }
 
+  await createAuditLog(c.env.DB, user.sub, 'NOTIFY_TRANSPORT_ROUTE', 'transport', id, `Sent a transport alert for route "${route.route_name}" to ${targetUserIds.length + directContacts.length} recipients`);
   return c.json({ success: true, notified_count: targetUserIds.length + directContacts.length });
 });
 
@@ -279,10 +284,11 @@ transport.post('/allocations', authMiddleware, requirePermission('transport.mana
   if (existing) {
     // Update existing route assignment
     await c.env.DB.prepare(`
-      UPDATE transport_allocations 
+      UPDATE transport_allocations
       SET route_id = ?, pickup_point = ?
       WHERE student_id = ? AND institution_id = ?
     `).bind(body.route_id, body.pickup_point || '', body.student_id, user.institution_id).run();
+    await createAuditLog(c.env.DB, user.sub, 'UPDATE_TRANSPORT_ALLOCATION', 'transport', existing.id as string, `Reassigned student ${body.student_id} to transport route ${body.route_id}`);
   } else {
     // Insert new assignment
     const id = crypto.randomUUID();
@@ -296,6 +302,7 @@ transport.post('/allocations', authMiddleware, requirePermission('transport.mana
       body.route_id,
       body.pickup_point || ''
     ).run();
+    await createAuditLog(c.env.DB, user.sub, 'CREATE_TRANSPORT_ALLOCATION', 'transport', id, `Assigned student ${body.student_id} to transport route ${body.route_id}`);
   }
 
   return c.json({ success: true });
@@ -308,10 +315,11 @@ transport.delete('/allocations/:studentId', authMiddleware, requirePermission('t
   await ensureTransportTables(c.env.DB);
 
   await c.env.DB.prepare(`
-    UPDATE transport_allocations SET is_active = 0 
+    UPDATE transport_allocations SET is_active = 0
     WHERE student_id = ? AND institution_id = ?
   `).bind(studentId, user.institution_id).run();
 
+  await createAuditLog(c.env.DB, user.sub, 'DELETE_TRANSPORT_ALLOCATION', 'transport', studentId, `Removed student ${studentId} from transport allocation`);
   return c.json({ success: true });
 });
 
@@ -388,6 +396,7 @@ transport.post('/billing/generate', authMiddleware, requirePermission('transport
     }
   }
 
+  await createAuditLog(c.env.DB, user.sub, 'GENERATE_TRANSPORT_BILLING', 'transport', null, `Generated transport billing for "${billing_month_name}": ${successCount} billed, ${skipCount} skipped`);
   return c.json({
     success: true,
     message: `Generated monthly billing successfully. Billed: ${successCount} students. Skipped (already billed): ${skipCount} students.`

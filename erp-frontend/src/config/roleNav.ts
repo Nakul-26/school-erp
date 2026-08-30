@@ -9,7 +9,7 @@ export type NavKey =
   | '/payroll/salary-structures' | '/payroll/runs'
   | '/leave/my' | '/leave/approvals' | '/leave/types' | '/student-leaves/approvals'
   | '/reports' | '/data-tools' | '/approvals'
-  | '/setup' | '/settings' | '/users' | '/access-control' | '/audit-logs' | '/institution-setup' | '/profile'
+  | '/setup' | '/settings' | '/users' | '/access-control' | '/audit-logs' | '/institution-setup' | '/super-admin/institutions' | '/profile'
   | '/visitors' | '/assets' | '/alumni'
   | '/academic-setup' | '/finance' | '/communication' | '/placements'
   | '/canteen' | '/study-materials' | '/gl-accounting' | '/compliance';
@@ -76,6 +76,7 @@ export const ROUTE_POLICIES: Record<string, AccessPolicy> = {
   '/access-control': { roles: ADMIN_ROLES, permissions: ['user.manage'] },
   '/users': { roles: ADMIN_ROLES, permissions: ['user.manage'] },
   '/institution-setup': { roles: ADMIN_ROLES, permissions: ['institution.manage'] },
+  '/super-admin/institutions': { roles: ['super_admin'] },
   '/settings': { roles: ADMIN_ROLES, permissions: ['institution.manage'] },
   '/settings/grades': { roles: ADMIN_ROLES, permissions: ['institution.manage'] },
   '/audit-logs': { roles: ADMIN_ROLES, permissions: ['audit.view'] },

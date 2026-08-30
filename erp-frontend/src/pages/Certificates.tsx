@@ -6,7 +6,7 @@ import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import {
-  Search, Printer, Settings, Plus, Trash2, Edit,
+  Search, Printer, Settings, Plus, Trash2, Edit, History,
 } from 'lucide-react';
 
 interface Student {
@@ -21,6 +21,15 @@ interface CertificateTemplate {
   name: string;
   type: 'ID_CARD' | 'BONAFIDE' | 'TRANSFER_CERTIFICATE' | 'CUSTOM';
   body_html: string;
+}
+
+interface CertificateIssuance {
+  id: string;
+  template_id: string;
+  template_name?: string;
+  reference_number: string;
+  rendered_html: string;
+  issued_at: string;
 }
 
 export default function Certificates() {
@@ -44,6 +53,11 @@ export default function Certificates() {
   const [issuing, setIssuing] = useState(false);
   const [lastReference, setLastReference] = useState<string | null>(null);
   const [showManageTemplates, setShowManageTemplates] = useState(false);
+
+  const [issuanceHistory, setIssuanceHistory] = useState<CertificateIssuance[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [reprintIssuance, setReprintIssuance] = useState<CertificateIssuance | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -85,6 +99,28 @@ export default function Certificates() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStudentId, selectedTemplateId]);
 
+  useEffect(() => {
+    if (selectedStudentId) {
+      fetchIssuanceHistory(selectedStudentId);
+    } else {
+      setIssuanceHistory([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStudentId]);
+
+  const fetchIssuanceHistory = async (studentId: string) => {
+    try {
+      setLoadingHistory(true);
+      const data = await api.get(`/certificates/issuances/${studentId}`);
+      setIssuanceHistory(data);
+    } catch (err) {
+      console.error('Error fetching certificate issuance history:', err);
+      setIssuanceHistory([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
   const fetchPreview = async () => {
     try {
       setLoadingPreview(true);
@@ -104,6 +140,7 @@ export default function Certificates() {
       const res = await api.post('/certificates/issue', { templateId: selectedTemplateId, studentId: selectedStudentId });
       setPreviewHtml(res.html);
       setLastReference(res.reference_number);
+      fetchIssuanceHistory(selectedStudentId);
       setTimeout(() => window.print(), 100);
     } catch (err: any) {
       showToast(err.message || 'Failed to issue certificate', 'error');
@@ -167,11 +204,16 @@ export default function Certificates() {
             Generate and print verified academic templates, ID badges, and leaving credentials
           </p>
         </div>
-        {canManageTemplates && (
-          <button className="btn btn-outline" onClick={() => setShowManageTemplates(!showManageTemplates)}>
-            <Settings size={16} /> {showManageTemplates ? 'Hide Template Manager' : 'Manage Templates'}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-outline" onClick={() => setShowHistory(!showHistory)} disabled={!selectedStudentId}>
+            <History size={16} /> {showHistory ? 'Hide Issuance History' : 'Issuance History'}
           </button>
-        )}
+          {canManageTemplates && (
+            <button className="btn btn-outline" onClick={() => setShowManageTemplates(!showManageTemplates)}>
+              <Settings size={16} /> {showManageTemplates ? 'Hide Template Manager' : 'Manage Templates'}
+            </button>
+          )}
+        </div>
       </div>
 
       {showManageTemplates && canManageTemplates && (
@@ -201,6 +243,35 @@ export default function Certificates() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {showHistory && selectedStudentId && (
+        <div className="card no-print certificates-card">
+          <h3 style={{ margin: '0 0 1rem' }}>
+            Issuance History{selectedStudent ? ` — ${selectedStudent.first_name} ${selectedStudent.last_name}` : ''}
+          </h3>
+          {loadingHistory ? <p>Loading issuance history...</p> : issuanceHistory.length === 0 ? (
+            <p className="no-data">No certificates have been issued to this student yet.</p>
+          ) : (
+            <table className="table">
+              <thead><tr><th>Issued At</th><th>Credential Type</th><th>Reference Number</th><th></th></tr></thead>
+              <tbody>
+                {issuanceHistory.map(iss => (
+                  <tr key={iss.id}>
+                    <td>{new Date(iss.issued_at).toLocaleString()}</td>
+                    <td>{iss.template_name || '-'}</td>
+                    <td><code>{iss.reference_number}</code></td>
+                    <td>
+                      <button className="btn btn-sm btn-outline" onClick={() => setReprintIssuance(iss)}>
+                        <Printer size={12} /> View / Reprint
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 
@@ -288,7 +359,7 @@ export default function Certificates() {
           {loadingPreview ? (
             <p>Rendering preview...</p>
           ) : (
-            <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+            <div id={reprintIssuance ? undefined : 'printable-certificate'} dangerouslySetInnerHTML={{ __html: previewHtml }} />
           )}
         </div>
       )}
@@ -327,6 +398,23 @@ export default function Certificates() {
                 <button type="submit" className="btn btn-primary">{editingTemplate ? 'Update Template' : 'Create Template'}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Reprint Modal — reproduces the exact HTML recorded at issuance time */}
+      {reprintIssuance && (
+        <div className="modal no-print" onClick={() => setReprintIssuance(null)}>
+          <div className="modal-content" style={{ maxWidth: '800px' }} onClick={e => e.stopPropagation()}>
+            <h3>Reprint — Reference {reprintIssuance.reference_number}</h3>
+            <div className="print-canvas-wrapper certificates-print-canvas-wrapper">
+              <div id="printable-certificate" dangerouslySetInnerHTML={{ __html: reprintIssuance.rendered_html }} />
+            </div>
+            <div className="modal-actions no-print">
+              <button type="button" className="btn btn-secondary" onClick={() => setReprintIssuance(null)}>Close</button>
+              <button type="button" className="btn btn-primary" onClick={() => window.print()}>
+                <Printer size={16} /> Print
+              </button>
+            </div>
           </div>
         </div>
       )}

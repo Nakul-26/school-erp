@@ -149,7 +149,7 @@ export class ExamsRepository {
           updated_at = datetime('now'),
           updated_by = excluded.updated_by
       `).bind(
-        id, institutionId, examSubjectId, record.student_id, record.marks_obtained, record.max_marks, record.remarks || null, userId || null, userId || null
+        id, institutionId, examSubjectId, record.student_id, record.marks_obtained ?? null, record.max_marks ?? null, record.remarks || null, userId || null, userId || null
       ).run();
     }
   }

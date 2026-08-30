@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, Trash2, ClipboardCheck, ArrowLeft, Award, FileSpreadsheet, Layers, Search, Info, Printer } from 'lucide-react';
+import { Plus, Trash2, ClipboardCheck, ArrowLeft, Award, FileSpreadsheet, Layers, Search, Info, Printer, Edit } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { hasAnyPermission, hasAnyRole } from '../utils/accessControl';
 
@@ -220,6 +220,7 @@ export default function Exams() {
   const [examResults, setExamResults] = useState<any[]>([]);
   
   const [showExamModal, setShowExamModal] = useState(false);
+  const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [selectedReportCard, setSelectedReportCard] = useState<any | null>(null);
   const [showReportCardModal, setShowReportCardModal] = useState(false);
@@ -307,13 +308,33 @@ export default function Exams() {
   const handleCreateExam = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/exams', examForm);
+      if (editingExam) {
+        await api.put(`/exams/${editingExam.id}`, examForm);
+      } else {
+        await api.post('/exams', examForm);
+      }
       setShowExamModal(false);
+      setEditingExam(null);
       setExamForm(f => ({ ...f, name: '', start_date: '', end_date: '' }));
       fetchExams();
     } catch (err: any) {
-      alert(err.message || 'Error creating exam event');
+      alert(err.message || `Error ${editingExam ? 'updating' : 'creating'} exam event`);
     }
+  };
+
+  const handleOpenEditExam = (exam: Exam, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingExam(exam);
+    setExamForm({
+      name: exam.name,
+      academic_year_id: exam.academic_year_id,
+      course_id: exam.course_id,
+      semester: exam.semester,
+      start_date: exam.start_date,
+      end_date: exam.end_date,
+      status: exam.status as any
+    });
+    setShowExamModal(true);
   };
 
   const handleStatusChange = async (exam: Exam, status: 'DRAFT' | 'PUBLISHED' | 'COMPLETED') => {
@@ -550,7 +571,7 @@ export default function Exams() {
               </p>
             </div>
             {canManageExamSetup && (
-              <button className="btn btn-primary" onClick={() => setShowExamModal(true)}>
+              <button className="btn btn-primary" onClick={() => { setEditingExam(null); setShowExamModal(true); }}>
                 <Plus size={18} /> Add Exam Event
               </button>
             )}
@@ -656,6 +677,12 @@ export default function Exams() {
                           )}
 
                           {canManageExamSetup && (
+                            <button className="btn btn-sm btn-outline" onClick={(e) => handleOpenEditExam(ex, e)} title="Edit exam event">
+                              <Edit size={12} />
+                            </button>
+                          )}
+
+                          {canManageExamSetup && (
                             <button className="btn btn-sm btn-danger" onClick={(e) => handleDeleteExam(ex.id, e)}>
                               <Trash2 size={12} />
                             </button>
@@ -680,7 +707,7 @@ export default function Exams() {
           {showExamModal && (
             <div className="modal-overlay">
               <div className="modal-content">
-                <h3>Add New Exam Event</h3>
+                <h3>{editingExam ? 'Edit Exam Event' : 'Add New Exam Event'}</h3>
                 <form onSubmit={handleCreateExam}>
                   <div className="form-group">
                     <label>Exam Name (e.g. Mid Semester Exam, Lab Finals)</label>
@@ -747,12 +774,26 @@ export default function Exams() {
                     </div>
                   </div>
 
+                  {editingExam && (
+                    <div className="form-group">
+                      <label>Status</label>
+                      <select
+                        value={examForm.status}
+                        onChange={(e) => setExamForm({ ...examForm, status: e.target.value as any })}
+                      >
+                        <option value="DRAFT">DRAFT</option>
+                        <option value="PUBLISHED">PUBLISHED</option>
+                        <option value="COMPLETED">COMPLETED</option>
+                      </select>
+                    </div>
+                  )}
+
                   <div className="modal-actions">
-                    <button type="button" onClick={() => setShowExamModal(false)} className="btn btn-secondary">
+                    <button type="button" onClick={() => { setShowExamModal(false); setEditingExam(null); }} className="btn btn-secondary">
                       Cancel
                     </button>
                     <button type="submit" className="btn btn-primary">
-                      Create Exam
+                      {editingExam ? 'Update Exam' : 'Create Exam'}
                     </button>
                   </div>
                 </form>

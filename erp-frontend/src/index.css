@@ -1180,9 +1180,16 @@ input.classes-input-27,
   .receipt-print-container, .receipt-print-container *,
   #printable-idcard, #printable-idcard *,
   #printable-bonafide, #printable-bonafide *,
-  #printable-tc, #printable-tc * { visibility: visible !important; }
+  #printable-tc, #printable-tc *,
+  #printable-certificate, #printable-certificate * { visibility: visible !important; }
 
   #printable-report-card, .receipt-print-container {
+    position: absolute !important; left: 0 !important; top: 0 !important;
+    width: 100% !important; border: none !important;
+    box-shadow: none !important; padding: 0 !important; background: white !important;
+  }
+
+  #printable-certificate {
     position: absolute !important; left: 0 !important; top: 0 !important;
     width: 100% !important; border: none !important;
     box-shadow: none !important; padding: 0 !important; background: white !important;

@@ -194,6 +194,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       links: [
         { to: '/setup', label: 'School Setup', icon: Settings },
         { to: '/institution-setup', label: 'Institution Setup', icon: Building2 },
+        { to: '/super-admin/institutions', label: 'All Institutions', icon: Building2 },
         { to: '/settings', label: 'Settings', icon: Settings },
         { to: '/data-tools', label: 'Data Tools', icon: FileSpreadsheet },
         { to: '/audit-logs', label: 'Audit Logs', icon: ClipboardList },

@@ -397,6 +397,11 @@ exams.post('/subjects/:id/marks', async (c) => {
     return c.json({ error: 'Marks payload must be an array' }, 400);
   }
   for (const record of input) {
+    if (!record.student_id) {
+      return c.json({ error: 'Each mark record must include student_id' }, 400);
+    }
+  }
+  for (const record of input) {
     const enrollment = await c.env.DB.prepare(`
       SELECT se.section_id
       FROM student_enrollments se

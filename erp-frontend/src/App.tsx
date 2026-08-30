@@ -14,6 +14,7 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ManageUsers = lazy(() => import('./pages/ManageUsers'));
 const InstitutionSetup = lazy(() => import('./pages/InstitutionSetup'));
+const SuperAdminInstitutions = lazy(() => import('./pages/SuperAdminInstitutions'));
 const AuditLogs = lazy(() => import('./pages/AuditLogs'));
 const AcademicYears = lazy(() => import('./pages/AcademicYears'));
 const Departments = lazy(() => import('./pages/Departments'));
@@ -209,6 +210,7 @@ function App() {
           <Route path="/users" element={<Navigate to="/access-control" replace />} />
           <Route path="/access-control" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><ManageUsers /></ProtectedRoute>} />
           <Route path="/institution-setup" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']}><InstitutionSetup /></ProtectedRoute>} />
+          <Route path="/super-admin/institutions" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminInstitutions /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']} allowedPermissions={['institution.manage']}><SystemSettings /></ProtectedRoute>} />
           <Route path="/settings/grades" element={<Navigate to="/settings?tab=grades" replace />} />
           <Route path="/audit-logs" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal']} allowedPermissions={['audit.view']}><AuditLogs /></ProtectedRoute>} />

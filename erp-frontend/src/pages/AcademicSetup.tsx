@@ -109,6 +109,25 @@ export default function AcademicSetup() {
   const [teacherLoadFilter, setTeacherLoadFilter] = useState<string>('All');
   const [assignmentCourseFilter, setAssignmentCourseFilter] = useState<string>('All');
 
+  // Workload dashboard & conflict report (teaching-allocations /dashboard, /conflicts)
+  interface AllocationDashboard {
+    activeAllocations: number;
+    healthyTeachers: number;
+    overloadedTeachers: number;
+    unallocatedSubjects: number;
+    conflicts: number;
+  }
+  interface AllocationConflict {
+    type: 'error' | 'warning';
+    message: string;
+    record_id?: string;
+    action_type?: string;
+  }
+  const [allocDashboard, setAllocDashboard] = useState<AllocationDashboard | null>(null);
+  const [allocConflicts, setAllocConflicts] = useState<AllocationConflict[]>([]);
+  const [loadingAllocDashboard, setLoadingAllocDashboard] = useState(false);
+  const [showConflicts, setShowConflicts] = useState(false);
+
   const handleTabChange = (tab: string) => {
     setSearchParams({ tab });
   };
@@ -141,6 +160,7 @@ export default function AcademicSetup() {
       if (currentYear) {
         setSelectedYearId(currentYear.id);
         fetchAllocations(currentYear.id);
+        fetchAllocationDashboard(currentYear.id);
       }
 
       // Initialize accordion (first course expanded)
@@ -168,7 +188,27 @@ export default function AcademicSetup() {
   const handleYearChange = (yearId: string) => {
     setSelectedYearId(yearId);
     fetchAllocations(yearId);
+    fetchAllocationDashboard(yearId);
     setSelectedSectionId('');
+  };
+
+  const fetchAllocationDashboard = async (yearId: string) => {
+    if (!yearId) return;
+    try {
+      setLoadingAllocDashboard(true);
+      const [dashboard, conflicts] = await Promise.all([
+        api.get(`/teaching-allocations/dashboard?academic_year_id=${yearId}`),
+        api.get(`/teaching-allocations/conflicts?academic_year_id=${yearId}`)
+      ]);
+      setAllocDashboard(dashboard);
+      setAllocConflicts(conflicts || []);
+    } catch (err) {
+      // Non-admin/HOD roles get a 403 here — the panel just stays empty for them.
+      setAllocDashboard(null);
+      setAllocConflicts([]);
+    } finally {
+      setLoadingAllocDashboard(false);
+    }
   };
 
   // ── Curriculum handlers ───────────────────────────────────────────────────
@@ -318,8 +358,9 @@ export default function AcademicSetup() {
           }
         }
       }
-      // Refresh allocations list
+      // Refresh allocations list + workload/conflict counts
       fetchAllocations(selectedYearId);
+      fetchAllocationDashboard(selectedYearId);
     } catch (err: any) {
       alert(err.message || 'Failed to update teaching allocation.');
     }
@@ -652,6 +693,63 @@ export default function AcademicSetup() {
                     </select>
                   </div>
                 </div>
+
+                {allocDashboard && (
+                  <div className="card" style={{ marginBottom: '1.25rem', padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ fontSize: '1.3rem', fontWeight: 800 }}>{allocDashboard.activeAllocations}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Active Allocations</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--success)' }}>{allocDashboard.healthyTeachers}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Healthy Teachers</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '1.3rem', fontWeight: 800, color: allocDashboard.overloadedTeachers > 0 ? 'var(--danger)' : 'var(--text-main)' }}>{allocDashboard.overloadedTeachers}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Overloaded Teachers</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '1.3rem', fontWeight: 800, color: allocDashboard.unallocatedSubjects > 0 ? 'var(--warning)' : 'var(--text-main)' }}>{allocDashboard.unallocatedSubjects}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Unallocated Subjects</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '1.3rem', fontWeight: 800, color: allocDashboard.conflicts > 0 ? 'var(--danger)' : 'var(--text-main)' }}>{allocDashboard.conflicts}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Conflicts</div>
+                        </div>
+                      </div>
+                      <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => setShowConflicts(!showConflicts)}
+                        disabled={allocConflicts.length === 0}
+                      >
+                        <AlertTriangle size={14} /> {showConflicts ? 'Hide' : 'View'} Conflict Report {allocConflicts.length > 0 ? `(${allocConflicts.length})` : ''}
+                      </button>
+                    </div>
+
+                    {showConflicts && allocConflicts.length > 0 && (
+                      <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        {allocConflicts.map((c, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '0.5rem',
+                              fontSize: '0.82rem',
+                              color: c.type === 'error' ? 'var(--danger)' : 'var(--warning)'
+                            }}
+                          >
+                            <AlertTriangle size={14} />
+                            <span>{c.message}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {loadingAllocDashboard && !allocDashboard && (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>Loading workload &amp; conflict summary...</p>
+                )}
 
                 {selectedSectionId ? (() => {
                   const section = sections.find(s => s.id === selectedSectionId);

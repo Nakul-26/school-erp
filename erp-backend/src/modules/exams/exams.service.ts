@@ -146,12 +146,17 @@ export class ExamsService {
       throw new ExamsServiceError('Marks for completed exams are locked and cannot be modified without override permission.', 403);
     }
 
-    // Validate all marks
+    // Validate all marks, and default a missing max_marks to the exam subject's
+    // configured max — student_marks.max_marks is NOT NULL, so a raw API caller
+    // omitting it would otherwise fail with a raw D1 constraint error.
     for (let i = 0; i < marks.length; i++) {
       const m = marks[i];
+      if (m.max_marks === undefined || m.max_marks === null) {
+        m.max_marks = examSub.max_marks;
+      }
       if (m.marks_obtained === undefined || m.marks_obtained === null) continue;
       const obtained = Number(m.marks_obtained);
-      const max = Number(m.max_marks || examSub.max_marks);
+      const max = Number(m.max_marks);
       if (isNaN(obtained) || obtained < 0) {
         throw new ExamsServiceError(`Row ${i + 1}: Obtained marks cannot be negative (got ${m.marks_obtained}).`, 400);
       }

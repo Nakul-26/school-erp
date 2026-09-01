@@ -136,9 +136,12 @@ export class ExamsRepository {
   }
 
   async saveMarks(institutionId: string, examSubjectId: string, marks: EnterMarkInput[], userId?: string): Promise<void> {
-    for (const record of marks) {
-      const id = crypto.randomUUID();
-      await this.db.prepare(`
+    if (marks.length === 0) return;
+    // One batch (single D1 round-trip / transaction) instead of one
+    // sequential write per student — a teacher saving marks for a whole
+    // class was previously N awaited round-trips in a row.
+    const statements = marks.map((record) =>
+      this.db.prepare(`
         INSERT INTO student_marks (
           id, institution_id, exam_subject_id, student_id, marks_obtained, max_marks, remarks, created_by, updated_by
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -149,9 +152,10 @@ export class ExamsRepository {
           updated_at = datetime('now'),
           updated_by = excluded.updated_by
       `).bind(
-        id, institutionId, examSubjectId, record.student_id, record.marks_obtained ?? null, record.max_marks ?? null, record.remarks || null, userId || null, userId || null
-      ).run();
-    }
+        crypto.randomUUID(), institutionId, examSubjectId, record.student_id, record.marks_obtained ?? null, record.max_marks ?? null, record.remarks || null, userId || null, userId || null
+      )
+    );
+    await this.db.batch(statements);
   }
 
   // --- RESULTS ---

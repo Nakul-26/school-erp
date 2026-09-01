@@ -3,6 +3,37 @@ import { jobRegistry } from './job-registry';
 import { BackgroundJob, EnqueueJobDTO, CronScheduleDTO, JobCronSchedule, JobWorker, JobStatus } from './types';
 import { createAuditLog } from '../../utils/audit';
 
+/**
+ * Queue engine backing TrackFlow's background jobs. See docs/
+ * database_scaling_strategy memory / db-scaling item 4 for the reasoning:
+ *
+ * TrackFlow runs on Cloudflare D1, which - like any SQLite-backed store -
+ * serializes writes through a single writer. Normal ERP writes (attendance,
+ * marks entry, fee recording spread across a day) are single-actor and
+ * spread out, so writing directly to `env.DB` from a request handler is
+ * fine. That stops being true the moment a feature has *many end-users
+ * writing in the same narrow window* - e.g. a live online-exam-taking
+ * module where hundreds of students submit within the same few seconds, or
+ * a fee-payment rush right before a deadline. That shape is a write
+ * stampede against D1's single-writer lock, and it's the actual failure
+ * pattern behind past outages of similarly-built (SQLite-backed) systems -
+ * not something `d1-retry.ts`'s backoff can fully paper over under real
+ * load, since every retry still re-contends for the same lock.
+ *
+ * Rule of thumb for any *future* feature: if the write volume in a single
+ * request would normally be one row from one actor, write directly as
+ * usual. If it's inherently "many concurrent end-users, one narrow time
+ * window," don't let each request hit `env.DB` directly - have the request
+ * handler call `service.enqueue({ jobType, payload, institutionId, ... })`
+ * to record the intent instantly, and do the actual write inside a handler
+ * registered in `job-registry.ts`, which `processQueue()` (see the
+ * `scheduled` cron handler in `src/index.ts`) drains at a controlled rate.
+ * This turns a write stampede into a serialized queue drain, trading a
+ * small amount of latency (the write lands seconds later, not
+ * instantaneously) for reliability at burst volume. No feature in TrackFlow
+ * currently has this shape, so nothing today needs converting - this is a
+ * guardrail for whoever builds the next one.
+ */
 export class BackgroundJobsService {
   constructor(public repo: BackgroundJobsRepository) {}
 

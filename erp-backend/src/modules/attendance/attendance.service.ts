@@ -23,6 +23,15 @@ export class AttendanceService {
       throw new AttendanceServiceError('Section, subject, teacher, and date are required.', 400);
     }
 
+    // Attendance records what actually happened in class - a future date has
+    // no attendance to take yet. Unlike the holiday check below, this is a
+    // hard block with no override: there's no legitimate reason to mark
+    // attendance for a day that hasn't occurred.
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (input.date > todayStr) {
+      throw new AttendanceServiceError('Cannot create an attendance session for a future date.', 400);
+    }
+
     if (this.db) {
       // 1. Fetch metadata for clean error messages
       const [sec, sub, teacher] = await Promise.all([

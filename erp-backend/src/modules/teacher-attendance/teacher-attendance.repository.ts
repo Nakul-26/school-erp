@@ -25,9 +25,11 @@ export class TeacherAttendanceRepository {
   }
 
   async markAttendance(institutionId: string, date: string, records: MarkTeacherAttendanceInput[], userId?: string): Promise<void> {
-    for (const record of records) {
-      const id = crypto.randomUUID();
-      await this.db.prepare(`
+    if (records.length === 0) return;
+    // One batch instead of one write per teacher — this is the whole
+    // institution's daily attendance submitted at once.
+    const statements = records.map((record) =>
+      this.db.prepare(`
         INSERT INTO teacher_attendance (
           id, institution_id, teacher_id, date, status, remarks, created_by, updated_by
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -37,9 +39,10 @@ export class TeacherAttendanceRepository {
           updated_at = datetime('now'),
           updated_by = excluded.updated_by
       `).bind(
-        id, institutionId, record.teacher_id, date, record.status, record.remarks || null, userId || null, userId || null
-      ).run();
-    }
+        crypto.randomUUID(), institutionId, record.teacher_id, date, record.status, record.remarks || null, userId || null, userId || null
+      )
+    );
+    await this.db.batch(statements);
   }
 
   async getTeacherAttendanceHistory(teacherId: string): Promise<TeacherAttendanceRecord[]> {

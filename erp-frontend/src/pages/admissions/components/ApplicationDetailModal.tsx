@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Application } from '../admissions.types';
 import { DetailRowsTable } from './DetailRowsTable';
+import { AdmissionAttachments } from './AdmissionAttachments';
 
 interface ApplicationDetailModalProps {
   application: Application | null;
@@ -44,6 +45,7 @@ export function ApplicationDetailModal({ application, onClose }: ApplicationDeta
             tdLabelClassName="admissions-td-108"
             tdValueClassName="admissions-td-109"
           />
+          <AdmissionAttachments entityType="AdmissionApplication" entityId={application.id} />
         </div>
         <div className="modal-footer">
           <button className="btn btn-outline" onClick={onClose}>Close</button>

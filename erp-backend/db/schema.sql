@@ -704,6 +704,23 @@ CREATE TABLE IF NOT EXISTS homework (
   updated_by TEXT
 );
 
+CREATE TABLE IF NOT EXISTS idempotency_keys (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL,
+  request_hash TEXT,
+  status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('processing', 'completed')),
+  response_status INTEGER,
+  response_body TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  completed_at TEXT,
+  UNIQUE(institution_id, scope, idempotency_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_idempotency_keys_lookup ON idempotency_keys(institution_id, scope, idempotency_key);
+CREATE INDEX IF NOT EXISTS idx_idempotency_keys_created_at ON idempotency_keys(created_at);
+
 CREATE TABLE IF NOT EXISTS institutions (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -2136,4 +2153,5 @@ INSERT OR IGNORE INTO _migrations (filename) VALUES
   ('migration-student-photo-address.sql'),
   ('migration-teachers.sql'),
   ('migration-teachers-notes-docs.sql'),
-  ('migration-webhooks-integrations.sql');
+  ('migration-webhooks-integrations.sql'),
+  ('migration-idempotency-keys.sql');

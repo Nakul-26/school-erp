@@ -6,6 +6,7 @@ import { authMiddleware, requirePermission } from '../../middleware/auth';
 import { createAuditLog } from '../../utils/audit';
 import { isYearLockedOrArchived } from '../../utils/academic-year-lock';
 import { isTeacherOnly, getTeacherIdForUser, teacherHasSectionAccess } from '../../utils/teacher-scope';
+import { isStudentOnly, isParentOnly, getOwnStudentInfo, getGuardianChildSectionId } from '../../utils/student-scope';
 
 const timetable = new Hono<{ Bindings: Env; Variables: { user: JwtPayload } }>();
 
@@ -35,6 +36,24 @@ timetable.get('/', requirePermission('timetable.view'), async (c) => {
     } else {
       teacherId = assignedTeacherId;
     }
+  } else if (isStudentOnly(user)) {
+    // A student can only ever see their own section's timetable - ignore
+    // any section_id/teacher_id the client sent and resolve it server-side.
+    const own = await getOwnStudentInfo(db, user);
+    if (!own || !own.section_id) return c.json([]);
+    sectionId = own.section_id;
+    teacherId = undefined;
+  } else if (isParentOnly(user)) {
+    // A parent must specify which child they mean, and can only resolve a
+    // section for a student they actually have a guardian link to.
+    const studentId = c.req.query('student_id');
+    if (!studentId) {
+      return c.json({ error: 'student_id is required' }, 400);
+    }
+    const childSectionId = await getGuardianChildSectionId(db, user, studentId);
+    if (!childSectionId) return c.json([]);
+    sectionId = childSectionId;
+    teacherId = undefined;
   }
 
   let results;
@@ -64,6 +83,17 @@ timetable.get('/:id', requirePermission('timetable.view'), async (c) => {
   if (isTeacherOnly(user)) {
     if (!(await teacherHasSectionAccess(db, user, result.section_id))) {
       return c.json({ error: 'Forbidden: Section is outside your teaching assignment' }, 403);
+    }
+  } else if (isStudentOnly(user)) {
+    const own = await getOwnStudentInfo(db, user);
+    if (!own || own.section_id !== result.section_id) {
+      return c.json({ error: 'Forbidden: outside your section' }, 403);
+    }
+  } else if (isParentOnly(user)) {
+    const studentId = c.req.query('student_id');
+    const childSectionId = studentId ? await getGuardianChildSectionId(db, user, studentId) : null;
+    if (!childSectionId || childSectionId !== result.section_id) {
+      return c.json({ error: 'Forbidden: outside your child\'s section' }, 403);
     }
   }
 

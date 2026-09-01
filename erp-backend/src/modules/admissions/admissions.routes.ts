@@ -3,6 +3,7 @@ import { Env, JwtPayload } from '../../types';
 import { AdmissionsRepository } from './admissions.repository';
 import { AdmissionsService } from './admissions.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
+import { idempotencyGuard } from '../../middleware/idempotency';
 import { createAuditLog } from '../../utils/audit';
 import { validateBody } from '../../middleware/validate';
 import { CreateInquirySchema, CreateApplicationSchema } from '../../utils/schemas';
@@ -184,6 +185,7 @@ admissions.get(
 admissions.patch(
   '/applications/:id/approve',
   requireRole('admin', 'super_admin', 'Principal'),
+  idempotencyGuard('admissions:approve'),
   async (c) => {
     const user = c.get('user');
     const id = c.req.param('id')!;
@@ -206,6 +208,7 @@ admissions.patch(
 admissions.patch(
   '/applications/:id/reject',
   requireRole('admin', 'super_admin', 'Principal'),
+  idempotencyGuard('admissions:reject'),
   async (c) => {
     const user = c.get('user');
     const id = c.req.param('id')!;

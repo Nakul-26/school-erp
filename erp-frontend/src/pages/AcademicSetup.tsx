@@ -109,6 +109,16 @@ export default function AcademicSetup() {
   const [teacherLoadFilter, setTeacherLoadFilter] = useState<string>('All');
   const [assignmentCourseFilter, setAssignmentCourseFilter] = useState<string>('All');
 
+  // Bulk teacher<->subject assignment (one teacher + one subject across many
+  // sections at once) - POST /teaching-allocations/bulk, preview then commit.
+  const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
+  const [bulkTeacherId, setBulkTeacherId] = useState('');
+  const [bulkSubjectId, setBulkSubjectId] = useState('');
+  const [bulkSectionIds, setBulkSectionIds] = useState<string[]>([]);
+  const [bulkClassesPerWeek, setBulkClassesPerWeek] = useState(4);
+  const [bulkPreview, setBulkPreview] = useState<{ success: boolean; errors: string[]; warnings: string[]; total_allocations: number } | null>(null);
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+
   // Workload dashboard & conflict report (teaching-allocations /dashboard, /conflicts)
   interface AllocationDashboard {
     activeAllocations: number;
@@ -208,6 +218,80 @@ export default function AcademicSetup() {
       setAllocConflicts([]);
     } finally {
       setLoadingAllocDashboard(false);
+    }
+  };
+
+  // ── Bulk teacher<->subject assignment ────────────────────────────────────
+  const closeBulkAssignModal = () => {
+    setShowBulkAssignModal(false);
+    setBulkTeacherId('');
+    setBulkSubjectId('');
+    setBulkSectionIds([]);
+    setBulkClassesPerWeek(4);
+    setBulkPreview(null);
+  };
+
+  const toggleBulkSection = (sectionId: string) => {
+    setBulkPreview(null);
+    setBulkSectionIds((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
+  };
+
+  const buildBulkPayload = (preview: boolean) => {
+    const subject = subjects.find((s) => s.id === bulkSubjectId);
+    return {
+      academic_year_id: selectedYearId,
+      preview,
+      // department_id/program_id/semester/year_number are NOT NULL on
+      // teaching_allocations and aren't derivable from teacher/subject/section
+      // ids alone server-side - mirrors the same derivation the single-cell
+      // assign flow above (handleAssignmentChange) already uses.
+      allocations: bulkSectionIds.map((section_id) => {
+        const section = sections.find((s) => s.id === section_id);
+        const program = courses.find((p) => p.id === section?.course_id);
+        return {
+          teacher_id: bulkTeacherId,
+          subject_id: bulkSubjectId,
+          section_id,
+          department_id: program?.department_id || departments[0]?.id || 'DEPT-MAIN',
+          program_id: program?.id || section?.course_id,
+          semester: subject?.semester || 1,
+          year_number: section?.year_number || 1,
+          classes_per_week: bulkClassesPerWeek,
+          primary_teacher: 1,
+        };
+      }),
+    };
+  };
+
+  const handleBulkPreview = async () => {
+    if (!bulkTeacherId || !bulkSubjectId || bulkSectionIds.length === 0) {
+      alert('Select a teacher, a subject, and at least one section.');
+      return;
+    }
+    try {
+      setBulkSubmitting(true);
+      const result = await api.post('/teaching-allocations/bulk', buildBulkPayload(true));
+      setBulkPreview(result);
+    } catch (err: any) {
+      alert(err.message || 'Failed to validate the bulk assignment.');
+    } finally {
+      setBulkSubmitting(false);
+    }
+  };
+
+  const handleBulkCommit = async () => {
+    try {
+      setBulkSubmitting(true);
+      await api.post('/teaching-allocations/bulk', buildBulkPayload(false));
+      closeBulkAssignModal();
+      fetchAllocations(selectedYearId);
+      fetchAllocationDashboard(selectedYearId);
+    } catch (err: any) {
+      alert(err.message || 'Failed to save the bulk assignment.');
+    } finally {
+      setBulkSubmitting(false);
     }
   };
 
@@ -674,7 +758,7 @@ export default function AcademicSetup() {
                       Assign subject teachers per class section. This updates workload balance metrics in real-time.
                     </p>
                   </div>
-                  <div className="academic-setup-year-filter">
+                  <div className="academic-setup-year-filter" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <label>Class Section:</label>
                     <select
                       value={selectedSectionId}
@@ -691,6 +775,15 @@ export default function AcademicSetup() {
                           <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
                     </select>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline"
+                      onClick={() => setShowBulkAssignModal(true)}
+                      disabled={!selectedYearId}
+                      title={!selectedYearId ? 'Select an academic year first' : 'Assign one teacher+subject across several sections at once'}
+                    >
+                      <Layers size={14} /> Bulk Assign
+                    </button>
                   </div>
                 </div>
 
@@ -1405,6 +1498,127 @@ export default function AcademicSetup() {
           </div>
         </div>
       )}
+
+      {/* ── Bulk Teacher<->Subject Assignment Modal ── */}
+      {showBulkAssignModal && (() => {
+        const chosenSubject = subjects.find((s) => s.id === bulkSubjectId);
+        const eligibleSections = sections.filter(
+          (s) => s.academic_year_id === selectedYearId && (!chosenSubject || s.course_id === chosenSubject.course_id)
+        );
+        const activeTeachers = teachers.filter((t) => t.status === 'ACTIVE');
+
+        return (
+          <div className="academic-setup-modal-overlay">
+            <div className="card modal-content academic-setup-modal-card" style={{ maxWidth: 560 }}>
+              <h4 className="academic-setup-modal-title">Bulk Assign Teacher to Subject</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+                Assign one teacher to teach one subject across several sections in a single step.
+              </p>
+
+              <div className="academic-setup-form-group-col" style={{ marginBottom: '0.75rem' }}>
+                <label className="academic-setup-form-label-styled">Teacher *</label>
+                <select
+                  className="input"
+                  value={bulkTeacherId}
+                  onChange={(e) => { setBulkTeacherId(e.target.value); setBulkPreview(null); }}
+                >
+                  <option value="">-- Select Teacher --</option>
+                  {activeTeachers.map((t) => (
+                    <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="academic-setup-form-group-col" style={{ marginBottom: '0.75rem' }}>
+                <label className="academic-setup-form-label-styled">Subject *</label>
+                <select
+                  className="input"
+                  value={bulkSubjectId}
+                  onChange={(e) => { setBulkSubjectId(e.target.value); setBulkSectionIds([]); setBulkPreview(null); }}
+                >
+                  <option value="">-- Select Subject --</option>
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>{s.subject_name} ({s.subject_code})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="academic-setup-form-group-col" style={{ marginBottom: '0.75rem' }}>
+                <label className="academic-setup-form-label-styled">Classes per week (each section)</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={15}
+                  className="input"
+                  value={bulkClassesPerWeek}
+                  onChange={(e) => { setBulkClassesPerWeek(parseInt(e.target.value) || 1); setBulkPreview(null); }}
+                />
+              </div>
+
+              <div className="academic-setup-form-group-col" style={{ marginBottom: '1rem' }}>
+                <label className="academic-setup-form-label-styled">Sections * {bulkSubjectId && '(matching this subject\'s course)'}</label>
+                {!bulkSubjectId ? (
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Choose a subject first.</p>
+                ) : eligibleSections.length === 0 ? (
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>No sections found for this subject's program in the selected academic year.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: 160, overflowY: 'auto' }}>
+                    {eligibleSections.map((s) => (
+                      <label
+                        key={s.id}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.35rem',
+                          padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
+                          background: bulkSectionIds.includes(s.id) ? 'var(--primary-soft)' : 'white',
+                          cursor: 'pointer', fontSize: '0.82rem'
+                        }}
+                      >
+                        <input type="checkbox" checked={bulkSectionIds.includes(s.id)} onChange={() => toggleBulkSection(s.id)} />
+                        {s.name}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {bulkPreview && (
+                <div style={{ marginBottom: '1rem', fontSize: '0.82rem' }}>
+                  {bulkPreview.errors.length > 0 && (
+                    <div style={{ color: 'var(--danger)', marginBottom: '0.5rem' }}>
+                      {bulkPreview.errors.map((e, i) => <div key={i}>⚠ {e}</div>)}
+                    </div>
+                  )}
+                  {bulkPreview.warnings.length > 0 && (
+                    <div style={{ color: 'var(--warning)', marginBottom: '0.5rem' }}>
+                      {bulkPreview.warnings.map((w, i) => <div key={i}>ⓘ {w}</div>)}
+                    </div>
+                  )}
+                  {bulkPreview.errors.length === 0 && (
+                    <div style={{ color: 'var(--success)' }}>
+                      ✓ Ready to assign {bulkPreview.total_allocations} section{bulkPreview.total_allocations === 1 ? '' : 's'}.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="academic-setup-modal-actions-row">
+                <button type="button" onClick={closeBulkAssignModal} className="btn btn-secondary" disabled={bulkSubmitting}>
+                  Cancel
+                </button>
+                {!bulkPreview || bulkPreview.errors.length > 0 ? (
+                  <button type="button" onClick={handleBulkPreview} className="btn btn-primary" disabled={bulkSubmitting}>
+                    {bulkSubmitting ? 'Checking...' : 'Preview'}
+                  </button>
+                ) : (
+                  <button type="button" onClick={handleBulkCommit} className="btn btn-primary" disabled={bulkSubmitting}>
+                    {bulkSubmitting ? 'Assigning...' : `Confirm & Assign ${bulkPreview.total_allocations}`}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </Layout>
   );
 }

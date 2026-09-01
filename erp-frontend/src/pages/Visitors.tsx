@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { PageGuidance } from '../components/PageGuidance';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
-import { Plus, Check, Clock, User, Phone, ArrowLeft, LogOut, ClipboardList } from 'lucide-react';
+import { Plus, Check, Clock, User, Phone, ArrowLeft, LogOut, ClipboardList, Search } from 'lucide-react';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 
@@ -23,6 +23,9 @@ export default function Visitors() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   
   const [form, setForm] = useState({
     name: '',
@@ -97,6 +100,21 @@ export default function Visitors() {
     }
   };
 
+  const filteredVisitors = visitors.filter((v) => {
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch = !q ||
+      v.name.toLowerCase().includes(q) ||
+      v.phone.toLowerCase().includes(q) ||
+      v.host_name.toLowerCase().includes(q) ||
+      v.purpose.toLowerCase().includes(q);
+
+    const visitDate = v.created_at ? v.created_at.slice(0, 10) : '';
+    const matchesFrom = !dateFrom || (visitDate && visitDate >= dateFrom);
+    const matchesTo = !dateTo || (visitDate && visitDate <= dateTo);
+
+    return matchesSearch && matchesFrom && matchesTo;
+  });
+
   const getPurposeBadgeColor = (purpose: string) => {
     const p = purpose.toLowerCase();
     if (p.includes('parent')) return { bg: '#eff6ff', color: '#1e40af' };
@@ -130,6 +148,33 @@ export default function Visitors() {
       </div>
 
       <div className="card">
+        {!loading && visitors.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <div className="search-container" style={{ flex: 1, minWidth: 220, maxWidth: 320 }}>
+              <Search size={14} />
+              <input
+                type="text"
+                placeholder="Search by name, phone, host, or purpose..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>From:</span>
+              <input type="date" className="input" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', height: 'auto' }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>To:</span>
+              <input type="date" className="input" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', height: 'auto' }} />
+            </div>
+            {(searchQuery || dateFrom || dateTo) && (
+              <button className="btn btn-sm btn-outline" onClick={() => { setSearchQuery(''); setDateFrom(''); setDateTo(''); }}>
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+
         {loading ? (
           <SkeletonLoader type="table" rows={5} cols={6} />
         ) : visitors.length === 0 ? (
@@ -141,6 +186,12 @@ export default function Visitors() {
               label: "Check-In Visitor",
               onClick: () => setShowAddModal(true)
             }}
+          />
+        ) : filteredVisitors.length === 0 ? (
+          <EmptyState
+            title="No matching visitors"
+            description="No logged visitors match your search or date range."
+            icon={Search}
           />
         ) : (
           <div className="table-responsive">
@@ -157,7 +208,7 @@ export default function Visitors() {
                 </tr>
               </thead>
               <tbody>
-                {visitors.map((v) => {
+                {filteredVisitors.map((v) => {
                   const purposeStyle = getPurposeBadgeColor(v.purpose);
                   const isCheckedIn = !v.out_time;
 

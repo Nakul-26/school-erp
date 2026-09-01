@@ -35,6 +35,36 @@ export async function seedStudent(db: D1Database, id: string, institutionId: str
   `).bind(id, institutionId, admissionNumber).run();
 }
 
+export async function seedSection(
+  db: D1Database,
+  id: string,
+  institutionId: string,
+  academicYearId: string,
+  courseId: string,
+  name = 'Section A'
+): Promise<void> {
+  await db.prepare(`
+    INSERT INTO sections (id, institution_id, academic_year_id, course_id, name, year_number)
+    VALUES (?, ?, ?, ?, ?, 1)
+  `).bind(id, institutionId, academicYearId, courseId, name).run();
+}
+
+export async function seedStudentEnrollment(
+  db: D1Database,
+  id: string,
+  studentId: string,
+  academicYearId: string,
+  courseId: string,
+  sectionId: string,
+  semester: number,
+  createdAt: string
+): Promise<void> {
+  await db.prepare(`
+    INSERT INTO student_enrollments (id, student_id, academic_year_id, course_id, section_id, semester, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).bind(id, studentId, academicYearId, courseId, sectionId, semester, createdAt).run();
+}
+
 export async function seedStudentFeeRecord(
   db: D1Database,
   id: string,

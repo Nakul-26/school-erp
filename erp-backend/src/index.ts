@@ -64,6 +64,7 @@ import { requestIdMiddleware } from './middleware/request-id';
 import { registerAuditEventListener } from './modules/audit-logs/audit-logs.subscriber';
 import { registerAnalyticsEventListener } from './modules/analytics/analytics.subscriber';
 import { registerIntegrationsEventListener } from './modules/integrations/integrations.subscriber';
+import { wrapD1WithRetry } from './utils/d1-retry';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -120,6 +121,16 @@ app.use('*', async (c, next) => {
 });
 
 app.use('*', requestIdMiddleware);
+
+app.use('*', async (c, next) => {
+  // Give every downstream route/repository transparent retry-with-backoff
+  // on transient D1 write contention (SQLITE_BUSY-style errors) without
+  // touching each of the ~76 files that call c.env.DB directly.
+  if (c.env?.DB) {
+    c.env.DB = wrapD1WithRetry(c.env.DB);
+  }
+  await next();
+});
 
 let isAuditSubscriberRegistered = false;
 let isAnalyticsSubscriberRegistered = false;
@@ -249,7 +260,7 @@ export default {
     try {
       const { BackgroundJobsRepository } = await import('./modules/background-jobs/background-jobs.repository');
       const { BackgroundJobsService } = await import('./modules/background-jobs/background-jobs.service');
-      const repo = new BackgroundJobsRepository(env.DB);
+      const repo = new BackgroundJobsRepository(wrapD1WithRetry(env.DB));
       const service = new BackgroundJobsService(repo);
       
       await service.evaluateCronSchedules();

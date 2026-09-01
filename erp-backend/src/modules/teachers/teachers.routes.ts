@@ -235,28 +235,28 @@ teachers.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
     const { department } = payload || {};
     if (!department) return c.json({ error: 'department is required' }, 400);
 
-    for (const tId of teacher_ids) {
-      await db.prepare("UPDATE teachers SET department = ?, updated_at = datetime('now'), updated_by = ? WHERE id = ? AND institution_id = ? AND is_active = 1")
-        .bind(department, user.sub, tId, user.institution_id).run();
-    }
+    const idPh = teacher_ids.map(() => '?').join(',');
+    await db.prepare(
+      `UPDATE teachers SET department = ?, updated_at = datetime('now'), updated_by = ? WHERE id IN (${idPh}) AND institution_id = ? AND is_active = 1`
+    ).bind(department, user.sub, ...teacher_ids, user.institution_id).run();
     await createAuditLog(c.env.DB, user.sub, 'BULK_ASSIGN_DEPARTMENT_TEACHERS', 'teachers', null, `Bulk-assigned department "${department}" for ${teacher_ids.length} teacher(s)`);
     return c.json({ success: true, message: `Successfully updated department for ${teacher_ids.length} teachers.` });
   }
 
   if (action === 'deactivate') {
-    for (const tId of teacher_ids) {
-      await db.prepare("UPDATE teachers SET status = 'INACTIVE', updated_at = datetime('now'), updated_by = ? WHERE id = ? AND institution_id = ? AND is_active = 1")
-        .bind(user.sub, tId, user.institution_id).run();
-    }
+    const idPh = teacher_ids.map(() => '?').join(',');
+    await db.prepare(
+      `UPDATE teachers SET status = 'INACTIVE', updated_at = datetime('now'), updated_by = ? WHERE id IN (${idPh}) AND institution_id = ? AND is_active = 1`
+    ).bind(user.sub, ...teacher_ids, user.institution_id).run();
     await createAuditLog(c.env.DB, user.sub, 'BULK_DEACTIVATE_TEACHERS', 'teachers', null, `Bulk-deactivated ${teacher_ids.length} teacher(s)`);
     return c.json({ success: true, message: `Successfully deactivated ${teacher_ids.length} teachers.` });
   }
 
   if (action === 'reactivate') {
-    for (const tId of teacher_ids) {
-      await db.prepare("UPDATE teachers SET status = 'ACTIVE', updated_at = datetime('now'), updated_by = ? WHERE id = ? AND institution_id = ? AND is_active = 1")
-        .bind(user.sub, tId, user.institution_id).run();
-    }
+    const idPh = teacher_ids.map(() => '?').join(',');
+    await db.prepare(
+      `UPDATE teachers SET status = 'ACTIVE', updated_at = datetime('now'), updated_by = ? WHERE id IN (${idPh}) AND institution_id = ? AND is_active = 1`
+    ).bind(user.sub, ...teacher_ids, user.institution_id).run();
     await createAuditLog(c.env.DB, user.sub, 'BULK_REACTIVATE_TEACHERS', 'teachers', null, `Bulk-reactivated ${teacher_ids.length} teacher(s)`);
     return c.json({ success: true, message: `Successfully reactivated ${teacher_ids.length} teachers.` });
   }
@@ -264,17 +264,39 @@ teachers.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
   if (action === 'delete') {
     const repo = new TeacherRepository(db);
     const service = new TeacherService(repo);
-    const deletedIds: string[] = [];
-    for (const tId of teacher_ids) {
-      const existing = await service.getTeacher(tId);
-      if (!existing || existing.institution_id !== user.institution_id) {
-        continue;
-      }
-      await service.deleteTeacher(tId, user.sub);
-      deletedIds.push(tId);
+    // Run concurrently instead of one-at-a-time, and collect a per-id outcome
+    // instead of letting one failure abort the whole request (see the same
+    // fix on the students bulk-delete above for the reasoning).
+    const outcomes = await Promise.allSettled(
+      (teacher_ids as string[]).map(async (tId) => {
+        const existing = await service.getTeacher(tId);
+        if (!existing || existing.institution_id !== user.institution_id) {
+          throw new Error('Teacher not found');
+        }
+        await service.deleteTeacher(tId, user.sub);
+      })
+    );
+    const deletedIds = (teacher_ids as string[]).filter((_, i) => outcomes[i].status === 'fulfilled');
+    const failed = outcomes
+      .map((outcome, i) => ({ outcome, id: (teacher_ids as string[])[i] }))
+      .filter(({ outcome }) => outcome.status === 'rejected')
+      .map(({ outcome, id }) => ({ id, reason: (outcome as PromiseRejectedResult).reason?.message || 'Failed to delete' }));
+
+    await createAuditLog(c.env.DB, user.sub, 'BULK_DELETE_TEACHERS', 'teachers', null, `Bulk-deleted ${deletedIds.length} of ${teacher_ids.length} teacher(s): ${deletedIds.join(', ')}`);
+
+    if (failed.length > 0 && deletedIds.length === 0) {
+      // Preserve the old behavior for the common case (all ids invalid/not
+      // found) rather than surfacing it as a partial-success 409.
+      return c.json({ error: 'No valid teachers found to delete' }, 404);
     }
-    await createAuditLog(c.env.DB, user.sub, 'BULK_DELETE_TEACHERS', 'teachers', null, `Bulk-deleted ${deletedIds.length} teacher(s): ${deletedIds.join(', ')}`);
-    return c.json({ success: true, message: `Successfully deleted ${teacher_ids.length} teachers.` });
+    if (failed.length > 0) {
+      return c.json({
+        error: `Deleted ${deletedIds.length} of ${teacher_ids.length} teacher(s); ${failed.length} could not be deleted.`,
+        deleted: deletedIds,
+        failed,
+      }, 409);
+    }
+    return c.json({ success: true, message: `Successfully deleted ${deletedIds.length} teachers.`, deleted: deletedIds });
   }
 
   return c.json({ error: 'Invalid action' }, 400);

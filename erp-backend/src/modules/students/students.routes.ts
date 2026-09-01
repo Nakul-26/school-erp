@@ -487,59 +487,86 @@ students.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
     const secExists = await db.prepare('SELECT course_id, academic_year_id FROM sections WHERE id = ? AND institution_id = ? AND is_active = 1').bind(section_id, user.institution_id).first<{ course_id: string; academic_year_id: string }>();
     if (!secExists) return c.json({ error: 'Invalid section' }, 400);
 
-    for (const sId of student_ids) {
-      // Check if student belongs to this institution
-      const stu = await db.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(sId, user.institution_id).first();
-      if (!stu) continue;
+    // Validate every student in one query instead of one round-trip per id.
+    const idPh = student_ids.map(() => '?').join(',');
+    const { results: validRows } = await db.prepare(
+      `SELECT id FROM students WHERE id IN (${idPh}) AND institution_id = ? AND is_active = 1`
+    ).bind(...student_ids, user.institution_id).all<{ id: string }>();
+    const validIds = (validRows || []).map((r) => r.id);
 
-      // Check if enrollment exists in current section
-      const activeEnrollment = await db.prepare('SELECT id FROM student_enrollments WHERE student_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1').bind(sId).first<{ id: string }>();
-      
-      if (activeEnrollment) {
-        // Update section
-        await db.prepare('UPDATE student_enrollments SET section_id = ?, updated_at = datetime(\'now\'), updated_by = ? WHERE id = ?')
-          .bind(section_id, user.sub, activeEnrollment.id).run();
-      } else {
-        // Create new enrollment
-        const enrollId = crypto.randomUUID();
-        await db.prepare('INSERT INTO student_enrollments (id, student_id, academic_year_id, course_id, section_id, semester, created_by, updated_by) VALUES (?, ?, ?, ?, ?, 1, ?, ?)')
-          .bind(enrollId, sId, secExists.academic_year_id, secExists.course_id, section_id, user.sub, user.sub).run();
-      }
+    if (validIds.length > 0) {
+      // Each valid student's latest active enrollment, fetched in one query
+      // (a window function replaces the old per-student "ORDER BY ... LIMIT 1").
+      const validPh = validIds.map(() => '?').join(',');
+      const { results: latestEnrollments } = await db.prepare(
+        `SELECT id, student_id FROM (
+           SELECT id, student_id, ROW_NUMBER() OVER (PARTITION BY student_id ORDER BY created_at DESC) AS rn
+           FROM student_enrollments WHERE student_id IN (${validPh}) AND is_active = 1
+         ) WHERE rn = 1`
+      ).bind(...validIds).all<{ id: string; student_id: string }>();
+      const enrollmentIdByStudent = new Map((latestEnrollments || []).map((e) => [e.student_id, e.id]));
+
+      const statements = validIds.map((sId) => {
+        const existingEnrollmentId = enrollmentIdByStudent.get(sId);
+        if (existingEnrollmentId) {
+          return db.prepare('UPDATE student_enrollments SET section_id = ?, updated_at = datetime(\'now\'), updated_by = ? WHERE id = ?')
+            .bind(section_id, user.sub, existingEnrollmentId);
+        }
+        return db.prepare('INSERT INTO student_enrollments (id, student_id, academic_year_id, course_id, section_id, semester, created_by, updated_by) VALUES (?, ?, ?, ?, ?, 1, ?, ?)')
+          .bind(crypto.randomUUID(), sId, secExists.academic_year_id, secExists.course_id, section_id, user.sub, user.sub);
+      });
+      // Execute as one batch (single D1 round-trip / transaction) instead of
+      // up to 2 sequential writes per student.
+      await db.batch(statements);
     }
-    await createAuditLog(c.env.DB, user.sub, 'BULK_ASSIGN_SECTION_STUDENTS', 'students', section_id, `Bulk-assigned ${student_ids.length} student(s) to section ${section_id}`);
-    return c.json({ success: true, message: `Successfully assigned section for ${student_ids.length} students.` });
+
+    await createAuditLog(c.env.DB, user.sub, 'BULK_ASSIGN_SECTION_STUDENTS', 'students', section_id, `Bulk-assigned ${validIds.length} student(s) to section ${section_id}`);
+    return c.json({ success: true, message: `Successfully assigned section for ${validIds.length} students.` });
   }
 
   if (action === 'promote_semester') {
-    for (const sId of student_ids) {
-      const stu = await db.prepare('SELECT 1 FROM students WHERE id = ? AND institution_id = ? AND is_active = 1').bind(sId, user.institution_id).first();
-      if (!stu) continue;
+    const idPh = student_ids.map(() => '?').join(',');
+    const { results: validRows } = await db.prepare(
+      `SELECT id FROM students WHERE id IN (${idPh}) AND institution_id = ? AND is_active = 1`
+    ).bind(...student_ids, user.institution_id).all<{ id: string }>();
+    const validIds = (validRows || []).map((r) => r.id);
 
-      const activeEnrollment = await db.prepare('SELECT id, semester FROM student_enrollments WHERE student_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1').bind(sId).first<{ id: string; semester: number }>();
-      if (activeEnrollment) {
-        const nextSem = (activeEnrollment.semester || 1) + 1;
-        await db.prepare('UPDATE student_enrollments SET semester = ?, updated_at = datetime(\'now\'), updated_by = ? WHERE id = ?')
-          .bind(nextSem, user.sub, activeEnrollment.id).run();
+    if (validIds.length > 0) {
+      const validPh = validIds.map(() => '?').join(',');
+      const { results: latestEnrollments } = await db.prepare(
+        `SELECT id, student_id, semester FROM (
+           SELECT id, student_id, semester, ROW_NUMBER() OVER (PARTITION BY student_id ORDER BY created_at DESC) AS rn
+           FROM student_enrollments WHERE student_id IN (${validPh}) AND is_active = 1
+         ) WHERE rn = 1`
+      ).bind(...validIds).all<{ id: string; student_id: string; semester: number }>();
+
+      const statements = (latestEnrollments || []).map((enr) =>
+        db.prepare('UPDATE student_enrollments SET semester = ?, updated_at = datetime(\'now\'), updated_by = ? WHERE id = ?')
+          .bind((enr.semester || 1) + 1, user.sub, enr.id)
+      );
+      if (statements.length > 0) {
+        await db.batch(statements);
       }
     }
-    await createAuditLog(c.env.DB, user.sub, 'BULK_PROMOTE_STUDENTS', 'students', null, `Bulk-promoted semester for ${student_ids.length} student(s)`);
-    return c.json({ success: true, message: `Successfully promoted semester for ${student_ids.length} students.` });
+
+    await createAuditLog(c.env.DB, user.sub, 'BULK_PROMOTE_STUDENTS', 'students', null, `Bulk-promoted semester for ${validIds.length} student(s)`);
+    return c.json({ success: true, message: `Successfully promoted semester for ${validIds.length} students.` });
   }
 
   if (action === 'deactivate') {
-    for (const sId of student_ids) {
-      await db.prepare('UPDATE students SET status = \'DROPPED\', updated_at = datetime(\'now\'), updated_by = ? WHERE id = ? AND institution_id = ?')
-        .bind(user.sub, sId, user.institution_id).run();
-    }
+    const idPh = student_ids.map(() => '?').join(',');
+    await db.prepare(
+      `UPDATE students SET status = 'DROPPED', updated_at = datetime('now'), updated_by = ? WHERE id IN (${idPh}) AND institution_id = ?`
+    ).bind(user.sub, ...student_ids, user.institution_id).run();
     await createAuditLog(c.env.DB, user.sub, 'BULK_DEACTIVATE_STUDENTS', 'students', null, `Bulk-deactivated ${student_ids.length} student(s)`);
     return c.json({ success: true, message: `Successfully deactivated ${student_ids.length} students.` });
   }
 
   if (action === 'reactivate') {
-    for (const sId of student_ids) {
-      await db.prepare('UPDATE students SET status = \'ACTIVE\', updated_at = datetime(\'now\'), updated_by = ? WHERE id = ? AND institution_id = ?')
-        .bind(user.sub, sId, user.institution_id).run();
-    }
+    const idPh = student_ids.map(() => '?').join(',');
+    await db.prepare(
+      `UPDATE students SET status = 'ACTIVE', updated_at = datetime('now'), updated_by = ? WHERE id IN (${idPh}) AND institution_id = ?`
+    ).bind(user.sub, ...student_ids, user.institution_id).run();
     await createAuditLog(c.env.DB, user.sub, 'BULK_REACTIVATE_STUDENTS', 'students', null, `Bulk-reactivated ${student_ids.length} student(s)`);
     return c.json({ success: true, message: `Successfully reactivated ${student_ids.length} students.` });
   }
@@ -547,11 +574,30 @@ students.post('/bulk-action', requireRole('admin', 'super_admin'), async (c) => 
   if (action === 'delete') {
     const repo = new StudentRepository(db);
     const service = new StudentService(repo);
-    for (const sId of student_ids) {
-      await service.deleteStudent(sId, user.institution_id, user.sub);
+    // Run concurrently instead of one-at-a-time — each id is an independent
+    // row so there's no ordering dependency between them. Previously a single
+    // failure (e.g. a dependency conflict) threw and aborted the whole
+    // request, silently leaving any already-deleted students deleted with no
+    // indication of what happened; now every id gets its own outcome.
+    const outcomes = await Promise.allSettled(
+      (student_ids as string[]).map((sId) => service.deleteStudent(sId, user.institution_id, user.sub))
+    );
+    const deletedIds = (student_ids as string[]).filter((_, i) => outcomes[i].status === 'fulfilled');
+    const failed = outcomes
+      .map((outcome, i) => ({ outcome, id: (student_ids as string[])[i] }))
+      .filter(({ outcome }) => outcome.status === 'rejected')
+      .map(({ outcome, id }) => ({ id, reason: (outcome as PromiseRejectedResult).reason?.message || 'Failed to delete' }));
+
+    await createAuditLog(c.env.DB, user.sub, 'BULK_DELETE_STUDENTS', 'students', null, `Bulk-deleted ${deletedIds.length} of ${student_ids.length} student(s): ${deletedIds.join(', ')}`);
+
+    if (failed.length > 0) {
+      return c.json({
+        error: `Deleted ${deletedIds.length} of ${student_ids.length} student(s); ${failed.length} could not be deleted: ${failed.map((f) => `${f.id} (${f.reason})`).join('; ')}`,
+        deleted: deletedIds,
+        failed,
+      }, 409);
     }
-    await createAuditLog(c.env.DB, user.sub, 'BULK_DELETE_STUDENTS', 'students', null, `Bulk-deleted ${student_ids.length} student(s): ${student_ids.join(', ')}`);
-    return c.json({ success: true, message: `Successfully deleted ${student_ids.length} students.` });
+    return c.json({ success: true, message: `Successfully deleted ${deletedIds.length} students.`, deleted: deletedIds });
   }
 
   return c.json({ error: 'Invalid action' }, 400);

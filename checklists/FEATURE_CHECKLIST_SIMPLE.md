@@ -2,7 +2,7 @@
 
 **Purpose:** a plain, non-technical answer to "can our school/college actually do X in TrackFlow?" — one line per capability. No bug reports, no dates, no code references. For the operation-level version of this same list (add/edit/delete/view, per module), see `FEATURE_CHECKLIST_DETAILED.md` in this folder.
 
-**As of:** 2026-08-31, based on the engineering review in `docs/REQUIREMENTS_VERIFICATION.md` / `docs/DETAILED_FUNCTIONAL_CHECKLIST.md`, re-read and re-framed purely around "does the feature exist," not "has it been tested."
+**As of:** 2026-08-31, based on the engineering review in `docs/REQUIREMENTS_VERIFICATION.md` / `docs/DETAILED_FUNCTIONAL_CHECKLIST.md`, re-read and re-framed purely around "does the feature exist," not "has it been tested." Updated later the same day after a pass that verified every 🟡 "not independently confirmed" item and implemented the no-external-blocker ❌ gaps (see the bottom-line note).
 
 **Legend:** ✅ Yes, available · 🟡 Available with a real limitation (noted) · ❌ Not available yet
 
@@ -17,6 +17,7 @@
 | A new school/college can sign itself up | ✅ | Self-service registration page |
 | Academic year & calendar setup | ✅ | Years, holidays/events, year-end rollover / promotion wizard |
 | Parent/student self-service dashboard | ✅ | Own (or per-child) attendance %, fee due/paid, and recent exam results — doesn't yet show upcoming events/holidays |
+| Student/parent views their own class timetable | ✅ | Dedicated "My Timetable" page; a parent with multiple children switches between them |
 
 ## Admissions
 
@@ -25,7 +26,7 @@
 | Track inquiries and applications | ✅ | Kanban-style board |
 | Approve an application into a real student record | ✅ | |
 | Reject an application | ✅ | |
-| Attach documents to an inquiry/application | ❌ | Not built — no way to upload a birth certificate, photo, etc. during admission |
+| Attach documents to an inquiry/application | ✅ | Staff can upload/download files (birth certificate, photo, etc.) directly on an inquiry or application |
 
 ## People Management
 
@@ -67,7 +68,7 @@
 | Record fee payments (cash/manual/offline) | ✅ | |
 | View / print a payment receipt | ✅ | Browser-print only, not a downloadable PDF file |
 | Accept fee payments online (card/UPI) | ❌ | Needs a payment gateway account (Razorpay/Stripe) before this can be built |
-| Automatic fee-due reminder to parents/students | ❌ | Runs internally but doesn't actually notify anyone yet — a real gap, not by design |
+| Automatic fee-due reminder to parents/students | ✅ | Daily job now sends a real in-app + email + push notification to the student and their guardians for each overdue fee (throttled to once per 24h per fee) |
 | Run payroll for staff | ✅ | |
 | Full double-entry accounting ledger | ✅ | |
 
@@ -90,7 +91,7 @@
 | Transport (routes, student allocation, billing) | ✅ | |
 | Hostel (rooms, allotment, capacity limits) | ✅ | |
 | Canteen (meal-plan subscriptions & billing) | 🟡 | No per-item purchase or student wallet — subscription billing only |
-| Visitor log (check-in/checkout) | 🟡 | No search of past visitor logs |
+| Visitor log (check-in/checkout) | ✅ | Search by name/phone/host/purpose plus a date-range filter |
 | Asset tracking | ✅ | |
 
 ## Student Life & Records
@@ -101,7 +102,7 @@
 | Track alumni donations | ❌ | Not built |
 | Certificates & ID cards with real student data | ✅ | |
 | Certificates as a real downloadable PDF | 🟡 | Currently print-from-browser only |
-| Student/parent views their own issued certificates | ❌ | Only staff can currently view/issue them — no self-service access |
+| Student/parent views their own issued certificates | ✅ | Dedicated "My Certificates" self-service page; staff-only issuing is unchanged |
 
 ## Compliance & Reporting
 
@@ -129,4 +130,4 @@
 
 ---
 
-**Bottom line for an MVP launch:** every core school/college workflow (admissions → students → academics → attendance → exams → fees → communication → facilities) is present and usable. Most gaps are things that need something *external* to build (a payment gateway account, an SMS/WhatsApp provider account) or were knowingly left out as bigger, separate features (real-time delivery, document upload on admissions, donations tracking, canteen wallet/POS, downloadable PDFs instead of browser-print). Two are genuine oversights worth fixing before launch even though nothing external is needed: the **fee-due reminder never actually notifies anyone** (it only updates an internal number), and **students/parents can't view their own issued certificates** (staff-only today). Neither blocks day-to-day use, but both are quick, real fixes rather than scope decisions.
+**Bottom line for an MVP launch:** every core school/college workflow (admissions → students → academics → attendance → exams → fees → communication → facilities) is present and usable. As of 2026-08-31, the remaining gaps are all things that need something *external* to build (a payment gateway account, an SMS/WhatsApp provider account, a government filing integration) or were knowingly left out as bigger, separate features (real-time delivery, donations tracking, canteen wallet/POS, downloadable PDFs instead of browser-print, a formal transfer/withdrawal workflow, routing admissions/fee-refund approvals through the central Approvals Inbox). The genuine no-external-blocker oversights found in the previous pass — fee-due reminders not actually notifying anyone, students/parents unable to view their own certificates, no visitor-log search, no bulk teacher↔subject assignment, no admission document uploads, and no student/parent timetable view — have all been fixed and tested.

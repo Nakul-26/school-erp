@@ -62,19 +62,21 @@ export class LeaveRepository {
       SELECT id, days_per_year FROM leave_types WHERE institution_id = ? AND is_active = 1
     `).bind(institutionId).all<{ id: string; days_per_year: number }>();
 
-    if (!teachers || !leaveTypes) return;
+    if (!teachers || !leaveTypes || teachers.length === 0 || leaveTypes.length === 0) return;
 
-    // For each teacher x leave type combination, INSERT OR IGNORE into leave_balances
-    for (const teacher of teachers) {
-      for (const lt of leaveTypes) {
-        const id = crypto.randomUUID();
-        await this.db.prepare(`
+    // One batch for every teacher x leave-type combination instead of a
+    // sequential write per pair — this runs institution-wide at the start of
+    // an academic year, so it was previously (teachers x leave types) round-trips.
+    const statements = teachers.flatMap((teacher) =>
+      leaveTypes.map((lt) =>
+        this.db.prepare(`
           INSERT OR IGNORE INTO leave_balances
             (id, institution_id, teacher_id, leave_type_id, academic_year_id, total_days, used_days)
           VALUES (?, ?, ?, ?, ?, ?, 0)
-        `).bind(id, institutionId, teacher.id, lt.id, academicYearId, lt.days_per_year).run();
-      }
-    }
+        `).bind(crypto.randomUUID(), institutionId, teacher.id, lt.id, academicYearId, lt.days_per_year)
+      )
+    );
+    await this.db.batch(statements);
   }
 
   async getBalancesForTeacher(teacherId: string, academicYearId: string): Promise<any[]> {

@@ -3,6 +3,7 @@ import { Env, JwtPayload } from '../../types';
 import { FeesRepository } from './fees.repository';
 import { FeesService } from './fees.service';
 import { authMiddleware, requireRole } from '../../middleware/auth';
+import { idempotencyGuard } from '../../middleware/idempotency';
 import { createAuditLog } from '../../utils/audit';
 import { isYearLockedOrArchived } from '../../utils/academic-year-lock';
 import { renderFeeReceiptHtml } from '../../utils/print-template';
@@ -248,7 +249,7 @@ fees.get('/payments', async (c) => {
   return c.json(results);
 });
 
-fees.post('/payments', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
+fees.post('/payments', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), idempotencyGuard('fees:payment'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
 
@@ -265,7 +266,7 @@ fees.post('/payments', requireRole('admin', 'super_admin', 'Principal', 'HOD', '
   }
 });
 
-fees.post('/payments/:id/refund', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
+fees.post('/payments/:id/refund', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), idempotencyGuard('fees:refund'), async (c) => {
   const user = c.get('user');
   const paymentId = c.req.param('id')!;
   const input = await c.req.json();
@@ -397,7 +398,7 @@ fees.get('/financial-ledger', requireRole('admin', 'super_admin', 'Principal', '
 });
 
 // --- CONCESSIONS & SCHOLARSHIPS ---
-fees.post('/concessions', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
+fees.post('/concessions', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), idempotencyGuard('fees:concession'), async (c) => {
   const user = c.get('user');
   const input = await c.req.json();
 
@@ -512,7 +513,7 @@ fees.get('/installments/:recordId', async (c) => {
   return c.json(installments);
 });
 
-fees.post('/installments/:id/pay', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), async (c) => {
+fees.post('/installments/:id/pay', requireRole('admin', 'super_admin', 'Principal', 'HOD', 'Accountant'), idempotencyGuard('fees:installment-pay'), async (c) => {
   const user = c.get('user');
   const id = c.req.param('id')!;
   const { amount } = await c.req.json();

@@ -6,3 +6,6 @@ dist
 *.log
 *.zip
 .DS_Store
+
+# Load-test generated artifacts (loadtest/run.mjs) - reusable scripts are tracked, output isn't
+erp-backend/loadtest/out/

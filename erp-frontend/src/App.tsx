@@ -57,7 +57,9 @@ const StudyMaterials = lazy(() => import('./pages/StudyMaterials'));
 const GLAccounting = lazy(() => import('./pages/GLAccounting'));
 const Compliance = lazy(() => import('./pages/Compliance'));
 const Certificates = lazy(() => import('./pages/Certificates'));
+const MyCertificates = lazy(() => import('./pages/MyCertificates'));
 const TimetablePage = lazy(() => import('./pages/TimetablePage'));
+const MyTimetable = lazy(() => import('./pages/MyTimetable'));
 const SchoolSetup = lazy(() => import('./pages/SchoolSetup'));
 const Visitors = lazy(() => import('./pages/Visitors'));
 const Assets = lazy(() => import('./pages/Assets'));
@@ -160,6 +162,7 @@ function App() {
           <Route path="/timetable" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><TimetablePage /></ProtectedRoute>} />
           {/* Legacy redirect for timetable-slots */}
           <Route path="/timetable-slots" element={<Navigate to="/timetable?tab=periods" replace />} />
+          <Route path="/my-timetable" element={<ProtectedRoute allowedRoles={['Student', 'Parent', 'Guardian']}><MyTimetable /></ProtectedRoute>} />
 
           {/* ── Attendance ──────────────────────────────────────────────── */}
           <Route path="/attendance" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Attendance /></ProtectedRoute>} />
@@ -181,6 +184,7 @@ function App() {
           <Route path="/gl-accounting" element={<ProtectedRoute><GLAccounting /></ProtectedRoute>} />
           <Route path="/compliance" element={<ProtectedRoute><Compliance /></ProtectedRoute>} />
           <Route path="/certificates" element={<ProtectedRoute allowedRoles={['admin', 'super_admin', 'Principal', 'HOD', 'Teacher']}><Certificates /></ProtectedRoute>} />
+          <Route path="/my-certificates" element={<ProtectedRoute allowedRoles={['Student', 'Parent', 'Guardian']}><MyCertificates /></ProtectedRoute>} />
           <Route path="/messaging" element={<Navigate to="/communication?tab=inbox" replace />} />
 
           {/* ── Finance ─────────────────────────────────────────────────── */}

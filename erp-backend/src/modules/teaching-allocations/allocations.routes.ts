@@ -519,6 +519,14 @@ allocations.post('/bulk', requirePermission('academic.manage'), async (c) => {
       continue;
     }
 
+    // department_id/program_id/semester/year_number are NOT NULL columns on
+    // teaching_allocations - fail cleanly here instead of letting an
+    // undefined bind param surface as a raw D1 error later in commit mode.
+    if (!alloc.department_id || !alloc.program_id || alloc.semester == null || alloc.year_number == null) {
+      errors.push(`Error: Missing department_id, program_id, semester, or year_number for ${teacherName} / ${subjectName} / ${sectionName}.`);
+      continue;
+    }
+
     // Check duplicate inside database
     const isDuplicate = await repo.checkDuplicateAllocation(
       alloc.teacher_id,

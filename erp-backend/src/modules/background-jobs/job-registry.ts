@@ -22,32 +22,100 @@ class JobRegistry {
   }
 
   private registerDefaults(): void {
-    // 1. FeeReminderJob
+    // 1. FeeReminderJob - sends a real notification (in-app + email + push,
+    // via the same NotificationsService.sendDirectNotification used
+    // elsewhere) to a student and their guardians for each overdue,
+    // not-yet-paid fee record. Previously this counted rows in a table
+    // (`fee_allocations`) that doesn't exist in the schema - the query
+    // always threw, was swallowed by a catch, and silently fell back to 0;
+    // nothing was ever actually sent to anyone. Capped at 200 records per
+    // run, and a record is skipped if it already got a reminder in the last
+    // 24 hours (this job runs hourly), so a student isn't re-notified every
+    // single hour for the same unpaid fee.
     this.register('FeeReminderJob', async (payload: any, ctx: JobHandlerContext): Promise<JobHandlerResult> => {
-      ctx.log(`[FeeReminderJob] Initiating fee payment reminders for institution: ${ctx.job.institution_id}`);
-      
-      // Query pending fee allocations or invoices if db available
-      let recipientCount = payload?.recipientCount || 0;
+      ctx.log(`[FeeReminderJob] Checking for overdue, unreminded fees for institution: ${ctx.job.institution_id}`);
+
+      let remindersSent = 0;
+      let recordsChecked = 0;
+
       if (ctx.db) {
         try {
-          const res = await ctx.db.prepare(
-            `SELECT COUNT(*) as cnt FROM fee_allocations WHERE status != 'PAID' AND institution_id = ?`
-          ).bind(ctx.job.institution_id).first();
-          if (res) recipientCount = res.cnt || recipientCount;
+          const { results: overdueRecords } = await ctx.db.prepare(`
+            SELECT sfr.id as record_id, sfr.student_id, sfr.fee_type, sfr.due_date,
+                   sfr.total_amount, sfr.paid_amount, sfr.fine_amount, sfr.concession_amount, sfr.refund_amount,
+                   s.user_id as student_user_id, s.first_name, s.last_name
+            FROM student_fee_records sfr
+            JOIN students s ON s.id = sfr.student_id AND s.is_active = 1
+            WHERE sfr.institution_id = ?
+              AND sfr.is_active = 1
+              AND sfr.status != 'PAID'
+              AND sfr.due_date IS NOT NULL
+              AND date(sfr.due_date) <= date('now')
+              AND NOT EXISTS (
+                SELECT 1 FROM fee_reminders fr
+                WHERE fr.student_fee_record_id = sfr.id
+                  AND fr.sent_at > datetime('now', '-24 hours')
+              )
+            LIMIT 200
+          `).bind(ctx.job.institution_id).all();
+
+          recordsChecked = overdueRecords?.length || 0;
+
+          if (recordsChecked > 0 && ctx.env) {
+            const { NotificationsRepository } = await import('../notifications/notifications.repository');
+            const { NotificationsService } = await import('../notifications/notifications.service');
+            const notifRepo = new NotificationsRepository(ctx.db);
+            const notifService = new NotificationsService(notifRepo, ctx.db);
+            const { FeesRepository } = await import('../fees/fees.repository');
+            const feesRepo = new FeesRepository(ctx.db);
+
+            for (const record of overdueRecords) {
+              const outstanding = Math.max(0, (record.total_amount + record.fine_amount) - (record.paid_amount + record.concession_amount) + record.refund_amount);
+              if (outstanding <= 0.01) continue;
+
+              const { results: guardians } = await ctx.db.prepare(
+                `SELECT user_id FROM guardians WHERE student_id = ? AND is_active = 1 AND user_id IS NOT NULL`
+              ).bind(record.student_id).all();
+
+              const recipientUserIds = new Set<string>();
+              if (record.student_user_id) recipientUserIds.add(record.student_user_id);
+              for (const g of guardians || []) recipientUserIds.add(g.user_id);
+
+              if (recipientUserIds.size === 0) continue;
+
+              const title = `Fee payment due: ${record.fee_type}`;
+              const message = `The ${record.fee_type} fee of ₹${outstanding.toFixed(2)} for ${record.first_name} ${record.last_name} was due on ${record.due_date} and is still unpaid. Please pay at the earliest to avoid additional fines.`;
+
+              for (const userId of recipientUserIds) {
+                try {
+                  await notifService.sendDirectNotification(
+                    ctx.env, ctx.job.institution_id, userId, title, message, 'fee_reminder', ['in_app', 'email', 'push']
+                  );
+                } catch (e) {
+                  ctx.log(`[FeeReminderJob] Failed to notify user ${userId} for record ${record.record_id}: ${(e as Error).message}`);
+                }
+              }
+
+              // Log once per record (not once per recipient) so the 24h
+              // dedup check above and the existing reminders-history view
+              // both read one row per fee record, same as a manual reminder.
+              await feesRepo.logReminder(crypto.randomUUID(), ctx.job.institution_id, record.student_id, record.record_id, 'EMAIL', 'auto-reminder', message);
+              remindersSent++;
+            }
+          }
         } catch (e) {
-          ctx.log(`[FeeReminderJob] Note: DB query fallback used: ${(e as Error).message}`);
+          ctx.log(`[FeeReminderJob] Error while processing overdue fees: ${(e as Error).message}`);
         }
       }
 
-      ctx.log(`[FeeReminderJob] Dispatched ${recipientCount} fee reminder events to EventBus.`);
-      
-      // Publish event via EventBus
+      ctx.log(`[FeeReminderJob] Checked ${recordsChecked} overdue fee record(s), sent reminders for ${remindersSent}.`);
+
       await eventBus.publish({
         institutionId: ctx.job.institution_id,
         eventType: 'FeeDueTomorrow',
         payload: {
           jobId: ctx.job.id,
-          remindersSent: recipientCount,
+          remindersSent,
           scheduledBy: ctx.job.created_by || 'SYSTEM',
         },
         priority: 'HIGH'
@@ -55,8 +123,8 @@ class JobRegistry {
 
       return {
         success: true,
-        message: `Successfully processed ${recipientCount} fee reminders`,
-        data: { remindersSent: recipientCount }
+        message: `Checked ${recordsChecked} overdue fee record(s), sent reminders for ${remindersSent}.`,
+        data: { remindersSent, recordsChecked }
       };
     });
 
@@ -219,22 +287,38 @@ class JobRegistry {
     // 7. SessionCleanupJob
     this.register('SessionCleanupJob', async (payload: any, ctx: JobHandlerContext): Promise<JobHandlerResult> => {
       ctx.log(`[SessionCleanupJob] Purging expired user auth tokens and transient rate-limit entries...`);
-      
+
       let purgedCount = 0;
+      let purgedIdempotencyKeys = 0;
       if (ctx.db) {
         try {
           const nowTs = Math.floor(Date.now() / 1000);
           const res = await ctx.db.prepare(`DELETE FROM rate_limits WHERE reset_at < ?`).bind(nowTs).run();
           purgedCount = res?.meta?.changes || 0;
         } catch (e) {}
+
+        try {
+          // Completed idempotency-key records only need to live long enough
+          // to catch a slow client retry (hours, not days) - 7 days is
+          // generous. A row stuck in 'processing' for over an hour means the
+          // request that claimed it never got to clean up after itself
+          // (worker crash, uncaught exception past our own try/catch); purge
+          // those too so a client isn't permanently stuck getting 409s.
+          const idemRes = await ctx.db.prepare(`
+            DELETE FROM idempotency_keys
+            WHERE (status = 'completed' AND created_at < datetime('now', '-7 days'))
+               OR (status = 'processing' AND created_at < datetime('now', '-1 hour'))
+          `).run();
+          purgedIdempotencyKeys = idemRes?.meta?.changes || 0;
+        } catch (e) {}
       }
 
-      ctx.log(`[SessionCleanupJob] Cleared ${purgedCount} expired temporary records.`);
+      ctx.log(`[SessionCleanupJob] Cleared ${purgedCount} expired temporary records and ${purgedIdempotencyKeys} stale idempotency-key records.`);
 
       return {
         success: true,
-        message: `Purged ${purgedCount} expired rate-limit tracking records.`,
-        data: { purgedCount }
+        message: `Purged ${purgedCount} expired rate-limit tracking records and ${purgedIdempotencyKeys} stale idempotency-key records.`,
+        data: { purgedCount, purgedIdempotencyKeys }
       };
     });
 

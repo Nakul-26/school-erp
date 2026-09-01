@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Inquiry } from '../admissions.types';
 import { DetailRowsTable } from './DetailRowsTable';
+import { AdmissionAttachments } from './AdmissionAttachments';
 
 interface InquiryDetailModalProps {
   inquiry: Inquiry | null;
@@ -38,6 +39,7 @@ export function InquiryDetailModal({ inquiry, onClose }: InquiryDetailModalProps
             tdLabelClassName="admissions-td-82"
             tdValueClassName="admissions-td-83"
           />
+          <AdmissionAttachments entityType="AdmissionInquiry" entityId={inquiry.id} />
         </div>
         <div className="modal-footer">
           <button className="btn btn-outline" onClick={onClose}>Close</button>

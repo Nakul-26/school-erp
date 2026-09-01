@@ -299,6 +299,77 @@ export class FeesRepository {
     );
   }
 
+  // Builds the complete atomic write-set for makePayment(): the optimistic-
+  // lock guard update, plus the payment/receipt/ledger inserts, as ONE D1
+  // batch (single transaction). Previously the guard ran as a standalone
+  // `.run()` and the three inserts as a *separate* `.batch()` call
+  // immediately after - two round-trips with a gap between them. Under load
+  // testing at high concurrency, a request that got torn down in that gap
+  // (timeout, worker eviction, network blip) left the guard's paid_amount
+  // bump committed with no payment/receipt/ledger row behind it: money
+  // recorded as paid with zero trail of what was paid or why.
+  //
+  // Each insert is written as `INSERT ... SELECT ... WHERE EXISTS(...)`,
+  // re-checking that the record now shows `paid_amount = newPaidAmount` (the
+  // value *this* guard update just tried to set). Because everything below
+  // runs inside one D1 batch/transaction, nothing else can touch the row
+  // between statements - so if the guard's UPDATE matched 0 rows (a
+  // concurrent payment beat us to it), the row never reaches that value and
+  // every dependent insert becomes a no-op in the same atomic step, instead
+  // of a separate compensating action after the fact.
+  buildPaymentBatchStatements(params: {
+    recordId: string;
+    expectedPaidAmount: number;
+    newPaidAmount: number;
+    status: string;
+    institutionId: string;
+    input: CreatePaymentInput;
+    paymentId: string;
+    receiptId: string;
+    ledgerId: string;
+    receiptNumber: string;
+    newOutstanding: number;
+    userId?: string;
+  }): D1PreparedStatement[] {
+    const { recordId, expectedPaidAmount, newPaidAmount, status, institutionId, input, paymentId, receiptId, ledgerId, receiptNumber, newOutstanding, userId } = params;
+
+    const guardUpdate = this.updateRecordStatusAndTotalsStatement(recordId, expectedPaidAmount, { paid_amount: newPaidAmount, status }, userId);
+
+    const stillApplied = `EXISTS (SELECT 1 FROM student_fee_records WHERE id = ? AND paid_amount = ?)`;
+
+    const paymentInsert = this.db.prepare(`
+      INSERT INTO fee_payments (
+        id, institution_id, student_id, student_fee_record_id, amount, payment_date, payment_method, transaction_reference, remarks, status, receipt_number, collected_by, created_by, updated_by
+      )
+      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, 'COMPLETED', ?, ?, ?, ?
+      WHERE ${stillApplied}
+    `).bind(
+      paymentId, institutionId, input.student_id, recordId, input.amount, input.payment_date, input.payment_method,
+      input.transaction_reference ? input.transaction_reference.trim() : null, input.remarks || null, receiptNumber, userId || null, userId || null, userId || null,
+      recordId, newPaidAmount
+    );
+
+    const receiptInsert = this.db.prepare(`
+      INSERT INTO fee_receipts (id, institution_id, payment_id, receipt_number, created_by, updated_by)
+      SELECT ?, ?, ?, ?, ?, ?
+      WHERE ${stillApplied}
+    `).bind(receiptId, institutionId, paymentId, receiptNumber, userId || null, userId || null, recordId, newPaidAmount);
+
+    const ledgerInsert = this.db.prepare(`
+      INSERT INTO financial_ledger (
+        id, institution_id, student_id, student_fee_record_id, entry_type, amount, balance_after, description, reference_id, created_by
+      )
+      SELECT ?, ?, ?, ?, 'PAYMENT', ?, ?, ?, ?, ?
+      WHERE ${stillApplied}
+    `).bind(
+      ledgerId, institutionId, input.student_id, recordId, input.amount, newOutstanding,
+      `Payment received via ${input.payment_method} (${receiptNumber})`, paymentId, userId || null,
+      recordId, newPaidAmount
+    );
+
+    return [guardUpdate, paymentInsert, receiptInsert, ledgerInsert];
+  }
+
   async getPaymentById(id: string): Promise<FeePayment | null> {
     return await this.db.prepare('SELECT * FROM fee_payments WHERE id = ? AND is_active = 1').bind(id).first<FeePayment>();
   }

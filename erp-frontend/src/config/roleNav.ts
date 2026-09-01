@@ -3,7 +3,7 @@ import { type AccessPolicy, type AccessSubject, canAccess, getUserRoles, normali
 export type NavKey =
   | '/dashboard' | '/announcements' | '/notifications' | '/messaging'
   | '/admissions' | '/students' | '/teachers'
-  | '/classes' | '/subjects' | '/timetable' | '/attendance' | '/teacher-attendance'
+  | '/classes' | '/subjects' | '/timetable' | '/my-timetable' | '/attendance' | '/teacher-attendance'
   | '/homework' | '/exams' | '/calendar' | '/library' | '/transport' | '/hostel' | '/certificates'
   | '/fee-structures' | '/student-fees'
   | '/payroll/salary-structures' | '/payroll/runs'
@@ -12,7 +12,7 @@ export type NavKey =
   | '/setup' | '/settings' | '/users' | '/access-control' | '/audit-logs' | '/institution-setup' | '/super-admin/institutions' | '/profile'
   | '/visitors' | '/assets' | '/alumni'
   | '/academic-setup' | '/finance' | '/communication' | '/placements'
-  | '/canteen' | '/study-materials' | '/gl-accounting' | '/compliance';
+  | '/canteen' | '/study-materials' | '/gl-accounting' | '/compliance' | '/my-certificates';
 
 const ADMIN_ROLES = ['admin', 'super_admin', 'Principal'];
 const ACADEMIC_MANAGER_ROLES = [...ADMIN_ROLES, 'HOD'];
@@ -40,6 +40,7 @@ export const ROUTE_POLICIES: Record<string, AccessPolicy> = {
   '/approvals': { roles: ACADEMIC_MANAGER_ROLES, permissions: ['approvals.view', 'approvals.manage', 'academic.manage'] },
   '/calendar': { roles: STAFF_ROLES, permissions: ['calendar.view', 'calendar.manage'] },
   '/timetable': { roles: STAFF_ROLES, permissions: ['timetable.view', 'timetable.manage'] },
+  '/my-timetable': { roles: ['Student', 'Parent', 'Guardian'], permissions: ['timetable.view'] },
 
   '/attendance': { roles: STAFF_ROLES, permissions: ['attendance.view', 'attendance.mark'] },
   '/teacher-attendance': { roles: ACADEMIC_MANAGER_ROLES, permissions: ['teacher_attendance.view', 'teacher_attendance.manage'] },
@@ -58,6 +59,7 @@ export const ROUTE_POLICIES: Record<string, AccessPolicy> = {
   '/gl-accounting': { roles: FINANCE_ROLES, permissions: ['gl.view', 'gl.manage'] },
   '/compliance': { roles: ADMIN_ROLES, permissions: ['compliance.view', 'compliance.manage'] },
   '/certificates': { roles: STAFF_ROLES, permissions: ['certificates.view', 'certificates.manage'] },
+  '/my-certificates': { roles: ['Student', 'Parent', 'Guardian'] },
 
   '/finance': { roles: [...FINANCE_ROLES, 'Student', 'Parent', 'Guardian'], permissions: ['finance.access', 'fees.view', 'fees.collect'] },
   '/fee-structures': { roles: FINANCE_ROLES, permissions: ['finance.access', 'fees.view'] },

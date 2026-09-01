@@ -597,6 +597,7 @@ export default function Attendance() {
                 <input
                   type="date"
                   value={sessionForm.date}
+                  max={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => setSessionForm({ ...sessionForm, date: e.target.value })}
                   required
                 />

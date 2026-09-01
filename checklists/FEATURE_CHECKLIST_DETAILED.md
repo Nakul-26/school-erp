@@ -2,7 +2,7 @@
 
 **Purpose:** the operation-level breakdown behind `FEATURE_CHECKLIST_SIMPLE.md` — e.g. instead of one line for "manage students," this lists add / edit / delete / view / search / bulk-import as separate rows. Still client-facing: no bug reports, no dates, no code references, no "tested vs. not tested" distinction — just "does this specific action exist and work."
 
-**As of:** 2026-08-31. **Legend:** ✅ Yes · 🟡 Partial/limited (see note) · ❌ Not available
+**As of:** 2026-08-31. Updated later the same day after a verification + small-fixes pass (see rows marked *verified* or *fixed 2026-08-31*). **Legend:** ✅ Yes · 🟡 Partial/limited (see note) · ❌ Not available
 
 ---
 
@@ -28,6 +28,7 @@
 | Parent dashboard, switch between multiple children | ✅ | Same breakdown (attendance %, fee due/paid, recent results) per child |
 | Accountant dashboard | ✅ | |
 | Student/parent dashboard shows upcoming events/holidays | ❌ | Not included — the academic calendar exists as its own screen, not surfaced on the dashboard |
+| Student/parent views their own class timetable | ✅ | *Fixed 2026-08-31* — new "My Timetable" page; backend resolves the caller's own (or a chosen child's) section server-side rather than trusting a client-supplied section_id |
 
 ## 3. Institution & Academic Setup
 
@@ -50,7 +51,7 @@
 | Submit an application directly (no prior inquiry) | ✅ | |
 | Approve an application (creates the student record) | ✅ | |
 | Reject an application | ✅ | |
-| Attach documents to an inquiry/application | ❌ | No upload option exists yet |
+| Attach documents to an inquiry/application | ✅ | *Fixed 2026-08-31* — reuses the existing generic document-storage system; staff can upload/download files directly from the inquiry/application detail view |
 | View more than the first page of leads/applications | ✅ | "Show more" per column |
 | Auto-generated admission numbers | ✅ | |
 
@@ -86,7 +87,7 @@
 | Store notes & documents for a teacher | ✅ | |
 | Assign teachers to subjects | ✅ | |
 | See teaching-workload & scheduling-conflict warnings | ✅ | |
-| Assign a whole batch of teacher↔subject links at once | ❌ | Only one at a time today; the bulk-assign option isn't in the screen yet |
+| Assign a whole batch of teacher↔subject links at once | ✅ | *Fixed 2026-08-31* — new "Bulk Assign" modal (one teacher + one subject across several sections, with a preview/validation step) calling the teaching-allocations bulk endpoint, which existed but had no UI and a crashing bug (undefined required fields) until now |
 
 ## 7. Classes, Sections, Subjects, Timetable
 
@@ -97,8 +98,8 @@
 | Attach lesson plans / assessments to a subject | ✅ | |
 | Upload/download documents on a section | ✅ | |
 | Build a weekly timetable | ✅ | |
-| Teachers view their own timetable | 🟡 | Present but not independently confirmed working |
-| Students view their section's timetable | 🟡 | Present but not independently confirmed working |
+| Teachers view their own timetable | ✅ | *Verified 2026-08-31* — confirmed working end-to-end (backend scopes a teacher-only caller to their own assigned timetable entries) |
+| Students view their section's timetable | ✅ | *Fixed 2026-08-31* — this was actually not built (the `/timetable` page and route explicitly excluded Student/Parent); see the new "My Timetable" page above |
 
 ## 8. Attendance
 
@@ -107,8 +108,8 @@
 | Create a daily attendance session | ✅ | |
 | Mark students present/absent | ✅ | |
 | View marked attendance | ✅ | |
-| Edit an already-marked day | 🟡 | Not independently confirmed working |
-| Block marking attendance for a future date | 🟡 | Not independently confirmed working |
+| Edit an already-marked day | ✅ | *Verified 2026-08-31* — re-marking a session updates the existing record in place (upsert), governed by the existing 24-hour lock (with staff override) |
+| Block marking attendance for a future date | ✅ | *Fixed 2026-08-31* — this was actually not enforced anywhere; a hard, no-override guard was added (there's no legitimate reason to take attendance for a day that hasn't happened) |
 | Attendance reports by student / date range | ✅ | |
 | Teachers mark their own attendance | ✅ | |
 | Students/parents submit a leave request | ✅ | |
@@ -154,7 +155,7 @@
 | Apply a late-payment fine | ✅ | |
 | View / print a fee receipt for a payment | ✅ | Student/parent/staff can view; browser-print only, no downloadable PDF file |
 | Accept fee payments online (card/UPI) | ❌ | Needs a payment gateway account first |
-| Automatic fee-due reminder sent to student/parent | ❌ | A background job runs and counts unpaid dues, but the result only updates an internal number for staff dashboards — nothing is actually emailed/texted/pushed to the student or parent yet |
+| Automatic fee-due reminder sent to student/parent | ✅ | *Fixed 2026-08-31* — the hourly job now sends a real in-app + email + push notification to the student and every guardian for each overdue fee record (throttled to once per 24h per record); previously it queried a table that didn't exist and silently did nothing |
 
 ## 12. Accounting (GL)
 
@@ -172,7 +173,7 @@
 | Generate a payroll run | ✅ | |
 | View salary breakdown per staff member | ✅ | |
 | View / print a payslip | 🟡 | Browser print only, no downloadable PDF |
-| Set up salary structures | 🟡 | Present but not independently confirmed working |
+| Set up salary structures | ✅ | *Verified 2026-08-31* — confirmed create, update-in-place (upsert per teacher), list, and soft-delete all work correctly |
 
 ## 14. Leave Management
 
@@ -240,7 +241,7 @@
 |---|:---:|---|
 | Log a visitor check-in | ✅ | |
 | Log a visitor checkout | ✅ | |
-| Search past visitor logs | ❌ | Not built |
+| Search past visitor logs | ✅ | *Fixed 2026-08-31* — search by name/phone/host/purpose plus a date-range filter |
 
 ## 21. Assets
 
@@ -280,7 +281,7 @@
 | Issue a certificate with real student data | ✅ | No fake/placeholder data |
 | View issuance history & reprint | ✅ | |
 | Download as a real PDF | 🟡 | Browser print only |
-| Student/parent views their own issued certificate | ❌ | Only staff with certificate permissions can view/issue — no self-service access for the student/parent it belongs to |
+| Student/parent views their own issued certificate | ✅ | *Fixed 2026-08-31* — new "My Certificates" self-service page; access is scoped to the caller's own (or their verified child's) record, not the broader staff certificates.view permission |
 
 ## 25. Compliance
 
